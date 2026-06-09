@@ -5,7 +5,11 @@ name: Build staging APK
 on:
   workflow_dispatch:
   push:
-    branches: [main, master, staging]
+    branches:
+      - main
+      - master
+      - staging
+      - 'cursor/**'
     paths:
       - 'radio_udaan_app/**'
       - '.github/workflows/build-staging-apk.yml'
