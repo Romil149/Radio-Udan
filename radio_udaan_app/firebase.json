@@ -1,0 +1,30 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "radio-udan-2412a",
+          "appId": "1:860433527358:android:b4f6cd16e5a950513b976f",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "radio-udan-2412a",
+          "appId": "1:860433527358:ios:dd042cfa744981f23b976f",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "radio-udan-2412a",
+          "configurations": {
+            "android": "1:860433527358:android:b4f6cd16e5a950513b976f",
+            "ios": "1:860433527358:ios:dd042cfa744981f23b976f"
+          }
+        }
+      }
+    }
+  }
+}

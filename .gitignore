@@ -1,0 +1,35 @@
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Secrets — never commit
+**/.env
+**/.env.*
+**/wp-config.php
+**/*service-account*.json
+**/fcm-sa*.json
+**/nexusfle_radio.sql
+*.pem
+*.p12
+
+# Flutter / Dart
+radio_udaan_app/build/
+radio_udaan_app/.dart_tool/
+radio_udaan_app/.flutter-plugins-dependencies
+radio_udaan_app/**/*.iml
+
+# WordPress core (keep plugin only; exclude full site bulk)
+radio-udan-wordpresss-website/wp-admin/
+radio-udan-wordpresss-website/wp-includes/
+radio-udan-wordpresss-website/wp-content/uploads/
+radio-udan-wordpresss-website/wp-content/cache/
+radio-udan-wordpresss-website/wp-content/plugins/*/vendor/
+radio-udan-wordpresss-website/wp-content/themes/twenty*/
+radio-udan-wordpresss-website/wp-content/plugins/modula-best-grid-gallery/
+radio-udan-wordpresss-website/wp-content/plugins/forminator/
+
+# Misc local
+build/
+.cursor/

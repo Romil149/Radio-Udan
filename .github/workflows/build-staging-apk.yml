@@ -1,0 +1,63 @@
+# Build Radio Udaan Android APK in the cloud (no local Android SDK required).
+# Download the APK from Actions → workflow run → Artifacts.
+name: Build staging APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master, staging]
+    paths:
+      - 'radio_udaan_app/**'
+      - '.github/workflows/build-staging-apk.yml'
+
+env:
+  STAGING_API_BASE_URL: https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1
+
+jobs:
+  build-android:
+    name: Android release APK (staging API)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: radio_udaan_app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze (fail fast)
+        run: dart analyze lib
+
+      - name: Build release APK
+        run: |
+          flutter build apk --release \
+            --dart-define=API_BASE_URL=${{ env.STAGING_API_BASE_URL }}
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: radio-udan-staging-${{ github.sha }}
+          path: radio_udaan_app/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Build summary
+        run: |
+          APK="build/app/outputs/flutter-apk/app-release.apk"
+          ls -lh "$APK"
+          echo "API_BASE_URL=${{ env.STAGING_API_BASE_URL }}"

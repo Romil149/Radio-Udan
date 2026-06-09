@@ -1,0 +1,487 @@
+import 'dart:async';
+
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+
+import '../../core/constants/app_strings.dart';
+import '../../core/models/radio_schedule.dart';
+import '../../core/providers/app_providers.dart';
+import '../../core/utils/wp_media_url.dart';
+import '../../core/theme/brand_tokens.dart';
+import '../../core/theme/udaan_colors.dart';
+import 'live_now_playing.dart';
+import 'radio_favorites_storage.dart';
+
+/// Refreshes on a timer so hero title / RJ update when the slot changes.
+final radioScheduleProvider = FutureProvider<RadioScheduleResponse>((ref) async {
+  final timer = Timer.periodic(const Duration(minutes: 1), (_) {
+    ref.invalidateSelf();
+  });
+  ref.onDispose(timer.cancel);
+
+  final api = ref.read(radioudaanApiProvider);
+  return api.fetchRadioSchedule(days: 2);
+});
+
+Future<void> showRadioScheduleSheet(BuildContext context) async {
+  await showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: UdaanColors.background,
+    showDragHandle: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) => DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.72,
+      minChildSize: 0.45,
+      maxChildSize: 0.92,
+      builder: (context, scrollController) => RadioScheduleSheet(
+        scrollController: scrollController,
+      ),
+    ),
+  );
+}
+
+class RadioScheduleSheet extends ConsumerWidget {
+  const RadioScheduleSheet({super.key, required this.scrollController});
+
+  final ScrollController scrollController;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheduleAsync = ref.watch(radioScheduleProvider);
+
+    return SafeArea(
+      top: false,
+      child: Column(
+        children: [
+          const SizedBox(height: 4),
+          Semantics(
+            header: true,
+            child: Text(
+              AppStrings.radioScheduleTitle,
+              style: GoogleFonts.atkinsonHyperlegible(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: UdaanColors.onBackground,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Expanded(
+            child: scheduleAsync.when(
+              data: (data) => _ScheduleList(
+                days: data.days,
+                onAirId: data.onAir?.id ?? '',
+                scrollController: scrollController,
+              ),
+              loading: () => const _ScheduleLoading(),
+              error: (_, _) => const _ScheduleError(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ScheduleList extends ConsumerWidget {
+  const _ScheduleList({
+    required this.days,
+    required this.onAirId,
+    required this.scrollController,
+  });
+
+  final List<RadioScheduleDay> days;
+  final String onAirId;
+  final ScrollController scrollController;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (days.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(BrandTokens.screenPadding),
+          child: Semantics(
+            liveRegion: true,
+            child: Text(
+              AppStrings.radioScheduleEmpty,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.atkinsonHyperlegible(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: UdaanColors.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final timeFmt = DateFormat('h:mm a');
+    final favorites = ref.watch(radioFavoritesProvider);
+
+    return ListView.builder(
+      controller: scrollController,
+      padding: const EdgeInsets.fromLTRB(
+        BrandTokens.screenPadding,
+        0,
+        BrandTokens.screenPadding,
+        20,
+      ),
+      itemCount: days.length,
+      itemBuilder: (context, i) {
+        final day = days[i];
+        return Padding(
+          padding: EdgeInsets.only(top: i == 0 ? 0 : 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Semantics(
+                    header: true,
+                    child: Text(
+                      day.displayLabel(),
+                      style: GoogleFonts.atkinsonHyperlegible(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: UdaanColors.primaryGlow,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      color: UdaanColors.outlineVariant,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ...day.segments.map(
+                (segment) => _ScheduleSegmentCard(
+                  segment: segment,
+                  timeFmt: timeFmt,
+                  isFavorite: segment.hasId && favorites.contains(segment.id),
+                  isOnAir: onAirId.isNotEmpty && segment.id == onAirId,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ScheduleSegmentCard extends ConsumerWidget {
+  const _ScheduleSegmentCard({
+    required this.segment,
+    required this.timeFmt,
+    required this.isFavorite,
+    required this.isOnAir,
+  });
+
+  final RadioScheduleSegment segment;
+  final DateFormat timeFmt;
+  final bool isFavorite;
+  final bool isOnAir;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final title =
+        segment.title.isNotEmpty ? segment.title : AppStrings.unknown;
+    final time = segment.timeRangeLabel(timeFormat: timeFmt);
+    final hostsLine = segment.hasHosts
+        ? formatRadioHostsLine(segment.hosts)
+        : '';
+
+    final segmentLabel = AppStrings.radioScheduleSegmentSemantics(
+      title: title,
+      time: time,
+      hosts: hostsLine,
+      onAir: isOnAir,
+    );
+
+    return Semantics(
+      label: segmentLabel,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        constraints:
+            const BoxConstraints(minHeight: BrandTokens.minTapTarget + 16),
+        decoration: BoxDecoration(
+          color: UdaanColors.surfaceContainer,
+          borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+          border: Border.all(
+            color: isOnAir ? UdaanColors.primary : UdaanColors.outlineVariant,
+            width: isOnAir ? 2 : 1,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              ExcludeSemantics(
+                child: _SegmentThumbnail(imageUrl: segment.imageUrl, title: title),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ExcludeSemantics(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (isOnAir) ...[
+                        _ChipLabel(
+                          text: AppStrings.radioScheduleOnAir,
+                          color: UdaanColors.primary,
+                          textColor: UdaanColors.onPrimary,
+                        ),
+                        const SizedBox(height: 6),
+                      ],
+                      Text(
+                        title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.atkinsonHyperlegible(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                          color: UdaanColors.onBackground,
+                          height: 1.2,
+                        ),
+                      ),
+                      if (time.isNotEmpty || segment.hasCategory) ...[
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            if (time.isNotEmpty)
+                              _ChipLabel(
+                                text: time,
+                                color: UdaanColors.surfaceContainerHigh,
+                                textColor: UdaanColors.primaryGlow,
+                                icon: Icons.schedule_outlined,
+                              ),
+                            if (segment.hasCategory)
+                              _ChipLabel(
+                                text: segment.category,
+                                color: UdaanColors.surfaceContainerHigh,
+                                textColor: UdaanColors.onSurfaceVariant,
+                              ),
+                          ],
+                        ),
+                      ],
+                      if (hostsLine.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          hostsLine,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.atkinsonHyperlegible(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: UdaanColors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              Semantics(
+                button: true,
+                label: AppStrings.radioFavoriteButtonLabel(
+                  showTitle: title,
+                  isFavorite: isFavorite,
+                ),
+                child: IconButton(
+                  constraints: const BoxConstraints(
+                    minWidth: BrandTokens.minTapTarget,
+                    minHeight: BrandTokens.minTapTarget,
+                  ),
+                  onPressed: segment.hasId
+                      ? () async {
+                          await ref
+                              .read(radioFavoritesProvider.notifier)
+                              .toggle(segment.id);
+                          if (!context.mounted) return;
+                          SemanticsService.sendAnnouncement(
+                            View.of(context),
+                            AppStrings.radioFavoriteAnnouncement(
+                              showTitle: title,
+                              added: !isFavorite,
+                            ),
+                            Directionality.of(context),
+                          );
+                        }
+                      : null,
+                  icon: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    size: 26,
+                    color: isFavorite
+                        ? UdaanColors.primary
+                        : UdaanColors.primaryGlow,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SegmentThumbnail extends ConsumerWidget {
+  const _SegmentThumbnail({
+    required this.imageUrl,
+    required this.title,
+  });
+
+  final String imageUrl;
+  final String title;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final resolved = resolveWpMediaUrl(
+      imageUrl,
+      apiBaseUrl: ref.watch(apiBaseUrlProvider),
+      siteUrl: ref.watch(remoteConfigProvider)?.siteUrl,
+    );
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        width: 72,
+        height: 72,
+        child: resolved.isNotEmpty
+            ? Semantics(
+                label: title,
+                image: true,
+                child: CachedNetworkImage(
+                  key: ValueKey(resolved),
+                  imageUrl: resolved,
+                  fit: BoxFit.cover,
+                  memCacheHeight: 144,
+                  placeholder: (_, _) => const _ThumbnailPlaceholder(),
+                  errorWidget: (_, _, _) => const _ThumbnailPlaceholder(),
+                ),
+              )
+            : const _ThumbnailPlaceholder(),
+      ),
+    );
+  }
+}
+
+class _ThumbnailPlaceholder extends StatelessWidget {
+  const _ThumbnailPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: UdaanColors.surfaceContainerHigh,
+      child: const Center(
+        child: Icon(
+          Icons.mic_none_outlined,
+          size: 32,
+          color: UdaanColors.primaryGlow,
+        ),
+      ),
+    );
+  }
+}
+
+class _ChipLabel extends StatelessWidget {
+  const _ChipLabel({
+    required this.text,
+    required this.color,
+    required this.textColor,
+    this.icon,
+  });
+
+  final String text;
+  final Color color;
+  final Color textColor;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: UdaanColors.outlineVariant),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: textColor),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            text,
+            style: GoogleFonts.atkinsonHyperlegible(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: textColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ScheduleLoading extends StatelessWidget {
+  const _ScheduleLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: AppStrings.semanticsLoading,
+      liveRegion: true,
+      child: const Padding(
+        padding: EdgeInsets.all(24),
+        child: Center(
+          child: CircularProgressIndicator(color: UdaanColors.primaryGlow),
+        ),
+      ),
+    );
+  }
+}
+
+class _ScheduleError extends StatelessWidget {
+  const _ScheduleError();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(BrandTokens.screenPadding),
+      child: Center(
+        child: Semantics(
+          liveRegion: true,
+          child: Text(
+            AppStrings.radioScheduleFailed,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.atkinsonHyperlegible(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: UdaanColors.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

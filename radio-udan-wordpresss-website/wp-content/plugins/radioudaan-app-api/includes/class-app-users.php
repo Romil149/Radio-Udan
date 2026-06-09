@@ -1,0 +1,540 @@
+<?php
+/**
+ * App users — mobile app accounts (password + OTP v2).
+ *
+ * @package RadioUdaanAppApi
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * Stores app account records separate from WordPress users and event form entries.
+ */
+class RadioUdaan_App_Users {
+
+	const DB_VERSION_OPTION    = 'radioudaan_app_users_db_version';
+	const DB_VERSION           = '2.0';
+	const COLUMN_VERSION_OPTION = 'radioudaan_app_users_column_version';
+	const COLUMN_VERSION        = '2.2';
+
+	const STATUS_PENDING = 'pending';
+	const STATUS_ACTIVE  = 'active';
+	const STATUS_DELETED = 'deleted';
+
+	/**
+	 * Register hooks.
+	 */
+	public static function init() {
+		add_action( 'init', array( __CLASS__, 'maybe_create_table' ), 5 );
+		add_action( 'init', array( __CLASS__, 'maybe_migrate_columns' ), 6 );
+	}
+
+	/**
+	 * @return string
+	 */
+	public static function table_name() {
+		global $wpdb;
+		return $wpdb->prefix . 'ru_app_users';
+	}
+
+	/**
+	 * Create or migrate table.
+	 */
+	public static function maybe_create_table() {
+		$installed = get_option( self::DB_VERSION_OPTION, '' );
+		if ( self::DB_VERSION === $installed ) {
+			return;
+		}
+
+		global $wpdb;
+
+		$table = self::table_name();
+
+		if ( $installed && version_compare( $installed, self::DB_VERSION, '<' ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$wpdb->query( "DROP TABLE IF EXISTS {$table}" );
+			self::purge_legacy_on_migrate();
+		}
+
+		$charset = $wpdb->get_charset_collate();
+
+		$sql = "CREATE TABLE {$table} (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			display_name varchar(120) NOT NULL DEFAULT '',
+			email varchar(190) NOT NULL DEFAULT '',
+			phone_e164 varchar(20) NOT NULL DEFAULT '',
+			password_hash varchar(255) NOT NULL DEFAULT '',
+			phone_verified tinyint(1) NOT NULL DEFAULT 0,
+			email_verified tinyint(1) NOT NULL DEFAULT 0,
+			status varchar(20) NOT NULL DEFAULT 'pending',
+			first_login_at datetime NULL,
+			last_login_at datetime NULL,
+			login_count int(11) unsigned NOT NULL DEFAULT 0,
+			created_at datetime NOT NULL,
+			updated_at datetime NOT NULL,
+			PRIMARY KEY  (id),
+			KEY phone_e164 (phone_e164),
+			KEY email (email),
+			KEY status (status),
+			KEY last_login_at (last_login_at)
+		) {$charset};";
+
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		dbDelta( $sql );
+
+		update_option( self::DB_VERSION_OPTION, self::DB_VERSION );
+	}
+
+	/**
+	 * Additive column migrations (no table drop).
+	 */
+	public static function maybe_migrate_columns() {
+		self::maybe_create_table();
+
+		if ( self::COLUMN_VERSION === get_option( self::COLUMN_VERSION_OPTION, '' ) ) {
+			return;
+		}
+
+		global $wpdb;
+
+		$table = self::table_name();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$column = $wpdb->get_results( "SHOW COLUMNS FROM {$table} LIKE 'avatar_attachment_id'" );
+		if ( empty( $column ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.DirectQuery
+			$wpdb->query( "ALTER TABLE {$table} ADD COLUMN avatar_attachment_id bigint(20) unsigned NOT NULL DEFAULT 0 AFTER password_hash" );
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$prefs_col = $wpdb->get_results( "SHOW COLUMNS FROM {$table} LIKE 'notification_prefs'" );
+		if ( empty( $prefs_col ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.DirectQuery
+			$wpdb->query( "ALTER TABLE {$table} ADD COLUMN notification_prefs longtext NULL AFTER avatar_attachment_id" );
+		}
+
+		update_option( self::COLUMN_VERSION_OPTION, self::COLUMN_VERSION );
+	}
+
+	/**
+	 * Drop v1 OTP-only rows on upgrade (table already recreated).
+	 */
+	private static function purge_legacy_on_migrate() {
+		RadioUdaan_App_Logger::log( 'app_users_migrated_v2', array() );
+	}
+
+	/**
+	 * @param array{display_name:string,email:string,phone_e164:string,password_hash:string} $data User fields.
+	 * @return int|false User id.
+	 */
+	public static function create_pending( array $data ) {
+		self::maybe_create_table();
+
+		global $wpdb;
+
+		$now = current_time( 'mysql', true );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+		$ok = $wpdb->insert(
+			self::table_name(),
+			array(
+				'display_name'  => $data['display_name'],
+				'email'         => strtolower( sanitize_email( $data['email'] ) ),
+				'phone_e164'    => $data['phone_e164'],
+				'password_hash' => $data['password_hash'],
+				'phone_verified' => 0,
+				'email_verified' => 0,
+				'status'        => self::STATUS_PENDING,
+				'login_count'   => 0,
+				'created_at'    => $now,
+				'updated_at'    => $now,
+			),
+			array( '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%d', '%s', '%s' )
+		);
+
+		return $ok ? (int) $wpdb->insert_id : false;
+	}
+
+	/**
+	 * @param int $user_id User id.
+	 * @return bool
+	 */
+	public static function activate_phone( $user_id ) {
+		self::maybe_create_table();
+
+		global $wpdb;
+
+		$now = current_time( 'mysql', true );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$updated = $wpdb->update(
+			self::table_name(),
+			array(
+				'status'         => self::STATUS_ACTIVE,
+				'phone_verified' => 1,
+				'updated_at'     => $now,
+			),
+			array(
+				'id'     => (int) $user_id,
+				'status' => self::STATUS_PENDING,
+			),
+			array( '%s', '%d', '%s' ),
+			array( '%d', '%s' )
+		);
+
+		return (bool) $updated;
+	}
+
+	/**
+	 * @param int $user_id User id.
+	 * @return bool
+	 */
+	public static function mark_email_verified( $user_id ) {
+		self::maybe_create_table();
+
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$updated = $wpdb->update(
+			self::table_name(),
+			array(
+				'email_verified' => 1,
+				'updated_at'     => current_time( 'mysql', true ),
+			),
+			array( 'id' => (int) $user_id ),
+			array( '%d', '%s' ),
+			array( '%d' )
+		);
+
+		return (bool) $updated;
+	}
+
+	/**
+	 * @param int    $user_id User id.
+	 * @param string $hash    Password hash.
+	 * @return bool
+	 */
+	/**
+	 * @param int                  $user_id User id.
+	 * @param array<string,mixed>  $fields  Column => value.
+	 * @return bool
+	 */
+	public static function update_fields( $user_id, array $fields ) {
+		self::maybe_create_table();
+		self::maybe_migrate_columns();
+
+		$allowed = array(
+			'display_name'         => '%s',
+			'email'                => '%s',
+			'phone_e164'           => '%s',
+			'phone_verified'       => '%d',
+			'email_verified'       => '%d',
+			'avatar_attachment_id' => '%d',
+			'notification_prefs'   => '%s',
+		);
+
+		$data   = array();
+		$format = array();
+
+		foreach ( $fields as $key => $value ) {
+			if ( ! isset( $allowed[ $key ] ) ) {
+				continue;
+			}
+			$data[ $key ] = $value;
+			$format[]     = $allowed[ $key ];
+		}
+
+		if ( empty( $data ) ) {
+			return false;
+		}
+
+		$data['updated_at'] = current_time( 'mysql', true );
+		$format[]           = '%s';
+
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$updated = $wpdb->update(
+			self::table_name(),
+			$data,
+			array( 'id' => (int) $user_id ),
+			$format,
+			array( '%d' )
+		);
+
+		return false !== $updated;
+	}
+
+	/**
+	 * @param int    $user_id User id.
+	 * @param string $hash    Password hash.
+	 * @return bool
+	 */
+	public static function update_password( $user_id, $hash ) {
+		self::maybe_create_table();
+
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$updated = $wpdb->update(
+			self::table_name(),
+			array(
+				'password_hash' => $hash,
+				'updated_at'      => current_time( 'mysql', true ),
+			),
+			array( 'id' => (int) $user_id ),
+			array( '%s', '%s' ),
+			array( '%d' )
+		);
+
+		return (bool) $updated;
+	}
+
+	/**
+	 * @param int $user_id User id.
+	 * @return object|null
+	 */
+	public static function get_by_id( $user_id ) {
+		self::maybe_create_table();
+
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				'SELECT * FROM ' . self::table_name() . ' WHERE id = %d',
+				(int) $user_id
+			)
+		);
+
+		return $row ? $row : null;
+	}
+
+	/**
+	 * @param string $phone_e164 E.164 phone.
+	 * @return object|null
+	 */
+	public static function find_by_phone( $phone_e164 ) {
+		$phone = self::sanitize_phone( $phone_e164 );
+		if ( ! $phone ) {
+			return null;
+		}
+
+		return self::find_active_row( 'phone_e164', $phone );
+	}
+
+	/**
+	 * @param string $email Email address.
+	 * @return object|null
+	 */
+	public static function find_by_email( $email ) {
+		$email = strtolower( sanitize_email( $email ) );
+		if ( ! is_email( $email ) ) {
+			return null;
+		}
+
+		return self::find_active_row( 'email', $email );
+	}
+
+	/**
+	 * @param string $identifier Email or E.164 phone.
+	 * @return object|null
+	 */
+	public static function find_by_identifier( $identifier ) {
+		$identifier = trim( (string) $identifier );
+		if ( '' === $identifier ) {
+			return null;
+		}
+
+		if ( false !== strpos( $identifier, '@' ) ) {
+			return self::find_by_email( $identifier );
+		}
+
+		return self::find_by_phone( $identifier );
+	}
+
+	/**
+	 * @param string $phone_e164 Phone.
+	 * @return bool
+	 */
+	public static function phone_taken( $phone_e164 ) {
+		return (bool) self::find_by_phone( $phone_e164 );
+	}
+
+	/**
+	 * @param string $email Email.
+	 * @return bool
+	 */
+	public static function email_taken( $email ) {
+		if ( ! RadioUdaan_App_Settings::require_unique_email() ) {
+			return false;
+		}
+
+		return (bool) self::find_by_email( $email );
+	}
+
+	/**
+	 * Soft-delete: free phone/email for reuse and revoke sessions externally.
+	 *
+	 * @param int $user_id User id.
+	 * @return bool
+	 */
+	public static function soft_delete( $user_id ) {
+		self::maybe_create_table();
+
+		global $wpdb;
+
+		$now = current_time( 'mysql', true );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$updated = $wpdb->update(
+			self::table_name(),
+			array(
+				'status'         => self::STATUS_DELETED,
+				'phone_e164'     => '',
+				'email'          => '',
+				'password_hash'  => '',
+				'phone_verified' => 0,
+				'email_verified' => 0,
+				'updated_at'     => $now,
+			),
+			array( 'id' => (int) $user_id ),
+			array( '%s', '%s', '%s', '%s', '%d', '%d', '%s' ),
+			array( '%d' )
+		);
+
+		return (bool) $updated;
+	}
+
+	/**
+	 * @param int $user_id User id.
+	 */
+	public static function record_login( $user_id ) {
+		self::maybe_create_table();
+
+		global $wpdb;
+
+		$user = self::get_by_id( $user_id );
+		if ( ! $user || self::STATUS_ACTIVE !== $user->status ) {
+			return;
+		}
+
+		$now   = current_time( 'mysql', true );
+		$table = self::table_name();
+
+		$first = $user->first_login_at ? $user->first_login_at : $now;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->update(
+			$table,
+			array(
+				'first_login_at' => $first,
+				'last_login_at'  => $now,
+				'login_count'    => (int) $user->login_count + 1,
+				'updated_at'     => $now,
+			),
+			array( 'id' => (int) $user_id ),
+			array( '%s', '%s', '%d', '%s' ),
+			array( '%d' )
+		);
+	}
+
+	/**
+	 * @param int $limit Max rows.
+	 * @return array<int,object>
+	 */
+	public static function list_users( $limit = 100 ) {
+		self::maybe_create_table();
+
+		global $wpdb;
+
+		$limit = max( 1, min( 500, (int) $limit ) );
+		$table = self::table_name();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$table} WHERE status != %s ORDER BY last_login_at DESC, created_at DESC LIMIT %d",
+				self::STATUS_DELETED,
+				$limit
+			)
+		);
+
+		return is_array( $rows ) ? $rows : array();
+	}
+
+	/**
+	 * @return int
+	 */
+	public static function count_users() {
+		self::maybe_create_table();
+
+		global $wpdb;
+
+		$table = self::table_name();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table} WHERE status != %s",
+				self::STATUS_DELETED
+			)
+		);
+	}
+
+	/**
+	 * @deprecated Use soft_delete() by user id.
+	 * @param string $phone_e164 E.164 phone.
+	 * @return bool
+	 */
+	public static function delete_by_phone( $phone_e164 ) {
+		$user = self::find_by_phone( $phone_e164 );
+		if ( ! $user ) {
+			return false;
+		}
+
+		return self::soft_delete( (int) $user->id );
+	}
+
+	/**
+	 * @param string $column Column name.
+	 * @param string $value  Value.
+	 * @return object|null
+	 */
+	private static function find_active_row( $column, $value ) {
+		self::maybe_create_table();
+
+		if ( ! in_array( $column, array( 'phone_e164', 'email' ), true ) ) {
+			return null;
+		}
+
+		global $wpdb;
+
+		$table = self::table_name();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$table} WHERE {$column} = %s AND status IN (%s, %s)",
+				$value,
+				self::STATUS_PENDING,
+				self::STATUS_ACTIVE
+			)
+		);
+
+		return $row ? $row : null;
+	}
+
+	/**
+	 * @param string $phone Phone input.
+	 * @return string
+	 */
+	private static function sanitize_phone( $phone ) {
+		$phone = preg_replace( '/\s+/', '', (string) $phone );
+		if ( ! preg_match( '/^\+[1-9]\d{7,14}$/', $phone ) ) {
+			return '';
+		}
+
+		return $phone;
+	}
+}

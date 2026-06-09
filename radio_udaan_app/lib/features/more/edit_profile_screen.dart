@@ -1,0 +1,380 @@
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../../core/constants/app_strings.dart';
+import '../../core/network/dio_exception_mapper.dart';
+import '../../core/providers/app_providers.dart';
+import '../../core/router/app_router.dart';
+import '../../core/theme/brand_tokens.dart';
+import '../../core/theme/udaan_colors.dart';
+import '../auth/auth_session_helper.dart';
+import '../auth/widgets/udaan_auth_widgets.dart';
+import '../events/registration_account_prefill.dart';
+import '../events/widgets/registration_form_styles.dart';
+import 'change_password_screen.dart';
+import 'settings_screen.dart';
+
+class EditProfileScreen extends ConsumerStatefulWidget {
+  const EditProfileScreen({super.key});
+
+  @override
+  ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
+}
+
+class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _emailController;
+  bool _loading = false;
+  String? _error;
+  String? _localAvatarPath;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = ref.read(authUserProvider);
+    _nameController = TextEditingController(text: user?.name ?? '');
+    _phoneController = TextEditingController(
+      text: formatPhoneForDisplay(user?.phoneE164 ?? ''),
+    );
+    _emailController = TextEditingController(text: user?.email ?? '');
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  void _announce(String message) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      SemanticsService.sendAnnouncement(
+        View.of(context),
+        message,
+        Directionality.of(context),
+      );
+    });
+  }
+
+  Future<void> _pickPhoto() async {
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      maxHeight: 1200,
+      imageQuality: 85,
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _localAvatarPath = picked.path);
+    setState(() => _loading = true);
+    try {
+      final session = await ref.read(radioudaanApiProvider).uploadAvatar(
+            filePath: picked.path,
+            fileName: picked.name,
+          );
+      await persistAuthSession(ref, session);
+      _announce(AppStrings.profileUpdated);
+    } catch (e) {
+      setState(() => _error = parseApiError(e).message);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _save() async {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim().toLowerCase();
+
+    if (name.length < 2) {
+      setState(() => _error = AppStrings.nameRequired);
+      _announce(AppStrings.nameRequired);
+      return;
+    }
+    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(email)) {
+      setState(() => _error = AppStrings.emailInvalid);
+      _announce(AppStrings.emailInvalid);
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final result = await ref.read(radioudaanApiProvider).updateProfile(
+            name: name,
+            email: email,
+          );
+      await persistAuthSession(ref, result.session);
+
+      if (!mounted) return;
+
+      if (result.emailVerificationSent) {
+        _announce(AppStrings.profileEmailVerificationSent);
+        Navigator.of(context).pop();
+        context.push(
+          '/verify-email',
+          extra: VerifyEmailRouteArgs(email: email),
+        );
+        return;
+      }
+
+      _announce(AppStrings.profileUpdated);
+      Navigator.of(context).pop();
+    } catch (e) {
+      setState(() => _error = parseApiError(e).message);
+      _announce(parseApiError(e).message);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = ref.watch(authUserProvider);
+    final avatarUrl = user?.avatarUrl;
+
+    return Scaffold(
+      backgroundColor: UdaanColors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: BrandTokens.screenPadding,
+              ),
+              child: UdaanAuthTopBar(
+                title: AppStrings.editProfileTitle,
+                onBack: () => Navigator.of(context).pop(),
+                trailing: Semantics(
+                  button: true,
+                  label: AppStrings.settingsTitle,
+                  child: IconButton(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const SettingsScreen(),
+                      ),
+                    ),
+                    icon: const Icon(
+                      Icons.settings_outlined,
+                      color: UdaanColors.onBackground,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(BrandTokens.screenPadding),
+                children: [
+                  Center(
+                    child: Semantics(
+                      button: true,
+                      enabled: !_loading,
+                      label: AppStrings.tapToUpdatePhoto,
+                      child: GestureDetector(
+                        onTap: _loading ? null : _pickPhoto,
+                        child: Stack(
+                          alignment: Alignment.bottomRight,
+                          children: [
+                            CircleAvatar(
+                              radius: 56,
+                              backgroundColor: UdaanColors.surfaceContainer,
+                              backgroundImage: _localAvatarPath != null
+                                  ? FileImage(File(_localAvatarPath!))
+                                  : (avatarUrl != null && avatarUrl.isNotEmpty
+                                      ? CachedNetworkImageProvider(avatarUrl)
+                                      : null),
+                              child: avatarUrl == null && _localAvatarPath == null
+                                  ? const Icon(Icons.person, size: 48)
+                                  : null,
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: UdaanColors.primary,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                color: UdaanColors.onPrimary,
+                                size: 20,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Text(
+                      AppStrings.tapToUpdatePhoto,
+                      style: GoogleFonts.atkinsonHyperlegible(
+                        fontSize: 14,
+                        color: UdaanColors.primaryGlow,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _labeledField(
+                    context: context,
+                    label: AppStrings.nameLabel,
+                    controller: _nameController,
+                  ),
+                  _labeledField(
+                    context: context,
+                    label: AppStrings.mobileNumberLabel,
+                    controller: _phoneController,
+                    readOnly: true,
+                    semanticsLabel: AppStrings.profileMobileSemantics(
+                      _phoneController.text,
+                    ),
+                    hint: AppStrings.profileMobileLockedHint,
+                    suffixIcon: const Icon(
+                      Icons.lock_outline,
+                      color: UdaanColors.onSurfaceVariant,
+                    ),
+                  ),
+                  _labeledField(
+                    context: context,
+                    label: AppStrings.emailLabel,
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: UdaanColors.surfaceContainer,
+                      borderRadius: BorderRadius.circular(12),
+                      border: const Border(
+                        left: BorderSide(color: UdaanColors.primaryGlow, width: 3),
+                      ),
+                    ),
+                    child: Text(
+                      AppStrings.profileInfoNote,
+                      style: GoogleFonts.atkinsonHyperlegible(
+                        fontSize: 15,
+                        color: UdaanColors.onSurfaceVariant,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Semantics(
+                    button: true,
+                    label: AppStrings.changePasswordTitle,
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const ChangePasswordScreen(),
+                        ),
+                      ),
+                      child: Text(
+                        AppStrings.changePasswordTitle,
+                        style: GoogleFonts.atkinsonHyperlegible(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: UdaanColors.primaryGlow,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (_error != null) ...[
+                    const SizedBox(height: 8),
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        _error!,
+                        style: GoogleFonts.atkinsonHyperlegible(
+                          color: UdaanColors.error,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  UdaanPrimaryButton(
+                    label: AppStrings.updateProfile,
+                    icon: Icons.check_circle_outline,
+                    loading: _loading,
+                    onPressed: _loading ? null : _save,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _labeledField({
+    required BuildContext context,
+    required String label,
+    required TextEditingController controller,
+    TextInputType? keyboardType,
+    bool readOnly = false,
+    String? semanticsLabel,
+    String? hint,
+    Widget? suffixIcon,
+  }) {
+    final field = TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      readOnly: readOnly,
+      enableInteractiveSelection: !readOnly,
+      style: registrationFieldInputStyle(context, readOnly: readOnly),
+      decoration: registrationFieldDecoration(context).copyWith(
+        suffixIcon: suffixIcon,
+      ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            label,
+            style: registrationFieldLabelStyle(context),
+          ),
+          if (hint != null && hint.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              hint,
+              style: GoogleFonts.atkinsonHyperlegible(
+                fontSize: 14,
+                color: UdaanColors.onSurfaceVariant,
+              ),
+            ),
+          ],
+          const SizedBox(height: 8),
+          if (readOnly && semanticsLabel != null)
+            Semantics(
+              label: semanticsLabel,
+              readOnly: true,
+              textField: true,
+              child: ExcludeSemantics(child: field),
+            )
+          else
+            Semantics(
+              textField: true,
+              label: '$label, required',
+              child: ExcludeSemantics(child: field),
+            ),
+        ],
+      ),
+    );
+  }
+}

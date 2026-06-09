@@ -1,0 +1,505 @@
+/**
+ * Settings page — tabbed layout, mobile preview, grouped copy fields.
+ * Global brand chrome lives in admin.css.
+ */
+
+.ru-settings-intro,
+.ru-page-intro {
+	margin: 0 0 16px;
+	padding: 14px 18px;
+	background: var(--ru-accent-soft);
+	border: 1px solid rgba(255, 107, 0, 0.25);
+	border-radius: var(--ru-radius);
+	color: #7c2d12;
+	font-size: 14px;
+	line-height: 1.5;
+}
+
+.ru-settings-intro strong,
+.ru-page-intro strong {
+	color: #9a3412;
+}
+
+.ru-settings-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 20px;
+	padding: 4px;
+	background: var(--ru-bg);
+	border: 1px solid var(--ru-border);
+	border-radius: 12px;
+}
+
+.ru-settings-tabs__btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 44px;
+	padding: 10px 16px;
+	border: 1px solid transparent;
+	border-radius: 8px;
+	background: transparent;
+	color: #334155;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.ru-settings-tabs__btn:hover {
+	background: #fff;
+	color: var(--ru-accent-dark);
+}
+
+.ru-settings-tabs__btn.is-active {
+	background: #fff;
+	border-color: var(--ru-accent);
+	color: var(--ru-accent-dark);
+	box-shadow: 0 1px 3px rgba(255, 107, 0, 0.15);
+}
+
+.ru-settings-tabs__btn .dashicons {
+	font-size: 18px;
+	width: 18px;
+	height: 18px;
+}
+
+.ru-settings-tabs__btn:focus-visible {
+	outline: 3px solid #2563eb;
+	outline-offset: 2px;
+}
+
+.ru-settings-panel {
+	display: none;
+	animation: ru-settings-fade 0.2s ease;
+}
+
+.ru-settings-panel.is-active {
+	display: block;
+}
+
+@keyframes ru-settings-fade {
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.ru-settings-panel__card {
+	background: var(--ru-surface);
+	border: 1px solid var(--ru-border);
+	border-radius: var(--ru-radius);
+	box-shadow: var(--ru-shadow);
+	padding: 22px 24px;
+	margin-bottom: 16px;
+}
+
+.ru-settings-panel__card h3 {
+	margin: 0 0 8px;
+	font-size: 16px;
+	font-weight: 700;
+	color: #0f172a;
+}
+
+.ru-settings-panel__card > .description {
+	margin: 0 0 18px;
+	color: var(--ru-muted);
+}
+
+.ru-settings-branding-layout {
+	display: grid;
+	grid-template-columns: 1fr 280px;
+	gap: 24px;
+	align-items: start;
+}
+
+@media (max-width: 1200px) {
+	.ru-settings-branding-layout {
+		grid-template-columns: 1fr;
+	}
+}
+
+.ru-admin__logo-preview {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 100px;
+	padding: 16px;
+	background: var(--ru-bg);
+	border: 2px dashed var(--ru-border);
+	border-radius: 12px;
+	margin: 8px 0 12px;
+}
+
+.ru-admin__logo-preview img {
+	max-height: 88px;
+	width: auto;
+}
+
+.ru-admin__color-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 14px 18px;
+}
+
+.ru-admin__color-field {
+	padding: 12px;
+	background: var(--ru-bg);
+	border-radius: 8px;
+	border: 1px solid var(--ru-border);
+}
+
+.ru-admin__color-field label {
+	font-size: 12px;
+	margin-bottom: 8px;
+}
+
+.ru-admin__color-field input[type="color"] {
+	width: 100%;
+	height: 40px;
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+}
+
+.ru-admin__color-field .ru-color-hex {
+	width: 100%;
+	margin-top: 8px;
+	font-family: ui-monospace, monospace;
+	font-size: 13px;
+}
+
+/* Mobile preview mockup */
+.ru-phone-preview {
+	position: sticky;
+	top: 32px;
+}
+
+.ru-phone-preview__label {
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--ru-muted);
+	margin: 0 0 10px;
+}
+
+.ru-phone-preview__device {
+	border-radius: 28px;
+	padding: 12px;
+	background: linear-gradient(145deg, #1a1a1a, #333);
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.ru-phone-preview__screen {
+	border-radius: 20px;
+	overflow: hidden;
+	background: #f8fafc;
+	min-height: 420px;
+	display: flex;
+	flex-direction: column;
+}
+
+.ru-phone-preview__header {
+	padding: 20px 16px 16px;
+	text-align: center;
+	color: #fff;
+}
+
+.ru-phone-preview__header img {
+	max-height: 48px;
+	width: auto;
+	margin: 0 auto 8px;
+	display: block;
+}
+
+.ru-phone-preview__app-name {
+	font-size: 18px;
+	font-weight: 800;
+	margin: 0;
+}
+
+.ru-phone-preview__tagline {
+	font-size: 11px;
+	opacity: 0.85;
+	margin: 6px 0 0;
+	line-height: 1.35;
+}
+
+.ru-phone-preview__body {
+	flex: 1;
+	padding: 16px;
+}
+
+.ru-phone-preview__btn {
+	display: block;
+	width: 100%;
+	padding: 12px;
+	border: none;
+	border-radius: 10px;
+	font-weight: 700;
+	font-size: 14px;
+	text-align: center;
+	margin-bottom: 10px;
+}
+
+.ru-phone-preview__tabs {
+	display: flex;
+	justify-content: space-around;
+	padding: 10px 8px 14px;
+	background: #fff;
+	border-top: 1px solid #e2e8f0;
+	font-size: 10px;
+	font-weight: 600;
+	color: #64748b;
+}
+
+.ru-phone-preview__tabs span.is-active {
+	color: var(--ru-preview-primary, #ff6b00);
+}
+
+/* Copy field groups */
+.ru-copy-groups {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.ru-copy-group {
+	border: 1px solid var(--ru-border);
+	border-radius: 10px;
+	background: var(--ru-surface);
+	overflow: hidden;
+}
+
+.ru-copy-group summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	min-height: 48px;
+	padding: 12px 16px;
+	font-weight: 700;
+	font-size: 14px;
+	color: #0f172a;
+	cursor: pointer;
+	list-style: none;
+	background: var(--ru-bg);
+}
+
+.ru-copy-group summary::-webkit-details-marker {
+	display: none;
+}
+
+.ru-copy-group summary::after {
+	content: "▾";
+	color: var(--ru-muted);
+	font-size: 12px;
+	transition: transform 0.15s ease;
+}
+
+.ru-copy-group[open] summary::after {
+	transform: rotate(180deg);
+}
+
+.ru-copy-group__body {
+	padding: 8px 16px 16px;
+}
+
+.ru-copy-group__body .ru-admin__field:last-child {
+	margin-bottom: 0;
+}
+
+.ru-settings-grid-2 {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 16px 20px;
+}
+
+@media (max-width: 782px) {
+	.ru-settings-grid-2 {
+		grid-template-columns: 1fr;
+	}
+}
+
+.ru-settings-danger-card {
+	border-color: #fecaca;
+	background: #fffbfb;
+}
+
+.ru-settings-danger-card h3 {
+	color: var(--ru-danger);
+}
+
+.ru-youtube-playlist-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 12px;
+	margin-top: 8px;
+}
+
+.ru-youtube-playlist-toolbar__status {
+	color: #646970;
+}
+
+.ru-youtube-playlist-tools {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px 12px;
+	margin-top: 12px;
+}
+
+.ru-youtube-playlist-tools #ru-youtube-playlist-search {
+	max-width: 320px;
+	margin: 0;
+}
+
+.ru-youtube-playlist-drag-hint {
+	margin: 8px 0 0;
+}
+
+.ru-youtube-playlist-picker {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	max-height: 420px;
+	overflow-y: auto;
+	margin-top: 12px;
+	padding-right: 4px;
+}
+
+.ru-youtube-playlist-picker__hint,
+.ru-youtube-playlist-picker__empty {
+	margin: 0 0 4px;
+}
+
+.ru-youtube-playlist-item {
+	display: grid;
+	grid-template-columns: auto 24px 72px 1fr;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 12px;
+	border: 1px solid var(--ru-border, #dcdcde);
+	border-radius: 10px;
+	background: #fff;
+	cursor: pointer;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ru-youtube-playlist-item.is-dragging {
+	opacity: 0.55;
+}
+
+.ru-youtube-playlist-item__drag {
+	color: #a7aaad;
+	cursor: grab;
+	font-size: 18px;
+	width: 24px;
+	height: 24px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 4px;
+}
+
+.ru-youtube-playlist-item__drag:hover,
+.ru-youtube-playlist-item__drag:focus {
+	color: #2271b1;
+	background: #f0f6fc;
+	outline: none;
+}
+
+.ru-youtube-playlist-item__drag:active {
+	cursor: grabbing;
+}
+
+.ru-youtube-playlist-picker .ui-sortable-placeholder {
+	visibility: visible !important;
+	border: 2px dashed #c3c4c7;
+	border-radius: 10px;
+	background: #f6f7f7;
+	min-height: 92px;
+	margin: 0;
+}
+
+.ru-youtube-playlist-item:hover {
+	border-color: #c3c4c7;
+}
+
+.ru-youtube-playlist-item.is-selected {
+	border-color: #2271b1;
+	box-shadow: 0 0 0 1px #2271b1 inset;
+	background: #f6f9fc;
+}
+
+.ru-youtube-playlist-item.is-hidden {
+	display: none;
+}
+
+.ru-youtube-playlist-item input[type='checkbox'] {
+	margin: 0;
+}
+
+.ru-youtube-playlist-item__thumb {
+	width: 72px;
+	height: 72px;
+	border-radius: 8px;
+	overflow: hidden;
+	background: #f0f0f1;
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.ru-youtube-playlist-item__thumb img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.ru-youtube-playlist-item__thumb-placeholder {
+	font-size: 28px;
+	width: 28px;
+	height: 28px;
+	color: #a7aaad;
+}
+
+.ru-youtube-playlist-item__body {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+
+.ru-youtube-playlist-item__title {
+	font-size: 14px;
+	line-height: 1.35;
+	color: #1d2327;
+	word-break: break-word;
+}
+
+.ru-youtube-playlist-item__meta {
+	font-size: 12px;
+	color: #646970;
+}
+
+.ru-youtube-playlist-item__meta--warn {
+	color: #996800;
+}
+
+.ru-youtube-playlist-item__id {
+	font-size: 11px;
+	color: #646970;
+	word-break: break-all;
+}
+
+/* Sticky save bar: base styles in admin.css (.ru-form-sticky-footer) */

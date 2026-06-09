@@ -1,0 +1,147 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../core/constants/app_strings.dart';
+import '../../core/models/event_summary.dart';
+import '../../core/network/dio_exception_mapper.dart';
+import '../../core/providers/app_providers.dart';
+import '../../core/theme/brand_tokens.dart';
+import '../../core/theme/udaan_colors.dart';
+import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/main_tab_app_bar.dart';
+import 'event_registration_screen.dart';
+import 'widgets/event_card.dart';
+
+final openEventsProvider = FutureProvider<List<EventSummary>>((ref) async {
+  return ref.read(radioudaanApiProvider).listEvents(status: 'open');
+});
+
+/// Open events list — Stitch layout with banner cards and in-app registration.
+class EventsTab extends ConsumerWidget {
+  const EventsTab({super.key});
+
+  String _bannerUrl(WidgetRef ref, EventSummary event) {
+    return resolveEventBannerUrl(
+      event,
+      apiBaseUrl: ref.watch(apiBaseUrlProvider),
+      siteUrl: ref.watch(remoteConfigProvider)?.siteUrl,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final copy = ref.watch(appCopyProvider);
+    final events = ref.watch(openEventsProvider);
+
+    return Scaffold(
+      backgroundColor: UdaanColors.background,
+      appBar: MainTabAppBar(title: copy.tabEvents),
+      body: SafeArea(
+        child: events.when(
+          data: (items) {
+            if (items.isEmpty) {
+              return EmptyState(
+                message: copy.eventsEmpty,
+                icon: Icons.event_busy_outlined,
+              );
+            }
+            return Semantics(
+              label: copy.tabEvents,
+              child: RefreshIndicator(
+                color: UdaanColors.primary,
+                backgroundColor: UdaanColors.surfaceContainer,
+                onRefresh: () async {
+                  ref.invalidate(openEventsProvider);
+                  await ref.read(openEventsProvider.future);
+                },
+                child: ListView(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        BrandTokens.screenPadding,
+                        8,
+                        BrandTokens.screenPadding,
+                        16,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Semantics(
+                            header: true,
+                            label: AppStrings.eventsPageTitle,
+                            child: Text(
+                              AppStrings.eventsPageTitle,
+                              style: GoogleFonts.atkinsonHyperlegible(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w900,
+                                color: UdaanColors.primaryGlow,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Semantics(
+                            label: AppStrings.eventsPageIntro,
+                            child: Text(
+                              AppStrings.eventsPageIntro,
+                              style: GoogleFonts.atkinsonHyperlegible(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: UdaanColors.onSurfaceVariant,
+                                height: 1.45,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: BrandTokens.screenPadding,
+                      ),
+                      child: Column(
+                        children: [
+                          for (final event in items) ...[
+                            EventCard(
+                              event: event,
+                              bannerUrl: _bannerUrl(ref, event),
+                              onRegister: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => EventRegistrationScreen(
+                                      eventId: event.eventId,
+                                      title: event.title,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+          loading: () => Center(
+            child: Semantics(
+              label: AppStrings.eventsLoading,
+              liveRegion: true,
+              child: const CircularProgressIndicator(color: UdaanColors.primary),
+            ),
+          ),
+          error: (error, _) => EmptyState(
+            message: parseApiError(error).message,
+            icon: Icons.error_outline,
+            actionLabel: AppStrings.retry,
+            onAction: () => ref.invalidate(openEventsProvider),
+          ),
+        ),
+      ),
+    );
+  }
+}

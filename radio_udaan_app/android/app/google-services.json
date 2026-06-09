@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "860433527358",
+    "project_id": "radio-udan-2412a",
+    "storage_bucket": "radio-udan-2412a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:860433527358:android:b4f6cd16e5a950513b976f",
+        "android_client_info": {
+          "package_name": "com.radioudaan.radio_udaan_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4Dp_WOnvLLjjebn0FUKskJ5aPm0_6kXQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
