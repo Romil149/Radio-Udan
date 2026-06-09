@@ -75,7 +75,7 @@ jobs:
       - name: Build tester APK
         run: |
           DART_DEFINE="$(printf 'API_BASE_URL=%s' "${STAGING_API_BASE_URL}" | base64 -w0)"
-          ./android/gradlew -p android --no-daemon assembleDebug \
+          ./android/gradlew -p android --no-daemon --no-watch-fs assembleDebug \
             -Pdart-defines="$DART_DEFINE"
 
       - name: Upload APK artifact
