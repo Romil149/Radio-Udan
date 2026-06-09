@@ -31,7 +31,7 @@ REQUIRED=(
   "/radioudaan/v1/library/youtube/playlists/featured"
   "/radioudaan/v1/library/youtube/recent"
   "/radioudaan/v1/library/youtube/search"
-  "/radioudaan/v1/radio/schedule"
+  "/radioudaan/v1/library/schedule"
 )
 for r in "${REQUIRED[@]}"; do
   if echo "$ROUTES_JSON" | /usr/bin/python3 -c "import json,sys; d=json.load(sys.stdin); sys.exit(0 if '$r' in d.get('routes',{}) else 1)"; then
@@ -58,12 +58,13 @@ d = json.load(open("/tmp/ru-config.json"))
 assert d.get("branding", {}).get("app_name"), "branding.app_name"
 assert d.get("stream_url"), "stream_url"
 assert d.get("api_base_url", "").startswith("https://"), "api_base_url https"
-support = d.get("support")
-if not support or not (support.get("helpline_phone") or support.get("email")):
-    sys.exit("support helpline/email empty — set in WP Admin")
+support = d.get("support") or {}
+if not (support.get("helpline_phone") or support.get("email")):
+    sys.exit("support helpline/email empty — set in WP Admin → Radio Udaan App")
 legal = d.get("legal") or {}
-if not legal.get("privacy_policy_url"):
-    sys.exit("legal.privacy_policy_url missing — set in WP Admin")
+privacy = legal.get("privacy_policy_url") or d.get("privacy_policy_url")
+if not privacy or not str(privacy).startswith("https://"):
+    sys.exit("privacy_policy_url missing — set in WP Admin")
 PY
 then
   ok "GET /config"
