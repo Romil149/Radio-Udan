@@ -1,0 +1,31 @@
+# Cloud agent: PHP syntax check for radioudaan-app-api plugin.
+name: CI — WP plugin PHP lint
+
+on:
+  push:
+    branches: [main, master, staging]
+    paths:
+      - 'radio-udan-wordpresss-website/wp-content/plugins/radioudaan-app-api/**'
+      - '.github/workflows/ci-wp-plugin.yml'
+  pull_request:
+    paths:
+      - 'radio-udan-wordpresss-website/wp-content/plugins/radioudaan-app-api/**'
+  workflow_dispatch:
+
+jobs:
+  php-lint:
+    name: php -l (plugin includes)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint PHP files
+        run: |
+          PLUGIN="radio-udan-wordpresss-website/wp-content/plugins/radioudaan-app-api"
+          count=0
+          while IFS= read -r -d '' f; do
+            php -l "$f" >/dev/null
+            count=$((count + 1))
+          done < <(find "$PLUGIN" -name '*.php' -print0)
+          echo "Checked $count PHP files — all OK"

@@ -1,0 +1,51 @@
+# Cloud agent: Flutter web build for iPhone Safari testing (no App Store / Xcode).
+name: Build staging Web
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master, staging]
+    paths:
+      - 'radio_udaan_app/**'
+      - '.github/workflows/build-staging-web.yml'
+
+env:
+  STAGING_API_BASE_URL: https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1
+
+jobs:
+  build-web:
+    name: Flutter web (staging API)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: radio_udaan_app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.44.1'
+          cache: true
+
+      - run: flutter pub get
+      - run: dart analyze lib
+
+      - name: Build web release
+        run: |
+          flutter build web --release \
+            --dart-define=API_BASE_URL=${{ env.STAGING_API_BASE_URL }}
+
+      - name: Upload web artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: radio-udan-staging-web-${{ github.sha }}
+          path: radio_udaan_app/build/web/
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Usage hint
+        run: |
+          echo "Deploy build/web/ to any static host (Netlify, Firebase Hosting, WP subfolder)."
+          echo "Open on iPhone Safari for partial UI testing."

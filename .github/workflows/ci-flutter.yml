@@ -1,0 +1,33 @@
+# Cloud agent: Flutter static analysis on every code change.
+name: CI — Flutter analyze
+
+on:
+  push:
+    branches: [main, master, staging]
+    paths:
+      - 'radio_udaan_app/**'
+      - '.github/workflows/ci-flutter.yml'
+  pull_request:
+    paths:
+      - 'radio_udaan_app/**'
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    name: dart analyze lib
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: radio_udaan_app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.44.1'
+          cache: true
+
+      - run: flutter pub get
+      - run: dart analyze lib

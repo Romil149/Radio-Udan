@@ -1,0 +1,38 @@
+# Cloud agent: verify staging WordPress App API is reachable and complete.
+name: Staging API health
+
+on:
+  schedule:
+    - cron: '0 6,18 * * *' # 06:00 and 18:00 UTC daily
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/staging-api-smoke.sh'
+      - '.github/workflows/staging-api-health.yml'
+
+env:
+  STAGING_API_BASE: https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1
+
+jobs:
+  smoke:
+    name: Staging API smoke test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run staging-api-smoke.sh
+        run: bash scripts/staging-api-smoke.sh
+
+      - name: Extended route check
+        run: |
+          BASE="${{ env.STAGING_API_BASE }}"
+          for path in health config "events?status=open"; do
+            code=$(curl -sS -o /tmp/body.json -w "%{http_code}" "$BASE/$path")
+            echo "GET /$path → HTTP $code"
+            if [[ "$code" != "200" ]]; then
+              cat /tmp/body.json | head -c 500
+              exit 1
+            fi
+          done

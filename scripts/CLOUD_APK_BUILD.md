@@ -1,6 +1,10 @@
 # Build APK in the cloud (no Android Studio on your Mac)
 
-Use **GitHub Actions** to build the staging APK. Your phone only needs the downloaded APK — no USB, no local SDK.
+Use **GitHub Actions cloud agents** to build the staging APK. See **`CLOUD_AGENTS.md`** for the full agent roster.
+
+**Fastest path:** Actions → **Cloud — Full staging pipeline** → Run workflow → download APK artifact.
+
+Your phone only needs the downloaded APK — no USB, no local SDK.
 
 **Staging API baked into the build:**
 `https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1`

@@ -1,0 +1,88 @@
+# Cloud orchestrator: run all checks + staging APK in one manual click.
+name: Cloud — Full staging pipeline
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: cloud-full-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: 1/4 Flutter analyze
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: radio_udaan_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.44.1'
+          cache: true
+      - run: flutter pub get && dart analyze lib
+
+  php-lint:
+    name: 2/4 WP plugin PHP lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          PLUGIN="radio-udan-wordpresss-website/wp-content/plugins/radioudaan-app-api"
+          find "$PLUGIN" -name '*.php' -print0 | while IFS= read -r -d '' f; do php -l "$f" >/dev/null; done
+
+  staging-api:
+    name: 3/4 Staging API smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/staging-api-smoke.sh
+    continue-on-error: true # Report but don't block APK if staging WP not ready yet
+
+  build-apk:
+    name: 4/4 Build staging APK
+    needs: [analyze, php-lint]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: radio_udaan_app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.44.1'
+          cache: true
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('radio_udaan_app/android/**/*.gradle*', 'radio_udaan_app/android/**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - run: flutter precache --android
+      - run: yes | flutter doctor --android-licenses
+      - run: flutter pub get
+
+      - name: Build release APK
+        env:
+          STAGING_API_BASE_URL: https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1
+        run: |
+          flutter build apk --release \
+            --dart-define=API_BASE_URL=${STAGING_API_BASE_URL}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: radio-udan-full-pipeline-${{ github.sha }}
+          path: radio_udaan_app/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
