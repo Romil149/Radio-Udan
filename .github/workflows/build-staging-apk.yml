@@ -59,7 +59,12 @@ jobs:
         run: yes | flutter doctor --android-licenses
 
       - name: Install Android SDK 36
-        run: yes | sdkmanager "platforms;android-36" "build-tools;36.0.0"
+        run: |
+          SDKMANAGER="${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
+          fi
+          yes | "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
 
       - name: Install dependencies
         run: flutter pub get
