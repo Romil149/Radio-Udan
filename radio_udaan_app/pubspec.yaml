@@ -17,7 +17,7 @@ dependencies:
   shared_preferences: ^2.5.3
   just_audio: ^0.9.46
   audio_session: ^0.1.25
-  file_picker: ^11.0.2
+  file_picker: ^8.3.7
   youtube_player_iframe: ^5.2.1
   intl: ^0.20.2
   url_launcher: ^6.3.2
@@ -37,6 +37,9 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   http: ^1.4.0
+
+dependency_overrides:
+  flutter_plugin_android_lifecycle: 2.0.24
 
 flutter:
   uses-material-design: true
