@@ -1,0 +1,55 @@
+# Fast CI on every PR and push to main — complements Cursor Cloud Agents.
+name: CI analyze
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'radio_udaan_app/**'
+      - 'radio-udan-wordpresss-website/wp-content/plugins/radioudaan-app-api/**'
+  push:
+    branches: [main, master]
+    paths:
+      - 'radio_udaan_app/**'
+      - 'radio-udan-wordpresss-website/wp-content/plugins/radioudaan-app-api/**'
+
+jobs:
+  flutter-analyze:
+    name: Flutter analyze
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: radio_udaan_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.44.1'
+          cache: true
+      - run: flutter pub get
+      - run: dart analyze lib
+
+  php-lint:
+    name: PHP syntax (App API plugin)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint changed PHP files
+        run: |
+          set -euo pipefail
+          PLUGIN="radio-udan-wordpresss-website/wp-content/plugins/radioudaan-app-api"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+            HEAD="${{ github.event.pull_request.head.sha }}"
+            FILES=$(git diff --name-only "$BASE" "$HEAD" -- "$PLUGIN" | grep '\.php$' || true)
+          else
+            FILES=$(git diff --name-only HEAD~1 HEAD -- "$PLUGIN" 2>/dev/null | grep '\.php$' || find "$PLUGIN/includes" -name '*.php' | head -20)
+          fi
+          if [ -z "$FILES" ]; then
+            echo "No PHP files to lint"
+            exit 0
+          fi
+          for f in $FILES; do
+            php -l "$f"
+          done

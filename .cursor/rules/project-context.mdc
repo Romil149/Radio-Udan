@@ -1,0 +1,52 @@
+---
+description: "Auto-generated project context for Radio Udaan"
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Project: Radio Udaan
+
+**Workspace**: `/Users/nexus/Documents/Radio Udan`
+
+## Tech Stack
+| Layer | Technology |
+|----|-----|
+| Mobile | Flutter (Android + iOS) |
+| Backend/Admin | WordPress + Forminator (free) |
+| App API | Custom WP plugin (“App API”) exposing REST endpoints |
+| Auth | OTP (India), provider abstraction (MSG91 default; switchable) |
+
+## Non-negotiables (must not change)
+- **All registrations happen inside the app** (app-first).
+- **One Forminator form per event** in WordPress (strict 1:1 mapping).
+- App renders **dynamic form schemas** from the WP App API to minimize app updates.
+
+## Architecture (high level)
+- WP holds event content + Forminator forms.
+- Custom WP plugin exposes:
+  - events list/details
+  - per-event dynamic form schema (derived from Forminator)
+  - registration submission (stores entries; tags `source=app`)
+  - uploads endpoint (with server-driven constraints)
+  - OTP request/verify façade
+- Flutter app consumes API, renders schema-driven registration forms, and submits registrations in-app.
+
+## Key Product Rules
+- **One form per event**: each event is linked to a single Forminator form ID.
+- Every registration entry must be tagged with **`source=app`** (and optionally `source=web` later).
+- Upload constraints (types/sizes/count) should be **configurable in WP admin**, not hardcoded in the app.
+
+## Data source of truth
+- **Live WordPress DB** from `radio-udan-wordpresss-website/wp-config.php` — not `nexusfle_radio.sql` (archived dump only).
+
+## Store compliance (mandatory)
+- Read `.cursor/memory/store-compliance.md` before Flutter work and store releases.
+- No `READ_SMS` on Android; manual OTP only. No Sign in with Apple unless social logins added.
+- In-app account deletion, Privacy Policy link, YouTube embed (stream only, no download), background audio for radio.
+
+## Risk Areas to watch
+- OTP abuse/rate limiting and identity/session model
+- File upload abuse and PII handling (UDID cards, audio/video)
+- Logging/monitoring without leaking PII
+- Accessibility quality (TalkBack/VoiceOver) as a release blocker
+

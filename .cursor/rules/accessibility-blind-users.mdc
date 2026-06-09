@@ -1,0 +1,37 @@
+---
+description: "Radio Udaan is built for blind and low-vision users — accessibility is mandatory on every screen."
+globs: ["radio_udaan_app/**"]
+alwaysApply: true
+---
+
+# Accessibility-first (blind & low-vision users)
+
+Radio Udaan serves **people who are blind or have low vision**. TalkBack (Android) and VoiceOver (iOS) quality is a **release blocker**, not polish.
+
+## Every screen MUST
+
+1. **Semantics** — Meaningful `label` on every control; `header: true` on titles; `liveRegion: true` on errors and success.
+2. **Announcements** — Use `SemanticsService.sendAnnouncement` for submit results, validation errors, and upload progress.
+3. **Touch targets** — Minimum **56×56** logical pixels (Stitch: 56px+).
+4. **Labels outside fields** — Persistent labels above inputs (never floating-only). Required fields: spoken label includes “required”.
+5. **Icons paired with text** — Play, Save, lock, back: icon + text label or explicit `Semantics.label` (e.g. lock = “from your account, cannot edit”).
+6. **Contrast** — Udaan dark theme + `primaryGlow` borders; errors use text + message, not color alone.
+7. **Focus order** — Top-to-bottom: title → intro → fields → summary → submit.
+
+## Forms & registration
+
+- Pre-fill name/phone from account when possible; mark read-only fields clearly for screen readers.
+- Validation: announce first missing field and scroll it into view.
+- Uploads: announce progress % and completion by filename.
+
+## Do NOT
+
+- Rely on color-only state (badges, errors, selected).
+- Use icon-only buttons without accessibility labels.
+- Hide critical copy only in placeholders.
+- Ship placeholder “coming soon” on user-facing paths.
+
+## Before claiming done
+
+- Run `flutter analyze lib`.
+- Manually verify: each interactive control has a unique, descriptive TalkBack/VoiceOver label.

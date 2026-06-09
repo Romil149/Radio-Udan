@@ -32,4 +32,12 @@ radio-udan-wordpresss-website/wp-content/plugins/forminator/
 
 # Misc local
 build/
-.cursor/
+# Cursor: commit cloud-agent + team config; ignore local IDE cache
+.cursor/*
+!.cursor/environment.json
+!.cursor/rules/
+!.cursor/rules/**
+!.cursor/memory/
+!.cursor/memory/**
+!.cursor/agents/
+!.cursor/agents/**

@@ -1,0 +1,41 @@
+---
+description: "Max parallel sub-agents on Auto model for large Radio Udaan tasks"
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Max agents + Auto model (Radio Udaan)
+
+When the user says **go ahead**, **max agents**, or assigns a **multi-layer task** (WP plugin + Flutter, new tab/screen, API + UI):
+
+## Coordinator (parent)
+
+1. Read `.cursor/memory/*` and project rules first.
+2. Split into **parallel** Task sub-agents when work is independent.
+3. **Merge** sub-agent output; resolve conflicts; run smoke checks (`php -l`, `dart analyze lib`, curl key endpoints).
+4. Update `.cursor/memory/` when APIs or behavior change.
+5. Do **not** commit unless the user asks.
+
+## Sub-agents (Task tool)
+
+| Rule | Requirement |
+|------|-------------|
+| **Model** | **Always** `model: fast` (Cursor **Auto**). No sub-agent may use Opus/Sonnet/other unless the user **explicitly** names an allowed model slug. |
+| **Role** | Senior specialist (20+ years) in the task domain. |
+| **Rules** | Follow all workspace rules: coding-standards, performance, store-compliance, project-context, memory system. |
+| **Paths** | Absolute paths under `/Users/nexus/Documents/Radio Udan`. |
+| **Return** | Files changed, acceptance criteria pass/fail, verification commands run. |
+
+## Parallel split pattern (example: Library YouTube)
+
+| Agent | Owns |
+|-------|------|
+| WP `generalPurpose` | YouTube Data API proxy, REST routes, admin settings, transients |
+| Flutter `generalPurpose` | Library tab UI, playlists/search/player/bookmarks |
+| `shell` (optional) | `php -l`, `dart analyze`, curl smoke scripts |
+
+## Do not
+
+- Run sub-agents without `model: fast` on this project (user mandate).
+- Skip delegation for large UI+API features.
+- Assume sub-agent work is merged — parent verifies in repo.

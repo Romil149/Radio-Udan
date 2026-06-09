@@ -1,0 +1,4 @@
+{
+  "install": "cd radio_udaan_app && flutter pub get",
+  "terminals": []
+}

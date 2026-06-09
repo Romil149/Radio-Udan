@@ -1,0 +1,28 @@
+---
+description: "Fast loading and performance standards for Radio Udaan WP + Flutter"
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Performance (Radio Udaan)
+
+## WordPress App API
+
+- **`GET /config`** must use transient cache (`RadioUdaan_App_Config`, 5 min) + `Cache-Control: public, max-age=300`.
+- Call `RadioUdaan_App_Config::invalidate_cache()` after any settings/branding save.
+- Avoid redundant `get_option()` loops on admin render (use placeholders, not full `get_public_copy()` unless needed).
+- Admin JS/CSS only on plugin screens (`RadioUdaan_Admin_Assets`).
+
+## Flutter app
+
+- **Stale-while-revalidate**: load `ConfigCacheStorage` before network; show branded UI immediately.
+- **Parallel bootstrap**: when logged in, fetch `/config` and `/auth/me` together.
+- **HTTP**: reuse `ApiClient` (`ref.keepAlive()`); reasonable timeouts (12s connect / 20s receive).
+- **Images**: `CachedNetworkImage` for logo with `memCacheHeight` / disk cache limits.
+- **Tabs**: `IndexedStack` + `RepaintBoundary` per tab to limit repaints.
+- **Lists**: prefer `ListView.builder` / pagination for large data sets.
+
+## Before claiming “optimized”
+
+- Confirm `GET /config` responds quickly on repeat requests (cache hit).
+- Run `flutter analyze` after perf changes.

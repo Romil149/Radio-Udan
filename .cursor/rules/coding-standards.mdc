@@ -1,0 +1,34 @@
+---
+description: Production code style — maintainable, human-written Radio Udaan code
+globs: ["**/*.dart", "radio-udan-wordpresss-website/wp-content/plugins/radioudaan-app-api/**/*.php"]
+alwaysApply: true
+---
+
+# Coding standards (Radio Udaan)
+
+## Intent
+All code should look like it was written and maintained by the same engineering team — clear structure, restrained comments, no AI filler.
+
+## Comments
+- **File header**: one or two lines on what the module owns (Dart `///` doc on library/class; PHP `@package` block where the plugin already uses it).
+- **Inline**: only for non-obvious behaviour — WordPress/Forminator contract, store-policy constraints, why a catch is swallowed, rate limits.
+- Do **not** narrate obvious code (`// increment counter`). Do **not** leave commented-out blocks or bare `TODO` without context.
+
+## Flutter (`radio_udaan_app/`)
+- Product copy → `lib/core/constants/app_strings.dart`.
+- Client metadata (version, platform) → `lib/core/constants/app_constants.dart` (keep version aligned with `pubspec.yaml`).
+- REST errors → `parseApiError()` in `lib/core/network/dio_exception_mapper.dart`; UI shows `ApiError.message`.
+- Debug-only UI (API base URL, dev hints) → wrap in `kDebugMode`.
+- Accessibility: `Semantics` on controls; `liveRegion: true` for errors and success messages.
+- Split large screens into `widgets/` when a file grows past ~300 lines of UI logic.
+
+## WordPress plugin (`radioudaan-app-api/`)
+- Match existing style: `defined( 'ABSPATH' ) || exit`, `WP_REST_Response` / `WP_Error`, text domain `radioudaan-app-api`.
+- PHPDoc on public REST handlers and settings helpers.
+- Log with `RadioUdaan_App_Logger`; never log phone numbers, OTP, or file paths with PII in production.
+
+## Avoid
+- Hardcoding Forminator fields or upload limits in the app.
+- `READ_SMS` or broad storage permissions on Android.
+- One-off “helper” classes used in a single place.
+- Placeholder user strings (“coming soon”) on paths users can reach before release.

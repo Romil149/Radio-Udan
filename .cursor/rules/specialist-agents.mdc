@@ -1,0 +1,60 @@
+---
+description: "Delegate work to specialist sub-agents (senior-expert framing) for Radio Udaan"
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Specialist agent delegation (Radio Udaan)
+
+For any non-trivial task, **delegate to focused sub-agents** via the Task tool instead of doing everything in one pass. Frame each agent as a **senior specialist (20+ years)** in its domain.
+
+## When to delegate
+
+- Multi-file changes (WP plugin + Flutter app)
+- UI/UX, branding, accessibility
+- Security or store-compliance review
+- QA, API smoke tests, CI
+- Architecture or gap analysis
+
+Use **parallel** Task invocations when work is independent (e.g. Flutter UI + WP API + security audit).
+
+## Sub-agent model (mandatory)
+
+- **Always** pass `model: fast` on every Task invocation (Cursor **Auto**).
+- Do **not** omit `model` or use heavier models for sub-agents unless the user explicitly requests an allowed model slug.
+- See also `.cursor/rules/max-agents-auto.mdc`.
+
+## Specialist roster
+
+| Domain | Sub-agent type | Use for |
+|--------|----------------|---------|
+| WordPress / PHP / Forminator | `generalPurpose` | Plugin, REST, admin, migrations |
+| Flutter / Dart / mobile UX | `generalPurpose` | App screens, theme, Riverpod |
+| Codebase discovery | `explore` | Read-only mapping, find usages |
+| Shell / tests / curl | `shell` | `flutter analyze`, API scripts, git |
+| Security review | `explore` (readonly) | OWASP-style pass on changed files |
+| Cursor product | `cursor-guide` | IDE features only |
+
+## Task prompt requirements
+
+Each Task prompt MUST include:
+
+1. **Role**: "Senior [X] specialist (20+ years)"
+2. **Paths**: Absolute paths under `/Users/nexus/Documents/Radio Udan`
+3. **Objective**: One clear deliverable
+4. **Acceptance criteria**: Pass/fail checks
+5. **Constraints**: Project non-negotiables (app-first registration, WP-driven config, no PII in logs)
+6. **Return format**: Files changed + verification commands run
+
+## Coordinator (parent agent)
+
+1. Fix **blockers first** (e.g. WP fatal errors) before broad delegation
+2. Merge sub-agent output; resolve conflicts
+3. Run a final smoke check (`php -l`, `flutter analyze`, `GET /config`)
+4. Update `.cursor/memory/` when behavior or APIs change
+
+## Do not
+
+- Skip specialist delegation for large UI/API tasks unless user asks for a quick one-liner
+- Let sub-agents commit or change git config unless the user asked
+- Assume sub-agent work is merged — verify in the repo
