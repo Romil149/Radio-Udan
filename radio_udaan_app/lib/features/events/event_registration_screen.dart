@@ -563,7 +563,7 @@ class _EventRegistrationScreenState
   }
 
   Future<void> _pickFile(FormFieldSchema field, FormSchema schema) async {
-    final result = await FilePicker.platform.pickFiles(withData: false);
+    final result = await FilePicker.pickFiles(withData: false);
     if (result == null || result.files.isEmpty) return;
     final file = result.files.single;
     if (file.path == null) return;
