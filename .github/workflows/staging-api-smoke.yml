@@ -1,0 +1,22 @@
+# Daily staging API health check (no Mac required).
+name: Staging API smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 06:30 UTC ≈ 12:00 IST — adjust in GitHub if needed
+    - cron: '30 6 * * *'
+
+env:
+  STAGING_API_BASE: https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1
+
+jobs:
+  smoke:
+    name: Staging API gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run staging smoke script
+        run: bash scripts/staging-api-smoke.sh
