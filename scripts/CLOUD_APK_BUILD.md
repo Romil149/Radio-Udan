@@ -34,6 +34,12 @@ git push -u origin main
 
 If `origin` already exists: `git remote set-url origin git@github.com:Romil149/Radio-Udan.git`
 
+**GPG signing error?** If commit fails with `gpg failed to sign`, use one commit without signing (does not change your git config):
+
+```bash
+git commit --no-gpg-sign -m "Your message"
+```
+
 **Important:** Do not commit `wp-config.php` passwords, FCM service account JSON, or `.env` files with secrets. `google-services.json` is OK (already in the app repo for team builds).
 
 ### 3. Enable GitHub Actions

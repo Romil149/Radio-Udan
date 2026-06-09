@@ -35,7 +35,24 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: '3.44.1'
           cache: true
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('radio_udaan_app/android/**/*.gradle*', 'radio_udaan_app/android/**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Precache Android tooling
+        run: flutter precache --android
+
+      - name: Accept Android SDK licenses
+        run: yes | flutter doctor --android-licenses
 
       - name: Install dependencies
         run: flutter pub get

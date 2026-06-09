@@ -1,8 +1,6 @@
-gradle-wrapper.jar
+# Gradle wrapper scripts/jar must stay in git for CI (flutter build apk).
 /.gradle
 /captures/
-/gradlew
-/gradlew.bat
 /local.properties
 GeneratedPluginRegistrant.java
 .cxx/
