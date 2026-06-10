@@ -10,6 +10,9 @@ on:
       - 'radio_udaan_app/**'
       - '.github/workflows/build-staging-apk.yml'
 
+permissions:
+  contents: write
+
 env:
   STAGING_API_BASE_URL: https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1
 
@@ -72,6 +75,24 @@ jobs:
           path: radio_udaan_app/build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
           if-no-files-found: error
+
+      - name: Publish downloadable staging release
+        if: github.ref == 'refs/heads/main'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: staging-apk
+          name: Radio Udaan Staging APK
+          body: |
+            Latest staging test build (commit ${{ github.sha }}).
+            API baked in: ${{ env.STAGING_API_BASE_URL }}
+            Uninstall any older APK on your phone before installing this one.
+          artifacts: radio_udaan_app/build/app/outputs/flutter-apk/app-release.apk
+          artifactContentType: application/vnd.android.package-archive
+          allowUpdates: true
+          replacesArtifacts: true
+          removeArtifacts: true
+          makeLatest: false
+          prerelease: true
 
       - name: Build summary
         run: |
