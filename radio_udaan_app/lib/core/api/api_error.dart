@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../constants/app_strings.dart';
 /// User-facing API failure with optional WordPress error code and HTTP status.
 class ApiError implements Exception {
   ApiError({
@@ -12,10 +13,15 @@ class ApiError implements Exception {
     required int? statusCode,
     required Map<String, dynamic>? body,
   }) {
-    final message = body?['message']?.toString() ??
+    final code = body?['code']?.toString();
+    var message = body?['message']?.toString() ??
         body?['data']?['message']?.toString() ??
         'Something went wrong. Please try again.';
-    final code = body?['code']?.toString();
+
+    if (code == 'youtube_not_configured') {
+      message = AppStrings.libraryYoutubeNotConfigured;
+    }
+
     return ApiError(message: message, code: code, statusCode: statusCode);
   }
 

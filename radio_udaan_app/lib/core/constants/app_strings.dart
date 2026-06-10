@@ -260,6 +260,8 @@ abstract final class AppStrings {
   static const String radioPlaying = 'Live radio is playing';
   static const String radioStopped = 'Live radio stopped';
   static const String radioPlaybackError = 'Could not play live radio';
+  static const String radioAudioUnavailable =
+      'Live radio playback is not ready on this device. Close and reopen the app, then try Play again.';
   static const String radioStreamMissing =
       'Stream URL is not configured on the server.';
   static const String radioVolume = 'Volume';
@@ -390,6 +392,8 @@ abstract final class AppStrings {
       'This playlist has no videos yet.';
   static const String libraryRecentUploads = 'Recent Uploads';
   static const String libraryRecentUploadsEmpty = 'No recent uploads yet.';
+  static const String libraryYoutubeNotConfigured =
+      'Video library is not set up on the server yet. Radio Udaan staff need to add a YouTube API key in WordPress admin.';
   static const String librarySaveVideo = 'Save';
   static const String librarySavedVideo = 'Saved';
   static const String libraryVideoSaved = 'Video saved';
@@ -403,6 +407,9 @@ abstract final class AppStrings {
       'No description available for this video.';
   static const String libraryNoVideo =
       'This video cannot be played in the app right now.';
+  static const String libraryEmbedError =
+      'This video could not play inside the app. Try opening it in YouTube.';
+  static const String libraryOpenInYoutube = 'Open in YouTube';
   static const String libraryUploadedJustNow = 'Just now';
   static const String libraryUploadedMinuteAgo = '1 minute ago';
   static String libraryUploadedMinutesAgo(int minutes) => '$minutes minutes ago';

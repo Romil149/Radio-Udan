@@ -1,5 +1,12 @@
 # Task History
 
+### 2026-06-05 — Cursor Cloud Agent setup (message-only workflow)
+**Requested by**: User (automate everything via messaging)
+**What was done**: Pushed `AGENTS.md`, `CLOUD_OPERATIONS.md`, `.cursor/environment.json`, `ci-analyze.yml`, and version-controlled `.cursor/rules|memory|agents` to `main`. GitHub already connected as Romil149. Created cloud environment for `Romil149/Radio-Udan` and started dashboard setup agent (~20 min). Updated `.gitignore` to allow team `.cursor` config.
+**Files changed**: `AGENTS.md`, `CLOUD_OPERATIONS.md`, `.cursor/environment.json`, `.github/workflows/ci-analyze.yml`, `.gitignore`, `.cursor/**`
+**Status**: ⚠️ Partial — Slack connected (Nexusfleck); branch default=`main` set; environment still Unconfigured until user clicks Save on setup agent
+**Notes**: Invite `/invite @cursor` in Slack channel. Test: `@cursor Read AGENTS.md. Run dart analyze lib`. See CLOUD_OPERATIONS.md Part B Option 3.
+
 ### 2026-06-05 — TalkBack / VoiceOver full audit + fixes
 **Requested by**: User (max agents; blind/low-vision users must use app easily)
 **What was done**: 4 parallel a11y audits (auth, more/shell, events, radio/library). Implemented Critical+High fixes: required field semantics, header landmarks, liveRegion on errors, sendAnnouncement for playback/validation/save, 56dp tap targets, locked account fields, switch/chip semantics dedup, notification read/unread labels, radio/library state announcements, nested button fixes on video cards.

@@ -27,11 +27,21 @@ final radioPlayerProvider =
 
 class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
   RadioPlayerNotifier(this._ref) : super(const RadioPlayerState()) {
-    _bindPlayerStateStream();
+    if (isRadioAudioServiceReady) {
+      attachPlayerIfReady();
+    }
   }
 
   final Ref _ref;
   bool _startInProgress = false;
+  bool _playerBound = false;
+
+  /// Binds just_audio streams after [ensureRadioAudioService] succeeds.
+  void attachPlayerIfReady() {
+    if (_playerBound || !isRadioAudioServiceReady) return;
+    _playerBound = true;
+    _bindPlayerStateStream();
+  }
 
   void _bindPlayerStateStream() {
     _ref.listen<LiveNowPlaying>(liveNowPlayingProvider, (previous, next) {
@@ -87,6 +97,16 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
   }
 
   Future<void> play() async {
+    final ready = await ensureRadioAudioService();
+    if (!ready) {
+      state = const RadioPlayerState(
+        status: RadioPlayerStatus.error,
+        errorMessage: AppStrings.radioAudioUnavailable,
+      );
+      return;
+    }
+    attachPlayerIfReady();
+
     final url = _ref.read(remoteConfigProvider)?.streamUrl ?? '';
     if (url.isEmpty) {
       state = const RadioPlayerState(
@@ -135,7 +155,7 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
     } catch (e) {
       state = RadioPlayerState(
         status: RadioPlayerStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: AppStrings.radioPlaybackError,
       );
     } finally {
       _startInProgress = false;
@@ -144,11 +164,17 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
 
   Future<void> stop() async {
     _startInProgress = false;
+    if (!isRadioAudioServiceReady) {
+      state = const RadioPlayerState(status: RadioPlayerStatus.idle);
+      return;
+    }
     await radioAudioHandler.stop();
     state = const RadioPlayerState(status: RadioPlayerStatus.idle);
   }
 
   void _syncNowPlayingMetadata(LiveNowPlaying nowPlaying) {
+    if (!isRadioAudioServiceReady) return;
+
     final copy = _ref.read(appCopyProvider);
     final branding = _ref.read(appBrandingProvider);
     final artist = nowPlaying.hostsLine.isNotEmpty

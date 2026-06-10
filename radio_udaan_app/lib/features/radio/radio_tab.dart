@@ -34,10 +34,15 @@ class _RadioTabState extends ConsumerState<RadioTab> {
   @override
   void initState() {
     super.initState();
-    try {
-      _volume = radioAudioHandler.player.volume;
-    } catch (_) {
-      _volume = 1.0;
+    _initAudio();
+  }
+
+  Future<void> _initAudio() async {
+    final ready = await ensureRadioAudioService();
+    if (!mounted) return;
+    if (ready) {
+      ref.read(radioPlayerProvider.notifier).attachPlayerIfReady();
+      setState(() => _volume = radioAudioHandler.player.volume);
     }
   }
 
