@@ -38,6 +38,149 @@ class RadioUdaan_App_Users {
 	}
 
 	/**
+	 * @return bool True when the app users table exists with required columns.
+	 */
+	public static function schema_ready() {
+		if ( ! self::table_exists() ) {
+			return false;
+		}
+
+		global $wpdb;
+
+		$table = self::table_name();
+		$required = array(
+			'id',
+			'display_name',
+			'email',
+			'phone_e164',
+			'password_hash',
+			'phone_verified',
+			'email_verified',
+			'status',
+			'login_count',
+			'created_at',
+			'updated_at',
+		);
+
+		foreach ( $required as $column ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$found = $wpdb->get_results( $wpdb->prepare( "SHOW COLUMNS FROM {$table} LIKE %s", $column ) );
+			if ( empty( $found ) ) {
+				return false;
+			}
+		}
+
+		return self::primary_key_auto_increments();
+	}
+
+	/**
+	 * @return bool
+	 */
+	public static function primary_key_auto_increments() {
+		global $wpdb;
+
+		$table = self::table_name();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$id_col = $wpdb->get_row( "SHOW COLUMNS FROM {$table} LIKE 'id'", ARRAY_A );
+		if ( empty( $id_col ) ) {
+			return false;
+		}
+
+		$extra = isset( $id_col['Extra'] ) ? (string) $id_col['Extra'] : '';
+
+		return false !== stripos( $extra, 'auto_increment' );
+	}
+
+	/**
+	 * @return int
+	 */
+	public static function row_count() {
+		if ( ! self::table_exists() ) {
+			return 0;
+		}
+
+		global $wpdb;
+
+		$table = self::table_name();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
+	}
+
+	/**
+	 * Drop and recreate the table when it is empty but structurally invalid.
+	 *
+	 * @return bool
+	 */
+	public static function repair_schema_if_empty() {
+		if ( self::schema_ready() ) {
+			return true;
+		}
+
+		if ( self::row_count() > 0 ) {
+			RadioUdaan_App_Logger::log( 'app_users_schema_broken_nonempty', array() );
+			return false;
+		}
+
+		self::drop_table();
+		delete_option( self::DB_VERSION_OPTION );
+		delete_option( self::COLUMN_VERSION_OPTION );
+		self::maybe_create_table();
+		self::maybe_migrate_columns();
+
+		return self::schema_ready();
+	}
+
+	/**
+	 * Remove the app users table.
+	 */
+	public static function drop_table() {
+		if ( ! self::table_exists() ) {
+			return;
+		}
+
+		global $wpdb;
+
+		$table = self::table_name();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.DirectQuery
+		$wpdb->query( "DROP TABLE IF EXISTS {$table}" );
+	}
+
+	/**
+	 * @return bool True when the physical table exists.
+	 */
+	public static function table_exists() {
+		global $wpdb;
+
+		$table = self::table_name();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$found = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
+
+		return $found === $table;
+	}
+
+	/**
+	 * Create or repair schema when options say "installed" but the table is missing.
+	 *
+	 * @return bool
+	 */
+	public static function ensure_schema() {
+		if ( ! self::table_exists() || ! self::schema_ready() ) {
+			delete_option( self::DB_VERSION_OPTION );
+			delete_option( self::COLUMN_VERSION_OPTION );
+		}
+
+		self::maybe_create_table();
+		self::maybe_migrate_columns();
+		self::repair_schema_if_empty();
+
+		return self::schema_ready();
+	}
+
+	/**
 	 * Create or migrate table.
 	 */
 	public static function maybe_create_table() {
@@ -128,31 +271,94 @@ class RadioUdaan_App_Users {
 	 * @return int|false User id.
 	 */
 	public static function create_pending( array $data ) {
-		self::maybe_create_table();
+		if ( ! self::ensure_schema() ) {
+			RadioUdaan_App_Logger::log( 'app_users_schema_unavailable', array() );
+			return false;
+		}
+
+		$user_id = self::insert_pending_row( $data );
+		if ( $user_id > 0 ) {
+			return $user_id;
+		}
+
+		if ( self::repair_schema_if_empty() ) {
+			$user_id = self::insert_pending_row( $data );
+			if ( $user_id > 0 ) {
+				return $user_id;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * @param array{display_name:string,email:string,phone_e164:string,password_hash:string} $data User fields.
+	 * @return int Inserted user id, or 0 on failure.
+	 */
+	private static function insert_pending_row( array $data ) {
+		self::maybe_migrate_columns();
 
 		global $wpdb;
 
 		$now = current_time( 'mysql', true );
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-		$ok = $wpdb->insert(
-			self::table_name(),
-			array(
-				'display_name'  => $data['display_name'],
-				'email'         => strtolower( sanitize_email( $data['email'] ) ),
-				'phone_e164'    => $data['phone_e164'],
-				'password_hash' => $data['password_hash'],
-				'phone_verified' => 0,
-				'email_verified' => 0,
-				'status'        => self::STATUS_PENDING,
-				'login_count'   => 0,
-				'created_at'    => $now,
-				'updated_at'    => $now,
-			),
-			array( '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%d', '%s', '%s' )
+		$row = array(
+			'display_name'   => $data['display_name'],
+			'email'          => strtolower( sanitize_email( $data['email'] ) ),
+			'phone_e164'     => $data['phone_e164'],
+			'password_hash'  => $data['password_hash'],
+			'phone_verified' => 0,
+			'email_verified' => 0,
+			'status'         => self::STATUS_PENDING,
+			'login_count'    => 0,
+			'created_at'     => $now,
+			'updated_at'     => $now,
 		);
 
-		return $ok ? (int) $wpdb->insert_id : false;
+		$format = array( '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%d', '%s', '%s' );
+
+		if ( self::column_exists( 'avatar_attachment_id' ) ) {
+			$row['avatar_attachment_id'] = 0;
+			$format[]                    = '%d';
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+		$ok = $wpdb->insert( self::table_name(), $row, $format );
+
+		if ( ! $ok || (int) $wpdb->insert_id <= 0 ) {
+			RadioUdaan_App_Logger::log(
+				'app_users_insert_failed',
+				array(
+					'db_error'   => sanitize_text_field( (string) $wpdb->last_error ),
+					'insert_ok'  => (bool) $ok,
+					'insert_id'  => (int) $wpdb->insert_id,
+					'auto_inc'   => self::primary_key_auto_increments(),
+					'row_count'  => self::row_count(),
+				)
+			);
+			return 0;
+		}
+
+		return (int) $wpdb->insert_id;
+	}
+
+	/**
+	 * @param string $column Column name.
+	 * @return bool
+	 */
+	private static function column_exists( $column ) {
+		if ( ! self::table_exists() ) {
+			return false;
+		}
+
+		global $wpdb;
+
+		$table = self::table_name();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$found = $wpdb->get_results( $wpdb->prepare( "SHOW COLUMNS FROM {$table} LIKE %s", $column ) );
+
+		return ! empty( $found );
 	}
 
 	/**

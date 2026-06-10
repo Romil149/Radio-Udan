@@ -44,10 +44,10 @@ echo ""
 
 echo "== GET /health =="
 HC="$(/usr/bin/curl -sS -o /tmp/ru-health.json -w "%{http_code}" "$STAGING_BASE/health")"
-if [[ "$HC" == "200" ]] && /usr/bin/python3 -c "import json; d=json.load(open('/tmp/ru-health.json')); assert d.get('status')=='ok'"; then
+if [[ "$HC" == "200" ]] && /usr/bin/python3 -c "import json; d=json.load(open('/tmp/ru-health.json')); assert d.get('status')=='ok'; c=d.get('checks',{}); assert c.get('app_users_table') is True; assert c.get('app_users_auto_inc') is True"; then
   ok "GET /health"
 else
-  bad "GET /health (HTTP $HC)"
+  bad "GET /health (HTTP $HC or app users DB not ready)"
 fi
 
 echo "== GET /config =="
@@ -58,18 +58,31 @@ d = json.load(open("/tmp/ru-config.json"))
 assert d.get("branding", {}).get("app_name"), "branding.app_name"
 assert d.get("stream_url"), "stream_url"
 assert d.get("api_base_url", "").startswith("https://"), "api_base_url https"
-support = d.get("support") or {}
-if not (support.get("helpline_phone") or support.get("email")):
-    sys.exit("support helpline/email empty — set in WP Admin → Radio Udaan App")
+support = d.get("support")
+if not support or not (support.get("helpline_phone") or support.get("email")):
+    sys.exit("support helpline/email empty — set in WP Admin")
 legal = d.get("legal") or {}
-privacy = legal.get("privacy_policy_url") or d.get("privacy_policy_url")
-if not privacy or not str(privacy).startswith("https://"):
-    sys.exit("privacy_policy_url missing — set in WP Admin")
+if not legal.get("privacy_policy_url"):
+    sys.exit("legal.privacy_policy_url missing — set in WP Admin")
 PY
 then
   ok "GET /config"
 else
   bad "GET /config (HTTP $CC or missing support/legal)"
+fi
+
+echo "== POST /auth/register (app accounts DB) =="
+STAMP="$(date +%s)"
+REG_PHONE="+919${STAMP: -9}"
+REG_EMAIL="smoke-${STAMP}@example.com"
+REG_BODY="$(/usr/bin/curl -sS -X POST "$STAGING_BASE/auth/register" \
+  -H 'Content-Type: application/json' \
+  -d "{\"name\":\"Smoke Test\",\"email\":\"$REG_EMAIL\",\"phone_e164\":\"$REG_PHONE\",\"password\":\"TestPass123\"}")"
+if echo "$REG_BODY" | /usr/bin/python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('needs_phone_verification') is True or d.get('status')=='pending_phone_verification'"; then
+  ok "POST /auth/register"
+else
+  MSG="$(echo "$REG_BODY" | /usr/bin/python3 -c "import json,sys; print(json.load(sys.stdin).get('message','unknown'))" 2>/dev/null || echo "$REG_BODY")"
+  bad "POST /auth/register ($MSG)"
 fi
 
 echo "== GET /events?status=open =="

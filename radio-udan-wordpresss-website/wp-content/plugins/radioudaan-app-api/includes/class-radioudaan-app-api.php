@@ -520,12 +520,20 @@ final class RadioUdaan_App_Api {
 	 * @return WP_REST_Response
 	 */
 	public function health() {
+		$app_users_ok = RadioUdaan_App_Users::ensure_schema();
+		$auto_inc     = $app_users_ok && RadioUdaan_App_Users::primary_key_auto_increments();
+
 		return new WP_REST_Response(
 			array(
-				'status'  => 'ok',
+				'status'  => ( $app_users_ok && $auto_inc ) ? 'ok' : 'degraded',
 				'version' => RADIOUDAAN_APP_API_VERSION,
+				'checks'  => array(
+					'app_users_table'        => $app_users_ok,
+					'app_users_auto_inc'     => $auto_inc,
+					'app_users_row_count'    => RadioUdaan_App_Users::row_count(),
+				),
 			),
-			200
+			( $app_users_ok && $auto_inc ) ? 200 : 503
 		);
 	}
 

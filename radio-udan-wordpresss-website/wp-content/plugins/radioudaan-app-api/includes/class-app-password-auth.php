@@ -68,6 +68,14 @@ class RadioUdaan_App_Password_Auth {
 		);
 
 		if ( ! $user_id ) {
+			if ( ! RadioUdaan_App_Users::schema_ready() ) {
+				return new WP_Error(
+					'app_users_table_missing',
+					__( 'Registration is temporarily unavailable on the server. Please try again in a few minutes or contact Radio Udaan support.', 'radioudaan-app-api' ),
+					array( 'status' => 503 )
+				);
+			}
+
 			return new WP_Error( 'register_failed', __( 'Could not create account.', 'radioudaan-app-api' ), array( 'status' => 500 ) );
 		}
 
