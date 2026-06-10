@@ -5,7 +5,11 @@ name: Build staging APK
 on:
   workflow_dispatch:
   push:
-    branches: [main, master, staging]
+    branches:
+      - main
+      - master
+      - staging
+      - 'cursor/**'
     paths:
       - 'radio_udaan_app/**'
       - '.github/workflows/build-staging-apk.yml'
@@ -15,7 +19,7 @@ env:
 
 jobs:
   build-android:
-    name: Android release APK (staging API)
+    name: Android tester APK (staging API)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -54,27 +58,36 @@ jobs:
       - name: Accept Android SDK licenses
         run: yes | flutter doctor --android-licenses
 
+      - name: Install Android SDK 36
+        run: |
+          SDKMANAGER="${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
+          fi
+          yes | "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
+
       - name: Install dependencies
         run: flutter pub get
 
       - name: Analyze (fail fast)
         run: dart analyze lib
 
-      - name: Build release APK
+      - name: Build tester APK
         run: |
-          flutter build apk --release \
-            --dart-define=API_BASE_URL=${{ env.STAGING_API_BASE_URL }}
+          DART_DEFINE="$(printf 'API_BASE_URL=%s' "${STAGING_API_BASE_URL}" | base64 -w0)"
+          ./android/gradlew -p android --no-daemon --no-watch-fs assembleDebug \
+            -Pdart-defines="$DART_DEFINE"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: radio-udan-staging-${{ github.sha }}
-          path: radio_udaan_app/build/app/outputs/flutter-apk/app-release.apk
+          name: radio-udan-staging-debug-${{ github.sha }}
+          path: build/app/outputs/apk/debug/app-debug.apk
           retention-days: 30
           if-no-files-found: error
 
       - name: Build summary
         run: |
-          APK="build/app/outputs/flutter-apk/app-release.apk"
+          APK="../build/app/outputs/apk/debug/app-debug.apk"
           ls -lh "$APK"
           echo "API_BASE_URL=${{ env.STAGING_API_BASE_URL }}"
