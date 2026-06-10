@@ -17,15 +17,27 @@ import '../providers/app_providers.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
+/// Notifies [GoRouter] to re-run redirects without recreating the router.
+final _routerRefreshProvider = Provider<RouterRefreshNotifier>((ref) {
+  final notifier = RouterRefreshNotifier();
+  ref.onDispose(notifier.dispose);
+  ref.listen(authTokenProvider, (_, _) => notifier.refresh());
+  ref.listen(authUserProvider, (_, _) => notifier.refresh());
+  ref.listen(remoteConfigProvider, (_, _) => notifier.refresh());
+  return notifier;
+});
+
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authToken = ref.watch(authTokenProvider);
-  final authUser = ref.watch(authUserProvider);
-  final config = ref.watch(remoteConfigProvider);
+  final refresh = ref.watch(_routerRefreshProvider);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
+    refreshListenable: refresh,
     initialLocation: '/bootstrap',
     redirect: (context, state) {
+      final authToken = ref.read(authTokenProvider);
+      final authUser = ref.read(authUserProvider);
+      final config = ref.read(remoteConfigProvider);
       final path = state.matchedLocation;
       final loggedIn = authToken != null && authToken.isNotEmpty;
       final user = authUser;
@@ -135,6 +147,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+class RouterRefreshNotifier extends ChangeNotifier {
+  void refresh() => notifyListeners();
+}
 
 bool _isAuthRoute(String path) {
   return path == '/login' ||

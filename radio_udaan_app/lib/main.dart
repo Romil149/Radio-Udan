@@ -8,7 +8,11 @@ import 'features/radio/radio_audio_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await PushNotificationService.ensureFirebase();
-  await initRadioAudioService();
+  try {
+    await initRadioAudioService();
+  } catch (e, st) {
+    debugPrint('Radio audio service init deferred: $e\n$st');
+  }
   runApp(
     const ProviderScope(
       child: RadioUdaanApp(),

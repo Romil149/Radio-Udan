@@ -60,7 +60,13 @@ class _BootstrapScreenState extends ConsumerState<BootstrapScreen> {
       body: bootstrap.when(
         data: (result) {
           _navigate(result);
-          return const SizedBox.shrink();
+          // Keep splash visible until navigation completes (avoids black flash).
+          if (_navigated) return const SizedBox.shrink();
+          return SplashBody(
+            branding: branding,
+            statusMessage: copy.bootstrapLoading,
+            showLoading: true,
+          );
         },
         loading: () => SplashBody(
           branding: branding,
