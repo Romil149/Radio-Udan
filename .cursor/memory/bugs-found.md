@@ -12,7 +12,7 @@
 | BUG-014 | 🟠 High | `class-rate-limiter.php` | Rate limits trusted spoofable `X-Forwarded-For` | Multi-agent audit | Fixed (REMOTE_ADDR default; proxy opt-in) |
 | BUG-006 | 🔴 Critical | `radio_player_controller.dart` / `MainActivity.kt` | Live radio failed on Android — `AudioService.init` failed because `MainActivity` did not extend `AudioServiceActivity` | User report | Fixed: `AudioServiceActivity` + init retry + just_audio fallback |
 | BUG-007 | 🟡 Medium | Staging WP YouTube settings | Library playlists/videos return 503 `youtube_not_configured` — no API key on staging | User report | Fixed (WP admin key added) |
-| BUG-008 | 🔴 Critical | `library_player_screen.dart` | YouTube iframe showed "Video unavailable" — WebView mounted only after tap, before player init | User report | Fixed (pending rebuild) | `browser_fill` on phone field sometimes does not update Flutter state (validation: “10-digit” while field looks filled). Workaround: click field → fill → Enter. “Verify and continue” needs bottom button click or semantics tree; Enter alone unreliable on OTP screen. | Agent 12 (IDE browser) | Open |
+| BUG-008 | 🔴 Critical | `library_player_screen.dart` | Tap to play did nothing on Android — WebView under poster stole touches / wrong embed origin | User report | Fixed: defer WebView until tap; loadVideoById+autoPlay; retry button |
 | BUG-004 | 🟢 Low | `go_router` | Direct URL `#/events` fails (`no routes for location: /events`); tabs are shell-only (`/`). | Agent 12 | Open (by design) |
 | BUG-001 | 🟡 Medium | `.cursor/agents/README.md` | README referenced non-existent `agent-03-wp-app-api.md` (fixed) | Developer | Closed |
 

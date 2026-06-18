@@ -88,11 +88,15 @@ class LibraryVideoCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            InkWell(
-              onTap: () => _openPlayer(context),
-              child: _Thumbnail(
-                title: video.title,
-                thumbnailUrl: thumbnailUrl,
+            Semantics(
+              button: true,
+              label: '${AppStrings.libraryPlayVideo}, ${video.title}',
+              child: InkWell(
+                onTap: () => _openPlayer(context),
+                child: _Thumbnail(
+                  title: video.title,
+                  thumbnailUrl: thumbnailUrl,
+                ),
               ),
             ),
             Padding(
@@ -239,9 +243,7 @@ class _Thumbnail extends StatelessWidget {
           else
             const _ThumbnailPlaceholder(),
           Center(
-            child: Semantics(
-              button: true,
-              label: '${AppStrings.libraryPlayVideo}, $title',
+            child: ExcludeSemantics(
               child: Container(
                 width: 56,
                 height: 56,
