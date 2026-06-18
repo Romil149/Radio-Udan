@@ -71,6 +71,9 @@ function radioudaan_app_api_init() {
 	RadioUdaan_Entry_Source::init();
 	RadioUdaan_Event_Sync::init();
 	RadioUdaan_Otp_Msg91::init();
+	if ( class_exists( 'RadioUdaan_Admin_App_Hub', false ) ) {
+		add_action( 'admin_post_radioudaan_save_app_settings', array( 'RadioUdaan_Admin_App_Hub', 'handle_save_settings' ) );
+	}
 	if ( is_admin() ) {
 		if ( class_exists( 'RadioUdaan_Admin_App_Hub', false ) ) {
 			RadioUdaan_Admin_App_Hub::init();

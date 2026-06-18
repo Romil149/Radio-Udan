@@ -250,8 +250,7 @@ abstract final class AppStrings {
   static const String radioShowTitle = 'Udaan Morning Show';
   static const String radioShowSubtitle = 'with RJ Karan & RJ Meera';
   static const String radioWithHostsPrefix = 'with ';
-  static const String radioWhatsappUrlFallback =
-      'https://chat.whatsapp.com/BYOPTP8rLR3H53vlrnHSmF';
+  static const String radioWhatsappUrlFallback = '#';
   static const String radioShareTextFallback = 'Listen to Radio Udaan live!';
   static const String shareFailed = 'Could not open share sheet';
   static const String shareUnavailable = 'Sharing is not available on this device';
@@ -264,7 +263,7 @@ abstract final class AppStrings {
   static const String radioStopped = 'Live radio stopped';
   static const String radioPlaybackError = 'Could not play live radio';
   static const String radioAudioUnavailable =
-      'Live radio playback is not ready on this device. Close and reopen the app, then try Play again.';
+      'Live radio could not start on this device. Check your internet connection and try Play again.';
   static const String radioStreamMissing =
       'Stream URL is not configured on the server.';
   static const String radioVolume = 'Volume';

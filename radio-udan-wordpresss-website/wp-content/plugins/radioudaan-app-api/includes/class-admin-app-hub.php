@@ -53,7 +53,6 @@ class RadioUdaan_Admin_App_Hub {
 
 		add_action( 'admin_menu', array( __CLASS__, 'register_menus' ), 9 );
 		add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
-		add_action( 'admin_post_radioudaan_save_app_settings', array( __CLASS__, 'handle_save_settings' ) );
 		add_action( 'admin_post_radioudaan_send_app_notification', array( 'RadioUdaan_Admin_Notifications', 'handle_send' ) );
 		add_action( 'admin_post_radioudaan_event_status', array( __CLASS__, 'handle_event_status' ) );
 		add_action( 'admin_post_radioudaan_save_event', array( 'RadioUdaan_Admin_Event_Editor', 'handle_save' ) );
@@ -241,11 +240,45 @@ class RadioUdaan_Admin_App_Hub {
 		}
 
 		if ( ! defined( 'RADIOUDAAN_APP_API_DEV_OTP' ) ) {
-			update_option( RadioUdaan_App_Settings::OPTION_DEV_OTP, ! empty( $_POST['dev_otp'] ) ? 1 : 0 );
+			$dev_otp_on = ! empty( $_POST['dev_otp'] );
+			if ( $dev_otp_on && RadioUdaan_App_Settings::dev_bypass_is_locked() ) {
+				wp_safe_redirect(
+					add_query_arg(
+						array(
+							'page'              => self::SETTINGS_SLUG,
+							'tab'               => 'security',
+							'radioudaan_notice' => 'error',
+							'radioudaan_detail' => rawurlencode(
+								__( 'Fixed OTP cannot be enabled on the production Radio Udaan site.', 'radioudaan-app-api' )
+							),
+						),
+						admin_url( 'admin.php' )
+					)
+				);
+				exit;
+			}
+			update_option( RadioUdaan_App_Settings::OPTION_DEV_OTP, $dev_otp_on ? 1 : 0 );
 		}
 
 		if ( ! defined( 'RADIOUDAAN_APP_API_DEV_AUTH' ) ) {
-			update_option( RadioUdaan_App_Settings::OPTION_DEV_AUTH, ! empty( $_POST['dev_auth'] ) ? 1 : 0 );
+			$dev_auth_on = ! empty( $_POST['dev_auth'] );
+			if ( $dev_auth_on && RadioUdaan_App_Settings::dev_bypass_is_locked() ) {
+				wp_safe_redirect(
+					add_query_arg(
+						array(
+							'page'              => self::SETTINGS_SLUG,
+							'tab'               => 'security',
+							'radioudaan_notice' => 'error',
+							'radioudaan_detail' => rawurlencode(
+								__( 'Skip bearer token check cannot be enabled on the production Radio Udaan site.', 'radioudaan-app-api' )
+							),
+						),
+						admin_url( 'admin.php' )
+					)
+				);
+				exit;
+			}
+			update_option( RadioUdaan_App_Settings::OPTION_DEV_AUTH, $dev_auth_on ? 1 : 0 );
 		}
 
 		if ( ! defined( 'RADIOUDAAN_MSG91_AUTH_KEY' ) && isset( $_POST['msg91_auth_key'] ) ) {
@@ -347,7 +380,22 @@ class RadioUdaan_Admin_App_Hub {
 			if ( '' !== $json ) {
 				$account = RadioUdaan_App_Fcm_Sender::parse_service_account_json( $json );
 				if ( ! $account ) {
-					wp_die( esc_html__( 'Invalid Firebase service account JSON.', 'radioudaan-app-api' ) );
+					wp_safe_redirect(
+						add_query_arg(
+							array(
+								'page'              => self::SETTINGS_SLUG,
+								'radioudaan_notice' => 'error',
+								'radioudaan_detail' => rawurlencode(
+									__( 'Invalid Firebase service account JSON. Other settings were not saved.', 'radioudaan-app-api' )
+								),
+								'tab'               => isset( $_POST['radioudaan_active_tab'] )
+									? sanitize_key( wp_unslash( $_POST['radioudaan_active_tab'] ) )
+									: 'notifications',
+							),
+							admin_url( 'admin.php' )
+						)
+					);
+					exit;
 				}
 
 				update_option( RadioUdaan_App_Settings::OPTION_FCM_SERVICE_ACCOUNT, $json );
@@ -457,31 +505,36 @@ class RadioUdaan_Admin_App_Hub {
 				sanitize_text_field( wp_unslash( $_POST['youtube_channel'] ) )
 			);
 		}
-		$featured_playlists = array();
 		if ( isset( $_POST['youtube_featured_playlists'] ) && is_array( $_POST['youtube_featured_playlists'] ) ) {
+			$featured_playlists = array();
 			foreach ( $_POST['youtube_featured_playlists'] as $playlist_id ) {
 				$playlist_id = sanitize_text_field( wp_unslash( $playlist_id ) );
 				if ( $playlist_id !== '' ) {
 					$featured_playlists[] = $playlist_id;
 				}
 			}
+			// Preserve admin drag-and-drop order (dedupe while keeping first occurrence).
+			$featured_playlists = array_values( array_unique( $featured_playlists ) );
+			update_option(
+				RadioUdaan_App_Youtube_Library::OPTION_FEATURED_PLAYLISTS,
+				wp_json_encode( $featured_playlists )
+			);
+			RadioUdaan_App_Youtube_Library::invalidate_cache();
 		}
-		// Preserve admin drag-and-drop order (dedupe while keeping first occurrence).
-		$featured_playlists = array_values( array_unique( $featured_playlists ) );
-		update_option(
-			RadioUdaan_App_Youtube_Library::OPTION_FEATURED_PLAYLISTS,
-			wp_json_encode( $featured_playlists )
-		);
-		RadioUdaan_App_Youtube_Library::invalidate_cache();
 
 		RadioUdaan_App_Config::invalidate_cache();
 
+		$redirect_args = array(
+			'page'             => self::SETTINGS_SLUG,
+			'settings-updated' => 'true',
+		);
+		if ( ! empty( $_POST['radioudaan_active_tab'] ) ) {
+			$redirect_args['tab'] = sanitize_key( wp_unslash( $_POST['radioudaan_active_tab'] ) );
+		}
+
 		wp_safe_redirect(
 			add_query_arg(
-				array(
-					'page'             => self::SETTINGS_SLUG,
-					'settings-updated' => 'true',
-				),
+				$redirect_args,
 				admin_url( 'admin.php' )
 			)
 		);

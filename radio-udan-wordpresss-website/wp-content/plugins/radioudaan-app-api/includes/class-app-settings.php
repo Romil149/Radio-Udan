@@ -89,16 +89,35 @@ class RadioUdaan_App_Settings {
 	}
 
 	/**
-	 * Dev bypass flags must never apply on production hosts.
+	 * Dev bypass flags must never apply on the live Radio Udaan production site.
+	 * Staging and local hosts are allowed to enable dev OTP from admin.
 	 *
 	 * @return bool
 	 */
-	private static function is_production_environment() {
-		if ( function_exists( 'wp_get_environment_type' ) && 'production' === wp_get_environment_type() ) {
-			return true;
-		}
+	public static function dev_bypass_is_locked() {
+		return self::is_production_environment();
+	}
 
-		return defined( 'WP_ENVIRONMENT_TYPE' ) && 'production' === WP_ENVIRONMENT_TYPE;
+	/**
+	 * @return bool
+	 */
+	private static function is_production_environment() {
+		$host = strtolower( (string) wp_parse_url( home_url(), PHP_URL_HOST ) );
+
+		/**
+		 * Hostnames where dev OTP / dev auth must never apply (real production only).
+		 *
+		 * @param string[] $hosts
+		 */
+		$hosts = apply_filters(
+			'radioudaan_production_hosts',
+			array(
+				'radioudaan.com',
+				'www.radioudaan.com',
+			)
+		);
+
+		return in_array( $host, $hosts, true );
 	}
 
 	/**

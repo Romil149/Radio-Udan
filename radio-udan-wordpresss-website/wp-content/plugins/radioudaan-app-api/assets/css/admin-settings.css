@@ -79,6 +79,11 @@
 	display: block;
 }
 
+/* On save, include every tab field in POST (see admin-settings.js). */
+.ru-settings-form.is-submitting .ru-settings-panel {
+	display: block !important;
+}
+
 @keyframes ru-settings-fade {
 	from {
 		opacity: 0;

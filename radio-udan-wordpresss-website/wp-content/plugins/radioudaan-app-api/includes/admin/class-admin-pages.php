@@ -147,8 +147,13 @@ class RadioUdaan_Admin_Pages {
 		}
 
 		$max_mb       = (int) get_option( RadioUdaan_App_Settings::OPTION_MAX_UPLOAD_MB, 25 );
-		$dev_otp      = RadioUdaan_App_Settings::is_dev_otp_enabled();
-		$dev_auth     = RadioUdaan_App_Settings::is_dev_auth_enabled();
+		$dev_otp_stored = (bool) get_option( RadioUdaan_App_Settings::OPTION_DEV_OTP, false );
+		$dev_auth_stored = (bool) get_option( RadioUdaan_App_Settings::OPTION_DEV_AUTH, false );
+		$dev_otp_effective = RadioUdaan_App_Settings::is_dev_otp_enabled();
+		$dev_auth_effective = RadioUdaan_App_Settings::is_dev_auth_enabled();
+		$dev_bypass_locked = RadioUdaan_App_Settings::dev_bypass_is_locked();
+		$dev_otp      = $dev_otp_stored;
+		$dev_auth     = $dev_auth_stored;
 		$msg91_key    = (string) get_option( 'radioudaan_msg91_auth_key', '' );
 		$msg91_snd    = (string) get_option( 'radioudaan_msg91_sender_id', 'RADIO' );
 		$msg91_tpl    = (string) get_option( 'radioudaan_msg91_template_id', '' );
@@ -218,6 +223,9 @@ class RadioUdaan_Admin_Pages {
 					'max_mb'        => $max_mb,
 					'dev_otp'       => $dev_otp,
 					'dev_auth'      => $dev_auth,
+					'dev_otp_effective'  => $dev_otp_effective,
+					'dev_auth_effective' => $dev_auth_effective,
+					'dev_bypass_locked'  => $dev_bypass_locked,
 					'msg91_key'     => $msg91_key,
 					'msg91_snd'     => $msg91_snd,
 					'msg91_tpl'     => $msg91_tpl,

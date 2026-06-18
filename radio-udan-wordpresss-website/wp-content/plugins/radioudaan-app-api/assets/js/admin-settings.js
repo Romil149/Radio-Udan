@@ -4,16 +4,47 @@
 (function ($) {
 	'use strict';
 
-	function initTabs() {
+	function activateSettingsTab(tab) {
 		var $tabs = $('.ru-settings-tabs__btn');
 		var $panels = $('.ru-settings-panel');
 
-		$tabs.on('click', function () {
-			var tab = $(this).data('tab');
-			$tabs.removeClass('is-active').attr('aria-selected', 'false');
-			$(this).addClass('is-active').attr('aria-selected', 'true');
-			$panels.removeClass('is-active').attr('hidden', true);
-			$panels.filter('[data-panel="' + tab + '"]').addClass('is-active').removeAttr('hidden');
+		$tabs.removeClass('is-active').attr('aria-selected', 'false');
+		$tabs.filter('[data-tab="' + tab + '"]').addClass('is-active').attr('aria-selected', 'true');
+		$panels.removeClass('is-active');
+		$panels.filter('[data-panel="' + tab + '"]').addClass('is-active');
+	}
+
+	function initTabs() {
+		$('.ru-settings-tabs__btn').on('click', function () {
+			activateSettingsTab($(this).data('tab'));
+		});
+
+		var tab = new URLSearchParams(window.location.search).get('tab');
+		if (tab && $('.ru-settings-tabs__btn[data-tab="' + tab + '"]').length) {
+			activateSettingsTab(tab);
+		}
+	}
+
+	function initFormSubmit() {
+		var $form = $('.ru-settings-form');
+		if (!$form.length) {
+			return;
+		}
+
+		$form.on('submit', function () {
+			// Browsers omit controls inside display:none / [hidden] ancestors from POST.
+			$form.addClass('is-submitting');
+			$('.ru-settings-panel').removeAttr('hidden');
+
+			var activeTab = $('.ru-settings-tabs__btn.is-active').data('tab');
+			if (activeTab) {
+				$form.find('input[name="radioudaan_active_tab"]').remove();
+				$('<input>', {
+					type: 'hidden',
+					name: 'radioudaan_active_tab',
+					value: activeTab
+				}).appendTo($form);
+			}
 		});
 	}
 
@@ -424,6 +455,7 @@
 			return;
 		}
 		initTabs();
+		initFormSubmit();
 		initPreview();
 		initLogoPicker();
 		initLiveHeroPicker();

@@ -10,14 +10,13 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await PushNotificationService.ensureFirebase();
   await CrashReporting.init();
-  try {
-    await initRadioAudioService();
-  } catch (e, st) {
-    debugPrint('Radio audio service init deferred: $e\n$st');
-  }
+  // Radio init is retried from Radio tab / Play; avoid blocking first frame.
   runApp(
     const ProviderScope(
       child: RadioUdaanApp(),
     ),
   );
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    initRadioAudioService();
+  });
 }

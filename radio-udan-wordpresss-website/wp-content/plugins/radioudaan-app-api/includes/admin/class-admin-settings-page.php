@@ -149,7 +149,7 @@ class RadioUdaan_Admin_Settings_Page {
 		</section>
 
 		<!-- Copy -->
-		<section class="ru-settings-panel" data-panel="copy" role="tabpanel" hidden>
+		<section class="ru-settings-panel" data-panel="copy" role="tabpanel">
 			<div class="ru-settings-panel__card">
 				<h3><?php esc_html_e( 'In-app text', 'radioudaan-app-api' ); ?></h3>
 				<p class="description"><?php esc_html_e( 'Short, plain-language strings. Leave blank to use defaults.', 'radioudaan-app-api' ); ?></p>
@@ -177,7 +177,7 @@ class RadioUdaan_Admin_Settings_Page {
 		</section>
 
 		<!-- Connection -->
-		<section class="ru-settings-panel" data-panel="connection" role="tabpanel" hidden>
+		<section class="ru-settings-panel" data-panel="connection" role="tabpanel">
 			<div class="ru-settings-panel__card">
 				<h3><?php esc_html_e( 'API & stream', 'radioudaan-app-api' ); ?></h3>
 				<div class="ru-admin__field">
@@ -202,7 +202,7 @@ class RadioUdaan_Admin_Settings_Page {
 		</section>
 
 		<!-- Live radio home screen -->
-		<section class="ru-settings-panel" data-panel="live_radio" role="tabpanel" hidden>
+		<section class="ru-settings-panel" data-panel="live_radio" role="tabpanel">
 			<div class="ru-settings-panel__card">
 				<h3><?php esc_html_e( 'Live tab (home after sign-in)', 'radioudaan-app-api' ); ?></h3>
 				<p class="description"><?php esc_html_e( 'Show title, hero image, and buttons on the app Live screen. Sent via GET /config → live_radio.', 'radioudaan-app-api' ); ?></p>
@@ -275,7 +275,7 @@ class RadioUdaan_Admin_Settings_Page {
 		</section>
 
 		<!-- YouTube library -->
-		<section class="ru-settings-panel" data-panel="youtube_library" role="tabpanel" hidden>
+		<section class="ru-settings-panel" data-panel="youtube_library" role="tabpanel">
 			<div class="ru-settings-panel__card">
 				<h3><?php esc_html_e( 'YouTube Data API', 'radioudaan-app-api' ); ?></h3>
 				<p class="description">
@@ -355,7 +355,7 @@ class RadioUdaan_Admin_Settings_Page {
 		</section>
 
 		<!-- Auth -->
-		<section class="ru-settings-panel" data-panel="auth" role="tabpanel" hidden>
+		<section class="ru-settings-panel" data-panel="auth" role="tabpanel">
 			<div class="ru-settings-panel__card">
 				<h3><?php esc_html_e( 'Registration & login', 'radioudaan-app-api' ); ?></h3>
 				<p class="description"><?php esc_html_e( 'Exposed to the app via GET /config → auth_policy.', 'radioudaan-app-api' ); ?></p>
@@ -410,7 +410,7 @@ class RadioUdaan_Admin_Settings_Page {
 		</section>
 
 		<!-- Legal -->
-		<section class="ru-settings-panel" data-panel="legal" role="tabpanel" hidden>
+		<section class="ru-settings-panel" data-panel="legal" role="tabpanel">
 			<?php
 			RadioUdaan_Admin_Layout::render_page_intro(
 				'<strong>' . esc_html__( 'Store requirement', 'radioudaan-app-api' ) . '</strong> — ' .
@@ -467,7 +467,7 @@ class RadioUdaan_Admin_Settings_Page {
 		</section>
 
 		<!-- Notifications -->
-		<section class="ru-settings-panel" data-panel="notifications" role="tabpanel" hidden>
+		<section class="ru-settings-panel" data-panel="notifications" role="tabpanel">
 			<div class="ru-settings-panel__card">
 				<h3><?php esc_html_e( 'Firebase Cloud Messaging (HTTP v1)', 'radioudaan-app-api' ); ?></h3>
 				<p class="description">
@@ -513,7 +513,7 @@ class RadioUdaan_Admin_Settings_Page {
 		</section>
 
 		<!-- Uploads -->
-		<section class="ru-settings-panel" data-panel="uploads" role="tabpanel" hidden>
+		<section class="ru-settings-panel" data-panel="uploads" role="tabpanel">
 			<div class="ru-settings-panel__card">
 				<h3><?php esc_html_e( 'File uploads', 'radioudaan-app-api' ); ?></h3>
 				<div class="ru-settings-grid-2">
@@ -565,7 +565,7 @@ class RadioUdaan_Admin_Settings_Page {
 		</section>
 
 		<!-- Security / OTP -->
-		<section class="ru-settings-panel" data-panel="security" role="tabpanel" hidden>
+		<section class="ru-settings-panel" data-panel="security" role="tabpanel">
 			<div class="ru-settings-panel__card">
 				<h3><?php esc_html_e( 'OTP rate limits', 'radioudaan-app-api' ); ?></h3>
 				<div class="ru-settings-grid-2">
@@ -585,15 +585,62 @@ class RadioUdaan_Admin_Settings_Page {
 			</div>
 			<div class="ru-settings-panel__card ru-settings-danger-card">
 				<h3><?php esc_html_e( 'Development only', 'radioudaan-app-api' ); ?></h3>
+				<?php if ( $c['otp_const'] ) : ?>
+					<p class="description">
+						<strong><?php esc_html_e( 'Fixed OTP is controlled by wp-config.php', 'radioudaan-app-api' ); ?></strong>
+						<?php
+						echo ' — ';
+						esc_html_e(
+							'Remove or change RADIOUDAAN_APP_API_DEV_OTP in wp-config.php to use this checkbox instead.',
+							'radioudaan-app-api'
+						);
+						?>
+					</p>
+				<?php elseif ( ! empty( $c['dev_bypass_locked'] ) ) : ?>
+					<p class="description">
+						<strong><?php esc_html_e( 'Blocked on this production host', 'radioudaan-app-api' ); ?></strong>
+						<?php
+						echo ' — ';
+						esc_html_e( 'Fixed OTP is only available on staging and local sites.', 'radioudaan-app-api' );
+						?>
+					</p>
+				<?php endif; ?>
 				<div class="ru-admin__toggle">
-					<input type="checkbox" name="dev_otp" id="dev_otp" value="1" <?php checked( $c['dev_otp'] ); ?> <?php disabled( $c['otp_const'] ); ?> />
+					<?php if ( ! $c['otp_const'] && empty( $c['dev_bypass_locked'] ) ) : ?>
+						<input type="hidden" name="dev_otp" value="0" />
+					<?php endif; ?>
+					<input type="checkbox" name="dev_otp" id="dev_otp" value="1"
+						<?php checked( $c['otp_const'] ? (bool) RADIOUDAAN_APP_API_DEV_OTP : $c['dev_otp'] ); ?>
+						<?php disabled( $c['otp_const'] || ! empty( $c['dev_bypass_locked'] ) ); ?> />
 					<div>
 						<label for="dev_otp"><strong><?php esc_html_e( 'Fixed OTP 123456', 'radioudaan-app-api' ); ?></strong></label>
-						<p class="description"><?php esc_html_e( 'Local/staging only. Disable before production.', 'radioudaan-app-api' ); ?></p>
+						<p class="description">
+							<?php esc_html_e( 'Local/staging only. Disable before production.', 'radioudaan-app-api' ); ?>
+							<?php if ( ! empty( $c['dev_otp_effective'] ) ) : ?>
+								<strong><?php esc_html_e( 'Currently active — OTP requests return 123456.', 'radioudaan-app-api' ); ?></strong>
+							<?php endif; ?>
+						</p>
 					</div>
 				</div>
+				<?php if ( $c['auth_const'] ) : ?>
+					<p class="description">
+						<strong><?php esc_html_e( 'Dev auth is controlled by wp-config.php', 'radioudaan-app-api' ); ?></strong>
+						<?php
+						echo ' — ';
+						esc_html_e(
+							'Remove or change RADIOUDAAN_APP_API_DEV_AUTH in wp-config.php to use this checkbox instead.',
+							'radioudaan-app-api'
+						);
+						?>
+					</p>
+				<?php endif; ?>
 				<div class="ru-admin__toggle">
-					<input type="checkbox" name="dev_auth" id="dev_auth" value="1" <?php checked( $c['dev_auth'] ); ?> <?php disabled( $c['auth_const'] ); ?> />
+					<?php if ( ! $c['auth_const'] && empty( $c['dev_bypass_locked'] ) ) : ?>
+						<input type="hidden" name="dev_auth" value="0" />
+					<?php endif; ?>
+					<input type="checkbox" name="dev_auth" id="dev_auth" value="1"
+						<?php checked( $c['auth_const'] ? ( defined( 'RADIOUDAAN_APP_API_DEV_AUTH' ) && RADIOUDAAN_APP_API_DEV_AUTH ) : $c['dev_auth'] ); ?>
+						<?php disabled( $c['auth_const'] || ! empty( $c['dev_bypass_locked'] ) ); ?> />
 					<div>
 						<label for="dev_auth"><strong><?php esc_html_e( 'Skip bearer token check', 'radioudaan-app-api' ); ?></strong></label>
 						<p class="description"><?php esc_html_e( 'Never enable on production.', 'radioudaan-app-api' ); ?></p>
@@ -603,7 +650,7 @@ class RadioUdaan_Admin_Settings_Page {
 		</section>
 
 		<!-- SMS -->
-		<section class="ru-settings-panel" data-panel="sms" role="tabpanel" hidden>
+		<section class="ru-settings-panel" data-panel="sms" role="tabpanel">
 			<div class="ru-settings-panel__card">
 				<h3><?php esc_html_e( 'MSG91 (production SMS)', 'radioudaan-app-api' ); ?></h3>
 				<p class="description"><?php esc_html_e( 'Used when development OTP is off.', 'radioudaan-app-api' ); ?></p>
