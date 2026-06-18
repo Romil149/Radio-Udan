@@ -72,7 +72,22 @@ function radioudaan_app_api_init() {
 	RadioUdaan_Event_Sync::init();
 	RadioUdaan_Otp_Msg91::init();
 	if ( is_admin() ) {
-		RadioUdaan_Admin_App_Hub::init();
+		if ( class_exists( 'RadioUdaan_Admin_App_Hub', false ) ) {
+			RadioUdaan_Admin_App_Hub::init();
+		} else {
+			add_action(
+				'admin_notices',
+				static function () {
+					$path = RADIOUDAAN_APP_API_PATH . 'includes/class-admin-app-hub.php';
+					echo '<div class="notice notice-error"><p><strong>Radio Udaan App:</strong> ';
+					echo esc_html__(
+						'Plugin files are incomplete on the server. Re-upload the full radioudaan-app-api folder (see dist/radioudaan-app-api-staging.zip).',
+						'radioudaan-app-api'
+					);
+					echo ' <code>' . esc_html( $path ) . '</code></p></div>';
+				}
+			);
+		}
 	}
 	RadioUdaan_App_Cors::init();
 	RadioUdaan_Rj_Profile::init();
