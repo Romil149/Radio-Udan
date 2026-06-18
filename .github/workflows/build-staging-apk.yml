@@ -1,5 +1,6 @@
 # Build Radio Udaan Android APK in the cloud (no local Android SDK required).
 # Download the APK from Actions → workflow run → Artifacts.
+# Manual re-run: Actions → Build staging APK → Run workflow.
 name: Build staging APK
 
 on:
