@@ -38,11 +38,15 @@ class RadioUdaan_Rate_Limiter {
 	 */
 	public static function get_client_ip() {
 		$ip = '';
-		if ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+		if ( ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
+			$ip = (string) $_SERVER['REMOTE_ADDR'];
+		}
+
+		// Only trust X-Forwarded-For when the immediate peer is a known reverse proxy.
+		if ( defined( 'RADIOUDAAN_APP_API_TRUST_PROXY' ) && RADIOUDAAN_APP_API_TRUST_PROXY
+			&& ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
 			$parts = explode( ',', (string) $_SERVER['HTTP_X_FORWARDED_FOR'] );
 			$ip    = trim( $parts[0] );
-		} elseif ( ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
-			$ip = (string) $_SERVER['REMOTE_ADDR'];
 		}
 
 		return sanitize_text_field( $ip ? $ip : '0.0.0.0' );

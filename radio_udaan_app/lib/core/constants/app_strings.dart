@@ -221,15 +221,18 @@ abstract final class AppStrings {
   static const String eventsPageIntro =
       'Join our vibrant community in upcoming accessible live streams and workshops.';
   static const String eventsRegisterNow = 'Register Now';
+  static const String eventsRegistrationClosed = 'Registration closed';
   static String eventCardSemantics({
     required String title,
     String? schedule,
     String? badge,
+    bool registrationOpen = true,
   }) {
     return [
       title,
       if (badge != null && badge.isNotEmpty) badge,
       if (schedule != null && schedule.isNotEmpty) schedule,
+      if (!registrationOpen) eventsRegistrationClosed,
     ].join(', ');
   }
   static const String libraryLoading = 'Loading library';
@@ -330,6 +333,9 @@ abstract final class AppStrings {
 
   // Events
   static const String eventsEmpty = 'No open events right now.';
+  static const String eventDeepLinkLoading = 'Opening event registration';
+  static String eventDeepLinkOpening(String eventTitle) =>
+      'Opening registration for $eventTitle';
   static const String eventRegistrationTitle = 'Event Registration';
   static const String eventRegistrationLoadingForm =
       'Loading registration form';

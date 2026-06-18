@@ -56,6 +56,8 @@ class EventSummary {
 
   bool get isOpen => status == 'open';
 
+  bool get isRegistrationOpen => status == 'open';
+
   String get badgeLabel {
     final label = eventTypeLabel?.trim() ?? '';
     if (label.isNotEmpty) return label;

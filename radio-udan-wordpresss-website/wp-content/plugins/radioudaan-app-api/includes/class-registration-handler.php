@@ -49,6 +49,8 @@ class RadioUdaan_Registration_Handler {
 			);
 		}
 
+		$email = self::get_authenticated_email( $request );
+
 		$rate = RadioUdaan_Registration_Guard::check_rate_limits( $phone, $request );
 		if ( is_wp_error( $rate ) ) {
 			return $rate;
@@ -57,9 +59,9 @@ class RadioUdaan_Registration_Handler {
 		$form_id = (int) $event['form_id'];
 
 		$dup = RadioUdaan_Registration_Guard::check_duplicate(
-			(int) $event['event_id'],
+			$event,
 			$form_id,
-			$phone
+			$email
 		);
 		if ( is_wp_error( $dup ) ) {
 			return $dup;
@@ -106,6 +108,12 @@ class RadioUdaan_Registration_Handler {
 			'name'  => '_radioudaan_phone_e164',
 			'value' => $phone,
 		);
+		if ( $email ) {
+			$entry_meta[] = array(
+				'name'  => '_radioudaan_email',
+				'value' => $email,
+			);
+		}
 		if ( ! empty( $client['platform'] ) ) {
 			$entry_meta[] = array(
 				'name'  => '_radioudaan_client_platform',
@@ -160,6 +168,19 @@ class RadioUdaan_Registration_Handler {
 			),
 			201
 		);
+	}
+
+	/**
+	 * @param WP_REST_Request $request Request.
+	 * @return string Normalized email or empty string.
+	 */
+	private static function get_authenticated_email( WP_REST_Request $request ) {
+		$session = RadioUdaan_App_Auth::get_session_from_request( $request );
+		if ( ! $session || empty( $session['user']['email'] ) ) {
+			return '';
+		}
+
+		return strtolower( sanitize_email( (string) $session['user']['email'] ) );
 	}
 
 	/**

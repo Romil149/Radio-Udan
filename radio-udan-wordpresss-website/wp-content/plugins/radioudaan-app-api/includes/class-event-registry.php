@@ -232,8 +232,9 @@ class RadioUdaan_Event_Registry {
 					'alt' => $title,
 				)
 				: null,
-			'form_id'               => $form_id,
-			'registration_page_id'  => $page_id ? $page_id : null,
+			'form_id'                       => $form_id,
+			'allow_multiple_registrations'  => (bool) get_post_meta( $post->ID, RadioUdaan_Cpt_Ru_Event::META_ALLOW_MULTIPLE_REGISTRATIONS, true ),
+			'registration_page_id'          => $page_id ? $page_id : null,
 			'page_url'              => $page ? get_permalink( $page ) : null,
 			'updated_at'            => gmdate( 'c', strtotime( $post->post_modified_gmt ? $post->post_modified_gmt : $post->post_modified ) ),
 		);
@@ -296,8 +297,9 @@ class RadioUdaan_Event_Registry {
 					'alt' => $title,
 				)
 				: null,
-			'form_id'              => $form_id,
-			'registration_page_id' => $page_id,
+			'form_id'                      => $form_id,
+			'allow_multiple_registrations' => false,
+			'registration_page_id'         => $page_id,
 			'page_url'             => get_permalink( $page_id ),
 			'updated_at'           => gmdate( 'c', strtotime( $page->post_modified_gmt ? $page->post_modified_gmt : $page->post_modified ) ),
 		);

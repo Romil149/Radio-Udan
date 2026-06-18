@@ -5,14 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../core/models/otp_purpose.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/router/app_router.dart';
+import '../../core/router/event_deep_link.dart';
 import '../../core/theme/udaan_colors.dart';
+import '../more/help_contact_screen.dart';
 import 'auth_session_helper.dart';
 import 'widgets/otp_verify_identity_body.dart';
 import 'widgets/otp_verify_login_body.dart';
@@ -171,38 +172,13 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
     context.go('/otp-login');
   }
 
-  Future<void> _openContactSupport() async {
-    final url = ref.read(remoteConfigProvider)?.contactUrl;
-    if (url == null || url.isEmpty) {
-      _announce(AppStrings.linkUnavailable);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.linkUnavailable)),
-      );
-      return;
-    }
-    final uri = Uri.tryParse(url);
-    if (uri == null || !uri.hasScheme) {
-      _announce(AppStrings.linkUnavailable);
-      return;
-    }
-    try {
-      final launched = await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
-      if (!launched && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.linkOpenFailed)),
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.linkOpenFailed)),
-        );
-      }
-    }
+  void _openContactSupport() {
+    _announce(AppStrings.contactTitle);
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const HelpContactScreen(),
+      ),
+    );
   }
 
   Future<void> _resend() async {
@@ -263,7 +239,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
       );
       return;
     }
-    context.go('/');
+    navigateAfterAuth(context, ref);
   }
 
   Future<void> _verify() async {
@@ -322,13 +298,18 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
     } catch (e) {
       final apiError = parseApiError(e);
       if (apiError.code == 'email_verification_required') {
-        if (!mounted) return;
-        context.go(
-          '/verify-email',
-          extra: VerifyEmailRouteArgs(
-            email: ref.read(authUserProvider)?.email ?? '',
-          ),
-        );
+        final hasToken = (ref.read(authTokenProvider) ?? '').isNotEmpty;
+        if (hasToken && mounted) {
+          context.go(
+            '/verify-email',
+            extra: VerifyEmailRouteArgs(
+              email: ref.read(authUserProvider)?.email ?? '',
+            ),
+          );
+          return;
+        }
+        setState(() => _error = apiError.message);
+        _announce(apiError.message);
         return;
       }
       final message = apiError.message;

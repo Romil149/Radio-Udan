@@ -62,9 +62,6 @@ class AppBootstrap {
     final configCache = await ConfigCacheStorage.create();
     final tokenStore = _ref.read(tokenStorageProvider);
     final storedToken = await tokenStore.readToken();
-    final storedPhone = await tokenStore.readPhone();
-    final storedEmail = await tokenStore.readEmail();
-    final storedName = await tokenStore.readName();
 
     var baseUrl = settings.apiBaseUrlOverride ?? AppEnv.bootstrapApiBaseUrl;
     _ref.read(apiBaseUrlProvider.notifier).state = baseUrl;
@@ -77,20 +74,12 @@ class AppBootstrap {
     RemoteConfig? config = cached;
     final hasToken = storedToken != null && storedToken.isNotEmpty;
 
+    // Restore token only; verification flags come from GET /auth/me (never assumed).
     if (hasToken) {
       _ref.read(authTokenProvider.notifier).state = storedToken;
-      _applyUser(
-        AuthSession(
-          token: storedToken,
-          phoneE164: storedPhone ?? '',
-          email: storedEmail,
-          name: storedName,
-          phoneVerified: true,
-          emailVerified: false,
-        ),
-        token: storedToken,
-      );
     }
+
+    var sessionValidated = false;
 
     try {
       final client = ApiClient(
@@ -112,8 +101,15 @@ class AppBootstrap {
           _ref.read(authTokenProvider.notifier).state = null;
           _applyUser(null, token: null);
         } else {
+          sessionValidated = true;
           final session = me.copyWith(token: storedToken ?? me.token);
           _applyUser(session, token: storedToken);
+          await tokenStore.saveSession(
+            token: session.token,
+            phoneE164: session.phoneE164,
+            email: session.email,
+            name: session.name,
+          );
           await _syncNotificationPreferences(api);
         }
       }
@@ -134,7 +130,9 @@ class AppBootstrap {
       }
       _applyConfig(config, baseOverride: settings.apiBaseUrlOverride);
     } catch (_) {
-      if (hasToken && config == null) {
+      // Fail closed: never keep a bearer token we could not validate on cold start.
+      if (hasToken && !sessionValidated) {
+        await tokenStore.clear();
         _ref.read(authTokenProvider.notifier).state = null;
         _applyUser(null, token: null);
       }

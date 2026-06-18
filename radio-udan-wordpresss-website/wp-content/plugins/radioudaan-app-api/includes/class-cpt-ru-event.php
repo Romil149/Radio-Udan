@@ -20,7 +20,8 @@ class RadioUdaan_Cpt_Ru_Event {
 	const META_EVENT_STATUS          = 'ru_event_status';
 	const META_SUCCESS_MESSAGE       = 'ru_success_message';
 	const META_EVENT_TYPE            = 'ru_event_type';
-	const META_EVENT_START_AT        = 'ru_event_start_at';
+	const META_EVENT_START_AT                = 'ru_event_start_at';
+	const META_ALLOW_MULTIPLE_REGISTRATIONS  = 'ru_allow_multiple_registrations';
 
 	/**
 	 * Register CPT and meta.
@@ -89,6 +90,21 @@ class RadioUdaan_Cpt_Ru_Event {
 				)
 			);
 		}
+
+		register_post_meta(
+			self::POST_TYPE,
+			self::META_ALLOW_MULTIPLE_REGISTRATIONS,
+			array(
+				'type'              => 'boolean',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'default'           => false,
+				'sanitize_callback' => 'rest_sanitize_boolean',
+				'auth_callback'     => static function () {
+					return current_user_can( 'edit_posts' );
+				},
+			)
+		);
 	}
 
 	/**
@@ -115,7 +131,8 @@ class RadioUdaan_Cpt_Ru_Event {
 		$page_id = (int) get_post_meta( $post->ID, self::META_REGISTRATION_PAGE_ID, true );
 		$form_id = (int) get_post_meta( $post->ID, self::META_FORMINATOR_FORM_ID, true );
 		$status  = get_post_meta( $post->ID, self::META_EVENT_STATUS, true );
-		$success = get_post_meta( $post->ID, self::META_SUCCESS_MESSAGE, true );
+		$success         = get_post_meta( $post->ID, self::META_SUCCESS_MESSAGE, true );
+		$allow_multiple  = (bool) get_post_meta( $post->ID, self::META_ALLOW_MULTIPLE_REGISTRATIONS, true );
 
 		if ( ! $status ) {
 			$status = 'open';
@@ -195,6 +212,14 @@ class RadioUdaan_Cpt_Ru_Event {
 			</div>
 
 			<div class="ru-event-field" style="margin-top:8px;">
+				<label>
+					<input type="checkbox" name="ru_allow_multiple_registrations" id="ru_allow_multiple_registrations" value="1" <?php checked( $allow_multiple ); ?> />
+					<?php esc_html_e( 'Allow multiple registrations per email', 'radioudaan-app-api' ); ?>
+				</label>
+				<p class="description"><?php esc_html_e( 'When unchecked, each account email may register only once for this event (if duplicate prevention is enabled globally).', 'radioudaan-app-api' ); ?></p>
+			</div>
+
+			<div class="ru-event-field" style="margin-top:8px;">
 				<label for="ru_success_message"><?php esc_html_e( 'Success message (app)', 'radioudaan-app-api' ); ?></label>
 				<?php RadioUdaan_Event_Meta_Ui::render_select( 'ru_success_preset', 'ru_success_preset', RadioUdaan_Event_Meta_Ui::get_success_message_presets(), '' ); ?>
 				<textarea name="ru_success_message" id="ru_success_message" class="widefat" rows="3" placeholder="<?php esc_attr_e( 'Shown after a successful registration in the mobile app.', 'radioudaan-app-api' ); ?>"><?php echo esc_textarea( $success ); ?></textarea>
@@ -240,5 +265,6 @@ class RadioUdaan_Cpt_Ru_Event {
 		if ( isset( $_POST['ru_success_message'] ) ) {
 			update_post_meta( $post_id, self::META_SUCCESS_MESSAGE, sanitize_textarea_field( wp_unslash( $_POST['ru_success_message'] ) ) );
 		}
+		update_post_meta( $post_id, self::META_ALLOW_MULTIPLE_REGISTRATIONS, ! empty( $_POST['ru_allow_multiple_registrations'] ) );
 	}
 }

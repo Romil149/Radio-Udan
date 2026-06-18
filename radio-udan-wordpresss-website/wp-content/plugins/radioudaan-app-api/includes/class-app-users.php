@@ -560,6 +560,27 @@ class RadioUdaan_App_Users {
 	}
 
 	/**
+	 * Remove abandoned pending signups so phone numbers are not squatted without OTP proof.
+	 *
+	 * @param string $phone_e164   E.164 phone.
+	 * @param int    $max_age_secs Max age before purge (default 24h).
+	 */
+	public static function purge_stale_pending_phone( $phone_e164, $max_age_secs = DAY_IN_SECONDS ) {
+		$user = self::find_by_phone( $phone_e164 );
+		if ( ! $user || self::STATUS_PENDING !== $user->status ) {
+			return;
+		}
+		if ( (int) $user->phone_verified ) {
+			return;
+		}
+
+		$created = isset( $user->created_at ) ? strtotime( (string) $user->created_at ) : 0;
+		if ( $created > 0 && ( time() - $created ) >= (int) $max_age_secs ) {
+			self::soft_delete( (int) $user->id );
+		}
+	}
+
+	/**
 	 * @param string $phone_e164 Phone.
 	 * @return bool
 	 */

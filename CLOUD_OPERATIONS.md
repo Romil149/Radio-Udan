@@ -73,9 +73,43 @@ Set a monthly cloud agent spend cap when prompted (Dashboard → Cloud Agents).
 
 Safari/Chrome → https://cursor.com/agents → **Add to Home Screen** → message agents like chat.
 
-### Option 3 — Slack (optional)
+### Option 3 — Slack (connected)
 
-Integrations → Slack → in channel: `@cursor fix staging API smoke failures`
+**Workspace:** Nexusfleck (`nexusfleckworkspace.slack.com`)
+
+#### One-time in Slack
+
+1. Open the channel you want for Radio Udaan (e.g. `#general` or create `#radio-udan`)
+2. Invite the bot: `/invite @cursor`
+3. Optional — [Cloud Agents → Slack routing](https://cursor.com/dashboard/cloud-agents): **Add Rule** → pick channel → description `Radio Udaan` → save
+
+#### Defaults (dashboard)
+
+On [Cloud Agents](https://cursor.com/dashboard/cloud-agents):
+
+- **Default repository** → `Romil149/Radio-Udan`
+- **Base branch** → `main`
+- **Network** → Allow all network access (for staging smoke)
+
+#### Message the agent from Slack
+
+In the channel (mention required):
+
+```
+@cursor Read AGENTS.md. Run dart analyze lib in radio_udaan_app and report pass/fail.
+```
+
+More examples:
+
+```
+@cursor Run scripts/staging-api-smoke.sh and list any failures.
+```
+
+```
+@cursor Verify GitHub Actions APK build on main; send me the artifact link.
+```
+
+The agent replies in the **thread** and works on `Romil149/Radio-Udan` automatically.
 
 ---
 
@@ -159,7 +193,11 @@ Update STAGING_QA_GUIDE.md section [X] based on latest API behavior.
 - [ ] AGENTS.md + .cursor/environment.json on `main`
 - [ ] GitHub Actions **Build staging APK** green
 - [ ] `staging-api-smoke.sh` passes (staging server ready)
+- [ ] Slack connected (Integrations shows **Manage** next to Slack)
+- [ ] `@cursor` invited to your project channel (`/invite @cursor`)
+- [ ] Default repo = Radio-Udan, branch = main (Cloud Agents → Defaults)
+- [ ] Cloud environment **saved** (not Unconfigured/Inactive)
 - [ ] At least one test Automation created (optional)
-- [ ] You can open cursor.com/agents on phone and send one message
+- [ ] Test message works in Slack or cursor.com/agents
 
 When all checked, you only **message** — agents + Actions do the rest.

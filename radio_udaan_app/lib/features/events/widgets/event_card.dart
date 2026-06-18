@@ -11,18 +11,18 @@ import '../event_formatters.dart';
 
 const double _eventMinTapTarget = 56;
 
-/// Stitch-style event card: banner, type badge, schedule, summary, Register Now.
+/// Stitch-style event card: banner, type badge, schedule, summary, register CTA.
 class EventCard extends StatelessWidget {
   const EventCard({
     required this.event,
     required this.bannerUrl,
-    required this.onRegister,
+    this.onRegister,
     super.key,
   });
 
   final EventSummary event;
   final String bannerUrl;
-  final VoidCallback onRegister;
+  final VoidCallback? onRegister;
 
   Color _badgeBackground() {
     switch (event.eventType) {
@@ -53,12 +53,15 @@ class EventCard extends StatelessWidget {
         : '';
     final summary = event.summary?.trim() ?? '';
 
+    final registrationOpen = event.isRegistrationOpen;
+
     return Semantics(
       container: true,
       label: AppStrings.eventCardSemantics(
         title: event.title,
         schedule: schedule,
         badge: event.hasBadge ? event.badgeLabel : null,
+        registrationOpen: registrationOpen,
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -135,38 +138,70 @@ class EventCard extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 16),
-                  Semantics(
-                    button: true,
-                    label: '${AppStrings.eventsRegisterNow}, ${event.title}',
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: onRegister,
-                        style: FilledButton.styleFrom(
-                          minimumSize: const Size(
-                            double.infinity,
-                            _eventMinTapTarget,
-                          ),
-                          backgroundColor: UdaanColors.primary,
-                          foregroundColor: UdaanColors.onPrimary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: Text(
-                          AppStrings.eventsRegisterNow,
-                          style: GoogleFonts.atkinsonHyperlegible(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ),
+                  _RegisterButton(
+                    eventTitle: event.title,
+                    registrationOpen: registrationOpen,
+                    onRegister: onRegister,
                   ),
                 ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RegisterButton extends StatelessWidget {
+  const _RegisterButton({
+    required this.eventTitle,
+    required this.registrationOpen,
+    required this.onRegister,
+  });
+
+  final String eventTitle;
+  final bool registrationOpen;
+  final VoidCallback? onRegister;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = registrationOpen
+        ? AppStrings.eventsRegisterNow
+        : AppStrings.eventsRegistrationClosed;
+    final semanticsLabel = registrationOpen
+        ? '${AppStrings.eventsRegisterNow}, $eventTitle'
+        : '${AppStrings.eventsRegistrationClosed}, $eventTitle';
+
+    return Semantics(
+      button: true,
+      enabled: registrationOpen,
+      label: semanticsLabel,
+      child: SizedBox(
+        width: double.infinity,
+        child: FilledButton(
+          onPressed: registrationOpen ? onRegister : null,
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(double.infinity, _eventMinTapTarget),
+            backgroundColor: registrationOpen
+                ? UdaanColors.primary
+                : UdaanColors.surfaceContainerHigh,
+            foregroundColor: registrationOpen
+                ? UdaanColors.onPrimary
+                : UdaanColors.onSurfaceMuted,
+            disabledBackgroundColor: UdaanColors.surfaceContainerHigh,
+            disabledForegroundColor: UdaanColors.onSurfaceMuted,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          child: Text(
+            label,
+            style: GoogleFonts.atkinsonHyperlegible(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
         ),
       ),
     );

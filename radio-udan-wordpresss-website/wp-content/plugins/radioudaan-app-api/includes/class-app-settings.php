@@ -64,6 +64,9 @@ class RadioUdaan_App_Settings {
 	 * @return bool
 	 */
 	public static function is_dev_otp_enabled() {
+		if ( self::is_production_environment() ) {
+			return false;
+		}
 		if ( defined( 'RADIOUDAAN_APP_API_DEV_OTP' ) ) {
 			return (bool) RADIOUDAAN_APP_API_DEV_OTP;
 		}
@@ -75,11 +78,27 @@ class RadioUdaan_App_Settings {
 	 * @return bool
 	 */
 	public static function is_dev_auth_enabled() {
+		if ( self::is_production_environment() ) {
+			return false;
+		}
 		if ( defined( 'RADIOUDAAN_APP_API_DEV_AUTH' ) && RADIOUDAAN_APP_API_DEV_AUTH ) {
 			return true;
 		}
 
 		return (bool) get_option( self::OPTION_DEV_AUTH, false );
+	}
+
+	/**
+	 * Dev bypass flags must never apply on production hosts.
+	 *
+	 * @return bool
+	 */
+	private static function is_production_environment() {
+		if ( function_exists( 'wp_get_environment_type' ) && 'production' === wp_get_environment_type() ) {
+			return true;
+		}
+
+		return defined( 'WP_ENVIRONMENT_TYPE' ) && 'production' === WP_ENVIRONMENT_TYPE;
 	}
 
 	/**
@@ -457,10 +476,14 @@ class RadioUdaan_App_Settings {
 	 * @return array<string,mixed>
 	 */
 	public static function get_auth_policy_public() {
+		$msg91_configured = class_exists( 'RadioUdaan_Otp_Msg91' ) && RadioUdaan_Otp_Msg91::is_configured();
+
 		return array(
 			'require_unique_email'       => self::require_unique_email(),
 			'require_email_verification' => self::require_email_verification(),
 			'password_min_length'        => self::get_password_min_length(),
+			'sms_otp_country_code'       => '91',
+			'sms_otp_supported'          => $msg91_configured,
 			'otp_purposes'               => array(
 				RadioUdaan_Otp_Service::PURPOSE_LOGIN,
 				RadioUdaan_Otp_Service::PURPOSE_VERIFY_PHONE,

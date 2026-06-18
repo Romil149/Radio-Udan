@@ -24,6 +24,15 @@ class RadioUdaan_App_Password_Auth {
 	 * @return array|WP_Error
 	 */
 	public static function register( array $body ) {
+		$ip = RadioUdaan_Rate_Limiter::get_client_ip();
+		if ( RadioUdaan_Rate_Limiter::is_limited( 'register_ip_' . $ip, 10, HOUR_IN_SECONDS ) ) {
+			return new WP_Error(
+				'rate_limited',
+				__( 'Too many registration attempts. Please try again later.', 'radioudaan-app-api' ),
+				array( 'status' => 429 )
+			);
+		}
+
 		$name     = isset( $body['name'] ) ? sanitize_text_field( $body['name'] ) : '';
 		$email    = isset( $body['email'] ) ? strtolower( sanitize_email( $body['email'] ) ) : '';
 		$phone    = isset( $body['phone_e164'] ) ? self::normalize_phone( $body['phone_e164'] ) : '';
@@ -50,6 +59,16 @@ class RadioUdaan_App_Password_Auth {
 				array( 'status' => 400 )
 			);
 		}
+
+		if ( RadioUdaan_Rate_Limiter::is_limited( 'register_phone_' . $phone, 5, HOUR_IN_SECONDS ) ) {
+			return new WP_Error(
+				'rate_limited',
+				__( 'Too many registration attempts for this number. Please try again later.', 'radioudaan-app-api' ),
+				array( 'status' => 429 )
+			);
+		}
+
+		RadioUdaan_App_Users::purge_stale_pending_phone( $phone );
 
 		if ( RadioUdaan_App_Users::phone_taken( $phone ) ) {
 			return new WP_Error( 'phone_taken', __( 'This mobile number is already registered.', 'radioudaan-app-api' ), array( 'status' => 409 ) );
@@ -78,6 +97,9 @@ class RadioUdaan_App_Password_Auth {
 
 			return new WP_Error( 'register_failed', __( 'Could not create account.', 'radioudaan-app-api' ), array( 'status' => 500 ) );
 		}
+
+		RadioUdaan_Rate_Limiter::bump( 'register_ip_' . $ip, HOUR_IN_SECONDS );
+		RadioUdaan_Rate_Limiter::bump( 'register_phone_' . $phone, HOUR_IN_SECONDS );
 
 		RadioUdaan_App_Logger::log( 'register_pending', array( 'user_id' => $user_id ) );
 

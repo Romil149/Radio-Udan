@@ -86,6 +86,7 @@ class RadioUdaan_Admin_Event_Editor {
 				$start_at_local = wp_date( 'Y-m-d\TH:i', $ts );
 			}
 		}
+		$allow_multiple = $post ? (bool) get_post_meta( $post_id, RadioUdaan_Cpt_Ru_Event::META_ALLOW_MULTIPLE_REGISTRATIONS, true ) : false;
 
 		if ( ! $status ) {
 			$status = 'open';
@@ -185,6 +186,14 @@ class RadioUdaan_Admin_Event_Editor {
 							<input type="text" id="ru_event_code_custom" class="widefat" value="<?php echo esc_attr( $code_custom ); ?>" style="<?php echo '__custom__' === $code_pick ? '' : 'display:none;'; ?>" />
 							<input type="hidden" name="ru_event_code" id="ru_event_code" value="<?php echo esc_attr( $code ); ?>" />
 						</div>
+					</div>
+
+					<div class="ru-event-field">
+						<label>
+							<input type="checkbox" name="ru_allow_multiple_registrations" id="ru_allow_multiple_registrations" value="1" <?php checked( $allow_multiple ); ?> />
+							<?php esc_html_e( 'Allow multiple registrations per email', 'radioudaan-app-api' ); ?>
+						</label>
+						<p class="description"><?php esc_html_e( 'When unchecked, each account email may register only once for this event (if duplicate prevention is enabled globally).', 'radioudaan-app-api' ); ?></p>
 					</div>
 
 					<div class="ru-event-field">
@@ -289,6 +298,11 @@ class RadioUdaan_Admin_Event_Editor {
 				);
 			}
 		}
+		update_post_meta(
+			$event_id,
+			RadioUdaan_Cpt_Ru_Event::META_ALLOW_MULTIPLE_REGISTRATIONS,
+			! empty( $_POST['ru_allow_multiple_registrations'] )
+		);
 
 		$thumb_id = isset( $_POST['featured_image_id'] ) ? (int) $_POST['featured_image_id'] : 0;
 		if ( $thumb_id ) {

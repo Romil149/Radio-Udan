@@ -40,6 +40,9 @@ final liveRadioProvider = Provider<LiveRadioConfig>((ref) {
 /// Main shell tab index: 0 Live, 1 Library, 2 Events, 3 More.
 final mainShellTabIndexProvider = StateProvider<int>((ref) => 0);
 
+/// Pending event ID from a deep link, consumed after auth completes.
+final pendingEventDeepLinkProvider = StateProvider<int?>((ref) => null);
+
 final authTokenProvider = StateProvider<String?>((ref) => null);
 
 /// Cached profile for routing (phone/email verification) and More tab.
@@ -52,7 +55,16 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   ref.keepAlive();
   final base = ref.watch(apiBaseUrlProvider);
   final token = ref.watch(authTokenProvider);
-  return ApiClient(baseUrl: base, bearerToken: token);
+  return ApiClient(
+    baseUrl: base,
+    bearerToken: token,
+    onUnauthorized: () {
+      ref.read(authTokenProvider.notifier).state = null;
+      ref.read(authUserProvider.notifier).state = null;
+      ref.read(authPhoneProvider.notifier).state = null;
+      ref.read(tokenStorageProvider).clear();
+    },
+  );
 });
 
 final radioudaanApiProvider = Provider<RadioUdaanApi>((ref) {

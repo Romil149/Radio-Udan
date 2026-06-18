@@ -31,6 +31,21 @@ class RadioUdaan_Otp_Service {
 			return $phone;
 		}
 
+		if ( ! self::expose_dev_otp()
+			&& class_exists( 'RadioUdaan_Otp_Msg91' )
+			&& RadioUdaan_Otp_Msg91::is_configured()
+			&& 0 !== strpos( $phone, '+91' )
+		) {
+			return new WP_Error(
+				'otp_sms_unsupported_country',
+				__(
+					'Text message codes are only available for India mobile numbers, country code plus nine one. Sign in with your email and password instead, or use forgot password with your email address.',
+					'radioudaan-app-api'
+				),
+				array( 'status' => 400 )
+			);
+		}
+
 		$purpose = self::sanitize_purpose( $purpose );
 		if ( is_wp_error( $purpose ) ) {
 			return $purpose;

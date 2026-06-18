@@ -13,11 +13,16 @@ import '../../core/widgets/main_tab_app_bar.dart';
 import 'event_registration_screen.dart';
 import 'widgets/event_card.dart';
 
-final openEventsProvider = FutureProvider<List<EventSummary>>((ref) async {
-  return ref.read(radioudaanApiProvider).listEvents(status: 'open');
+final eventsProvider = FutureProvider<List<EventSummary>>((ref) async {
+  final items =
+      await ref.read(radioudaanApiProvider).listEvents(status: 'all');
+  return [...items]..sort((a, b) {
+      if (a.isRegistrationOpen == b.isRegistrationOpen) return 0;
+      return a.isRegistrationOpen ? -1 : 1;
+    });
 });
 
-/// Open events list — Stitch layout with banner cards and in-app registration.
+/// Events list — open and closed — with in-app registration when open.
 class EventsTab extends ConsumerWidget {
   const EventsTab({super.key});
 
@@ -32,7 +37,7 @@ class EventsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final copy = ref.watch(appCopyProvider);
-    final events = ref.watch(openEventsProvider);
+    final events = ref.watch(eventsProvider);
 
     return Scaffold(
       backgroundColor: UdaanColors.background,
@@ -52,8 +57,8 @@ class EventsTab extends ConsumerWidget {
                 color: UdaanColors.primary,
                 backgroundColor: UdaanColors.surfaceContainer,
                 onRefresh: () async {
-                  ref.invalidate(openEventsProvider);
-                  await ref.read(openEventsProvider.future);
+                  ref.invalidate(eventsProvider);
+                  await ref.read(eventsProvider.future);
                 },
                 child: ListView(
                   padding: const EdgeInsets.only(bottom: 24),
@@ -106,16 +111,19 @@ class EventsTab extends ConsumerWidget {
                             EventCard(
                               event: event,
                               bannerUrl: _bannerUrl(ref, event),
-                              onRegister: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => EventRegistrationScreen(
-                                      eventId: event.eventId,
-                                      title: event.title,
-                                    ),
-                                  ),
-                                );
-                              },
+                              onRegister: event.isRegistrationOpen
+                                  ? () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute<void>(
+                                          builder: (_) =>
+                                              EventRegistrationScreen(
+                                            eventId: event.eventId,
+                                            title: event.title,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  : null,
                             ),
                             const SizedBox(height: 16),
                           ],
@@ -138,7 +146,7 @@ class EventsTab extends ConsumerWidget {
             message: parseApiError(error).message,
             icon: Icons.error_outline,
             actionLabel: AppStrings.retry,
-            onAction: () => ref.invalidate(openEventsProvider),
+            onAction: () => ref.invalidate(eventsProvider),
           ),
         ),
       ),

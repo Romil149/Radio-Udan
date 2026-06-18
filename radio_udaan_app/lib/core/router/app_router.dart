@@ -11,9 +11,11 @@ import '../../features/auth/register_screen.dart';
 import '../../features/auth/reset_password_screen.dart';
 import '../../features/auth/verify_email_screen.dart';
 import '../../features/bootstrap/bootstrap_screen.dart';
+import '../../features/events/event_deep_link_screen.dart';
 import '../../features/shell/main_shell_screen.dart';
 import '../models/otp_purpose.dart';
 import '../providers/app_providers.dart';
+import 'event_deep_link.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -35,10 +37,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     refreshListenable: refresh,
     initialLocation: '/bootstrap',
     redirect: (context, state) {
+      final normalized = normalizeEventDeepLinkUri(state.uri);
+      if (normalized != null) {
+        return normalized;
+      }
+
       final authToken = ref.read(authTokenProvider);
       final authUser = ref.read(authUserProvider);
       final config = ref.read(remoteConfigProvider);
       final path = state.matchedLocation;
+      final eventId = parseEventDeepLinkPath(path);
+      if (eventId != null) {
+        ref.read(pendingEventDeepLinkProvider.notifier).state = eventId;
+      }
       final loggedIn = authToken != null && authToken.isNotEmpty;
       final user = authUser;
       final requireEmail =
@@ -46,7 +57,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       if (path == '/bootstrap') return null;
 
+      if (config == null) {
+        return '/bootstrap';
+      }
+
       if (!loggedIn && !_isAuthRoute(path)) {
+        return '/login';
+      }
+
+      if (loggedIn && user == null && path != '/bootstrap') {
         return '/login';
       }
 
@@ -143,6 +162,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/',
         builder: (context, state) => const MainShellScreen(),
+      ),
+      GoRoute(
+        path: '/event/:eventId',
+        builder: (context, state) {
+          final rawId = state.pathParameters['eventId'] ?? '';
+          final eventId = int.tryParse(rawId) ?? 0;
+          return EventDeepLinkScreen(eventId: eventId);
+        },
       ),
     ],
   );

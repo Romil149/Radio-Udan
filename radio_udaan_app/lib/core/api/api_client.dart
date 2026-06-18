@@ -8,6 +8,7 @@ class ApiClient {
   ApiClient({
     required String baseUrl,
     String? bearerToken,
+    void Function()? onUnauthorized,
   }) : _dio = Dio(
           BaseOptions(
             baseUrl: _normalizeBase(baseUrl),
@@ -21,6 +22,18 @@ class ApiClient {
         ) {
     if (bearerToken != null && bearerToken.isNotEmpty) {
       _dio.options.headers['Authorization'] = 'Bearer $bearerToken';
+    }
+    if (onUnauthorized != null) {
+      _dio.interceptors.add(
+        InterceptorsWrapper(
+          onError: (error, handler) {
+            if (error.response?.statusCode == 401) {
+              onUnauthorized();
+            }
+            handler.next(error);
+          },
+        ),
+      );
     }
   }
 

@@ -72,17 +72,31 @@ class RadioUdaan_Registration_Guard {
 	}
 
 	/**
-	 * @param int    $event_id Event CPT id.
-	 * @param int    $form_id  Forminator form id.
-	 * @param string $phone    E.164 phone.
+	 * @param array<string,mixed> $event   Event from registry.
+	 * @param int                 $form_id Forminator form id.
+	 * @param string              $email   Authenticated app user email.
 	 * @return true|WP_Error
 	 */
-	public static function check_duplicate( $event_id, $form_id, $phone ) {
+	public static function check_duplicate( $event, $form_id, $email ) {
 		if ( ! RadioUdaan_App_Settings::prevent_duplicate_registration() ) {
 			return true;
 		}
 
-		if ( self::has_existing_entry( $event_id, $form_id, $phone ) ) {
+		if ( ! empty( $event['allow_multiple_registrations'] ) ) {
+			return true;
+		}
+
+		$email = strtolower( sanitize_email( (string) $email ) );
+		if ( ! $email ) {
+			return true;
+		}
+
+		$event_id = isset( $event['event_id'] ) ? (int) $event['event_id'] : 0;
+		if ( $event_id <= 0 ) {
+			return true;
+		}
+
+		if ( self::has_existing_entry( $event_id, $form_id, $email ) ) {
 			return new WP_Error(
 				'registration_duplicate',
 				__( 'You have already registered for this event.', 'radioudaan-app-api' ),
@@ -96,10 +110,10 @@ class RadioUdaan_Registration_Guard {
 	/**
 	 * @param int    $event_id Event id.
 	 * @param int    $form_id  Form id.
-	 * @param string $phone    Phone.
+	 * @param string $email    Normalized email.
 	 * @return bool
 	 */
-	public static function has_existing_entry( $event_id, $form_id, $phone ) {
+	public static function has_existing_entry( $event_id, $form_id, $email ) {
 		global $wpdb;
 
 		$meta_table  = $wpdb->prefix . 'frmt_form_entry_meta';
@@ -110,14 +124,14 @@ class RadioUdaan_Registration_Guard {
 			$wpdb->prepare(
 				"SELECT e.entry_id FROM {$entry_table} e
 				INNER JOIN {$meta_table} m_event ON m_event.entry_id = e.entry_id AND m_event.meta_key = %s AND m_event.meta_value = %s
-				INNER JOIN {$meta_table} m_phone ON m_phone.entry_id = e.entry_id AND m_phone.meta_key = %s AND m_phone.meta_value = %s
+				INNER JOIN {$meta_table} m_email ON m_email.entry_id = e.entry_id AND m_email.meta_key = %s AND m_email.meta_value = %s
 				INNER JOIN {$meta_table} m_src ON m_src.entry_id = e.entry_id AND m_src.meta_key = %s AND m_src.meta_value = %s
 				WHERE e.form_id = %d
 				LIMIT 1",
 				'_radioudaan_event_id',
 				(string) (int) $event_id,
-				'_radioudaan_phone_e164',
-				$phone,
+				'_radioudaan_email',
+				$email,
 				RadioUdaan_Entry_Source::META_KEY,
 				RadioUdaan_Entry_Source::SOURCE_APP,
 				(int) $form_id

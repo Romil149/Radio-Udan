@@ -7,6 +7,7 @@ import '../../core/constants/app_strings.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/router/app_router.dart';
+import '../../core/router/event_deep_link.dart';
 import '../../core/theme/udaan_colors.dart';
 import 'auth_otp_flow.dart';
 import 'auth_session_helper.dart';
@@ -107,7 +108,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           extra: VerifyEmailRouteArgs(email: session.email ?? ''),
         );
       } else {
-        context.go('/');
+        navigateAfterAuth(context, ref);
       }
     } catch (e) {
       final message = parseApiError(e).message;

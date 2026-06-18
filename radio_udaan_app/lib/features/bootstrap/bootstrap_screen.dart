@@ -42,7 +42,12 @@ class _BootstrapScreenState extends ConsumerState<BootstrapScreen> {
     _navigated = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.go(result.isLoggedIn ? '/' : '/login');
+      if (result.isLoggedIn) {
+        final pending = ref.read(pendingEventDeepLinkProvider);
+        context.go(pending != null ? '/event/$pending' : '/');
+      } else {
+        context.go('/login');
+      }
     });
   }
 

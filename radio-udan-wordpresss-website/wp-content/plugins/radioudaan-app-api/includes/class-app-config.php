@@ -12,8 +12,10 @@ defined( 'ABSPATH' ) || exit;
  */
 class RadioUdaan_App_Config {
 
-	const CACHE_KEY = 'radioudaan_app_public_config';
-	const CACHE_TTL = 300;
+	const CACHE_KEY            = 'radioudaan_app_public_config';
+	const CACHE_TTL            = 300;
+	const LIVE_RADIO_CACHE_KEY = 'radioudaan_app_live_radio_config';
+	const LIVE_RADIO_CACHE_TTL = 60;
 
 	/**
 	 * Cached public config (rebuilt when settings change or TTL expires).
@@ -30,8 +32,7 @@ class RadioUdaan_App_Config {
 		}
 
 		$config['api_version'] = RADIOUDAAN_APP_API_VERSION;
-		// On-air show title / RJ / hero come from radio-shows schedule (never cache).
-		$config['live_radio'] = RadioUdaan_App_Live_Radio::get_public_config();
+		$config['live_radio']  = self::get_cached_live_radio();
 
 		return $config;
 	}
@@ -41,6 +42,24 @@ class RadioUdaan_App_Config {
 	 */
 	public static function invalidate_cache() {
 		delete_transient( self::CACHE_KEY );
+		delete_transient( self::LIVE_RADIO_CACHE_KEY );
+	}
+
+	/**
+	 * On-air show title / RJ / hero from radio-shows schedule (short TTL).
+	 *
+	 * @return array<string,mixed>
+	 */
+	private static function get_cached_live_radio() {
+		$cached = get_transient( self::LIVE_RADIO_CACHE_KEY );
+		if ( is_array( $cached ) && ! empty( $cached ) ) {
+			return $cached;
+		}
+
+		$config = RadioUdaan_App_Live_Radio::get_public_config();
+		set_transient( self::LIVE_RADIO_CACHE_KEY, $config, self::LIVE_RADIO_CACHE_TTL );
+
+		return $config;
 	}
 
 	/**
@@ -76,7 +95,6 @@ class RadioUdaan_App_Config {
 			'notification_preferences' => RadioUdaan_App_Settings::get_notification_preferences_defaults(),
 			'branding'           => RadioUdaan_App_Branding::get_public_branding(),
 			'copy'               => RadioUdaan_App_Branding::get_public_copy(),
-			'live_radio'         => RadioUdaan_App_Live_Radio::get_public_config(),
 		);
 	}
 }

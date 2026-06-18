@@ -557,7 +557,8 @@ class RadioUdaan_Admin_Settings_Page {
 				<div class="ru-admin__toggle">
 					<input type="checkbox" name="prevent_duplicate" id="prevent_duplicate" value="1" <?php checked( $c['prevent_dup'] ); ?> />
 					<div>
-						<label for="prevent_duplicate"><strong><?php esc_html_e( 'One registration per phone per event', 'radioudaan-app-api' ); ?></strong></label>
+						<label for="prevent_duplicate"><strong><?php esc_html_e( 'One registration per email per event', 'radioudaan-app-api' ); ?></strong></label>
+						<p class="description"><?php esc_html_e( 'Per-event override: allow multiple registrations per email on individual App Events.', 'radioudaan-app-api' ); ?></p>
 					</div>
 				</div>
 			</div>

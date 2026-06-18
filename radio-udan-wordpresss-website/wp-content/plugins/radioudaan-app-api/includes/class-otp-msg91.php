@@ -1,6 +1,9 @@
 <?php
 /**
- * MSG91 OTP SMS provider (optional).
+ * MSG91 OTP SMS provider (India domestic sendhttp.php + DLT).
+ *
+ * Accepts E.164 input but delivery is reliable for +91 only unless
+ * international routing is configured separately. See .cursor/memory/msg91-international.md.
  *
  * Configure in WP admin or wp-config.php:
  * - radioudaan_msg91_auth_key (option) or RADIOUDAAN_MSG91_AUTH_KEY constant

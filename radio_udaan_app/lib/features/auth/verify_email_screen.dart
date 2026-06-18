@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
+import '../../core/router/event_deep_link.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/udaan_colors.dart';
 import 'auth_session_helper.dart';
@@ -136,7 +137,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
           );
       await persistAuthSession(ref, session);
       if (!mounted) return;
-      context.go('/');
+      navigateAfterAuth(context, ref);
     } catch (e) {
       final message = parseApiError(e).message;
       setState(() => _error = message);

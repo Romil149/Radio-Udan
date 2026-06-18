@@ -8,6 +8,8 @@
 
 ## Part 0 — Strict re-test results (last run)
 
+**Latest post-deploy gate (13 June 2026):** With App settings filled (`support` email + helpline, `privacy_policy_url`), `bash scripts/staging-post-deploy-verify.sh` reports **smoke 14/14**, **34 routes**, and **OVERALL: PASS**. Use that script after every FTP/cPanel plugin upload; `bash scripts/load-test-registration-plan.sh` is plan-only (no load).
+
 Run date: **5 June 2026** (automated + API comparison local vs staging).
 
 ### Flutter app (local codebase)

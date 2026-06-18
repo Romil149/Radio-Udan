@@ -61,9 +61,9 @@ assert d.get("api_base_url", "").startswith("https://"), "api_base_url https"
 support = d.get("support")
 if not support or not (support.get("helpline_phone") or support.get("email")):
     sys.exit("support helpline/email empty — set in WP Admin")
-legal = d.get("legal") or {}
-if not legal.get("privacy_policy_url"):
-    sys.exit("legal.privacy_policy_url missing — set in WP Admin")
+privacy = (d.get("legal") or {}).get("privacy_policy_url") or d.get("privacy_policy_url")
+if not privacy:
+    sys.exit("privacy_policy_url missing — set in WP Admin")
 PY
 then
   ok "GET /config"

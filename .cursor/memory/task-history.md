@@ -1,6 +1,25 @@
 # Task History
 
-### 2026-06-05 — Cursor Cloud Agent setup (message-only workflow)
+### 2026-06-13 — P3 sprint: deploy zip, QA automation, iOS links, MSG91 gate
+**Requested by**: User (continue in order, full AI agents team)
+**Agents**: shell (package-staging-plugin + staging-qa-automated) + Flutter/iOS (Universal Links entitlements) + WP (India OTP fail-loud) + docs (ios-push-setup.md)
+**What was done**: `dist/radioudaan-app-api-staging.zip` packager. Extended QA script (events all + auth_policy). iOS `Runner.entitlements` + URL scheme. MSG91 non-+91 returns 400 with clear message. `scripts/apple-app-site-association.template.json` for HTTPS universal links.
+**Status**: ✅ dart analyze + staging-qa-automated PASS (staging API; new plugin bits need zip upload)
+**Notes**: Upload zip to staging; GitHub APK still manual; AASA file needs Team ID on server.
+
+### 2026-06-13 — P2 sprint: deep links, live_radio cache, deploy scripts, MSG91 audit
+**Requested by**: User (continue in order, full AI agents team)
+**Agents**: WP (BUG-013 cache) + Flutter (event deep links) + shell (post-deploy verify + load plan) + explore (MSG91 intl)
+**What was done**: Separate 60s transient for `live_radio`. Route `/event/:eventId` + Android intent filters + pending link through login. `scripts/staging-post-deploy-verify.sh`, `scripts/load-test-registration-plan.sh`. `.cursor/memory/msg91-international.md`. Staging post-deploy **OVERALL PASS**.
+**Status**: ✅ dart analyze + staging verify pass; APK workflow needs manual trigger (gh not auth locally)
+**Notes**: Deploy plugin folder to staging for email dedupe + cache fix. Test deep link: `adb shell am start -a android.intent.action.VIEW -d "radioudaan://event/1318" com.radioudaan.radio_udaan_app`
+
+**Requested by**: User (continue in order with full AI agents team)
+**Agents**: Coordinator → WP (email dedupe) + Flutter (closed events) + Flutter (Crashlytics) + shell verify
+**What was done**: Fixed `staging-api-smoke.sh` (`privacy_policy_url` top-level). Staging gate **14/14 PASS**. Per-event `ru_allow_multiple_registrations` + email duplicate guard (`_radioudaan_email`). Events tab shows closed events disabled. Firebase Crashlytics wired in `main.dart`. OTP Contact Support → in-app Help (prior). Admin label updated to email per event.
+**Status**: ✅ `dart analyze lib` + `php -l` + staging smoke exit 0 locally
+**Notes**: Deploy plugin to staging for dedupe meta. Crashlytics needs **release** build to upload. Manual device QA checklist below still required.
+
 **Requested by**: User (automate everything via messaging)
 **What was done**: Pushed `AGENTS.md`, `CLOUD_OPERATIONS.md`, `.cursor/environment.json`, `ci-analyze.yml`, and version-controlled `.cursor/rules|memory|agents` to `main`. GitHub already connected as Romil149. Created cloud environment for `Romil149/Radio-Udan` and started dashboard setup agent (~20 min). Updated `.gitignore` to allow team `.cursor` config.
 **Files changed**: `AGENTS.md`, `CLOUD_OPERATIONS.md`, `.cursor/environment.json`, `.github/workflows/ci-analyze.yml`, `.gitignore`, `.cursor/**`
