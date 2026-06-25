@@ -30,7 +30,7 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>com.radioudaan.radioUdaanApp</string>
+			<string>org.reactjs.native.example.Radio</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>radioudaan</string>

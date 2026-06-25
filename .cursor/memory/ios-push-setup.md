@@ -1,9 +1,20 @@
 # iOS push notification setup (Radio Udaan)
 
 Firebase project: **`radio-udan-2412a`**  
-iOS bundle ID: **`com.radioudaan.radioUdaanApp`**
+iOS bundle ID: **`org.reactjs.native.example.Radio`** (App Store Connect app `1439057220`)
 
 This doc covers operator steps to enable APNs → FCM → app delivery. **Do not commit APNs keys, service account JSON, or `.p8` files to git.**
+
+---
+
+## 0. GitHub Actions → TestFlight (no local Mac)
+
+Workflow: `.github/workflows/build-ios-testflight.yml`  
+Setup script: `bash scripts/ios-github-secrets-setup.sh`
+
+**GitHub secrets required:** `APPLE_TEAM_ID`, `IOS_DISTRIBUTION_CERTIFICATE_BASE64`, `IOS_DISTRIBUTION_CERTIFICATE_PASSWORD`, `IOS_PROVISIONING_PROFILE_BASE64`, `IOS_PROVISIONING_PROFILE_NAME`, `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_API_PRIVATE_KEY`
+
+After secrets are set: **Actions** → **Build iOS TestFlight** → **Run workflow**. Build appears under App Store Connect → **Radio Udaan** → **TestFlight**.
 
 ---
 
@@ -14,7 +25,7 @@ This doc covers operator steps to enable APNs → FCM → app delivery. **Do not
 3. Download the **`.p8`** file once (cannot re-download). Store it in a password manager or secure vault — **not in the repo**.
 4. Note the **Key ID** and your **Team ID** (Membership details).
 
-The App ID `com.radioudaan.radioUdaanApp` must have **Push Notifications** capability enabled (Xcode or Developer portal).
+The App ID `org.reactjs.native.example.Radio` must have **Push Notifications** capability enabled (Xcode or Developer portal).
 
 ---
 
@@ -22,7 +33,7 @@ The App ID `com.radioudaan.radioUdaanApp` must have **Push Notifications** capab
 
 1. Open [Firebase Console](https://console.firebase.google.com/) → project **`radio-udan-2412a`**.
 2. **Project settings** (gear) → **Cloud Messaging** tab.
-3. Under **Apple app configuration**, select the iOS app (`com.radioudaan.radioUdaanApp`).
+3. Under **Apple app configuration**, select the iOS app (`org.reactjs.native.example.Radio`).
 4. **APNs Authentication Key** → Upload:
    - `.p8` file
    - **Key ID**
@@ -37,8 +48,8 @@ Alternative (not preferred): APNs certificates — auth keys do not expire yearl
 
 | Item | Location | Expected |
 |------|----------|----------|
-| Firebase plist | `radio_udaan_app/ios/Runner/GoogleService-Info.plist` | `PROJECT_ID` = `radio-udan-2412a`, `BUNDLE_ID` = `com.radioudaan.radioUdaanApp` |
-| Dart options | `radio_udaan_app/lib/firebase_options.dart` | `iosBundleId: 'com.radioudaan.radioUdaanApp'` |
+| Firebase plist | `radio_udaan_app/ios/Runner/GoogleService-Info.plist` | `PROJECT_ID` = `radio-udan-2412a`, `BUNDLE_ID` = `org.reactjs.native.example.Radio` |
+| Dart options | `radio_udaan_app/lib/firebase_options.dart` | `iosBundleId: 'org.reactjs.native.example.Radio'` |
 | Firebase init | `radio_udaan_app/ios/Runner/AppDelegate.swift` | `FirebaseApp.configure()` in `didFinishLaunchingWithOptions` |
 | Background mode | `radio_udaan_app/ios/Runner/Info.plist` | `UIBackgroundModes` includes `remote-notification` |
 | Client | `radio_udaan_app/lib/core/push/push_notification_service.dart` | Requests permission, registers FCM token with WP API |

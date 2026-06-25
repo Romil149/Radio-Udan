@@ -12,6 +12,8 @@ You work on **Radio Udaan**: Flutter app + WordPress App API. The user delegates
 | `.cursor/memory/` | Task history, decisions, bugs — read before work, update after |
 | `scripts/staging-api-smoke.sh` | Staging API gate |
 | `.github/workflows/build-staging-apk.yml` | Cloud APK build (GitHub Actions) |
+| `.github/workflows/build-ios-testflight.yml` | Cloud iOS IPA → TestFlight (GitHub Actions) |
+| `scripts/ios-github-secrets-setup.sh` | One-time iOS signing secrets for GitHub |
 
 ## Non-negotiables
 
@@ -61,6 +63,14 @@ Do **not** rely on local `flutter build apk`. Use GitHub Actions:
 - Workflow: **Build staging APK** (`.github/workflows/build-staging-apk.yml`)
 - Trigger: push to `main` or manual **Run workflow**
 - Artifact: `app-release.apk` with staging API baked in
+
+### iOS TestFlight (no local Mac)
+
+After one-time GitHub secrets setup (`bash scripts/ios-github-secrets-setup.sh`):
+
+- Workflow: **Build iOS TestFlight** (`.github/workflows/build-ios-testflight.yml`)
+- Trigger: push to `main` or manual **Run workflow**
+- Uploads to App Store Connect → **TestFlight** (bundle ID `org.reactjs.native.example.Radio`)
 
 ### Typical user requests → your actions
 

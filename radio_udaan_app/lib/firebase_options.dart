@@ -41,6 +41,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '860433527358',
     projectId: 'radio-udan-2412a',
     storageBucket: 'radio-udan-2412a.firebasestorage.app',
-    iosBundleId: 'com.radioudaan.radioUdaanApp',
+    iosBundleId: 'org.reactjs.native.example.Radio',
   );
 }
