@@ -95,7 +95,7 @@ if [[ "${1:-}" == "p12" ]]; then
   openssl x509 -inform DER -in "$CER" -out "${CSR_DIR}/distribution.pem"
   read -r -s -p "Password for .p12 export: " P12_PASS
   echo ""
-  openssl pkcs12 -export -out "$P12" -inkey "$CSR_KEY" -in "${CSR_DIR}/distribution.pem" -password "pass:${P12_PASS}"
+  openssl pkcs12 -export -legacy -out "$P12" -inkey "$CSR_KEY" -in "${CSR_DIR}/distribution.pem" -password "pass:${P12_PASS}"
   echo ""
   echo "Created: $P12"
   echo ""
