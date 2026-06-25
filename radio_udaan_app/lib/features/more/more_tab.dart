@@ -8,7 +8,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/api/api_error.dart';
 import '../../core/config/remote_config.dart';
 import '../../core/constants/app_constants.dart';
-import '../../core/constants/app_strings.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/storage/registration_draft_storage.dart';
@@ -67,23 +66,23 @@ class MoreTab extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.all(BrandTokens.screenPadding),
           children: [
-            const MoreHeroCard(
-              title: AppStrings.moreOptionsTitle,
-              intro: AppStrings.moreOptionsIntro,
+            MoreHeroCard(
+              title: copy.moreOptionsTitle,
+              intro: copy.moreOptionsIntro,
             ),
             if (isSignedIn) ...[
               MoreMenuTile(
-                title: AppStrings.userProfile,
-                subtitle: AppStrings.userProfileSubtitle,
+                title: copy.userProfile,
+                subtitle: copy.userProfileSubtitle,
                 icon: Icons.person,
                 iconBackground: UdaanColors.primary,
                 onTap: () => _push(context, const EditProfileScreen()),
               ),
               MoreMenuTile(
-                title: AppStrings.notificationsTitle,
+                title: copy.notificationsTitle,
                 subtitle: unreadCount > 0
-                    ? AppStrings.unreadNotificationsBadge(unreadCount)
-                    : AppStrings.notificationsSubtitle,
+                    ? copy.unreadNotificationsBadge(unreadCount)
+                    : copy.notificationsSubtitle,
                 icon: Icons.notifications_outlined,
                 iconBackground: UdaanColors.secondary,
                 trailing: unreadCount > 0
@@ -107,8 +106,8 @@ class MoreTab extends ConsumerWidget {
                 },
               ),
               MoreMenuTile(
-                title: AppStrings.settingsTitle,
-                subtitle: AppStrings.settingsSubtitle,
+                title: copy.settingsTitle,
+                subtitle: copy.settingsSubtitle,
                 icon: Icons.tune,
                 iconBackground: UdaanColors.surfaceContainerHigh,
                 iconColor: UdaanColors.primaryGlow,
@@ -116,8 +115,8 @@ class MoreTab extends ConsumerWidget {
               ),
             ],
             MoreMenuTile(
-              title: AppStrings.helpAndContact,
-              subtitle: AppStrings.helpAndContactSubtitle,
+              title: copy.helpAndContact,
+              subtitle: copy.helpAndContactSubtitle,
               icon: Icons.support_agent,
               iconBackground: UdaanColors.surfaceContainerHigh,
               iconColor: UdaanColors.onBackground,
@@ -125,19 +124,19 @@ class MoreTab extends ConsumerWidget {
             ),
             if (config?.aboutUrl != null)
               MoreMenuTile(
-                title: AppStrings.aboutUs,
-                subtitle: AppStrings.aboutUsSubtitle,
+                title: copy.aboutUs,
+                subtitle: copy.aboutUsSubtitle,
                 icon: Icons.info_outline,
                 iconBackground: UdaanColors.secondary,
-                onTap: () => _openExternalUrl(context, config!.aboutUrl!),
+                onTap: () => _openExternalUrl(context, config!.aboutUrl!, copy),
               ),
             if (isSignedIn && user != null && !user.emailVerified) ...[
               const SizedBox(height: 4),
               MoreMenuTile(
-                title: AppStrings.verifyEmailLink,
+                title: copy.verifyEmailLink,
                 subtitle: user.email != null && user.email!.isNotEmpty
-                    ? '${user.email}. ${AppStrings.emailNotVerified}'
-                    : AppStrings.emailNotVerified,
+                    ? '${user.email}. ${copy.emailNotVerified}'
+                    : copy.emailNotVerified,
                 icon: Icons.mark_email_unread_outlined,
                 iconBackground: UdaanColors.primary,
                 onTap: () => context.go(
@@ -150,9 +149,9 @@ class MoreTab extends ConsumerWidget {
               const SizedBox(height: 8),
               Semantics(
                 header: true,
-                label: AppStrings.legalSection,
+                label: copy.legalSection,
                 child: Text(
-                  AppStrings.legalSection,
+                  copy.legalSection,
                   style: GoogleFonts.atkinsonHyperlegible(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -161,43 +160,43 @@ class MoreTab extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              ..._legalTiles(context, config),
+              ..._legalTiles(context, config, copy),
             ],
             const SizedBox(height: 8),
             MoreMenuTile(
-              title: AppStrings.deleteAccount,
-              subtitle: AppStrings.deleteAccountSubtitle,
+              title: copy.deleteAccount,
+              subtitle: copy.deleteAccountSubtitle,
               semanticsLabel: isSignedIn
                   ? null
-                  : '${AppStrings.deleteAccount}. ${AppStrings.deleteAccountSubtitle}. ${AppStrings.notSignedIn}',
+                  : '${copy.deleteAccount}. ${copy.deleteAccountSubtitle}. ${copy.notSignedIn}',
               icon: Icons.delete_forever_outlined,
               iconBackground: UdaanColors.error.withValues(alpha: 0.2),
               iconColor: UdaanColors.error,
               titleColor: UdaanColors.error,
               onTap: isSignedIn
-                  ? () => _confirmDeleteAccount(context, ref)
+                  ? () => _confirmDeleteAccount(context, ref, copy)
                   : null,
             ),
             MoreMenuTile(
-              title: AppStrings.logout,
-              subtitle: AppStrings.logoutSubtitle,
+              title: copy.logout,
+              subtitle: copy.logoutSubtitle,
               semanticsLabel: isSignedIn
                   ? null
-                  : '${AppStrings.logout}. ${AppStrings.logoutSubtitle}. ${AppStrings.notSignedIn}',
+                  : '${copy.logout}. ${copy.logoutSubtitle}. ${copy.notSignedIn}',
               icon: Icons.logout,
               iconBackground: UdaanColors.error.withValues(alpha: 0.15),
               iconColor: UdaanColors.error,
               titleColor: UdaanColors.primaryGlow,
               borderColor: UdaanColors.primaryGlow,
               trailing: const Icon(Icons.logout, color: UdaanColors.primaryGlow),
-              onTap: isSignedIn ? () => _logout(context, ref) : null,
+              onTap: isSignedIn ? () => _logout(context, ref, copy) : null,
             ),
             const SizedBox(height: 24),
             Center(
               child: Column(
                 children: [
                   Text(
-                    AppStrings.appVersionLabel(AppConstants.appVersion),
+                    copy.appVersionLabel(AppConstants.appVersion),
                     style: GoogleFonts.atkinsonHyperlegible(
                       fontSize: 14,
                       color: UdaanColors.onSurfaceVariant,
@@ -205,7 +204,7 @@ class MoreTab extends ConsumerWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    AppStrings.madeWithAccessibility,
+                    copy.madeWithAccessibility,
                     style: GoogleFonts.atkinsonHyperlegible(
                       fontSize: 13,
                       color: UdaanColors.onSurfaceVariant,
@@ -220,10 +219,14 @@ class MoreTab extends ConsumerWidget {
     );
   }
 
-  List<Widget> _legalTiles(BuildContext context, RemoteConfig config) {
+  List<Widget> _legalTiles(
+    BuildContext context,
+    RemoteConfig config,
+    AppCopy copy,
+  ) {
     final links = <({String title, String? url, IconData icon})>[
-      (title: AppStrings.privacyPolicy, url: config.privacyPolicyUrl, icon: Icons.privacy_tip_outlined),
-      (title: AppStrings.termsOfUse, url: config.termsUrl, icon: Icons.description_outlined),
+      (title: copy.privacyPolicy, url: config.privacyPolicyUrl, icon: Icons.privacy_tip_outlined),
+      (title: copy.termsOfUse, url: config.termsUrl, icon: Icons.description_outlined),
     ];
 
     return [
@@ -231,22 +234,26 @@ class MoreTab extends ConsumerWidget {
         if (link.url != null)
           MoreMenuTile(
             title: link.title,
-            subtitle: AppStrings.linkOpensInBrowser,
+            subtitle: copy.linkOpensInBrowser,
             icon: link.icon,
             iconBackground: UdaanColors.surfaceContainerHigh,
             iconColor: UdaanColors.primaryGlow,
-            onTap: () => _openExternalUrl(context, link.url!),
+            onTap: () => _openExternalUrl(context, link.url!, copy),
           ),
     ];
   }
 
-  Future<void> _openExternalUrl(BuildContext context, String url) async {
+  Future<void> _openExternalUrl(
+    BuildContext context,
+    String url,
+    AppCopy copy,
+  ) async {
     final uri = Uri.tryParse(url);
     if (uri == null || !uri.hasScheme) {
       if (context.mounted) {
-        _announce(context, AppStrings.linkUnavailable);
+        _announce(context, copy.linkUnavailable);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.linkUnavailable)),
+          SnackBar(content: Text(copy.linkUnavailable)),
         );
       }
       return;
@@ -258,16 +265,16 @@ class MoreTab extends ConsumerWidget {
         mode: LaunchMode.externalApplication,
       );
       if (!launched && context.mounted) {
-        _announce(context, AppStrings.linkOpenFailed);
+        _announce(context, copy.linkOpenFailed);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.linkOpenFailed)),
+          SnackBar(content: Text(copy.linkOpenFailed)),
         );
       }
     } catch (_) {
       if (context.mounted) {
-        _announce(context, AppStrings.linkOpenFailed);
+        _announce(context, copy.linkOpenFailed);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.linkOpenFailed)),
+          SnackBar(content: Text(copy.linkOpenFailed)),
         );
       }
     }
@@ -276,33 +283,38 @@ class MoreTab extends ConsumerWidget {
   Future<void> _confirmDeleteAccount(
     BuildContext context,
     WidgetRef ref,
+    AppCopy copy,
   ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text(AppStrings.deleteAccountConfirmTitle),
-        content: const Text(AppStrings.deleteAccountConfirmBody),
+        title: Text(copy.deleteAccountConfirmTitle),
+        content: Text(copy.deleteAccountConfirmBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text(AppStrings.cancel),
+            child: Text(copy.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(ctx).colorScheme.error,
             ),
-            child: const Text(AppStrings.deleteAccount),
+            child: Text(copy.deleteAccount),
           ),
         ],
       ),
     );
 
     if (confirmed != true || !context.mounted) return;
-    await _deleteAccount(context, ref);
+    await _deleteAccount(context, ref, copy);
   }
 
-  Future<void> _deleteAccount(BuildContext context, WidgetRef ref) async {
+  Future<void> _deleteAccount(
+    BuildContext context,
+    WidgetRef ref,
+    AppCopy copy,
+  ) async {
     try {
       await ref.read(radioudaanApiProvider).deleteAccount();
     } catch (e) {
@@ -320,12 +332,16 @@ class MoreTab extends ConsumerWidget {
     await drafts.clearAll();
     await clearAuthSession(ref);
     if (context.mounted) {
-      _announce(context, AppStrings.accountDeletedSigningOut);
+      _announce(context, copy.accountDeletedSigningOut);
       context.go('/login');
     }
   }
 
-  Future<void> _logout(BuildContext context, WidgetRef ref) async {
+  Future<void> _logout(
+    BuildContext context,
+    WidgetRef ref,
+    AppCopy copy,
+  ) async {
     try {
       await ref.read(radioudaanApiProvider).logout();
     } on ApiError {
@@ -336,7 +352,7 @@ class MoreTab extends ConsumerWidget {
     await drafts.clearAll();
     await clearAuthSession(ref);
     if (context.mounted) {
-      _announce(context, AppStrings.signingOut);
+      _announce(context, copy.signingOut);
       context.go('/login');
     }
   }

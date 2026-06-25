@@ -3,7 +3,6 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/udaan_colors.dart';
@@ -22,6 +21,8 @@ class PhoneLoginScreen extends ConsumerStatefulWidget {
 }
 
 class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
+  AppCopy get _copy => ref.read(appCopyProvider);
+
   final _phoneInput = PhoneCountryInputController();
   String? _error;
   bool _loading = false;
@@ -55,8 +56,8 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
   Future<void> _submit() async {
     final phone = _phoneInput.e164;
     if (phone == null) {
-      setState(() => _error = AppStrings.phoneInvalid);
-      _announceError(AppStrings.phoneInvalid);
+      setState(() => _error = _copy.phoneInvalid);
+      _announceError(_copy.phoneInvalid);
       return;
     }
 
@@ -88,6 +89,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               UdaanAuthTopBar(
+                copy: copy,
                 title: branding.appName,
                 onBack: () {
                   if (context.canPop()) {
@@ -100,10 +102,11 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
               const SizedBox(height: 16),
               UdaanAuthLogoHeader(
                 branding: branding,
-                subtitle: copy.signInIntro,
+                subtitle: _copy.signInIntro,
               ),
               const SizedBox(height: 32),
               UdaanPhoneField(
+                copy: copy,
                 controller: _phoneInput,
                 textInputAction: TextInputAction.done,
                 required: true,
@@ -129,14 +132,14 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
               ],
               const SizedBox(height: 32),
               UdaanPrimaryButton(
-                label: AppStrings.otpSendCode,
+                label: _copy.otpSendCode,
                 icon: Icons.sms_outlined,
                 loading: _loading,
                 onPressed: _loading ? null : _submit,
               ),
               const SizedBox(height: 16),
               UdaanOutlineButton(
-                label: AppStrings.signInWithPassword,
+                label: _copy.signInWithPassword,
                 icon: Icons.lock_outline,
                 onPressed: _loading ? null : () => context.go('/login'),
               ),

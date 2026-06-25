@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../constants/app_strings.dart';
 import '../providers/app_providers.dart';
 import '../theme/brand_tokens.dart';
 import '../../features/shell/main_shell_screen.dart';
 import 'brand_app_bar.dart';
 
-/// Top bar for main shell tabs: menu (More) · page title · profile.
+/// Top bar for main shell tabs: page title · profile (More is bottom tab only).
 class MainTabAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final VoidCallback? onProfileTap;
 
@@ -29,25 +28,15 @@ class MainTabAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final copy = ref.watch(appCopyProvider);
     return BrandAppBar(
       title: title,
       centerTitle: true,
-      leading: Semantics(
-        button: true,
-        label: AppStrings.tabMore,
-        child: IconButton(
-          constraints: const BoxConstraints(
-            minWidth: BrandTokens.a11yMinTapTarget,
-            minHeight: BrandTokens.a11yMinTapTarget,
-          ),
-          onPressed: () => _openMoreTab(ref),
-          icon: const Icon(Icons.menu),
-        ),
-      ),
+      automaticallyImplyLeading: false,
       actions: [
         Semantics(
           button: true,
-          label: onProfileTap != null ? AppStrings.profile : AppStrings.tabMore,
+          label: onProfileTap != null ? copy.profile : copy.tabMore,
           child: IconButton(
             constraints: const BoxConstraints(
               minWidth: BrandTokens.a11yMinTapTarget,

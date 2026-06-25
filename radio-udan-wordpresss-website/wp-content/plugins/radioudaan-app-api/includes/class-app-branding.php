@@ -39,6 +39,7 @@ class RadioUdaan_App_Branding {
 	const OPTION_COPY_LIBRARY_SHOWS_EMPTY          = 'radioudaan_copy_library_shows_empty';
 	const OPTION_COPY_LIBRARY_WHATS_NEW_EMPTY      = 'radioudaan_copy_library_whats_new_empty';
 	const OPTION_COPY_UNSUPPORTED_FIELDS_NOTICE    = 'radioudaan_copy_unsupported_fields_notice';
+	const OPTION_COPY_OVERRIDES                    = 'radioudaan_copy_overrides';
 
 	/**
 	 * Website-aligned defaults (radio-udaan.com theme).
@@ -57,37 +58,12 @@ class RadioUdaan_App_Branding {
 	}
 
 	/**
+	 * Default copy strings (Flutter AppStrings catalog).
+	 *
 	 * @return array<string,string>
 	 */
 	public static function default_copy() {
-		return array(
-			'bootstrap_loading' => __( 'READY TO LAUNCH', 'radioudaan-app-api' ),
-			'sign_in_intro'     => __( 'Enter your mobile number. We will send a one-time code by SMS.', 'radioudaan-app-api' ),
-			'radio_intro'       => __( 'Listen to Radio Udaan live — community radio by and for persons with disabilities.', 'radioudaan-app-api' ),
-			'radio_live_label'  => __( 'Live now', 'radioudaan-app-api' ),
-			'tab_radio'         => __( 'Live Radio', 'radioudaan-app-api' ),
-			'tab_library'       => __( 'Library', 'radioudaan-app-api' ),
-			'tab_events'        => __( 'Events', 'radioudaan-app-api' ),
-			'tab_more'          => __( 'More', 'radioudaan-app-api' ),
-			'events_empty'      => __( 'No open events right now. Check back soon.', 'radioudaan-app-api' ),
-			'library_shows'     => __( 'Radio shows', 'radioudaan-app-api' ),
-			'library_whats_new'           => __( "What's new", 'radioudaan-app-api' ),
-			'verify_intro'                => __(
-				'Enter the code sent to your number. Type the digits manually — the app does not read SMS.',
-				'radioudaan-app-api'
-			),
-			'submit_registration'         => __( 'Submit registration', 'radioudaan-app-api' ),
-			'registration_success_prefix'   => __(
-				'Registration submitted successfully. Reference: entry',
-				'radioudaan-app-api'
-			),
-			'library_shows_empty'           => __( 'No shows published yet.', 'radioudaan-app-api' ),
-			'library_whats_new_empty'       => __( 'No updates yet.', 'radioudaan-app-api' ),
-			'unsupported_fields_notice'   => __(
-				'Some fields on this form are not supported in the app yet. Contact Radio Udaan if you need help completing them.',
-				'radioudaan-app-api'
-			),
-		);
+		return RadioUdaan_App_Copy_Catalog::default_catalog();
 	}
 
 	/**
@@ -192,13 +168,35 @@ class RadioUdaan_App_Branding {
 	}
 
 	/**
-	 * @param string $option Option key.
-	 * @param string $default Default string.
+	 * Resolve one copy string: per-key option, legacy option, JSON overrides, then default.
+	 *
+	 * @param string               $key      Catalog key.
+	 * @param string               $default  Default from catalog.
+	 * @param array<string,string> $legacy   Legacy option => catalog key (inverted lookup built by caller).
+	 * @param array<string,string> $overrides Optional JSON overrides.
 	 * @return string
 	 */
-	private static function get_copy_option( $option, $default ) {
-		$val = trim( (string) get_option( $option, '' ) );
-		return $val ? $val : $default;
+	private static function resolve_copy_value( $key, $default, array $legacy, array $overrides ) {
+		if ( isset( $overrides[ $key ] ) ) {
+			$override = trim( (string) $overrides[ $key ] );
+			if ( $override !== '' ) {
+				return $override;
+			}
+		}
+
+		$per_key = trim( (string) get_option( RadioUdaan_App_Copy_Catalog::option_name( $key ), '' ) );
+		if ( $per_key !== '' ) {
+			return $per_key;
+		}
+
+		if ( isset( $legacy[ $key ] ) ) {
+			$legacy_val = trim( (string) get_option( $legacy[ $key ], '' ) );
+			if ( $legacy_val !== '' ) {
+				return $legacy_val;
+			}
+		}
+
+		return $default;
 	}
 
 	/**
@@ -208,24 +206,29 @@ class RadioUdaan_App_Branding {
 	 */
 	public static function get_public_copy() {
 		$defaults = self::default_copy();
-		return array(
-			'bootstrap_loading' => self::get_copy_option( self::OPTION_COPY_BOOTSTRAP_LOADING, $defaults['bootstrap_loading'] ),
-			'sign_in_intro'     => self::get_copy_option( self::OPTION_COPY_SIGN_IN_INTRO, $defaults['sign_in_intro'] ),
-			'radio_intro'       => self::get_copy_option( self::OPTION_COPY_RADIO_INTRO, $defaults['radio_intro'] ),
-			'radio_live_label'  => self::get_copy_option( self::OPTION_COPY_RADIO_LIVE_LABEL, $defaults['radio_live_label'] ),
-			'tab_radio'         => self::get_copy_option( self::OPTION_COPY_TAB_RADIO, $defaults['tab_radio'] ),
-			'tab_library'       => self::get_copy_option( self::OPTION_COPY_TAB_LIBRARY, $defaults['tab_library'] ),
-			'tab_events'        => self::get_copy_option( self::OPTION_COPY_TAB_EVENTS, $defaults['tab_events'] ),
-			'tab_more'          => self::get_copy_option( self::OPTION_COPY_TAB_MORE, $defaults['tab_more'] ),
-			'events_empty'      => self::get_copy_option( self::OPTION_COPY_EVENTS_EMPTY, $defaults['events_empty'] ),
-			'library_shows'     => self::get_copy_option( self::OPTION_COPY_LIBRARY_SHOWS, $defaults['library_shows'] ),
-			'library_whats_new'           => self::get_copy_option( self::OPTION_COPY_LIBRARY_WHATS_NEW, $defaults['library_whats_new'] ),
-			'verify_intro'                => self::get_copy_option( self::OPTION_COPY_VERIFY_INTRO, $defaults['verify_intro'] ),
-			'submit_registration'         => self::get_copy_option( self::OPTION_COPY_SUBMIT_REGISTRATION, $defaults['submit_registration'] ),
-			'registration_success_prefix' => self::get_copy_option( self::OPTION_COPY_REGISTRATION_SUCCESS_PREFIX, $defaults['registration_success_prefix'] ),
-			'library_shows_empty'         => self::get_copy_option( self::OPTION_COPY_LIBRARY_SHOWS_EMPTY, $defaults['library_shows_empty'] ),
-			'library_whats_new_empty'     => self::get_copy_option( self::OPTION_COPY_LIBRARY_WHATS_NEW_EMPTY, $defaults['library_whats_new_empty'] ),
-			'unsupported_fields_notice'   => self::get_copy_option( self::OPTION_COPY_UNSUPPORTED_FIELDS_NOTICE, $defaults['unsupported_fields_notice'] ),
-		);
+		$legacy_by_key = array();
+		foreach ( RadioUdaan_App_Copy_Catalog::legacy_option_map() as $option => $catalog_key ) {
+			$legacy_by_key[ $catalog_key ] = $option;
+		}
+
+		$overrides = array();
+		$raw_overrides = get_option( self::OPTION_COPY_OVERRIDES, '' );
+		if ( is_string( $raw_overrides ) && $raw_overrides !== '' ) {
+			$decoded = json_decode( $raw_overrides, true );
+			if ( is_array( $decoded ) ) {
+				foreach ( $decoded as $k => $v ) {
+					if ( is_string( $k ) && is_scalar( $v ) ) {
+						$overrides[ $k ] = (string) $v;
+					}
+				}
+			}
+		}
+
+		$copy = array();
+		foreach ( $defaults as $key => $default ) {
+			$copy[ $key ] = self::resolve_copy_value( $key, $default, $legacy_by_key, $overrides );
+		}
+
+		return $copy;
 	}
 }

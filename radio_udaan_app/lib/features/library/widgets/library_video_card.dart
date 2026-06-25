@@ -4,8 +4,8 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/constants/app_strings.dart';
 import '../../../core/models/youtube_video.dart';
+import '../../../core/providers/app_providers.dart';
 import '../../../core/theme/brand_tokens.dart';
 import '../../../core/theme/udaan_colors.dart';
 import '../library_formatters.dart' show formatLibraryRelativeDate, summarizeYoutubeDescription;
@@ -33,11 +33,11 @@ class LibraryVideoCard extends ConsumerWidget {
     );
   }
 
-  void _openPlayer(BuildContext context) {
+  void _openPlayer(BuildContext context, AppCopy copy) {
     if (!video.hasPlayableId) {
-      _announce(context, AppStrings.libraryNoVideo);
+      _announce(context, copy.libraryNoVideo);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.libraryNoVideo)),
+        SnackBar(content: Text(copy.libraryNoVideo)),
       );
       return;
     }
@@ -48,7 +48,7 @@ class LibraryVideoCard extends ConsumerWidget {
     );
   }
 
-  String _summaryLine() {
+  String _summaryLine(AppCopy copy) {
     final parts = <String>[];
     final desc = summarizeYoutubeDescription(video.description);
     if (desc.isNotEmpty) {
@@ -56,23 +56,24 @@ class LibraryVideoCard extends ConsumerWidget {
     }
     final duration = video.displayDuration;
     if (duration.isNotEmpty) {
-      parts.add('${AppStrings.libraryDurationPrefix}$duration');
+      parts.add('${copy.libraryDurationPrefix}$duration');
     }
     return parts.join(' ');
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final copy = ref.watch(appCopyProvider);
     final savedIds = ref.watch(librarySavedVideoIdsProvider);
     final savedNotifier = ref.read(librarySavedVideoIdsProvider.notifier);
     final isSaved = savedIds.contains(video.id.trim());
     final uploaded = video.publishedAtDate != null
-        ? formatLibraryRelativeDate(video.publishedAtDate!)
+        ? formatLibraryRelativeDate(video.publishedAtDate!, copy)
         : '';
-    final summary = _summaryLine();
+    final summary = _summaryLine(copy);
 
     return Semantics(
-      label: AppStrings.libraryVideoSemantics(
+      label: copy.libraryVideoSemantics(
         title: video.title,
         duration: video.displayDuration,
         uploaded: uploaded,
@@ -90,9 +91,9 @@ class LibraryVideoCard extends ConsumerWidget {
           children: [
             Semantics(
               button: true,
-              label: '${AppStrings.libraryPlayVideo}, ${video.title}',
+              label: '${copy.libraryPlayVideo}, ${video.title}',
               child: InkWell(
-                onTap: () => _openPlayer(context),
+                onTap: () => _openPlayer(context, copy),
                 child: _Thumbnail(
                   title: video.title,
                   thumbnailUrl: thumbnailUrl,
@@ -147,14 +148,15 @@ class LibraryVideoCard extends ConsumerWidget {
                         ),
                       ),
                       _SaveButton(
+                        copy: copy,
                         isSaved: isSaved,
                         onPressed: () {
                           savedNotifier.toggle(video.id);
                           _announce(
                             context,
                             isSaved
-                                ? AppStrings.libraryVideoUnsaved
-                                : AppStrings.libraryVideoSaved,
+                                ? copy.libraryVideoUnsaved
+                                : copy.libraryVideoSaved,
                           );
                         },
                       ),
@@ -172,20 +174,22 @@ class LibraryVideoCard extends ConsumerWidget {
 
 class _SaveButton extends StatelessWidget {
   const _SaveButton({
+    required this.copy,
     required this.isSaved,
     required this.onPressed,
   });
 
+  final AppCopy copy;
   final bool isSaved;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
+    final saveLabel =
+        isSaved ? copy.librarySavedVideo : copy.librarySaveVideo;
     return Semantics(
       button: true,
-      label: isSaved
-          ? AppStrings.librarySavedVideo
-          : AppStrings.librarySaveVideo,
+      label: saveLabel,
       child: OutlinedButton.icon(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
@@ -203,7 +207,7 @@ class _SaveButton extends StatelessWidget {
           color: isSaved ? UdaanColors.primary : UdaanColors.primaryGlow,
         ),
         label: Text(
-          isSaved ? AppStrings.librarySavedVideo : AppStrings.librarySaveVideo,
+          saveLabel,
           style: GoogleFonts.atkinsonHyperlegible(
             fontSize: 15,
             fontWeight: FontWeight.w800,
@@ -282,4 +286,3 @@ class _ThumbnailPlaceholder extends StatelessWidget {
     );
   }
 }
-

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/bootstrap/app_bootstrap.dart';
-import '../../core/constants/app_strings.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/udaan_colors.dart';
 import 'widgets/splash_body.dart';
@@ -69,18 +68,21 @@ class _BootstrapScreenState extends ConsumerState<BootstrapScreen> {
           if (_navigated) return const SizedBox.shrink();
           return SplashBody(
             branding: branding,
+            copy: copy,
             statusMessage: copy.bootstrapLoading,
             showLoading: true,
           );
         },
         loading: () => SplashBody(
           branding: branding,
+          copy: copy,
           statusMessage: copy.bootstrapLoading,
           showLoading: true,
         ),
         error: (error, _) => SplashBody(
           branding: branding,
-          statusMessage: AppStrings.bootstrapOffline,
+          copy: copy,
+          statusMessage: copy.bootstrapOffline,
           showLoading: false,
           errorDetail: error.toString(),
           onRetry: () {

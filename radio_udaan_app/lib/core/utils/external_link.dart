@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../constants/app_strings.dart';
+import '../config/app_branding.dart';
+import '../config/app_copy_accessors.dart';
 
-/// Opens [url] in the system browser; shows [AppStrings] errors on failure.
-Future<void> openExternalUrl(BuildContext context, String url) async {
+/// Opens [url] in the system browser; shows copy-driven errors on failure.
+Future<void> openExternalUrl(
+  BuildContext context,
+  String url, {
+  AppCopy? copy,
+}) async {
+  final strings = copy ?? AppCopy.fallback;
   final uri = Uri.tryParse(url.trim());
   if (uri == null || !uri.hasScheme) {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text(AppStrings.linkUnavailable)),
+      SnackBar(content: Text(strings.linkUnavailable)),
     );
     return;
   }
@@ -18,13 +24,13 @@ Future<void> openExternalUrl(BuildContext context, String url) async {
     final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!launched && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.linkOpenFailed)),
+        SnackBar(content: Text(strings.linkOpenFailed)),
       );
     }
   } catch (_) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.linkOpenFailed)),
+        SnackBar(content: Text(strings.linkOpenFailed)),
       );
     }
   }

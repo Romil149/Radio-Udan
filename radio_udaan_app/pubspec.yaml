@@ -38,6 +38,17 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   http: ^1.4.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  # Same asset as WP RadioUdaan_App_Branding::get_logo_url() theme fallback (logo.png).
+  image_path: assets/images/radio_udaan_logo.png
+  adaptive_icon_background: '#000000'
+  adaptive_icon_foreground: assets/images/radio_udaan_logo.png
+  background_color_ios: '#000000'
+  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true

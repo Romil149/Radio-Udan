@@ -1,8 +1,9 @@
+import '../../../core/config/app_branding.dart';
+import '../../../core/config/app_copy_accessors.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/constants/app_strings.dart';
 import '../../../core/theme/udaan_colors.dart';
 import '../../../core/utils/phone_e164.dart';
 import 'udaan_auth_widgets.dart';
@@ -11,6 +12,7 @@ import 'udaan_otp_pin_row.dart';
 /// Registration phone OTP UI (Stitch “Verify Identity”).
 class OtpVerifyIdentityBody extends StatelessWidget {
   const OtpVerifyIdentityBody({
+    required this.copy,
     required this.brandingAppName,
     required this.phoneE164,
     required this.otpController,
@@ -26,6 +28,7 @@ class OtpVerifyIdentityBody extends StatelessWidget {
     super.key,
   });
 
+  final AppCopy copy;
   final String brandingAppName;
   final String phoneE164;
   final TextEditingController otpController;
@@ -55,10 +58,11 @@ class OtpVerifyIdentityBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         UdaanAuthTopBar(
-          title: brandingAppName,
+                copy: copy,
+                title: brandingAppName,
           onBack: onBack,
           trailing: Semantics(
-            label: AppStrings.secureVerificationHero,
+            label: copy.secureVerificationHero,
             child: Icon(
               Icons.verified_user_outlined,
               color: UdaanColors.primaryGlow.withValues(alpha: 0.95),
@@ -72,13 +76,15 @@ class OtpVerifyIdentityBody extends StatelessWidget {
           color: UdaanColors.outlineVariant,
         ),
         const SizedBox(height: 8),
-        const Center(child: UdaanOtpPadlockHero()),
+        Center(child: UdaanOtpPadlockHero(
+                copy: copy,
+                )),
         const SizedBox(height: 28),
         Semantics(
           header: true,
-          label: AppStrings.verifyIdentityTitle,
+          label: copy.verifyIdentityTitle,
           child: Text(
-            AppStrings.verifyIdentityTitle,
+            copy.verifyIdentityTitle,
             textAlign: TextAlign.center,
             style: GoogleFonts.atkinsonHyperlegible(
               fontSize: 28,
@@ -89,11 +95,11 @@ class OtpVerifyIdentityBody extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         Semantics(
-          label: '${AppStrings.verifyIdentityIntro} $maskedPhone',
+          label: '${copy.verifyIdentityIntro} $maskedPhone',
           child: Column(
             children: [
               Text(
-                AppStrings.verifyIdentityIntro,
+                copy.verifyIdentityIntro,
                 textAlign: TextAlign.center,
                 style: bodyStyle,
               ),
@@ -112,9 +118,9 @@ class OtpVerifyIdentityBody extends StatelessWidget {
         if (kDebugMode && devOtp != null) ...[
           const SizedBox(height: 8),
           Semantics(
-            label: AppStrings.verifyDevHint,
+            label: copy.verifyDevHint,
             child: Text(
-              AppStrings.verifyDevHint,
+              copy.verifyDevHint,
               textAlign: TextAlign.center,
               style: GoogleFonts.atkinsonHyperlegible(
                 fontSize: 14,
@@ -125,7 +131,8 @@ class OtpVerifyIdentityBody extends StatelessWidget {
         ],
         const SizedBox(height: 28),
         UdaanOtpPinRow(
-          controller: otpController,
+                copy: copy,
+                controller: otpController,
           length: otpLength,
           enabled: !loading && !resending,
         ),
@@ -147,20 +154,22 @@ class OtpVerifyIdentityBody extends StatelessWidget {
         ],
         const SizedBox(height: 32),
         UdaanPrimaryButton(
-          label: AppStrings.verifyButton,
+          label: copy.verifyButton,
           icon: Icons.check_circle_outline,
           loading: loading,
           onPressed: loading ? null : onVerify,
         ),
         const SizedBox(height: 16),
         UdaanOutlineButton(
-          label: AppStrings.otpResendLabel,
+          label: copy.otpResendLabel,
           icon: Icons.refresh,
           loading: resending,
           onPressed: canResend && !resending ? onResend : null,
         ),
         const SizedBox(height: 28),
-        UdaanContactSupportPrompt(onContactSupport: onContactSupport),
+        UdaanContactSupportPrompt(
+                copy: copy,
+                onContactSupport: onContactSupport),
       ],
     );
   }

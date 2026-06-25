@@ -11,12 +11,14 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.leading,
     this.actions,
     this.centerTitle = false,
+    this.automaticallyImplyLeading,
   });
 
   final String title;
   final Widget? leading;
   final List<Widget>? actions;
   final bool centerTitle;
+  final bool? automaticallyImplyLeading;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -31,7 +33,8 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
       scrolledUnderElevation: 0,
       centerTitle: centerTitle,
       leading: leading,
-      automaticallyImplyLeading: leading == null,
+      automaticallyImplyLeading:
+          automaticallyImplyLeading ?? leading != null,
       title: Text(
         title,
         style: udaanTextStyle(

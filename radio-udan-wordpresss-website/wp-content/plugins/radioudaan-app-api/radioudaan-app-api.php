@@ -29,6 +29,7 @@ define( 'RADIOUDAAN_APP_API_PATH', plugin_dir_path( __FILE__ ) );
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-rate-limiter.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-logger.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-registration-guard.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-copy-catalog.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-branding.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-live-radio.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-config.php';

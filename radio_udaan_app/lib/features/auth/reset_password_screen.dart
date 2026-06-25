@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/udaan_colors.dart';
@@ -32,6 +31,8 @@ class ResetPasswordScreen extends ConsumerStatefulWidget {
 }
 
 class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
+  AppCopy get _copy => ref.read(appCopyProvider);
+
   late final TextEditingController _tokenController;
   final _codeController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -82,7 +83,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   }) {
     return Semantics(
       button: true,
-      label: obscured ? AppStrings.showPassword : AppStrings.hidePassword,
+      label: obscured ? _copy.showPassword : _copy.hidePassword,
       child: IconButton(
         icon: Icon(
           obscured
@@ -103,23 +104,23 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     final minLen = _passwordMinLength;
 
     if (!_smsReset && token.isEmpty) {
-      setState(() => _error = AppStrings.resetTokenRequired);
-      _announce(AppStrings.resetTokenRequired);
+      setState(() => _error = _copy.resetTokenRequired);
+      _announce(_copy.resetTokenRequired);
       return;
     }
     if (!_smsReset && code.length != 6) {
-      setState(() => _error = AppStrings.resetEmailCodeRequired);
-      _announce(AppStrings.resetEmailCodeRequired);
+      setState(() => _error = _copy.resetEmailCodeRequired);
+      _announce(_copy.resetEmailCodeRequired);
       return;
     }
     if (!isValidPassword(password, minLength: minLen)) {
-      setState(() => _error = AppStrings.passwordTooShort);
-      _announce(AppStrings.passwordTooShort);
+      setState(() => _error = _copy.passwordTooShort);
+      _announce(_copy.passwordTooShort);
       return;
     }
     if (password != confirm) {
-      setState(() => _error = AppStrings.passwordMismatch);
-      _announce(AppStrings.passwordMismatch);
+      setState(() => _error = _copy.passwordMismatch);
+      _announce(_copy.passwordMismatch);
       return;
     }
 
@@ -137,9 +138,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             password: password,
           );
       if (!mounted) return;
-      _announce(AppStrings.resetPasswordSuccess);
+      _announce(_copy.resetPasswordSuccess);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.resetPasswordSuccess)),
+        SnackBar(content: Text(_copy.resetPasswordSuccess)),
       );
       context.go('/login');
     } catch (e) {
@@ -153,15 +154,16 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final copy = ref.watch(appCopyProvider);
     final branding = ref.watch(appBrandingProvider);
     final tokenFromLink = widget.initialToken != null &&
         widget.initialToken!.isNotEmpty;
     final intro = _smsReset
-        ? AppStrings.resetPasswordSmsIntro(
+        ? _copy.resetPasswordSmsIntro(
             maskPhoneForOtpDisplay(widget.phoneE164),
           )
-        : AppStrings.resetPasswordIntro;
-    final passwordHint = AppStrings.passwordMinHint(_passwordMinLength);
+        : _copy.resetPasswordIntro;
+    final passwordHint = _copy.passwordMinHint(_passwordMinLength);
 
     return Scaffold(
       backgroundColor: UdaanColors.background,
@@ -172,6 +174,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               UdaanAuthTopBar(
+                copy: copy,
                 title: branding.appName,
                 onBack: () {
                   if (context.canPop()) {
@@ -187,13 +190,15 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 color: UdaanColors.outlineVariant,
               ),
               const SizedBox(height: 8),
-              const Center(child: UdaanForgotPasswordHero()),
+              Center(child: UdaanForgotPasswordHero(
+                copy: copy,
+                )),
               const SizedBox(height: 28),
               Semantics(
                 header: true,
-                label: AppStrings.resetPasswordTitle,
+                label: _copy.resetPasswordTitle,
                 child: Text(
-                  AppStrings.resetPasswordTitle,
+                  _copy.resetPasswordTitle,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.atkinsonHyperlegible(
                     fontSize: 28,
@@ -216,7 +221,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               const SizedBox(height: 28),
               if (!_smsReset && !tokenFromLink) ...[
                 UdaanLabeledField(
-                  label: AppStrings.resetTokenLabel,
+                  label: _copy.resetTokenLabel,
                   controller: _tokenController,
                   textInputAction: TextInputAction.next,
                   prefixIcon: Icons.link,
@@ -226,15 +231,16 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               ],
               if (!_smsReset) ...[
                 UdaanOtpPinRow(
-                  controller: _codeController,
+                copy: copy,
+                controller: _codeController,
                   length: 6,
                   enabled: !_loading,
-                  semanticsHint: AppStrings.otpPinRowEmailHint(6),
+                  semanticsHint: _copy.otpPinRowEmailHint(6),
                 ),
                 const SizedBox(height: 24),
               ],
               UdaanLabeledField(
-                label: AppStrings.passwordLabel,
+                label: _copy.passwordLabel,
                 controller: _passwordController,
                 hint: passwordHint,
                 obscureText: _obscurePassword,
@@ -250,9 +256,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               ),
               const SizedBox(height: 20),
               UdaanLabeledField(
-                label: AppStrings.confirmPasswordLabel,
+                label: _copy.confirmPasswordLabel,
                 controller: _confirmController,
-                hint: AppStrings.registerConfirmHint,
+                hint: _copy.registerConfirmHint,
                 obscureText: _obscureConfirm,
                 textInputAction: TextInputAction.done,
                 prefixIcon: Icons.lock_outline,
@@ -283,7 +289,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               ],
               const SizedBox(height: 28),
               UdaanPrimaryButton(
-                label: AppStrings.resetPassword,
+                label: _copy.resetPassword,
                 icon: Icons.lock_reset_rounded,
                 loading: _loading,
                 onPressed: _loading ? null : _submit,
@@ -291,7 +297,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               const SizedBox(height: 16),
               Semantics(
                 button: true,
-                label: AppStrings.backToLogin,
+                label: _copy.backToLogin,
                 child: TextButton.icon(
                   onPressed: _loading ? null : () => context.go('/login'),
                   icon: const Icon(
@@ -299,7 +305,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                     color: UdaanColors.secondary,
                   ),
                   label: Text(
-                    AppStrings.backToLogin,
+                    _copy.backToLogin,
                     style: GoogleFonts.atkinsonHyperlegible(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,

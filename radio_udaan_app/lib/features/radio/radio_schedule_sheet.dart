@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/models/radio_schedule.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/utils/wp_media_url.dart';
@@ -55,6 +54,7 @@ class RadioScheduleSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final copy = ref.watch(appCopyProvider);
     final scheduleAsync = ref.watch(radioScheduleProvider);
 
     return SafeArea(
@@ -65,7 +65,7 @@ class RadioScheduleSheet extends ConsumerWidget {
           Semantics(
             header: true,
             child: Text(
-              AppStrings.radioScheduleTitle,
+              copy.radioScheduleTitle,
               style: GoogleFonts.atkinsonHyperlegible(
                 fontSize: 20,
                 fontWeight: FontWeight.w900,
@@ -104,6 +104,7 @@ class _ScheduleList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final copy = ref.watch(appCopyProvider);
     if (days.isEmpty) {
       return Center(
         child: Padding(
@@ -111,7 +112,7 @@ class _ScheduleList extends ConsumerWidget {
           child: Semantics(
             liveRegion: true,
             child: Text(
-              AppStrings.radioScheduleEmpty,
+              copy.radioScheduleEmpty,
               textAlign: TextAlign.center,
               style: GoogleFonts.atkinsonHyperlegible(
                 fontSize: 16,
@@ -197,14 +198,15 @@ class _ScheduleSegmentCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final copy = ref.watch(appCopyProvider);
     final title =
-        segment.title.isNotEmpty ? segment.title : AppStrings.unknown;
+        segment.title.isNotEmpty ? segment.title : copy.unknown;
     final time = segment.timeRangeLabel(timeFormat: timeFmt);
     final hostsLine = segment.hasHosts
-        ? formatRadioHostsLine(segment.hosts)
+        ? formatRadioHostsLine(segment.hosts, copy)
         : '';
 
-    final segmentLabel = AppStrings.radioScheduleSegmentSemantics(
+    final segmentLabel = copy.radioScheduleSegmentSemantics(
       title: title,
       time: time,
       hosts: hostsLine,
@@ -241,7 +243,7 @@ class _ScheduleSegmentCard extends ConsumerWidget {
                     children: [
                       if (isOnAir) ...[
                         _ChipLabel(
-                          text: AppStrings.radioScheduleOnAir,
+                          text: copy.radioScheduleOnAir,
                           color: UdaanColors.primary,
                           textColor: UdaanColors.onPrimary,
                         ),
@@ -299,7 +301,7 @@ class _ScheduleSegmentCard extends ConsumerWidget {
               ),
               Semantics(
                 button: true,
-                label: AppStrings.radioFavoriteButtonLabel(
+                label: copy.radioFavoriteButtonLabel(
                   showTitle: title,
                   isFavorite: isFavorite,
                 ),
@@ -316,7 +318,7 @@ class _ScheduleSegmentCard extends ConsumerWidget {
                           if (!context.mounted) return;
                           SemanticsService.sendAnnouncement(
                             View.of(context),
-                            AppStrings.radioFavoriteAnnouncement(
+                            copy.radioFavoriteAnnouncement(
                               showTitle: title,
                               added: !isFavorite,
                             ),
@@ -443,13 +445,14 @@ class _ChipLabel extends StatelessWidget {
   }
 }
 
-class _ScheduleLoading extends StatelessWidget {
+class _ScheduleLoading extends ConsumerWidget {
   const _ScheduleLoading();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final copy = ref.watch(appCopyProvider);
     return Semantics(
-      label: AppStrings.semanticsLoading,
+      label: copy.semanticsLoading,
       liveRegion: true,
       child: const Padding(
         padding: EdgeInsets.all(24),
@@ -461,18 +464,19 @@ class _ScheduleLoading extends StatelessWidget {
   }
 }
 
-class _ScheduleError extends StatelessWidget {
+class _ScheduleError extends ConsumerWidget {
   const _ScheduleError();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final copy = ref.watch(appCopyProvider);
     return Padding(
       padding: const EdgeInsets.all(BrandTokens.screenPadding),
       child: Center(
         child: Semantics(
           liveRegion: true,
           child: Text(
-            AppStrings.radioScheduleFailed,
+            copy.radioScheduleFailed,
             textAlign: TextAlign.center,
             style: GoogleFonts.atkinsonHyperlegible(
               fontSize: 16,

@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
@@ -29,6 +28,8 @@ class RadioTab extends ConsumerStatefulWidget {
 }
 
 class _RadioTabState extends ConsumerState<RadioTab> {
+  AppCopy get _copy => ref.read(appCopyProvider);
+
   double _volume = 1.0;
 
   @override
@@ -65,16 +66,16 @@ class _RadioTabState extends ConsumerState<RadioTab> {
       if (result.status == ShareResultStatus.unavailable) {
         await Clipboard.setData(ClipboardData(text: text));
         if (!mounted) return;
-        _announce(AppStrings.shareCopied);
+        _announce(_copy.shareCopied);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppStrings.shareCopied)),
+          SnackBar(content: Text(_copy.shareCopied)),
         );
       }
     } catch (_) {
       if (!mounted) return;
-      _announce(AppStrings.shareFailed);
+      _announce(_copy.shareFailed);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.shareFailed)),
+        SnackBar(content: Text(_copy.shareFailed)),
       );
     }
   }
@@ -82,7 +83,6 @@ class _RadioTabState extends ConsumerState<RadioTab> {
   @override
   Widget build(BuildContext context) {
     final branding = ref.watch(appBrandingProvider);
-    final copy = ref.watch(appCopyProvider);
     final live = ref.watch(liveRadioProvider);
     final player = ref.watch(radioPlayerProvider);
     final notifier = ref.read(radioPlayerProvider.notifier);
@@ -111,16 +111,16 @@ class _RadioTabState extends ConsumerState<RadioTab> {
       }
       switch (next.status) {
         case RadioPlayerStatus.loading:
-          _announce(AppStrings.radioConnecting);
+          _announce(_copy.radioConnecting);
         case RadioPlayerStatus.playing:
-          _announce(AppStrings.radioPlaying);
+          _announce(_copy.radioPlaying);
         case RadioPlayerStatus.idle:
           if (previous?.status == RadioPlayerStatus.playing ||
               previous?.status == RadioPlayerStatus.loading) {
-            _announce(AppStrings.radioStopped);
+            _announce(_copy.radioStopped);
           }
         case RadioPlayerStatus.error:
-          _announce(next.errorMessage ?? AppStrings.radioPlaybackError);
+          _announce(next.errorMessage ?? _copy.radioPlaybackError);
       }
     });
 
@@ -135,6 +135,7 @@ class _RadioTabState extends ConsumerState<RadioTab> {
             const Center(child: LiveBadge()),
             const SizedBox(height: 16),
             _HeroCard(
+              copy: _copy,
               title: heroTitle,
               hosts: heroHosts,
               heroImageUrl: heroImageUrl,
@@ -168,6 +169,7 @@ class _RadioTabState extends ConsumerState<RadioTab> {
             if (live.showVolume) ...[
               const SizedBox(height: 18),
               _VolumeCard(
+                copy: _copy,
                 value: _volume,
                 onChanged: (v) async {
                   setState(() => _volume = v);
@@ -183,13 +185,14 @@ class _RadioTabState extends ConsumerState<RadioTab> {
               const SizedBox(height: 18),
               _WhatsAppCard(
                 title: live.whatsappLabel,
-                subtitle: AppStrings.joinTheDiscussion,
+                subtitle: _copy.joinTheDiscussion,
                 onPressed: () => openExternalUrl(context, live.whatsappUrl),
                 accent: branding.colors.secondary,
               ),
             ],
             const SizedBox(height: 18),
             _UpcomingSegmentsCard(
+              copy: _copy,
               next: next,
               onOpenSchedule: () => showRadioScheduleSheet(context),
             ),
@@ -204,12 +207,12 @@ class _RadioTabState extends ConsumerState<RadioTab> {
               favoriteShowTitle: heroTitle,
               onFavoriteToggled: _announce,
             ),
-            if (copy.radioIntro.isNotEmpty) ...[
+            if (_copy.radioIntro.isNotEmpty) ...[
               const SizedBox(height: 12),
               Semantics(
-                label: copy.radioIntro,
+                label: _copy.radioIntro,
                 child: Text(
-                  copy.radioIntro,
+                  _copy.radioIntro,
                   style: GoogleFonts.atkinsonHyperlegible(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -227,6 +230,7 @@ class _RadioTabState extends ConsumerState<RadioTab> {
 
 class _HeroCard extends StatelessWidget {
   const _HeroCard({
+    required this.copy,
     required this.title,
     required this.hosts,
     required this.heroImageUrl,
@@ -235,6 +239,7 @@ class _HeroCard extends StatelessWidget {
     required this.onToggle,
   });
 
+  final AppCopy copy;
   final String title;
   final String hosts;
   final String heroImageUrl;
@@ -303,6 +308,7 @@ class _HeroCard extends StatelessWidget {
           ],
           const SizedBox(height: 18),
           _PlayButton(
+            copy: copy,
             loading: loading,
             isPlaying: isPlaying,
             onPressed: onToggle,
@@ -316,12 +322,14 @@ class _HeroCard extends StatelessWidget {
 
 class _PlayButton extends StatelessWidget {
   const _PlayButton({
+    required this.copy,
     required this.loading,
     required this.isPlaying,
     required this.onPressed,
     required this.primary,
   });
 
+  final AppCopy copy;
   final bool loading;
   final bool isPlaying;
   final VoidCallback? onPressed;
@@ -337,10 +345,10 @@ class _PlayButton extends StatelessWidget {
       button: true,
       enabled: !loading,
       label: loading
-          ? AppStrings.radioConnecting
+          ? copy.radioConnecting
           : isPlaying
-              ? AppStrings.radioStop
-              : AppStrings.radioPlay,
+              ? copy.radioStop
+              : copy.radioPlay,
       child: ConstrainedBox(
         constraints: const BoxConstraints(
           minWidth: BrandTokens.minTapTarget,
@@ -410,10 +418,12 @@ class _HeroPlaceholder extends StatelessWidget {
 
 class _VolumeCard extends StatelessWidget {
   const _VolumeCard({
+    required this.copy,
     required this.value,
     required this.onChanged,
   });
 
+  final AppCopy copy;
   final double value;
   final ValueChanged<double> onChanged;
 
@@ -433,7 +443,7 @@ class _VolumeCard extends StatelessWidget {
           ),
           Expanded(
             child: Semantics(
-              label: AppStrings.radioVolume,
+              label: copy.radioVolume,
               value: '${(value * 100).round()} percent',
               child: Slider(
                 value: value.clamp(0, 1),
@@ -526,10 +536,12 @@ class _WhatsAppCard extends StatelessWidget {
 
 class _UpcomingSegmentsCard extends StatelessWidget {
   const _UpcomingSegmentsCard({
+    required this.copy,
     required this.next,
     required this.onOpenSchedule,
   });
 
+  final AppCopy copy;
   final RadioScheduleSegment? next;
   final VoidCallback onOpenSchedule;
 
@@ -537,7 +549,7 @@ class _UpcomingSegmentsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final title = next?.title.trim().isNotEmpty == true
         ? next!.title
-        : AppStrings.radioUpcomingNone;
+        : copy.radioUpcomingNone;
 
     final subtitleParts = <String>[
       if ((next?.timeRangeLabel() ?? '').isNotEmpty) next!.timeRangeLabel(),
@@ -553,7 +565,7 @@ class _UpcomingSegmentsCard extends StatelessWidget {
       ),
       child: Semantics(
         button: true,
-        label: AppStrings.radioUpcomingSegmentsLabel(
+        label: copy.radioUpcomingSegmentsLabel(
           segmentTitle: title,
           subtitle: subtitle,
         ),
@@ -571,7 +583,7 @@ class _UpcomingSegmentsCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        AppStrings.radioUpcomingSegments,
+                        copy.radioUpcomingSegments,
                         style: GoogleFonts.atkinsonHyperlegible(
                           fontSize: 13,
                           fontWeight: FontWeight.w900,
@@ -600,7 +612,7 @@ class _UpcomingSegmentsCard extends StatelessWidget {
                       ],
                       const SizedBox(height: 8),
                       Text(
-                        AppStrings.radioViewFullSchedule,
+                        copy.radioViewFullSchedule,
                         style: GoogleFonts.atkinsonHyperlegible(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
@@ -637,12 +649,13 @@ class _ActionRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final copy = ref.watch(appCopyProvider);
     final hasFavorite = favoriteShowId.trim().isNotEmpty;
     final favorites = ref.watch(radioFavoritesProvider);
     final isFavorite = hasFavorite && favorites.contains(favoriteShowId.trim());
     final shareText = shareLabel.trim().isNotEmpty
         ? shareLabel
-        : AppStrings.radioShareLive;
+        : copy.radioShareLive;
 
     return Row(
       children: [
@@ -657,7 +670,7 @@ class _ActionRow extends ConsumerWidget {
         const SizedBox(width: 12),
         Expanded(
           child: _LiveActionButton(
-            label: AppStrings.radioFavorite,
+            label: copy.radioFavorite,
             icon: isFavorite ? Icons.favorite : Icons.favorite_border,
             onPressed: hasFavorite
                 ? () async {
@@ -666,9 +679,9 @@ class _ActionRow extends ConsumerWidget {
                         .toggle(favoriteShowId);
                     final showTitle = favoriteShowTitle.trim().isNotEmpty
                         ? favoriteShowTitle.trim()
-                        : AppStrings.unknown;
+                        : copy.unknown;
                     onFavoriteToggled(
-                      AppStrings.radioFavoriteAnnouncement(
+                      copy.radioFavoriteAnnouncement(
                         showTitle: showTitle,
                         added: !isFavorite,
                       ),
@@ -677,13 +690,13 @@ class _ActionRow extends ConsumerWidget {
                 : null,
             isActive: isFavorite,
             semanticsLabel: hasFavorite
-                ? AppStrings.radioFavoriteButtonLabel(
+                ? copy.radioFavoriteButtonLabel(
                     showTitle: favoriteShowTitle.trim().isNotEmpty
                         ? favoriteShowTitle.trim()
-                        : AppStrings.unknown,
+                        : copy.unknown,
                     isFavorite: isFavorite,
                   )
-                : AppStrings.radioFavoriteAdd,
+                : copy.radioFavoriteAdd,
           ),
         ),
       ],

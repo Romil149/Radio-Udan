@@ -6,7 +6,6 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/storage/registration_draft_storage.dart';
@@ -60,6 +59,8 @@ class _EventRegistrationScreenState
   bool _unsupportedAnnounced = false;
   final _uploadAnnouncedMilestones = <String, int>{};
   Timer? _draftSaveDebounce;
+
+  AppCopy get _copy => ref.read(appCopyProvider);
 
   @override
   void initState() {
@@ -149,7 +150,7 @@ class _EventRegistrationScreenState
 
   String _requiredMessage(FormFieldSchema field) =>
       '${registrationFieldDisplayLabel(field.label)}. '
-      '${AppStrings.registrationFieldRequired}';
+      '${_copy.registrationFieldRequired}';
 
   bool _isRequiredValueMissing(FormFieldSchema field) {
     if (!field.required) return false;
@@ -265,7 +266,7 @@ class _EventRegistrationScreenState
           (_uploadAnnouncedMilestones[field.key] ?? 0) < milestone) {
         _uploadAnnouncedMilestones[field.key] = milestone;
         _announce(
-          AppStrings.registrationUploadProgressLabel(uploadLabel, milestone),
+          _copy.registrationUploadProgressLabel(uploadLabel, milestone),
         );
         break;
       }
@@ -349,7 +350,7 @@ class _EventRegistrationScreenState
       Semantics(
         label: _fieldSemanticsLabel(field),
         hint: isAccountLocked
-            ? AppStrings.registrationAccountLockedHint
+            ? _copy.registrationAccountLockedHint
             : (hintOverride ?? field.placeholder),
         textField: true,
         readOnly: isAccountLocked,
@@ -659,11 +660,12 @@ class _EventRegistrationScreenState
                 horizontal: BrandTokens.screenPadding,
               ),
               child: UdaanAuthTopBar(
+                copy: _copy,
                 title: branding.appName,
                 onBack: () => Navigator.of(context).pop(),
                 trailing: Semantics(
                   button: true,
-                  label: AppStrings.profile,
+                  label: _copy.profile,
                   child: IconButton(
                     onPressed: _openProfileTab,
                     icon: Icon(
@@ -680,7 +682,7 @@ class _EventRegistrationScreenState
                   if (!_draftLoaded) {
                     return Center(
                       child: Semantics(
-                        label: AppStrings.eventRegistrationLoadingForm,
+                        label: _copy.eventRegistrationLoadingForm,
                         liveRegion: true,
                         child: CircularProgressIndicator(
                           color: palette.primary,
@@ -692,7 +694,7 @@ class _EventRegistrationScreenState
                 },
                 loading: () => Center(
                   child: Semantics(
-                    label: AppStrings.eventRegistrationLoadingForm,
+                    label: _copy.eventRegistrationLoadingForm,
                     liveRegion: true,
                     child: CircularProgressIndicator(
                       color: palette.primary,
@@ -721,7 +723,7 @@ class _EventRegistrationScreenState
                         const SizedBox(height: 16),
                         Semantics(
                           button: true,
-                          label: AppStrings.eventRegistrationRetryLoad,
+                          label: _copy.eventRegistrationRetryLoad,
                           child: FilledButton(
                             style: FilledButton.styleFrom(
                               backgroundColor: palette.primary,
@@ -734,7 +736,7 @@ class _EventRegistrationScreenState
                             onPressed: () => ref.invalidate(
                               eventFormProvider(widget.eventId),
                             ),
-                            child: const Text(AppStrings.retry),
+                            child: Text(_copy.retry),
                           ),
                         ),
                       ],
@@ -757,7 +759,6 @@ class _EventRegistrationScreenState
       });
     }
 
-    final copy = ref.watch(appCopyProvider);
     final palette = context.udaan;
     final bySection = <String, List<FormFieldSchema>>{};
     for (final f in schema.fields) {
@@ -778,9 +779,9 @@ class _EventRegistrationScreenState
       children: [
         Semantics(
           header: true,
-          label: AppStrings.eventRegistrationTitle,
+          label: _copy.eventRegistrationTitle,
           child: Text(
-            AppStrings.eventRegistrationTitle,
+            _copy.eventRegistrationTitle,
             style: udaanTextStyle(
               context,
               fontSize: 28,
@@ -812,8 +813,8 @@ class _EventRegistrationScreenState
                 final fieldNames = schema.unsupportedFields
                     .map((f) => registrationFieldDisplayLabel(f.label))
                     .join(', ');
-                final notice = AppStrings.registrationUnsupportedFieldsSemantics(
-                  notice: copy.unsupportedFieldsNotice,
+                final notice = _copy.registrationUnsupportedFieldsSemantics(
+                  notice: _copy.unsupportedFieldsNotice,
                   fieldNames: fieldNames,
                 );
                 WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -828,13 +829,13 @@ class _EventRegistrationScreenState
                 children: [
                   const SizedBox(height: 16),
                   Semantics(
-                    label: AppStrings.registrationUnsupportedFieldsSemantics(
-                      notice: copy.unsupportedFieldsNotice,
+                    label: _copy.registrationUnsupportedFieldsSemantics(
+                      notice: _copy.unsupportedFieldsNotice,
                       fieldNames: fieldNames,
                     ),
                     liveRegion: true,
                     child: Text(
-                      copy.unsupportedFieldsNotice,
+                      _copy.unsupportedFieldsNotice,
                       style: udaanTextStyle(
                         context,
                         fontSize: 16,
@@ -920,8 +921,8 @@ class _EventRegistrationScreenState
         Semantics(
           button: true,
           label: _submitting
-              ? AppStrings.submittingRegistrationPleaseWait
-              : copy.submitRegistration,
+              ? _copy.submittingRegistrationPleaseWait
+              : _copy.submitRegistration,
           enabled: !_submitting,
           child: FilledButton(
             style: FilledButton.styleFrom(
@@ -949,7 +950,7 @@ class _EventRegistrationScreenState
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        copy.submitRegistration,
+                        _copy.submitRegistration,
                         style: udaanTextStyle(
                           context,
                           fontSize: 20,
@@ -1017,7 +1018,7 @@ class _EventRegistrationScreenState
             field,
             Semantics(
               label: _fieldSemanticsLabel(field),
-              value: AppStrings.registrationMultiSelectSemanticsValue(selected),
+              value: _copy.registrationMultiSelectSemanticsValue(selected),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -1105,13 +1106,13 @@ class _EventRegistrationScreenState
           field,
           Semantics(
               label: _fieldSemanticsLabel(field),
-              hint: field.required ? AppStrings.registrationFieldRequired : null,
+              hint: field.required ? _copy.registrationFieldRequired : null,
               value: uploading
-                  ? AppStrings.registrationUploadProgressLabel(
+                  ? _copy.registrationUploadProgressLabel(
                       uploadLabel,
                       percent,
                     )
-                  : (uploadValue ?? AppStrings.registrationNoFileSelected),
+                  : (uploadValue ?? _copy.registrationNoFileSelected),
               container: true,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1119,17 +1120,17 @@ class _EventRegistrationScreenState
                   Semantics(
                     button: true,
                     label: uploading
-                        ? AppStrings.registrationUploadProgressLabel(
+                        ? _copy.registrationUploadProgressLabel(
                             uploadLabel,
                             percent,
                           )
                         : uploadValue != null
-                            ? AppStrings.registrationChangeFileSemantics(
+                            ? _copy.registrationChangeFileSemantics(
                                 uploadLabel,
                                 uploadValue,
                                 required: field.required,
                               )
-                            : AppStrings.registrationChooseFileSemantics(
+                            : _copy.registrationChooseFileSemantics(
                                 uploadLabel,
                                 required: field.required,
                               ),
@@ -1148,7 +1149,7 @@ class _EventRegistrationScreenState
                           ? null
                           : () => _pickFile(field, schema),
                       child: Text(
-                        _uploadLabels[field.key] ?? AppStrings.chooseFile,
+                        _uploadLabels[field.key] ?? _copy.chooseFile,
                         style: udaanTextStyle(
                           context,
                           fontSize: 18,
@@ -1160,7 +1161,7 @@ class _EventRegistrationScreenState
                   if (uploading) ...[
                     const SizedBox(height: 8),
                     Semantics(
-                      label: AppStrings.registrationUploadProgressLabel(
+                      label: _copy.registrationUploadProgressLabel(
                         uploadLabel,
                         percent,
                       ),
@@ -1190,7 +1191,7 @@ class _EventRegistrationScreenState
                     const SizedBox(height: 8),
                     Semantics(
                       button: true,
-                      label: AppStrings.registrationUploadRetryLabel(
+                      label: _copy.registrationUploadRetryLabel(
                         field.label,
                       ),
                       enabled: !uploading && !_submitting,
@@ -1198,7 +1199,7 @@ class _EventRegistrationScreenState
                         onPressed: uploading || _submitting
                             ? null
                             : () => _retryUpload(field, schema),
-                        child: const Text(AppStrings.retry),
+                        child: Text(_copy.retry),
                       ),
                     ),
                   ],
@@ -1229,7 +1230,7 @@ class _EventRegistrationScreenState
           context: context,
           field: field,
           onPick: _pickDate,
-          hint: AppStrings.registrationPickerDateHint,
+          hint: _copy.registrationPickerDateHint,
           icon: Icons.calendar_today,
         );
       case 'time':
@@ -1237,7 +1238,7 @@ class _EventRegistrationScreenState
           context: context,
           field: field,
           onPick: _pickTime,
-          hint: AppStrings.registrationPickerTimeHint,
+          hint: _copy.registrationPickerTimeHint,
           icon: Icons.schedule,
         );
       case 'datetime':
@@ -1245,7 +1246,7 @@ class _EventRegistrationScreenState
           context: context,
           field: field,
           onPick: _pickDateTime,
-          hint: AppStrings.registrationPickerDateTimeHint,
+          hint: _copy.registrationPickerDateTimeHint,
           icon: Icons.event,
         );
       case 'address':
@@ -1256,7 +1257,7 @@ class _EventRegistrationScreenState
           keyboardType: TextInputType.streetAddress,
           textCapitalization: TextCapitalization.sentences,
           hintOverride:
-              field.placeholder ?? AppStrings.registrationAddressHint,
+              field.placeholder ?? _copy.registrationAddressHint,
         );
       default:
         return _textField(context: context, field: field);

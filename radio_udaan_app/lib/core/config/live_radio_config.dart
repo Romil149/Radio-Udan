@@ -1,4 +1,4 @@
-import '../constants/app_strings.dart';
+import 'app_copy_defaults.dart';
 
 /// Live tab content from `GET /config` → `live_radio`.
 class LiveRadioConfig {
@@ -44,14 +44,14 @@ class LiveRadioConfig {
     );
   }
 
-  static const LiveRadioConfig fallback = LiveRadioConfig(
-    showTitle: AppStrings.radioShowTitle,
-    showSubtitle: AppStrings.radioShowSubtitle,
+  static final LiveRadioConfig fallback = LiveRadioConfig(
+    showTitle: appCopyDefaults['radio_show_title']!,
+    showSubtitle: appCopyDefaults['radio_show_subtitle']!,
     heroImageUrl: '',
-    whatsappUrl: AppStrings.radioWhatsappUrlFallback,
-    whatsappLabel: AppStrings.joinWhatsAppChannel,
-    shareLabel: AppStrings.share,
-    shareText: AppStrings.radioShareTextFallback,
+    whatsappUrl: appCopyDefaults['radio_whatsapp_url_fallback']!,
+    whatsappLabel: appCopyDefaults['join_whats_app_channel']!,
+    shareLabel: appCopyDefaults['share']!,
+    shareText: appCopyDefaults['radio_share_text_fallback']!,
     showWhatsapp: true,
     showShare: true,
     showVolume: true,

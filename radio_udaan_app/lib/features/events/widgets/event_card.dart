@@ -2,7 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/constants/app_strings.dart';
+import '../../../core/config/app_branding.dart';
+import '../../../core/config/app_copy_accessors.dart';
 import '../../../core/models/event_summary.dart';
 import '../../../core/theme/brand_tokens.dart';
 import '../../../core/theme/udaan_colors.dart';
@@ -14,12 +15,14 @@ const double _eventMinTapTarget = 56;
 /// Stitch-style event card: banner, type badge, schedule, summary, register CTA.
 class EventCard extends StatelessWidget {
   const EventCard({
+    required this.copy,
     required this.event,
     required this.bannerUrl,
     this.onRegister,
     super.key,
   });
 
+  final AppCopy copy;
   final EventSummary event;
   final String bannerUrl;
   final VoidCallback? onRegister;
@@ -57,7 +60,7 @@ class EventCard extends StatelessWidget {
 
     return Semantics(
       container: true,
-      label: AppStrings.eventCardSemantics(
+      label: copy.eventCardSemantics(
         title: event.title,
         schedule: schedule,
         badge: event.hasBadge ? event.badgeLabel : null,
@@ -139,6 +142,7 @@ class EventCard extends StatelessWidget {
                   ],
                   const SizedBox(height: 16),
                   _RegisterButton(
+                    copy: copy,
                     eventTitle: event.title,
                     registrationOpen: registrationOpen,
                     onRegister: onRegister,
@@ -155,11 +159,13 @@ class EventCard extends StatelessWidget {
 
 class _RegisterButton extends StatelessWidget {
   const _RegisterButton({
+    required this.copy,
     required this.eventTitle,
     required this.registrationOpen,
     required this.onRegister,
   });
 
+  final AppCopy copy;
   final String eventTitle;
   final bool registrationOpen;
   final VoidCallback? onRegister;
@@ -167,11 +173,11 @@ class _RegisterButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final label = registrationOpen
-        ? AppStrings.eventsRegisterNow
-        : AppStrings.eventsRegistrationClosed;
+        ? copy.eventsRegisterNow
+        : copy.eventsRegistrationClosed;
     final semanticsLabel = registrationOpen
-        ? '${AppStrings.eventsRegisterNow}, $eventTitle'
-        : '${AppStrings.eventsRegistrationClosed}, $eventTitle';
+        ? '${copy.eventsRegisterNow}, $eventTitle'
+        : '${copy.eventsRegistrationClosed}, $eventTitle';
 
     return Semantics(
       button: true,

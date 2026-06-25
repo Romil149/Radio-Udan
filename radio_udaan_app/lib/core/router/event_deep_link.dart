@@ -3,7 +3,6 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../constants/app_strings.dart';
 import '../network/dio_exception_mapper.dart';
 import '../providers/app_providers.dart';
 import '../../features/events/event_registration_screen.dart';
@@ -58,7 +57,7 @@ Future<void> openEventFromDeepLink(
   ref.read(pendingEventDeepLinkProvider.notifier).state = null;
   ref.read(mainShellTabIndexProvider.notifier).state = 2;
 
-  var title = AppStrings.eventRegistrationTitle;
+  var title = ref.read(appCopyProvider).eventRegistrationTitle;
   try {
     final schema =
         await ref.read(radioudaanApiProvider).getEventForm(eventId);
@@ -76,9 +75,10 @@ Future<void> openEventFromDeepLink(
   }
 
   if (!context.mounted) return;
+  final copy = ref.read(appCopyProvider);
   SemanticsService.sendAnnouncement(
     View.of(context),
-    AppStrings.eventDeepLinkOpening(title),
+    copy.eventDeepLinkOpening(title),
     Directionality.of(context),
   );
 

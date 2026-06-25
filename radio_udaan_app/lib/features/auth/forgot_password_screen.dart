@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/models/otp_purpose.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
@@ -26,6 +25,8 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
+  AppCopy get _copy => ref.read(appCopyProvider);
+
   _ForgotChannel _channel = _ForgotChannel.email;
   final _emailController = TextEditingController();
   final _phoneInput = PhoneCountryInputController();
@@ -66,10 +67,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       final email = _emailController.text.trim().toLowerCase();
       if (!isValidEmail(email)) {
         setState(() {
-          _error = AppStrings.emailInvalid;
+          _error = _copy.emailInvalid;
           _success = null;
         });
-        _announce(AppStrings.emailInvalid);
+        _announce(_copy.emailInvalid);
         return;
       }
       identifier = email;
@@ -77,10 +78,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       final phone = _phoneInput.e164;
       if (phone == null) {
         setState(() {
-          _error = AppStrings.phoneInvalid;
+          _error = _copy.phoneInvalid;
           _success = null;
         });
-        _announce(AppStrings.phoneInvalid);
+        _announce(_copy.phoneInvalid);
         return;
       }
       identifier = phone;
@@ -116,8 +117,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         return;
       }
 
-      setState(() => _success = AppStrings.forgotPasswordSuccess);
-      _announce(AppStrings.forgotPasswordSuccess);
+      setState(() => _success = _copy.forgotPasswordSuccess);
+      _announce(_copy.forgotPasswordSuccess);
     } catch (e) {
       final message = parseApiError(e).message;
       setState(() => _error = message);
@@ -129,6 +130,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final copy = ref.watch(appCopyProvider);
     final branding = ref.watch(appBrandingProvider);
     final isEmail = _channel == _ForgotChannel.email;
 
@@ -141,6 +143,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               UdaanAuthTopBar(
+                copy: copy,
                 title: branding.appName,
                 onBack: () {
                   if (context.canPop()) {
@@ -150,7 +153,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   }
                 },
                 trailing: Semantics(
-                  label: AppStrings.accountIcon,
+                  label: _copy.accountIcon,
                   child: Icon(
                     Icons.person_outline,
                     color: UdaanColors.primaryGlow.withValues(alpha: 0.95),
@@ -164,13 +167,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 color: UdaanColors.outlineVariant,
               ),
               const SizedBox(height: 8),
-              const Center(child: UdaanForgotPasswordHero()),
+              Center(child: UdaanForgotPasswordHero(
+                copy: copy,
+                )),
               const SizedBox(height: 28),
               Semantics(
                 header: true,
-                label: AppStrings.forgotPasswordTitle,
+                label: _copy.forgotPasswordTitle,
                 child: Text(
-                  AppStrings.forgotPasswordTitle,
+                  _copy.forgotPasswordTitle,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.atkinsonHyperlegible(
                     fontSize: 28,
@@ -181,7 +186,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                AppStrings.forgotPasswordIntro,
+                _copy.forgotPasswordIntro,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 17,
@@ -192,12 +197,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               ),
               const SizedBox(height: 28),
               Semantics(
-                label: AppStrings.forgotPasswordChannelSemantics,
+                label: _copy.forgotPasswordChannelSemantics,
                 child: Row(
                   children: [
                     Expanded(
                       child: _ForgotChannelChip(
-                        label: AppStrings.forgotPasswordChannelEmail,
+                        label: _copy.forgotPasswordChannelEmail,
                         selected: isEmail,
                         onTap: () => _setChannel(_ForgotChannel.email),
                       ),
@@ -205,7 +210,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _ForgotChannelChip(
-                        label: AppStrings.forgotPasswordChannelPhone,
+                        label: _copy.forgotPasswordChannelPhone,
                         selected: !isEmail,
                         onTap: () => _setChannel(_ForgotChannel.phone),
                       ),
@@ -216,9 +221,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               const SizedBox(height: 20),
               if (isEmail) ...[
                 UdaanLabeledField(
-                  label: AppStrings.emailLabel,
+                  label: _copy.emailLabel,
                   controller: _emailController,
-                  hint: AppStrings.forgotPasswordEmailHint,
+                  hint: _copy.forgotPasswordEmailHint,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.done,
                   prefixIcon: Icons.mail_outline,
@@ -228,7 +233,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  AppStrings.forgotPasswordEmailNote,
+                  _copy.forgotPasswordEmailNote,
                   style: GoogleFonts.atkinsonHyperlegible(
                     fontSize: 14,
                     color: UdaanColors.onSurfaceVariant.withValues(alpha: 0.9),
@@ -236,7 +241,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 ),
               ] else ...[
                 UdaanPhoneField(
-                  controller: _phoneInput,
+                copy: copy,
+                controller: _phoneInput,
                   textInputAction: TextInputAction.done,
                   required: true,
                   onSubmitted: (_) {
@@ -245,7 +251,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  AppStrings.forgotPasswordPhoneNote,
+                  _copy.forgotPasswordPhoneNote,
                   style: GoogleFonts.atkinsonHyperlegible(
                     fontSize: 14,
                     color: UdaanColors.onSurfaceVariant.withValues(alpha: 0.9),
@@ -286,7 +292,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               ],
               const SizedBox(height: 28),
               UdaanPrimaryButton(
-                label: AppStrings.resetPasswordButton,
+                label: _copy.resetPasswordButton,
                 icon: Icons.arrow_forward_rounded,
                 loading: _loading,
                 onPressed: _loading ? null : _submit,
@@ -294,7 +300,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               const SizedBox(height: 20),
               Semantics(
                 button: true,
-                label: AppStrings.backToLogin,
+                label: _copy.backToLogin,
                 child: TextButton.icon(
                   onPressed: _loading ? null : () => context.go('/login'),
                   icon: const Icon(
@@ -302,7 +308,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     color: UdaanColors.secondary,
                   ),
                   label: Text(
-                    AppStrings.backToLogin,
+                    _copy.backToLogin,
                     style: GoogleFonts.atkinsonHyperlegible(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -312,7 +318,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              const UdaanForgotPasswordHelpCard(),
+              UdaanForgotPasswordHelpCard(
+                copy: copy,
+                ),
             ],
           ),
         ),

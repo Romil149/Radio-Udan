@@ -440,29 +440,16 @@ class RadioUdaan_Admin_App_Hub {
 			}
 		}
 
-		$copy_fields = array(
-			'copy_bootstrap_loading' => RadioUdaan_App_Branding::OPTION_COPY_BOOTSTRAP_LOADING,
-			'copy_sign_in_intro'     => RadioUdaan_App_Branding::OPTION_COPY_SIGN_IN_INTRO,
-			'copy_radio_intro'       => RadioUdaan_App_Branding::OPTION_COPY_RADIO_INTRO,
-			'copy_radio_live_label'  => RadioUdaan_App_Branding::OPTION_COPY_RADIO_LIVE_LABEL,
-			'copy_tab_radio'         => RadioUdaan_App_Branding::OPTION_COPY_TAB_RADIO,
-			'copy_tab_library'       => RadioUdaan_App_Branding::OPTION_COPY_TAB_LIBRARY,
-			'copy_tab_events'        => RadioUdaan_App_Branding::OPTION_COPY_TAB_EVENTS,
-			'copy_tab_more'          => RadioUdaan_App_Branding::OPTION_COPY_TAB_MORE,
-			'copy_events_empty'      => RadioUdaan_App_Branding::OPTION_COPY_EVENTS_EMPTY,
-			'copy_library_shows'     => RadioUdaan_App_Branding::OPTION_COPY_LIBRARY_SHOWS,
-			'copy_library_whats_new'      => RadioUdaan_App_Branding::OPTION_COPY_LIBRARY_WHATS_NEW,
-			'copy_verify_intro'           => RadioUdaan_App_Branding::OPTION_COPY_VERIFY_INTRO,
-			'copy_submit_registration'    => RadioUdaan_App_Branding::OPTION_COPY_SUBMIT_REGISTRATION,
-			'copy_registration_success'   => RadioUdaan_App_Branding::OPTION_COPY_REGISTRATION_SUCCESS_PREFIX,
-			'copy_library_shows_empty'    => RadioUdaan_App_Branding::OPTION_COPY_LIBRARY_SHOWS_EMPTY,
-			'copy_library_whats_new_empty' => RadioUdaan_App_Branding::OPTION_COPY_LIBRARY_WHATS_NEW_EMPTY,
-			'copy_unsupported_fields'     => RadioUdaan_App_Branding::OPTION_COPY_UNSUPPORTED_FIELDS_NOTICE,
-		);
-		foreach ( $copy_fields as $post_key => $option_key ) {
-			if ( isset( $_POST[ $post_key ] ) ) {
-				update_option( $option_key, sanitize_text_field( wp_unslash( $_POST[ $post_key ] ) ) );
+		foreach ( RadioUdaan_App_Copy_Catalog::catalog_keys() as $catalog_key ) {
+			$post_key = 'copy_' . $catalog_key;
+			if ( ! isset( $_POST[ $post_key ] ) ) {
+				continue;
 			}
+			$raw = wp_unslash( $_POST[ $post_key ] );
+			$value = RadioUdaan_App_Copy_Catalog::is_long_text( $catalog_key )
+				? sanitize_textarea_field( $raw )
+				: sanitize_text_field( $raw );
+			update_option( RadioUdaan_App_Copy_Catalog::option_name( $catalog_key ), $value );
 		}
 
 		$live_text_fields = array(

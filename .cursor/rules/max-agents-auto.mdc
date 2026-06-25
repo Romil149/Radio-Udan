@@ -12,7 +12,7 @@ When the user says **go ahead**, **max agents**, or assigns a **multi-layer task
 
 1. Read `.cursor/memory/*` and project rules first.
 2. Split into **parallel** Task sub-agents when work is independent.
-3. **Merge** sub-agent output; resolve conflicts; run smoke checks (`php -l`, `dart analyze lib`, curl key endpoints).
+3. **Merge** sub-agent output; resolve conflicts; run **verification gate** (`bash scripts/verify-wp-plugin.sh`, `dart analyze lib`, `bash scripts/staging-api-smoke.sh`) — paste PASS/FAIL table.
 4. Update `.cursor/memory/` when APIs or behavior change.
 5. Do **not** commit unless the user asks.
 

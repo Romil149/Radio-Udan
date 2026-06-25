@@ -7,8 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/models/youtube_video.dart';
+import '../../core/providers/app_providers.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
 import '../../core/utils/external_link.dart';
@@ -27,6 +27,8 @@ class LibraryPlayerScreen extends ConsumerStatefulWidget {
 }
 
 class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
+  AppCopy get _copy => ref.read(appCopyProvider);
+
   YoutubePlayerController? _controller;
   StreamSubscription<YoutubePlayerValue>? _playerSubscription;
   PlayerState? _lastAnnouncedPlayerState;
@@ -65,7 +67,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
             _playerError = true;
             _startingPlayback = false;
           });
-          _announce(AppStrings.libraryEmbedError);
+          _announce(_copy.libraryEmbedError);
         }
         return;
       }
@@ -78,10 +80,10 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
       if (state == _lastAnnouncedPlayerState) return;
       switch (state) {
         case PlayerState.paused:
-          _announce(AppStrings.libraryPlayerPaused);
+          _announce(_copy.libraryPlayerPaused);
           _lastAnnouncedPlayerState = state;
         case PlayerState.buffering:
-          _announce(AppStrings.libraryPlayerBuffering);
+          _announce(_copy.libraryPlayerBuffering);
           _lastAnnouncedPlayerState = state;
         case PlayerState.playing:
           _lastAnnouncedPlayerState = state;
@@ -134,7 +136,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
         _playerError = true;
         _startingPlayback = false;
       });
-      _announce(AppStrings.libraryEmbedError);
+      _announce(_copy.libraryEmbedError);
     }
   }
 
@@ -155,6 +157,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final copy = ref.watch(appCopyProvider);
     final video = widget.video;
     final controller = _controller;
     final videoId = _videoId;
@@ -162,7 +165,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
     final description = summarizeYoutubeDescription(video.description);
     final duration = video.displayDuration;
     final uploaded = video.publishedAtDate != null
-        ? formatLibraryRelativeDate(video.publishedAtDate!)
+        ? formatLibraryRelativeDate(video.publishedAtDate!, copy)
         : '';
 
     if (videoId == null) {
@@ -173,14 +176,14 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
           child: Padding(
             padding: const EdgeInsets.all(BrandTokens.screenPadding),
             child: Semantics(
-              label: AppStrings.libraryNoVideo,
+              label: copy.libraryNoVideo,
               liveRegion: true,
               child: Card(
                 color: UdaanColors.surfaceContainer,
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Text(
-                    AppStrings.libraryNoVideo,
+                    copy.libraryNoVideo,
                     style: Theme.of(context).textTheme.bodyLarge,
                     textAlign: TextAlign.center,
                   ),
@@ -193,6 +196,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
     }
 
     final metadata = _PlayerMetadata(
+      copy: copy,
       video: video,
       description: description,
       duration: duration,
@@ -218,6 +222,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
                   child: AspectRatio(
                     aspectRatio: 16 / 9,
                     child: _TapToPlayPoster(
+                      copy: copy,
                       title: video.title,
                       thumbnailUrl: thumbnailUrl,
                       loading: _startingPlayback,
@@ -281,6 +286,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
 
 class _PlayerMetadata extends StatelessWidget {
   const _PlayerMetadata({
+    required this.copy,
     required this.video,
     required this.description,
     required this.duration,
@@ -290,6 +296,7 @@ class _PlayerMetadata extends StatelessWidget {
     required this.onRetry,
   });
 
+  final AppCopy copy;
   final YoutubeVideo video;
   final String description;
   final String duration;
@@ -307,9 +314,9 @@ class _PlayerMetadata extends StatelessWidget {
           const SizedBox(height: 12),
           Semantics(
             liveRegion: true,
-            label: AppStrings.libraryEmbedError,
+            label: copy.libraryEmbedError,
             child: Text(
-              AppStrings.libraryEmbedError,
+              copy.libraryEmbedError,
               style: const TextStyle(
                 color: UdaanColors.error,
                 fontSize: 16,
@@ -320,27 +327,27 @@ class _PlayerMetadata extends StatelessWidget {
           const SizedBox(height: 10),
           Semantics(
             button: true,
-            label: AppStrings.retry,
+            label: copy.retry,
             child: OutlinedButton.icon(
               onPressed: onRetry,
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 56),
               ),
               icon: const Icon(Icons.refresh),
-              label: Text(AppStrings.retry),
+              label: Text(copy.retry),
             ),
           ),
           const SizedBox(height: 10),
           Semantics(
             button: true,
-            label: AppStrings.libraryOpenInYoutube,
+            label: copy.libraryOpenInYoutube,
             child: OutlinedButton.icon(
               onPressed: onOpenInYoutube,
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 56),
               ),
               icon: const Icon(Icons.open_in_new),
-              label: Text(AppStrings.libraryOpenInYoutube),
+              label: Text(copy.libraryOpenInYoutube),
             ),
           ),
         ],
@@ -362,7 +369,7 @@ class _PlayerMetadata extends StatelessWidget {
               if (duration.isNotEmpty)
                 _MetaChip(
                   icon: Icons.schedule_outlined,
-                  label: '${AppStrings.libraryDurationPrefix}$duration',
+                  label: '${copy.libraryDurationPrefix}$duration',
                 ),
               if (uploaded.isNotEmpty)
                 _MetaChip(
@@ -385,7 +392,7 @@ class _PlayerMetadata extends StatelessWidget {
           )
         else
           Text(
-            AppStrings.libraryNoDescription,
+            copy.libraryNoDescription,
             style: GoogleFonts.atkinsonHyperlegible(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -395,9 +402,9 @@ class _PlayerMetadata extends StatelessWidget {
           ),
         const SizedBox(height: 16),
         Semantics(
-          label: AppStrings.libraryYoutubeAttribution,
+          label: copy.libraryYoutubeAttribution,
           child: Text(
-            AppStrings.libraryYoutubeAttribution,
+            copy.libraryYoutubeAttribution,
             style: GoogleFonts.atkinsonHyperlegible(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -412,12 +419,14 @@ class _PlayerMetadata extends StatelessWidget {
 
 class _TapToPlayPoster extends StatelessWidget {
   const _TapToPlayPoster({
+    required this.copy,
     required this.title,
     required this.thumbnailUrl,
     required this.onPlay,
     this.loading = false,
   });
 
+  final AppCopy copy;
   final String title;
   final String thumbnailUrl;
   final VoidCallback onPlay;
@@ -428,7 +437,7 @@ class _TapToPlayPoster extends StatelessWidget {
     return Semantics(
       button: true,
       enabled: !loading,
-      label: '${AppStrings.libraryPlayVideo}, $title. ${AppStrings.libraryTapToPlay}',
+      label: '${copy.libraryPlayVideo}, $title. ${copy.libraryTapToPlay}',
       child: Material(
         color: UdaanColors.surfaceContainer,
         child: InkWell(
@@ -473,7 +482,7 @@ class _TapToPlayPoster extends StatelessWidget {
                             ),
                             const SizedBox(height: 10),
                             Text(
-                              AppStrings.libraryTapToPlay,
+                              copy.libraryTapToPlay,
                               style: GoogleFonts.atkinsonHyperlegible(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w800,

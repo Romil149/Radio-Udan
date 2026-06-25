@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/constants/app_strings.dart';
 import '../../core/models/youtube_video.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/theme/brand_tokens.dart';
@@ -11,6 +10,7 @@ import '../../core/widgets/empty_state.dart';
 import 'library_playlist_videos_screen.dart';
 import 'library_providers.dart';
 import 'widgets/library_playlist_tile.dart';
+import '../../core/providers/app_providers.dart';
 
 /// Full playlist catalog (`GET /library/youtube/playlists`).
 class LibraryPlaylistsScreen extends ConsumerWidget {
@@ -21,17 +21,18 @@ class LibraryPlaylistsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final copy = ref.watch(appCopyProvider);
     final playlists = ref.watch(allYoutubePlaylistsProvider);
 
     return Scaffold(
       backgroundColor: UdaanColors.background,
-      appBar: BrandAppBar(title: AppStrings.libraryPlaylists),
+      appBar: BrandAppBar(title: copy.libraryPlaylists),
       body: SafeArea(
         child: playlists.when(
           data: (data) {
             if (data.items.isEmpty) {
               return EmptyState(
-                message: AppStrings.libraryPlaylistsEmpty,
+                message: copy.libraryPlaylistsEmpty,
                 icon: Icons.playlist_play_outlined,
               );
             }
@@ -67,7 +68,7 @@ class LibraryPlaylistsScreen extends ConsumerWidget {
           },
           loading: () => Center(
             child: Semantics(
-              label: AppStrings.libraryLoading,
+              label: copy.libraryLoading,
               liveRegion: true,
               child: const CircularProgressIndicator(color: UdaanColors.primary),
             ),
@@ -75,7 +76,7 @@ class LibraryPlaylistsScreen extends ConsumerWidget {
           error: (error, _) => EmptyState(
             message: parseApiError(error).message,
             icon: Icons.error_outline,
-            actionLabel: AppStrings.retry,
+            actionLabel: copy.retry,
             onAction: () => ref.invalidate(allYoutubePlaylistsProvider),
           ),
         ),

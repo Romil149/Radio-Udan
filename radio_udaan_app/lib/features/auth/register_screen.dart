@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/models/otp_purpose.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
@@ -23,6 +22,8 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+  AppCopy get _copy => ref.read(appCopyProvider);
+
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneInput = PhoneCountryInputController();
@@ -63,7 +64,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }) {
     return Semantics(
       button: true,
-      label: obscured ? AppStrings.showPassword : AppStrings.hidePassword,
+      label: obscured ? _copy.showPassword : _copy.hidePassword,
       child: IconButton(
         icon: Icon(
           obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
@@ -83,28 +84,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final minLen = _passwordMinLength;
 
     if (name.isEmpty) {
-      setState(() => _error = AppStrings.nameRequired);
-      _announce(AppStrings.nameRequired);
+      setState(() => _error = _copy.nameRequired);
+      _announce(_copy.nameRequired);
       return;
     }
     if (!isValidEmail(email)) {
-      setState(() => _error = AppStrings.emailInvalid);
-      _announce(AppStrings.emailInvalid);
+      setState(() => _error = _copy.emailInvalid);
+      _announce(_copy.emailInvalid);
       return;
     }
     if (phone == null) {
-      setState(() => _error = AppStrings.phoneInvalid);
-      _announce(AppStrings.phoneInvalid);
+      setState(() => _error = _copy.phoneInvalid);
+      _announce(_copy.phoneInvalid);
       return;
     }
     if (!isValidPassword(password, minLength: minLen)) {
-      setState(() => _error = AppStrings.passwordTooShort);
-      _announce(AppStrings.passwordTooShort);
+      setState(() => _error = _copy.passwordTooShort);
+      _announce(_copy.passwordTooShort);
       return;
     }
     if (password != confirm) {
-      setState(() => _error = AppStrings.passwordMismatch);
-      _announce(AppStrings.passwordMismatch);
+      setState(() => _error = _copy.passwordMismatch);
+      _announce(_copy.passwordMismatch);
       return;
     }
 
@@ -123,8 +124,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       );
 
       if (!pending.needsPhoneVerification) {
-        setState(() => _error = AppStrings.registrationIncomplete);
-        _announce(AppStrings.registrationIncomplete);
+        setState(() => _error = _copy.registrationIncomplete);
+        _announce(_copy.registrationIncomplete);
         return;
       }
 
@@ -155,8 +156,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final copy = ref.watch(appCopyProvider);
     final branding = ref.watch(appBrandingProvider);
-    final passwordHint = AppStrings.passwordMinHint(_passwordMinLength);
+    final passwordHint = _copy.passwordMinHint(_passwordMinLength);
 
     return Scaffold(
       backgroundColor: UdaanColors.background,
@@ -167,6 +169,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               UdaanAuthTopBar(
+                copy: copy,
                 title: branding.appName,
                 onBack: () {
                   if (context.canPop()) {
@@ -181,9 +184,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               const SizedBox(height: 20),
               Semantics(
                 header: true,
-                label: AppStrings.registerTitle,
+                label: _copy.registerTitle,
                 child: Text(
-                  AppStrings.registerTitle,
+                  _copy.registerTitle,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.atkinsonHyperlegible(
                     fontSize: 28,
@@ -194,7 +197,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               const SizedBox(height: 10),
               Text(
-                AppStrings.registerIntro,
+                _copy.registerIntro,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 16,
@@ -205,9 +208,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               const SizedBox(height: 28),
               UdaanLabeledField(
-                label: AppStrings.nameLabel,
+                label: _copy.nameLabel,
                 controller: _nameController,
-                hint: AppStrings.registerNameHint,
+                hint: _copy.registerNameHint,
                 textInputAction: TextInputAction.next,
                 prefixIcon: Icons.person_outline,
                 autofillHints: const [AutofillHints.name],
@@ -215,9 +218,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               const SizedBox(height: 18),
               UdaanLabeledField(
-                label: AppStrings.emailLabel,
+                label: _copy.emailLabel,
                 controller: _emailController,
-                hint: AppStrings.emailHint,
+                hint: _copy.emailHint,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 prefixIcon: Icons.mail_outline,
@@ -226,14 +229,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               const SizedBox(height: 18),
               UdaanPhoneField(
+                copy: copy,
                 controller: _phoneInput,
-                nationalHint: AppStrings.registerMobileHint,
+                nationalHint: _copy.registerMobileHint,
                 textInputAction: TextInputAction.next,
                 required: true,
               ),
               const SizedBox(height: 18),
               UdaanLabeledField(
-                label: AppStrings.passwordLabel,
+                label: _copy.passwordLabel,
                 controller: _passwordController,
                 hint: passwordHint,
                 obscureText: _obscurePassword,
@@ -249,9 +253,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               const SizedBox(height: 18),
               UdaanLabeledField(
-                label: AppStrings.confirmPasswordLabel,
+                label: _copy.confirmPasswordLabel,
                 controller: _confirmController,
-                hint: AppStrings.registerConfirmHint,
+                hint: _copy.registerConfirmHint,
                 obscureText: _obscureConfirm,
                 textInputAction: TextInputAction.done,
                 prefixIcon: Icons.shield_outlined,
@@ -282,20 +286,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ],
               const SizedBox(height: 28),
               UdaanPrimaryButton(
-                label: AppStrings.registerButton,
+                label: _copy.registerButton,
                 icon: Icons.arrow_forward_rounded,
                 loading: _loading,
                 onPressed: _loading ? null : _submit,
               ),
               const SizedBox(height: 20),
               UdaanSignInPrompt(
+                copy: copy,
                 onSignIn: _loading ? null : () => context.go('/login'),
               ),
               const SizedBox(height: 24),
-              const UdaanAccessibilityAssistCard(),
+              UdaanAccessibilityAssistCard(
+                copy: copy,
+                ),
               const SizedBox(height: 16),
               Text(
-                AppStrings.registerCopyright,
+                _copy.registerCopyright,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 12,

@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/config/app_branding.dart';
+import '../../core/config/app_copy_accessors.dart';
 import '../../core/config/live_radio_config.dart';
-import '../../core/constants/app_strings.dart';
 import '../../core/models/radio_schedule.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/utils/wp_media_url.dart';
@@ -29,11 +30,11 @@ class LiveNowPlaying {
 }
 
 /// Prefix RJ line as "with …" when the API returns bare host names.
-String formatRadioHostsLine(String hosts) {
+String formatRadioHostsLine(String hosts, AppCopy copy) {
   final trimmed = hosts.trim();
   if (trimmed.isEmpty) return '';
   if (trimmed.toLowerCase().startsWith('with ')) return trimmed;
-  return '${AppStrings.radioWithHostsPrefix}$trimmed';
+  return '${copy.radioWithHostsPrefix}$trimmed';
 }
 
 LiveNowPlaying resolveLiveNowPlaying({
@@ -71,7 +72,7 @@ LiveNowPlaying _fromSegment(
       : configFallback.heroImageUrl;
   return LiveNowPlaying(
     title: segment.title,
-    hostsLine: formatRadioHostsLine(segment.hosts),
+    hostsLine: formatRadioHostsLine(segment.hosts, AppCopy.fallback),
     imageUrl: image,
     showId: segment.id,
     isFromSchedule: isFromSchedule,

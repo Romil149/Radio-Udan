@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/router/event_deep_link.dart';
 import '../../core/theme/udaan_colors.dart';
+import '../../core/providers/app_providers.dart';
 
 /// Handles `/event/:eventId` — switches to Events tab and opens registration.
 class EventDeepLinkScreen extends ConsumerStatefulWidget {
@@ -17,6 +17,8 @@ class EventDeepLinkScreen extends ConsumerStatefulWidget {
 }
 
 class _EventDeepLinkScreenState extends ConsumerState<EventDeepLinkScreen> {
+  AppCopy get _copy => ref.read(appCopyProvider);
+
   @override
   void initState() {
     super.initState();
@@ -31,7 +33,7 @@ class _EventDeepLinkScreenState extends ConsumerState<EventDeepLinkScreen> {
       backgroundColor: UdaanColors.background,
       body: Center(
         child: Semantics(
-          label: AppStrings.eventDeepLinkLoading,
+          label: _copy.eventDeepLinkLoading,
           liveRegion: true,
           child: const CircularProgressIndicator(color: UdaanColors.primary),
         ),

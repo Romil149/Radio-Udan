@@ -3,7 +3,6 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/router/event_deep_link.dart';
@@ -21,6 +20,8 @@ class EmailLoginScreen extends ConsumerStatefulWidget {
 }
 
 class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
+  AppCopy get _copy => ref.read(appCopyProvider);
+
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   String? _error;
@@ -50,13 +51,13 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
     final password = _passwordController.text;
 
     if (!isValidEmail(email)) {
-      setState(() => _error = AppStrings.emailInvalid);
-      _announce(AppStrings.emailInvalid);
+      setState(() => _error = _copy.emailInvalid);
+      _announce(_copy.emailInvalid);
       return;
     }
     if (password.isEmpty) {
-      setState(() => _error = AppStrings.passwordRequired);
-      _announce(AppStrings.passwordRequired);
+      setState(() => _error = _copy.passwordRequired);
+      _announce(_copy.passwordRequired);
       return;
     }
 
@@ -93,7 +94,7 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
   Widget _passwordVisibilityToggle() {
     return Semantics(
       button: true,
-      label: _obscurePassword ? AppStrings.showPassword : AppStrings.hidePassword,
+      label: _obscurePassword ? _copy.showPassword : _copy.hidePassword,
       child: IconButton(
         icon: Icon(
           _obscurePassword
@@ -108,6 +109,7 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final copy = ref.watch(appCopyProvider);
     final branding = ref.watch(appBrandingProvider);
 
     return Scaffold(
@@ -119,6 +121,7 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               UdaanAuthTopBar(
+                copy: copy,
                 title: branding.appName,
                 onBack: () {
                   if (context.canPop()) {
@@ -131,13 +134,13 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
               const SizedBox(height: 16),
               UdaanAuthLogoHeader(
                 branding: branding,
-                subtitle: AppStrings.loginEmailIntro,
+                subtitle: _copy.loginEmailIntro,
               ),
               const SizedBox(height: 32),
               UdaanLabeledField(
-                label: AppStrings.emailLabel,
+                label: _copy.emailLabel,
                 controller: _emailController,
-                hint: AppStrings.emailHint,
+                hint: _copy.emailHint,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 prefixIcon: Icons.mail_outline,
@@ -146,16 +149,16 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                AppStrings.loginEmailVerifiedNote,
+                _copy.loginEmailVerifiedNote,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: UdaanColors.onSurfaceVariant,
                     ),
               ),
               const SizedBox(height: 12),
               UdaanLabeledField(
-                label: AppStrings.passwordLabel,
+                label: _copy.passwordLabel,
                 controller: _passwordController,
-                hint: AppStrings.loginPasswordHint,
+                hint: _copy.loginPasswordHint,
                 obscureText: _obscurePassword,
                 textInputAction: TextInputAction.done,
                 prefixIcon: Icons.lock_outline,
@@ -167,7 +170,7 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: UdaanAuthLink(
-                  label: AppStrings.forgotPasswordLink,
+                  label: _copy.forgotPasswordLink,
                   onPressed:
                       _loading ? null : () => context.push('/forgot-password'),
                 ),
@@ -189,21 +192,21 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
               ],
               const SizedBox(height: 28),
               UdaanPrimaryButton(
-                label: AppStrings.loginButton,
+                label: _copy.loginButton,
                 icon: Icons.login_rounded,
                 loading: _loading,
                 onPressed: _loading ? null : _submit,
               ),
               const SizedBox(height: 16),
               UdaanOutlineButton(
-                label: AppStrings.signInWithMobile,
+                label: _copy.signInWithMobile,
                 icon: Icons.smartphone_outlined,
                 onPressed: _loading ? null : () => context.go('/login'),
               ),
               const SizedBox(height: 32),
               UdaanAuthFooterPrompt(
-                prompt: AppStrings.dontHaveAccount,
-                actionLabel: AppStrings.registerHere,
+                prompt: _copy.dontHaveAccount,
+                actionLabel: _copy.registerHere,
                 onAction: _loading ? null : () => context.push('/register'),
               ),
             ],

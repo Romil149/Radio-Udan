@@ -57,6 +57,12 @@
 **Decision**: WordPress + Forminator remain the admin surface; `radioudaan-app-api` adds a **Radio Udaan App** WP admin menu (dashboard, settings, events, form migration links).
 **Consequences**: Staff use WP admin only; Flutter is end-user only.
 
+### 2026-06-25 — 100% WP-driven app copy + fast cold start
+**Context**: Product owner requires all user-visible strings editable from WordPress plugin without app updates; cold start must stay fast.
+**Decision**: Full copy catalog in `GET /config` → `copy` (map keyed by snake_case). Flutter `AppCopy.fromJson` merges WP overrides over `appCopyDefaults` (offline fallbacks). UI reads `appCopyProvider` only; `AppStrings` is compile-time fallback catalog, not shown when config is loaded. WP admin Settings → App copy uses `RadioUdaan_App_Copy_Catalog::groups()` for all fields.
+**Reasoning**: Single `/config` fetch (cached 5 min WP + 6 h device) avoids extra round-trips; stale-while-revalidate shows branded UI immediately.
+**Consequences**: Admin has many copy fields (grouped). Template strings use `{placeholders}` in copy values. App rebuild not needed for text changes.
+
 ## Template:
 ### [Date] — [Decision Title]
 **Context**: Why was this decision needed?
@@ -64,4 +70,3 @@
 **Decision**: What we chose
 **Reasoning**: Why this option over others
 **Consequences**: What this means for future work
-

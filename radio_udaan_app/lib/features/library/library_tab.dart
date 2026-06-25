@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/models/youtube_video.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
@@ -33,6 +32,8 @@ class LibraryTab extends ConsumerStatefulWidget {
 }
 
 class _LibraryTabState extends ConsumerState<LibraryTab> {
+  AppCopy get _copy => ref.read(appCopyProvider);
+
   final _searchController = TextEditingController();
   Timer? _searchDebounceTimer;
 
@@ -79,7 +80,6 @@ class _LibraryTabState extends ConsumerState<LibraryTab> {
 
   @override
   Widget build(BuildContext context) {
-    final copy = ref.watch(appCopyProvider);
     final searchQuery = ref.watch(librarySearchQueryProvider);
     final isSearching = searchQuery.isNotEmpty;
     final featured = ref.watch(featuredYoutubePlaylistsProvider);
@@ -90,10 +90,10 @@ class _LibraryTabState extends ConsumerState<LibraryTab> {
 
     return Scaffold(
       backgroundColor: UdaanColors.background,
-      appBar: MainTabAppBar(title: copy.tabLibrary),
+      appBar: MainTabAppBar(title: _copy.tabLibrary),
       body: SafeArea(
         child: Semantics(
-          label: AppStrings.tabLibrary,
+          label: _copy.tabLibrary,
           child: RefreshIndicator(
             color: UdaanColors.primary,
             backgroundColor: UdaanColors.surfaceContainer,
@@ -105,19 +105,22 @@ class _LibraryTabState extends ConsumerState<LibraryTab> {
                 if (isSearching) ...[
                   _SearchResultsSection(
                     results: searchResults,
+                    searchEmptyLabel: _copy.librarySearchEmpty,
                     onRetry: () =>
                         ref.invalidate(libraryYoutubeSearchProvider(searchQuery)),
                   ),
                 ] else ...[
-                  const LibrarySectionHeading(title: AppStrings.libraryPlaylists),
+                  LibrarySectionHeading(title: _copy.libraryPlaylists),
                   featured.when(
                     data: (data) => _FeaturedPlaylistsSection(
                       playlists: data.items,
+                      emptyLabel: _copy.libraryPlaylistsEmpty,
                       thumbnailFor: _playlistThumbnail,
                     ),
-                    loading: () => const _LoadingBlock(),
+                    loading: () => _LoadingBlock(loadingLabel: _copy.libraryLoading),
                     error: (error, _) => _ErrorBlock(
                       message: parseApiError(error).message,
+                      retryLabel: _copy.retry,
                       onRetry: () =>
                           ref.invalidate(featuredYoutubePlaylistsProvider),
                     ),
@@ -133,7 +136,7 @@ class _LibraryTabState extends ConsumerState<LibraryTab> {
                       alignment: Alignment.centerLeft,
                       child: Semantics(
                         button: true,
-                        label: AppStrings.libraryViewAllPlaylists,
+                        label: _copy.libraryViewAllPlaylists,
                         child: TextButton(
                           onPressed: () {
                             Navigator.of(context).push(
@@ -151,7 +154,7 @@ class _LibraryTabState extends ConsumerState<LibraryTab> {
                             foregroundColor: UdaanColors.primary,
                           ),
                           child: Text(
-                            AppStrings.libraryViewAllPlaylists,
+                            _copy.libraryViewAllPlaylists,
                             style: GoogleFonts.atkinsonHyperlegible(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -161,17 +164,18 @@ class _LibraryTabState extends ConsumerState<LibraryTab> {
                       ),
                     ),
                   ),
-                  const LibrarySectionHeading(
-                    title: AppStrings.libraryRecentUploads,
+                  LibrarySectionHeading(
+                    title: _copy.libraryRecentUploads,
                   ),
                   recent.when(
                     data: (data) => _VideoListSection(
                       videos: data.items,
-                      emptyLabel: AppStrings.libraryRecentUploadsEmpty,
+                      emptyLabel: _copy.libraryRecentUploadsEmpty,
                     ),
-                    loading: () => const _LoadingBlock(),
+                    loading: () => _LoadingBlock(loadingLabel: _copy.libraryLoading),
                     error: (error, _) => _ErrorBlock(
                       message: parseApiError(error).message,
+                      retryLabel: _copy.retry,
                       onRetry: () =>
                           ref.invalidate(libraryRecentUploadsProvider),
                     ),
@@ -199,10 +203,12 @@ IconData _compactPlaylistIcon(int index) {
 class _FeaturedPlaylistsSection extends StatelessWidget {
   const _FeaturedPlaylistsSection({
     required this.playlists,
+    required this.emptyLabel,
     required this.thumbnailFor,
   });
 
   final List<YoutubePlaylist> playlists;
+  final String emptyLabel;
   final String Function(YoutubePlaylist playlist) thumbnailFor;
 
   @override
@@ -211,10 +217,10 @@ class _FeaturedPlaylistsSection extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: BrandTokens.screenPadding),
         child: Semantics(
-          label: AppStrings.libraryPlaylistsEmpty,
+          label: emptyLabel,
           liveRegion: true,
           child: Text(
-            AppStrings.libraryPlaylistsEmpty,
+            emptyLabel,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: UdaanColors.onSurfaceVariant,
                 ),
@@ -327,25 +333,29 @@ class _VideoListSection extends ConsumerWidget {
 class _SearchResultsSection extends ConsumerWidget {
   const _SearchResultsSection({
     required this.results,
+    required this.searchEmptyLabel,
     required this.onRetry,
   });
 
   final AsyncValue<YoutubeVideoListResponse>? results;
+  final String searchEmptyLabel;
   final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = results;
     if (async == null) return const SizedBox.shrink();
+    final copy = ref.watch(appCopyProvider);
 
     return async.when(
       data: (data) => _VideoListSection(
         videos: data.items,
-        emptyLabel: AppStrings.librarySearchEmpty,
+        emptyLabel: searchEmptyLabel,
       ),
-      loading: () => const _LoadingBlock(),
+      loading: () => _LoadingBlock(loadingLabel: copy.libraryLoading),
       error: (error, _) => _ErrorBlock(
         message: parseApiError(error).message,
+        retryLabel: copy.retry,
         onRetry: onRetry,
       ),
     );
@@ -353,7 +363,9 @@ class _SearchResultsSection extends ConsumerWidget {
 }
 
 class _LoadingBlock extends StatelessWidget {
-  const _LoadingBlock();
+  const _LoadingBlock({required this.loadingLabel});
+
+  final String loadingLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -361,7 +373,7 @@ class _LoadingBlock extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       child: Center(
         child: Semantics(
-          label: AppStrings.libraryLoading,
+          label: loadingLabel,
           liveRegion: true,
           child: const CircularProgressIndicator(color: UdaanColors.primary),
         ),
@@ -371,9 +383,14 @@ class _LoadingBlock extends StatelessWidget {
 }
 
 class _ErrorBlock extends StatelessWidget {
-  const _ErrorBlock({required this.message, required this.onRetry});
+  const _ErrorBlock({
+    required this.message,
+    required this.retryLabel,
+    required this.onRetry,
+  });
 
   final String message;
+  final String retryLabel;
   final VoidCallback onRetry;
 
   @override
@@ -383,7 +400,7 @@ class _ErrorBlock extends StatelessWidget {
       child: EmptyState(
         message: message,
         icon: Icons.error_outline,
-        actionLabel: AppStrings.retry,
+        actionLabel: retryLabel,
         onAction: onRetry,
       ),
     );

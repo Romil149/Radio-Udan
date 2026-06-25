@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/router/app_router.dart';
@@ -29,6 +28,8 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
+  AppCopy get _copy => ref.read(appCopyProvider);
+
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
   late final TextEditingController _emailController;
@@ -82,7 +83,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             fileName: picked.name,
           );
       await persistAuthSession(ref, session);
-      _announce(AppStrings.profileUpdated);
+      _announce(_copy.profileUpdated);
     } catch (e) {
       setState(() => _error = parseApiError(e).message);
     } finally {
@@ -95,13 +96,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final email = _emailController.text.trim().toLowerCase();
 
     if (name.length < 2) {
-      setState(() => _error = AppStrings.nameRequired);
-      _announce(AppStrings.nameRequired);
+      setState(() => _error = _copy.nameRequired);
+      _announce(_copy.nameRequired);
       return;
     }
     if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(email)) {
-      setState(() => _error = AppStrings.emailInvalid);
-      _announce(AppStrings.emailInvalid);
+      setState(() => _error = _copy.emailInvalid);
+      _announce(_copy.emailInvalid);
       return;
     }
 
@@ -120,7 +121,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       if (!mounted) return;
 
       if (result.emailVerificationSent) {
-        _announce(AppStrings.profileEmailVerificationSent);
+        _announce(_copy.profileEmailVerificationSent);
         Navigator.of(context).pop();
         context.push(
           '/verify-email',
@@ -129,7 +130,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         return;
       }
 
-      _announce(AppStrings.profileUpdated);
+      _announce(_copy.profileUpdated);
       Navigator.of(context).pop();
     } catch (e) {
       setState(() => _error = parseApiError(e).message);
@@ -141,6 +142,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final copy = ref.watch(appCopyProvider);
     final user = ref.watch(authUserProvider);
     final avatarUrl = user?.avatarUrl;
 
@@ -154,11 +156,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 horizontal: BrandTokens.screenPadding,
               ),
               child: UdaanAuthTopBar(
-                title: AppStrings.editProfileTitle,
+                copy: copy,
+                title: _copy.editProfileTitle,
                 onBack: () => Navigator.of(context).pop(),
                 trailing: Semantics(
                   button: true,
-                  label: AppStrings.settingsTitle,
+                  label: _copy.settingsTitle,
                   child: IconButton(
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
@@ -181,7 +184,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     child: Semantics(
                       button: true,
                       enabled: !_loading,
-                      label: AppStrings.tapToUpdatePhoto,
+                      label: _copy.tapToUpdatePhoto,
                       child: GestureDetector(
                         onTap: _loading ? null : _pickPhoto,
                         child: Stack(
@@ -219,7 +222,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   const SizedBox(height: 8),
                   Center(
                     child: Text(
-                      AppStrings.tapToUpdatePhoto,
+                      _copy.tapToUpdatePhoto,
                       style: GoogleFonts.atkinsonHyperlegible(
                         fontSize: 14,
                         color: UdaanColors.primaryGlow,
@@ -229,18 +232,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   const SizedBox(height: 24),
                   _labeledField(
                     context: context,
-                    label: AppStrings.nameLabel,
+                    label: _copy.nameLabel,
                     controller: _nameController,
                   ),
                   _labeledField(
                     context: context,
-                    label: AppStrings.mobileNumberLabel,
+                    label: _copy.mobileNumberLabel,
                     controller: _phoneController,
                     readOnly: true,
-                    semanticsLabel: AppStrings.profileMobileSemantics(
+                    semanticsLabel: _copy.profileMobileSemantics(
                       _phoneController.text,
                     ),
-                    hint: AppStrings.profileMobileLockedHint,
+                    hint: _copy.profileMobileLockedHint,
                     suffixIcon: const Icon(
                       Icons.lock_outline,
                       color: UdaanColors.onSurfaceVariant,
@@ -248,7 +251,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ),
                   _labeledField(
                     context: context,
-                    label: AppStrings.emailLabel,
+                    label: _copy.emailLabel,
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                   ),
@@ -263,7 +266,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       ),
                     ),
                     child: Text(
-                      AppStrings.profileInfoNote,
+                      _copy.profileInfoNote,
                       style: GoogleFonts.atkinsonHyperlegible(
                         fontSize: 15,
                         color: UdaanColors.onSurfaceVariant,
@@ -274,7 +277,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   const SizedBox(height: 12),
                   Semantics(
                     button: true,
-                    label: AppStrings.changePasswordTitle,
+                    label: _copy.changePasswordTitle,
                     child: TextButton(
                       onPressed: () => Navigator.of(context).push(
                         MaterialPageRoute<void>(
@@ -282,7 +285,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         ),
                       ),
                       child: Text(
-                        AppStrings.changePasswordTitle,
+                        _copy.changePasswordTitle,
                         style: GoogleFonts.atkinsonHyperlegible(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -305,7 +308,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ],
                   const SizedBox(height: 20),
                   UdaanPrimaryButton(
-                    label: AppStrings.updateProfile,
+                    label: _copy.updateProfile,
                     icon: Icons.check_circle_outline,
                     loading: _loading,
                     onPressed: _loading ? null : _save,

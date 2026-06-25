@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/config/app_branding.dart';
-import '../../../core/constants/app_strings.dart';
+import '../../../core/config/app_copy_accessors.dart';
 import '../../../core/theme/accessibility_scope.dart';
 import '../../../core/theme/brand_tokens.dart';
 import '../../../core/theme/udaan_text_styles.dart';
@@ -11,12 +11,14 @@ import '../../../core/widgets/offline_brand_logo.dart';
 /// Top bar: back + centered app title (OTP verify and similar flows).
 class UdaanAuthTopBar extends StatelessWidget {
   const UdaanAuthTopBar({
+    required this.copy,
     required this.title,
     required this.onBack,
     this.trailing,
     super.key,
   });
 
+  final AppCopy copy;
   final String title;
   final VoidCallback onBack;
   final Widget? trailing;
@@ -33,7 +35,7 @@ class UdaanAuthTopBar extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Semantics(
               button: true,
-              label: AppStrings.backButton,
+              label: copy.backButton,
               child: IconButton(
                 onPressed: onBack,
                 constraints: const BoxConstraints(
@@ -74,13 +76,15 @@ class UdaanAuthTopBar extends StatelessWidget {
 /// Orange circle with lock-reset icon (forgot password).
 /// Email verification hero (verify email screen).
 class UdaanVerifyEmailHero extends StatelessWidget {
-  const UdaanVerifyEmailHero({super.key});
+  const UdaanVerifyEmailHero({required this.copy, super.key});
+
+  final AppCopy copy;
 
   @override
   Widget build(BuildContext context) {
     final palette = context.udaan;
     return Semantics(
-      label: AppStrings.verifyEmailTitle,
+      label: copy.verifyEmailTitle,
       child: Container(
         width: 120,
         height: 120,
@@ -99,13 +103,15 @@ class UdaanVerifyEmailHero extends StatelessWidget {
 }
 
 class UdaanForgotPasswordHero extends StatelessWidget {
-  const UdaanForgotPasswordHero({super.key});
+  const UdaanForgotPasswordHero({required this.copy, super.key});
+
+  final AppCopy copy;
 
   @override
   Widget build(BuildContext context) {
     final palette = context.udaan;
     return Semantics(
-      label: AppStrings.resetPasswordHero,
+      label: copy.resetPasswordHero,
       child: Container(
         width: 120,
         height: 120,
@@ -125,14 +131,16 @@ class UdaanForgotPasswordHero extends StatelessWidget {
 
 /// Forgot-password accessibility / support callout.
 class UdaanForgotPasswordHelpCard extends StatelessWidget {
-  const UdaanForgotPasswordHelpCard({super.key});
+  const UdaanForgotPasswordHelpCard({required this.copy, super.key});
+
+  final AppCopy copy;
 
   @override
   Widget build(BuildContext context) {
     final palette = context.udaan;
     return Semantics(
       container: true,
-      label: AppStrings.forgotPasswordHelpBody,
+      label: copy.forgotPasswordHelpBody,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
@@ -152,7 +160,7 @@ class UdaanForgotPasswordHelpCard extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                AppStrings.forgotPasswordHelpBody,
+                copy.forgotPasswordHelpBody,
                 style: udaanTextStyle(
                   context,
                   fontSize: 14,
@@ -170,13 +178,15 @@ class UdaanForgotPasswordHelpCard extends StatelessWidget {
 
 /// Outlined circle with padlock (registration OTP / Verify Identity).
 class UdaanOtpPadlockHero extends StatelessWidget {
-  const UdaanOtpPadlockHero({super.key});
+  const UdaanOtpPadlockHero({required this.copy, super.key});
+
+  final AppCopy copy;
 
   @override
   Widget build(BuildContext context) {
     final palette = context.udaan;
     return Semantics(
-      label: AppStrings.verifyIdentityHero,
+      label: copy.verifyIdentityHero,
       child: Container(
         width: 120,
         height: 120,
@@ -196,13 +206,15 @@ class UdaanOtpPadlockHero extends StatelessWidget {
 
 /// Orange circle with shield icon (OTP verify hero).
 class UdaanOtpHeroIcon extends StatelessWidget {
-  const UdaanOtpHeroIcon({super.key});
+  const UdaanOtpHeroIcon({required this.copy, super.key});
+
+  final AppCopy copy;
 
   @override
   Widget build(BuildContext context) {
     final palette = context.udaan;
     return Semantics(
-      label: AppStrings.secureVerificationHero,
+      label: copy.secureVerificationHero,
       child: Container(
         width: 120,
         height: 120,
@@ -590,14 +602,16 @@ class UdaanAuthCompactLogo extends StatelessWidget {
 
 /// Stitch register screen accessibility callout.
 class UdaanAccessibilityAssistCard extends StatelessWidget {
-  const UdaanAccessibilityAssistCard({super.key});
+  const UdaanAccessibilityAssistCard({required this.copy, super.key});
+
+  final AppCopy copy;
 
   @override
   Widget build(BuildContext context) {
     final palette = context.udaan;
     return Semantics(
       container: true,
-      label: '${AppStrings.registerA11yTitle}. ${AppStrings.registerA11yBody}',
+      label: '${copy.registerA11yTitle}. ${copy.registerA11yBody}',
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
@@ -618,7 +632,7 @@ class UdaanAccessibilityAssistCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  AppStrings.registerA11yTitle,
+                  copy.registerA11yTitle,
                   style: udaanTextStyle(
                     context,
                     fontSize: 16,
@@ -630,7 +644,7 @@ class UdaanAccessibilityAssistCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              AppStrings.registerA11yBody,
+              copy.registerA11yBody,
               style: udaanTextStyle(
                 context,
                 fontSize: 14,
@@ -649,10 +663,12 @@ class UdaanAccessibilityAssistCard extends StatelessWidget {
 /// Footer link for OTP / support (registration verify identity).
 class UdaanContactSupportPrompt extends StatelessWidget {
   const UdaanContactSupportPrompt({
+    required this.copy,
     required this.onContactSupport,
     super.key,
   });
 
+  final AppCopy copy;
   final VoidCallback? onContactSupport;
 
   @override
@@ -664,7 +680,7 @@ class UdaanContactSupportPrompt extends StatelessWidget {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           Text(
-            '${AppStrings.otpHavingTrouble} ',
+            '${copy.otpHavingTrouble} ',
             style: udaanTextStyle(
               context,
               fontSize: 16,
@@ -673,7 +689,7 @@ class UdaanContactSupportPrompt extends StatelessWidget {
           ),
           Semantics(
             button: true,
-            label: AppStrings.contactSupport,
+            label: copy.contactSupport,
             child: TextButton(
               onPressed: onContactSupport,
               style: TextButton.styleFrom(
@@ -685,7 +701,7 @@ class UdaanContactSupportPrompt extends StatelessWidget {
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               child: Text(
-                AppStrings.contactSupport,
+                copy.contactSupport,
                 style: udaanTextStyle(
                   context,
                   fontSize: 16,
@@ -706,10 +722,12 @@ class UdaanContactSupportPrompt extends StatelessWidget {
 
 class UdaanSignInPrompt extends StatelessWidget {
   const UdaanSignInPrompt({
+    required this.copy,
     required this.onSignIn,
     super.key,
   });
 
+  final AppCopy copy;
   final VoidCallback? onSignIn;
 
   @override
@@ -721,7 +739,7 @@ class UdaanSignInPrompt extends StatelessWidget {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           Text(
-            '${AppStrings.hasAccountPrompt} ',
+            '${copy.hasAccountPrompt} ',
             style: udaanTextStyle(
               context,
               fontSize: 16,
@@ -730,7 +748,7 @@ class UdaanSignInPrompt extends StatelessWidget {
           ),
           Semantics(
             button: true,
-            label: AppStrings.signInHere,
+            label: copy.signInHere,
             child: TextButton(
               onPressed: onSignIn,
               style: TextButton.styleFrom(
@@ -742,7 +760,7 @@ class UdaanSignInPrompt extends StatelessWidget {
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               child: Text(
-                AppStrings.signInHere,
+                copy.signInHere,
                 style: udaanTextStyle(
                   context,
                   fontSize: 16,

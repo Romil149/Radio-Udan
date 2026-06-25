@@ -1,7 +1,8 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
 
-import '../../core/constants/app_strings.dart';
+import '../../core/config/app_branding.dart';
+import '../../core/config/app_copy_accessors.dart';
 import 'radio_audio_handler.dart';
 
 RadioAudioHandler? _handler;
@@ -17,10 +18,10 @@ bool get isRadioBackgroundPlaybackEnabled => _backgroundControlsEnabled;
 Future<bool> initRadioAudioService() async {
   if (_handler != null) return true;
 
-  const config = AudioServiceConfig(
+  final config = AudioServiceConfig(
     androidNotificationChannelId:
         'com.radioudaan.radio_udaan_app.channel.radio',
-    androidNotificationChannelName: AppStrings.tabRadio,
+    androidNotificationChannelName: AppCopy.fallback.tabRadio,
     androidStopForegroundOnPause: false,
   );
 

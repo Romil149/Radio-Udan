@@ -1,9 +1,10 @@
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
+import '../../../core/config/app_branding.dart';
+import '../../../core/config/app_copy_accessors.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/constants/app_strings.dart';
 import '../../../core/theme/udaan_colors.dart';
 import '../../../core/utils/phone_country.dart';
 import '../../../core/utils/phone_e164.dart';
@@ -61,6 +62,7 @@ class PhoneCountryInputController extends ChangeNotifier {
 /// Split control: [country flag + dial code ▼] [national number].
 class UdaanPhoneField extends StatefulWidget {
   const UdaanPhoneField({
+    required this.copy,
     required this.controller,
     this.label,
     this.helperText,
@@ -71,6 +73,7 @@ class UdaanPhoneField extends StatefulWidget {
     super.key,
   });
 
+  final AppCopy copy;
   final PhoneCountryInputController controller;
   final String? label;
   final String? helperText;
@@ -118,7 +121,7 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
           color: UdaanColors.onBackground,
         ),
         inputDecoration: InputDecoration(
-          hintText: AppStrings.phoneCountrySearchHint,
+          hintText: widget.copy.phoneCountrySearchHint,
           hintStyle: GoogleFonts.atkinsonHyperlegible(color: UdaanColors.hint),
           filled: true,
           fillColor: UdaanColors.background,
@@ -156,10 +159,10 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
   @override
   Widget build(BuildContext context) {
     final country = _input.country;
-    final label = widget.label ?? AppStrings.phoneFieldLabel;
-    final helper = widget.helperText ?? AppStrings.phoneFieldHelper;
-    final hint = widget.nationalHint ?? AppStrings.phoneNationalHint;
-    final countryLabel = AppStrings.phoneCountryCodeSemantics(
+    final label = widget.label ?? widget.copy.phoneFieldLabel;
+    final helper = widget.helperText ?? widget.copy.phoneFieldHelper;
+    final hint = widget.nationalHint ?? widget.copy.phoneNationalHint;
+    final countryLabel = widget.copy.phoneCountryCodeSemantics(
       countryName: country.name,
       dialCode: country.phoneCode,
     );

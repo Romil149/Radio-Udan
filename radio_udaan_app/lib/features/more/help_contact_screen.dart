@@ -3,7 +3,6 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/brand_tokens.dart';
@@ -21,6 +20,8 @@ class HelpContactScreen extends ConsumerStatefulWidget {
 }
 
 class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
+  AppCopy get _copy => ref.read(appCopyProvider);
+
   late final TextEditingController _nameController;
   late final TextEditingController _emailController;
   late final TextEditingController _subjectController;
@@ -55,8 +56,8 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
     final message = _messageController.text.trim();
 
     if (name.isEmpty || email.isEmpty || subject.isEmpty || message.isEmpty) {
-      setState(() => _error = AppStrings.registrationFieldRequired);
-      _announce(AppStrings.registrationFieldRequired);
+      setState(() => _error = _copy.registrationFieldRequired);
+      _announce(_copy.registrationFieldRequired);
       return;
     }
 
@@ -74,14 +75,14 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
             message: message,
           );
       setState(() {
-        _success = AppStrings.messageSent;
+        _success = _copy.messageSent;
         _subjectController.clear();
         _messageController.clear();
       });
       if (mounted) {
         SemanticsService.sendAnnouncement(
           View.of(context),
-          AppStrings.messageSent,
+          _copy.messageSent,
           Directionality.of(context),
         );
       }
@@ -107,14 +108,15 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
 
   void _launchFailed() {
     if (!mounted) return;
-    _announce(AppStrings.linkOpenFailed);
+    _announce(_copy.linkOpenFailed);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text(AppStrings.linkOpenFailed)),
+      SnackBar(content: Text(_copy.linkOpenFailed)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final copy = ref.watch(appCopyProvider);
     final config = ref.watch(remoteConfigProvider);
     final support = config?.support;
     final supportEmail = support?.email ?? '';
@@ -130,7 +132,8 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
                 horizontal: BrandTokens.screenPadding,
               ),
               child: UdaanAuthTopBar(
-                title: AppStrings.contactTitle,
+                copy: copy,
+                title: _copy.contactTitle,
                 onBack: () => Navigator.of(context).pop(),
               ),
             ),
@@ -141,7 +144,7 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
                   Semantics(
                     header: true,
                     child: Text(
-                      AppStrings.contactFormTitle,
+                      _copy.contactFormTitle,
                       style: GoogleFonts.atkinsonHyperlegible(
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
@@ -151,7 +154,7 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    AppStrings.contactFormIntro,
+                    _copy.contactFormIntro,
                     style: GoogleFonts.atkinsonHyperlegible(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
@@ -160,17 +163,17 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  _field(context, AppStrings.nameLabel, _nameController),
+                  _field(context, _copy.nameLabel, _nameController),
                   _field(
                     context,
-                    AppStrings.emailLabel,
+                    _copy.emailLabel,
                     _emailController,
                     keyboardType: TextInputType.emailAddress,
                   ),
-                  _field(context, AppStrings.helpSubject, _subjectController),
+                  _field(context, _copy.helpSubject, _subjectController),
                   _field(
                     context,
-                    AppStrings.helpMessage,
+                    _copy.helpMessage,
                     _messageController,
                     maxLines: 5,
                   ),
@@ -197,13 +200,14 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
                       ),
                     ),
                   UdaanPrimaryButton(
-                    label: AppStrings.sendMessage,
+                    label: _copy.sendMessage,
                     icon: Icons.send_outlined,
                     loading: _sending,
                     onPressed: _sending ? null : _send,
                   ),
                   const SizedBox(height: 24),
                   ContactSupportActionsCard(
+                    copy: copy,
                     supportEmail: supportEmail,
                     helplinePhone: helpline,
                     onLaunchFailed: _launchFailed,

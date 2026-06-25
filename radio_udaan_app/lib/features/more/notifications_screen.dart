@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/models/app_notification.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
@@ -23,6 +22,8 @@ class NotificationsScreen extends ConsumerStatefulWidget {
 }
 
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
+  AppCopy get _copy => ref.read(appCopyProvider);
+
   _NotificationFilter _filter = _NotificationFilter.all;
 
   Color _accentForType(String type) {
@@ -45,6 +46,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final copy = ref.watch(appCopyProvider);
     final notifications = ref.watch(notificationsListProvider);
 
     return Scaffold(
@@ -58,7 +60,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 horizontal: BrandTokens.screenPadding,
               ),
               child: UdaanAuthTopBar(
-                title: AppStrings.notificationsTitle,
+                copy: copy,
+                title: _copy.notificationsTitle,
                 onBack: () => Navigator.of(context).pop(),
               ),
             ),
@@ -68,12 +71,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               ),
               child: Row(
                 children: [
-                  _filterChip(AppStrings.notificationsFilterAll,
+                  _filterChip(_copy.notificationsFilterAll,
                       _filter == _NotificationFilter.all, () {
                     setState(() => _filter = _NotificationFilter.all);
                   }),
                   const SizedBox(width: 8),
-                  _filterChip(AppStrings.notificationsFilterUnread,
+                  _filterChip(_copy.notificationsFilterUnread,
                       _filter == _NotificationFilter.unread, () {
                     setState(() => _filter = _NotificationFilter.unread);
                   }),
@@ -102,8 +105,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                               liveRegion: true,
                               child: Text(
                                 _filter == _NotificationFilter.unread
-                                    ? AppStrings.notificationsUnreadEmpty
-                                    : AppStrings.notificationsEmpty,
+                                    ? _copy.notificationsUnreadEmpty
+                                    : _copy.notificationsEmpty,
                                 style: GoogleFonts.atkinsonHyperlegible(
                                   fontSize: 16,
                                   color: UdaanColors.onSurfaceVariant,
@@ -123,6 +126,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                           item: item,
                           accent: _accentForType(item.type),
                           when: _formatWhen(item.createdAt),
+                          readLabel: _copy.notificationRead,
+                          unreadLabel: _copy.notificationUnread,
                           onTap: () async {
                             if (!item.isRead) {
                               await ref
@@ -137,7 +142,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   },
                   loading: () => Center(
                     child: Semantics(
-                      label: AppStrings.notificationsLoading,
+                      label: _copy.notificationsLoading,
                       child: const CircularProgressIndicator(
                         color: UdaanColors.primary,
                       ),
@@ -188,18 +193,21 @@ class _NotificationCard extends StatelessWidget {
     required this.item,
     required this.accent,
     required this.when,
+    required this.readLabel,
+    required this.unreadLabel,
     required this.onTap,
   });
 
   final AppNotification item;
   final Color accent;
   final String when;
+  final String readLabel;
+  final String unreadLabel;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final status =
-        item.isRead ? AppStrings.notificationRead : AppStrings.notificationUnread;
+    final status = item.isRead ? readLabel : unreadLabel;
     final whenPart = when.isNotEmpty ? '$when. ' : '';
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),

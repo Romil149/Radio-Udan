@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/config/app_branding.dart';
-import '../../../core/constants/app_strings.dart';
+import '../../../core/config/app_copy_accessors.dart';
 import '../../../core/theme/accessibility_scope.dart';
 import '../../../core/theme/udaan_colors.dart';
 import '../../../core/theme/udaan_text_styles.dart';
@@ -12,6 +12,7 @@ import '../../../core/widgets/offline_brand_logo.dart';
 class SplashBody extends StatelessWidget {
   const SplashBody({
     required this.branding,
+    required this.copy,
     required this.statusMessage,
     required this.showLoading,
     this.errorDetail,
@@ -20,6 +21,7 @@ class SplashBody extends StatelessWidget {
   });
 
   final AppBranding branding;
+  final AppCopy copy;
   final String statusMessage;
   final bool showLoading;
   final String? errorDetail;
@@ -42,10 +44,10 @@ class SplashBody extends StatelessWidget {
                 const Spacer(flex: 3),
                 _SplashLogo(branding: branding),
                 const SizedBox(height: 28),
-                _SplashTitleBlock(branding: branding),
+                _SplashTitleBlock(branding: branding, copy: copy),
                 const Spacer(flex: 2),
                 if (showLoading)
-                  _SplashLoadingDots(reduceMotion: reduceMotion),
+                  _SplashLoadingDots(copy: copy, reduceMotion: reduceMotion),
                 if (showLoading) const SizedBox(height: 20),
                 Semantics(
                   label: statusMessage,
@@ -82,7 +84,7 @@ class SplashBody extends StatelessWidget {
                   const SizedBox(height: 24),
                   Semantics(
                     button: true,
-                    label: AppStrings.retry,
+                    label: copy.retry,
                     child: FilledButton(
                       onPressed: onRetry,
                       style: FilledButton.styleFrom(
@@ -91,7 +93,7 @@ class SplashBody extends StatelessWidget {
                         minimumSize: const Size.fromHeight(56),
                       ),
                       child: Text(
-                        AppStrings.retry,
+                        copy.retry,
                         style: udaanTextStyle(
                           context,
                           fontSize: 18,
@@ -102,7 +104,7 @@ class SplashBody extends StatelessWidget {
                   ),
                 ],
                 const Spacer(flex: 3),
-                const _SplashAccessibilityBadge(),
+                _SplashAccessibilityBadge(copy: copy),
                 const SizedBox(height: 16),
               ],
             ),
@@ -155,9 +157,10 @@ class _SplashLogo extends StatelessWidget {
 }
 
 class _SplashTitleBlock extends StatelessWidget {
-  const _SplashTitleBlock({required this.branding});
+  const _SplashTitleBlock({required this.branding, required this.copy});
 
   final AppBranding branding;
+  final AppCopy copy;
 
   @override
   Widget build(BuildContext context) {
@@ -180,7 +183,7 @@ class _SplashTitleBlock extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          AppStrings.splashTagline,
+          copy.splashTagline,
           textAlign: TextAlign.center,
           style: GoogleFonts.lora(
             fontSize: 18,
@@ -196,8 +199,9 @@ class _SplashTitleBlock extends StatelessWidget {
 }
 
 class _SplashLoadingDots extends StatefulWidget {
-  const _SplashLoadingDots({required this.reduceMotion});
+  const _SplashLoadingDots({required this.copy, required this.reduceMotion});
 
+  final AppCopy copy;
   final bool reduceMotion;
 
   @override
@@ -228,10 +232,11 @@ class _SplashLoadingDotsState extends State<_SplashLoadingDots>
   @override
   Widget build(BuildContext context) {
     final palette = context.udaan;
+    final loadingLabel = widget.copy.semanticsLoading;
 
     if (widget.reduceMotion) {
       return Semantics(
-        label: AppStrings.semanticsLoading,
+        label: loadingLabel,
         liveRegion: true,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -246,7 +251,7 @@ class _SplashLoadingDotsState extends State<_SplashLoadingDots>
 
     final controller = _controller!;
     return Semantics(
-      label: AppStrings.semanticsLoading,
+      label: loadingLabel,
       liveRegion: true,
       child: AnimatedBuilder(
         animation: controller,
@@ -290,13 +295,15 @@ class _SplashLoadingDotsState extends State<_SplashLoadingDots>
 }
 
 class _SplashAccessibilityBadge extends StatelessWidget {
-  const _SplashAccessibilityBadge();
+  const _SplashAccessibilityBadge({required this.copy});
+
+  final AppCopy copy;
 
   @override
   Widget build(BuildContext context) {
     final palette = context.udaan;
     return Semantics(
-      label: AppStrings.splashA11yBadge,
+      label: copy.splashA11yBadge,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
@@ -314,7 +321,7 @@ class _SplashAccessibilityBadge extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              AppStrings.splashA11yBadge,
+              copy.splashA11yBadge,
               style: udaanTextStyle(
                 context,
                 fontSize: 14,

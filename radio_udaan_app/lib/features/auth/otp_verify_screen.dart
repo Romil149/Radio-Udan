@@ -6,7 +6,6 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/models/otp_purpose.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
@@ -29,6 +28,8 @@ class OtpVerifyScreen extends ConsumerStatefulWidget {
 }
 
 class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
+  AppCopy get _copy => ref.read(appCopyProvider);
+
   final _otpController = TextEditingController();
   String? _error;
   bool _loading = false;
@@ -173,7 +174,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
   }
 
   void _openContactSupport() {
-    _announce(AppStrings.contactTitle);
+    _announce(_copy.contactTitle);
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => const HelpContactScreen(),
@@ -216,7 +217,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
         }
       });
       _startResendCountdown();
-      _announce(AppStrings.otpResentSuccess);
+      _announce(_copy.otpResentSuccess);
     } catch (e) {
       final message = parseApiError(e).message;
       setState(() => _error = message);
@@ -255,7 +256,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
     final otp = _otpController.text.trim();
     final otpLength = OtpVerifyIdentityBody.otpLength;
     if (otp.length < otpLength) {
-      const message = AppStrings.otpCodeIncomplete;
+      final message = _copy.otpCodeIncomplete;
       setState(() => _error = message);
       _announce(message);
       return;
@@ -287,8 +288,8 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
 
       final session = result.session;
       if (session == null || !session.hasToken) {
-        setState(() => _error = AppStrings.verificationIncomplete);
-        _announce(AppStrings.verificationIncomplete);
+        setState(() => _error = _copy.verificationIncomplete);
+        _announce(_copy.verificationIncomplete);
         return;
       }
 
@@ -324,13 +325,14 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
   Widget build(BuildContext context) {
     final phone = _phoneE164;
     final branding = ref.watch(appBrandingProvider);
+    final copy = ref.watch(appCopyProvider);
 
     if (_bootstrapping) {
       return Scaffold(
         backgroundColor: UdaanColors.background,
         body: Center(
           child: Semantics(
-            label: AppStrings.semanticsLoading,
+            label: copy.semanticsLoading,
             liveRegion: true,
             child: CircularProgressIndicator(color: UdaanColors.primary),
           ),
@@ -340,6 +342,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
 
     final body = _isIdentityVerify
         ? OtpVerifyIdentityBody(
+            copy: copy,
             brandingAppName: branding.appName,
             phoneE164: phone,
             otpController: _otpController,
@@ -354,6 +357,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
             onContactSupport: _openContactSupport,
           )
         : OtpVerifyLoginBody(
+            copy: copy,
             brandingAppName: branding.appName,
             phoneE164: phone,
             otpController: _otpController,

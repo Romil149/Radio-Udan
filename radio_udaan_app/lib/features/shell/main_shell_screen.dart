@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/accessibility_scope.dart';
 import '../more/notifications_providers.dart';
@@ -49,7 +48,7 @@ class MainShellScreen extends ConsumerWidget {
       ),
       bottomNavigationBar: Semantics(
         container: true,
-        label: AppStrings.mainNavigation,
+        label: copy.mainNavigation,
         child: NavigationBar(
           backgroundColor: palette.surfaceContainerHigh,
           indicatorColor: palette.primary.withValues(alpha: 0.25),
@@ -70,7 +69,7 @@ class MainShellScreen extends ConsumerWidget {
                 icon: Semantics(
                   selected: index == i,
                   label: i == moreTabIndex && unreadCount > 0
-                      ? '${tabs[i].label}. ${AppStrings.unreadNotificationsBadge(unreadCount)}'
+                      ? '${tabs[i].label}. ${copy.unreadNotificationsBadge(unreadCount)}'
                       : tabs[i].label,
                   child: _TabIcon(
                     icon: tabs[i].icon,
@@ -80,7 +79,7 @@ class MainShellScreen extends ConsumerWidget {
                 selectedIcon: Semantics(
                   selected: true,
                   label: i == moreTabIndex && unreadCount > 0
-                      ? '${tabs[i].label}, selected. ${AppStrings.unreadNotificationsBadge(unreadCount)}'
+                      ? '${tabs[i].label}, selected. ${copy.unreadNotificationsBadge(unreadCount)}'
                       : '${tabs[i].label}, selected',
                   child: _TabIcon(
                     icon: tabs[i].selected,

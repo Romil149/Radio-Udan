@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/models/event_summary.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
@@ -75,9 +74,9 @@ class EventsTab extends ConsumerWidget {
                         children: [
                           Semantics(
                             header: true,
-                            label: AppStrings.eventsPageTitle,
+                            label: copy.eventsPageTitle,
                             child: Text(
-                              AppStrings.eventsPageTitle,
+                              copy.eventsPageTitle,
                               style: GoogleFonts.atkinsonHyperlegible(
                                 fontSize: 28,
                                 fontWeight: FontWeight.w900,
@@ -87,9 +86,9 @@ class EventsTab extends ConsumerWidget {
                           ),
                           const SizedBox(height: 8),
                           Semantics(
-                            label: AppStrings.eventsPageIntro,
+                            label: copy.eventsPageIntro,
                             child: Text(
-                              AppStrings.eventsPageIntro,
+                              copy.eventsPageIntro,
                               style: GoogleFonts.atkinsonHyperlegible(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -109,6 +108,7 @@ class EventsTab extends ConsumerWidget {
                         children: [
                           for (final event in items) ...[
                             EventCard(
+                              copy: copy,
                               event: event,
                               bannerUrl: _bannerUrl(ref, event),
                               onRegister: event.isRegistrationOpen
@@ -137,7 +137,7 @@ class EventsTab extends ConsumerWidget {
           },
           loading: () => Center(
             child: Semantics(
-              label: AppStrings.eventsLoading,
+              label: copy.eventsLoading,
               liveRegion: true,
               child: const CircularProgressIndicator(color: UdaanColors.primary),
             ),
@@ -145,7 +145,7 @@ class EventsTab extends ConsumerWidget {
           error: (error, _) => EmptyState(
             message: parseApiError(error).message,
             icon: Icons.error_outline,
-            actionLabel: AppStrings.retry,
+            actionLabel: copy.retry,
             onAction: () => ref.invalidate(eventsProvider),
           ),
         ),

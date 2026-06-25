@@ -1,0 +1,71 @@
+---
+description: Mandatory verification pipeline — no task is done without evidence
+alwaysApply: true
+---
+
+# Verification gate (mandatory)
+
+**No agent may report a task complete, “working”, or “ready for QA” without running this pipeline and pasting a PASS/FAIL table with command output.**
+
+## After ANY code change
+
+| Step | Command | Pass criteria |
+|------|---------|---------------|
+| Flutter analyze | `cd radio_udaan_app && dart analyze lib` | 0 errors |
+| WP plugin | `bash scripts/verify-wp-plugin.sh` | exit 0 |
+| Staging API | `bash scripts/staging-api-smoke.sh` | 14/14 pass (needs network) |
+
+If only Flutter changed: still run `dart analyze lib`.  
+If only WP plugin changed: still run `verify-wp-plugin.sh` + staging smoke.  
+If both changed: run all three.
+
+## Environment honesty (required in every status report)
+
+State explicitly:
+
+| Layer | Question to answer |
+|-------|-------------------|
+| Local repo | What commit / build number? Uncommitted files? |
+| Staging WP | Plugin deployed? `GET /config` copy key count? |
+| TestFlight / APK | Build on `main` or local only? |
+
+Never say “shipped” unless pushed to `main` **and** CI artifact exists (or user confirmed manual deploy).
+
+## WP plugin deploy checks
+
+After plugin deploy to staging:
+
+```bash
+curl -sS "$STAGING/config" | python3 -c "import json,sys; c=json.load(sys.stdin).get('copy',{}); print(len(c)); sys.exit(0 if len(c)>=300 else 1)"
+```
+
+Expect **≥300** copy keys when full catalog is live.
+
+## Coordinator (@alex) duties
+
+1. **Implementer ≠ verifier** — parent re-runs checks; do not trust sub-agent “done” without evidence.
+2. **Blockers first** — WP fatal / staging down stops all feature work until fixed.
+3. **Delegate QA** — use `shell` sub-agent for verify commands on multi-file tasks.
+4. **Memory** — append to `task-history.md` and update `release-state.md` same turn.
+5. **`decisions.md`** — append only; never replace the full file.
+
+## Forbidden
+
+- Saying “should work” without running commands.
+- Skipping staging smoke because “only UI changed”.
+- Deploying partial plugin zip (every `require_once` target must exist on server).
+- Reporting health from API only when user issue is **wp-admin** — check admin paths or plugin bootstrap.
+
+## Report format (copy this table)
+
+```
+| Check | Result | Evidence |
+|-------|--------|----------|
+| dart analyze | PASS/FAIL | (exit code) |
+| verify-wp-plugin | PASS/FAIL | (copy key count) |
+| staging smoke | PASS/FAIL | (N/14) |
+| Staging copy keys | N | (curl) |
+| Local uncommitted | N files | (git status) |
+```
+
+**Overall: PASS or FAIL** — FAIL means not done; list blockers.

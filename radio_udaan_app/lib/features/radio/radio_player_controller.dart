@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/providers/app_providers.dart';
 import 'android_media_notification_permission.dart';
 import 'live_now_playing.dart';
@@ -97,11 +96,12 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
   }
 
   Future<void> play() async {
+    final copy = _ref.read(appCopyProvider);
     final ready = await ensureRadioAudioService();
     if (!ready) {
-      state = const RadioPlayerState(
+      state = RadioPlayerState(
         status: RadioPlayerStatus.error,
-        errorMessage: AppStrings.radioAudioUnavailable,
+        errorMessage: copy.radioAudioUnavailable,
       );
       return;
     }
@@ -109,15 +109,14 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
 
     final url = _ref.read(remoteConfigProvider)?.streamUrl ?? '';
     if (url.isEmpty) {
-      state = const RadioPlayerState(
+      state = RadioPlayerState(
         status: RadioPlayerStatus.error,
-        errorMessage: AppStrings.radioStreamMissing,
+        errorMessage: copy.radioStreamMissing,
       );
       return;
     }
 
     final branding = _ref.read(appBrandingProvider);
-    final copy = _ref.read(appCopyProvider);
     final nowPlaying = _ref.read(liveNowPlayingProvider);
 
     // Android 13+: system dialog for media notification only; playback still starts if denied.
@@ -155,7 +154,7 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
     } catch (e) {
       state = RadioPlayerState(
         status: RadioPlayerStatus.error,
-        errorMessage: AppStrings.radioPlaybackError,
+        errorMessage: copy.radioPlaybackError,
       );
     } finally {
       _startInProgress = false;

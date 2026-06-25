@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/router/event_deep_link.dart';
@@ -27,6 +26,8 @@ class VerifyEmailScreen extends ConsumerStatefulWidget {
 }
 
 class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
+  AppCopy get _copy => ref.read(appCopyProvider);
+
   late final TextEditingController _emailController;
   final _codeController = TextEditingController();
   String? _error;
@@ -107,7 +108,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     try {
       await ref.read(radioudaanApiProvider).resendVerificationEmail();
       _startResendCountdown(60);
-      _announce(AppStrings.verificationCodeResent);
+      _announce(_copy.verificationCodeResent);
     } catch (e) {
       final message = parseApiError(e).message;
       setState(() => _error = message);
@@ -121,8 +122,8 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     final code = _codeController.text.trim();
 
     if (code.length != 6) {
-      setState(() => _error = AppStrings.verificationCodeRequired);
-      _announce(AppStrings.verificationCodeRequired);
+      setState(() => _error = _copy.verificationCodeRequired);
+      _announce(_copy.verificationCodeRequired);
       return;
     }
 
@@ -149,6 +150,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final copy = ref.watch(appCopyProvider);
     final branding = ref.watch(appBrandingProvider);
     final email = _emailController.text.trim();
 
@@ -161,6 +163,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               UdaanAuthTopBar(
+                copy: copy,
                 title: branding.appName,
                 onBack: () {
                   if (context.canPop()) {
@@ -176,13 +179,15 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                 color: UdaanColors.outlineVariant,
               ),
               const SizedBox(height: 8),
-              const Center(child: UdaanOtpHeroIcon()),
+              Center(child: UdaanOtpHeroIcon(
+                copy: copy,
+                )),
               const SizedBox(height: 28),
               Semantics(
                 header: true,
-                label: AppStrings.verifyEmailTitle,
+                label: _copy.verifyEmailTitle,
                 child: Text(
-                  AppStrings.verifyEmailTitle,
+                  _copy.verifyEmailTitle,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.atkinsonHyperlegible(
                     fontSize: 28,
@@ -193,7 +198,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                AppStrings.verifyEmailIntro,
+                _copy.verifyEmailIntro,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 17,
@@ -205,7 +210,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               if (email.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
-                  AppStrings.verifyEmailSentTo(email),
+                  _copy.verifyEmailSentTo(email),
                   textAlign: TextAlign.center,
                   style: GoogleFonts.atkinsonHyperlegible(
                     fontSize: 16,
@@ -216,21 +221,21 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               ],
               const SizedBox(height: 28),
               UdaanLabeledField(
-                label: AppStrings.emailLabel,
+                label: _copy.emailLabel,
                 controller: _emailController,
                 hint: _emailReadOnly
-                    ? AppStrings.profileEmailLockedHint
-                    : AppStrings.emailHint,
+                    ? _copy.profileEmailLockedHint
+                    : _copy.emailHint,
                 keyboardType: TextInputType.emailAddress,
                 readOnly: _emailReadOnly,
                 prefixIcon: Icons.mail_outline,
                 semanticsLabel: _emailReadOnly && email.isNotEmpty
-                    ? AppStrings.profileEmailSemantics(email)
+                    ? _copy.profileEmailSemantics(email)
                     : null,
               ),
               const SizedBox(height: 24),
               Text(
-                AppStrings.verificationCodeLabel,
+                _copy.verificationCodeLabel,
                 style: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -239,20 +244,21 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               ),
               const SizedBox(height: 8),
               UdaanOtpPinRow(
+                copy: copy,
                 controller: _codeController,
                 length: 6,
                 enabled: !_loading && !_resending,
-                semanticsHint: AppStrings.otpPinRowEmailHint(6),
+                semanticsHint: _copy.otpPinRowEmailHint(6),
               ),
               const SizedBox(height: 12),
               Align(
                 alignment: Alignment.centerRight,
                 child: UdaanAuthLink(
                   label: _resending
-                      ? AppStrings.resendingCodePleaseWait
+                      ? _copy.resendingCodePleaseWait
                       : _resendSecondsRemaining > 0
-                          ? AppStrings.resendInSeconds(_resendSecondsRemaining)
-                          : AppStrings.resendCode,
+                          ? _copy.resendInSeconds(_resendSecondsRemaining)
+                          : _copy.resendCode,
                   onPressed: _canResend ? _resend : null,
                 ),
               ),
@@ -274,7 +280,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               ],
               const SizedBox(height: 28),
               UdaanPrimaryButton(
-                label: AppStrings.verifyAndContinue,
+                label: _copy.verifyAndContinue,
                 icon: Icons.verified_outlined,
                 loading: _loading,
                 onPressed: _loading || _resending ? null : _submit,

@@ -1,8 +1,9 @@
+import '../../../core/config/app_branding.dart';
+import '../../../core/config/app_copy_accessors.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/constants/app_strings.dart';
 import '../../../core/theme/udaan_colors.dart';
 import '../../../core/utils/phone_e164.dart';
 import 'udaan_auth_widgets.dart';
@@ -11,6 +12,7 @@ import 'udaan_otp_pin_row.dart';
 /// Login OTP UI (Stitch “Enter OTP” / READY TO LAUNCH flow).
 class OtpVerifyLoginBody extends StatelessWidget {
   const OtpVerifyLoginBody({
+    required this.copy,
     required this.brandingAppName,
     required this.phoneE164,
     required this.otpController,
@@ -26,6 +28,7 @@ class OtpVerifyLoginBody extends StatelessWidget {
     super.key,
   });
 
+  final AppCopy copy;
   final String brandingAppName;
   final String phoneE164;
   final TextEditingController otpController;
@@ -49,17 +52,20 @@ class OtpVerifyLoginBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         UdaanAuthTopBar(
-          title: brandingAppName,
+                copy: copy,
+                title: brandingAppName,
           onBack: onBack,
         ),
         const SizedBox(height: 24),
-        const Center(child: UdaanOtpHeroIcon()),
+        Center(child: UdaanOtpHeroIcon(
+                copy: copy,
+                )),
         const SizedBox(height: 28),
         Semantics(
           header: true,
-          label: AppStrings.otpEnterTitle,
+          label: copy.otpEnterTitle,
           child: Text(
-            AppStrings.otpEnterTitle,
+            copy.otpEnterTitle,
             textAlign: TextAlign.center,
             style: GoogleFonts.atkinsonHyperlegible(
               fontSize: 28,
@@ -70,7 +76,7 @@ class OtpVerifyLoginBody extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          AppStrings.otpSentIntro,
+          copy.otpSentIntro,
           textAlign: TextAlign.center,
           style: GoogleFonts.atkinsonHyperlegible(
             fontSize: 18,
@@ -92,9 +98,9 @@ class OtpVerifyLoginBody extends StatelessWidget {
         if (kDebugMode && devOtp != null) ...[
           const SizedBox(height: 8),
           Semantics(
-            label: AppStrings.verifyDevHint,
+            label: copy.verifyDevHint,
             child: Text(
-              AppStrings.verifyDevHint,
+              copy.verifyDevHint,
               textAlign: TextAlign.center,
               style: GoogleFonts.atkinsonHyperlegible(
                 fontSize: 14,
@@ -105,7 +111,8 @@ class OtpVerifyLoginBody extends StatelessWidget {
         ],
         const SizedBox(height: 28),
         UdaanOtpPinRow(
-          controller: otpController,
+                copy: copy,
+                controller: otpController,
           length: otpLength,
           enabled: !loading && !resending,
         ),
@@ -127,7 +134,7 @@ class OtpVerifyLoginBody extends StatelessWidget {
         ],
         const SizedBox(height: 32),
         UdaanPrimaryButton(
-          label: AppStrings.otpLoginButton,
+          label: copy.otpLoginButton,
           icon: Icons.login_rounded,
           loading: loading,
           onPressed: loading ? null : onVerify,
@@ -137,9 +144,9 @@ class OtpVerifyLoginBody extends StatelessWidget {
           Semantics(
             liveRegion: true,
             label:
-                '${AppStrings.otpWaitPrompt}${AppStrings.otpWaitTimer(resendSecondsRemaining)}',
+                '${copy.otpWaitPrompt}${copy.otpWaitTimer(resendSecondsRemaining)}',
             child: Text(
-              '${AppStrings.otpWaitPrompt}${AppStrings.otpWaitTimer(resendSecondsRemaining)}',
+              '${copy.otpWaitPrompt}${copy.otpWaitTimer(resendSecondsRemaining)}',
               textAlign: TextAlign.center,
               style: GoogleFonts.atkinsonHyperlegible(
                 fontSize: 16,
@@ -151,7 +158,7 @@ class OtpVerifyLoginBody extends StatelessWidget {
         ],
         const SizedBox(height: 16),
         UdaanOutlineButton(
-          label: AppStrings.otpResendLabel,
+          label: copy.otpResendLabel,
           icon: Icons.refresh,
           loading: resending,
           onPressed: canResend && !resending ? onResend : null,

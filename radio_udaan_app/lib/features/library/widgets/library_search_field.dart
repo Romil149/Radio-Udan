@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/constants/app_strings.dart';
 import '../../../core/theme/brand_tokens.dart';
 import '../../../core/theme/udaan_colors.dart';
 import '../library_providers.dart';
 import 'library_section_heading.dart';
+import '../../../core/providers/app_providers.dart';
 
 /// Search Videos block — heading + bordered field (magnifier on the right).
 class LibrarySearchField extends ConsumerStatefulWidget {
@@ -22,6 +22,8 @@ class LibrarySearchField extends ConsumerStatefulWidget {
 }
 
 class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
+  AppCopy get _copy => ref.read(appCopyProvider);
+
   @override
   Widget build(BuildContext context) {
     final query = ref.watch(librarySearchQueryProvider);
@@ -29,12 +31,12 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const LibrarySectionHeading(title: AppStrings.librarySearchVideos),
+        LibrarySectionHeading(title: _copy.librarySearchVideos),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: BrandTokens.screenPadding),
           child: Semantics(
             label:
-                '${AppStrings.librarySearchVideos}, ${AppStrings.librarySearchHint}',
+                '${_copy.librarySearchVideos}, ${_copy.librarySearchHint}',
             textField: true,
             child: TextField(
               controller: widget.controller,
@@ -44,7 +46,7 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
                 color: UdaanColors.onBackground,
               ),
               decoration: InputDecoration(
-                hintText: AppStrings.librarySearchHint,
+                hintText: _copy.librarySearchHint,
                 hintStyle: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
@@ -53,7 +55,7 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
                 suffixIcon: query.isNotEmpty
                     ? Semantics(
                         button: true,
-                        label: AppStrings.cancel,
+                        label: _copy.cancel,
                         child: IconButton(
                           onPressed: () {
                             widget.controller.clear();

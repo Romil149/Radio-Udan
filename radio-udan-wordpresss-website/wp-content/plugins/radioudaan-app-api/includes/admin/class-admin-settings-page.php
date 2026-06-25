@@ -16,10 +16,9 @@ class RadioUdaan_Admin_Settings_Page {
 	 * @param array<string,mixed> $c Context from RadioUdaan_Admin_Pages::render_settings().
 	 */
 	public static function render( array $c ) {
-		$brand_colors = $c['brand_colors'];
+		$brand_colors  = $c['brand_colors'];
 		$copy_defaults = $c['copy_defaults'];
-		$copy_option_map = self::copy_option_map();
-		$copy_groups = self::copy_groups_ui( $copy_option_map, $copy_defaults );
+		$copy_groups   = RadioUdaan_App_Copy_Catalog::groups();
 
 		$tabs = array(
 			'branding'   => array( __( 'Branding', 'radioudaan-app-api' ), 'dashicons-art' ),
@@ -154,19 +153,29 @@ class RadioUdaan_Admin_Settings_Page {
 				<h3><?php esc_html_e( 'In-app text', 'radioudaan-app-api' ); ?></h3>
 				<p class="description"><?php esc_html_e( 'Short, plain-language strings. Leave blank to use defaults.', 'radioudaan-app-api' ); ?></p>
 				<div class="ru-copy-groups">
-					<?php foreach ( $copy_groups as $group_title => $fields ) : ?>
+					<?php foreach ( $copy_groups as $group_title => $catalog_keys ) : ?>
 						<details class="ru-copy-group" open>
 							<summary><?php echo esc_html( $group_title ); ?></summary>
 							<div class="ru-copy-group__body">
-								<?php foreach ( $fields as $input_name => $meta ) : ?>
+								<?php foreach ( $catalog_keys as $catalog_key ) : ?>
 									<?php
-									$stored = trim( (string) get_option( $copy_option_map[ $input_name ], '' ) );
+									$input_name = 'copy_' . $catalog_key;
+									$stored     = trim( (string) get_option( RadioUdaan_App_Copy_Catalog::option_name( $catalog_key ), '' ) );
+									$default    = isset( $copy_defaults[ $catalog_key ] ) ? $copy_defaults[ $catalog_key ] : '';
+									$label      = RadioUdaan_App_Copy_Catalog::field_label( $catalog_key );
+									$is_long    = RadioUdaan_App_Copy_Catalog::is_long_text( $catalog_key );
 									?>
 									<div class="ru-admin__field">
-										<label for="<?php echo esc_attr( $input_name ); ?>"><?php echo esc_html( $meta[0] ); ?></label>
-										<input type="text" name="<?php echo esc_attr( $input_name ); ?>" id="<?php echo esc_attr( $input_name ); ?>"
-											class="large-text" value="<?php echo esc_attr( $stored ); ?>"
-											placeholder="<?php echo esc_attr( $copy_defaults[ $meta[1] ] ); ?>" />
+										<label for="<?php echo esc_attr( $input_name ); ?>"><?php echo esc_html( $label ); ?></label>
+										<?php if ( $is_long ) : ?>
+											<textarea name="<?php echo esc_attr( $input_name ); ?>" id="<?php echo esc_attr( $input_name ); ?>"
+												class="large-text" rows="3"
+												placeholder="<?php echo esc_attr( $default ); ?>"><?php echo esc_textarea( $stored ); ?></textarea>
+										<?php else : ?>
+											<input type="text" name="<?php echo esc_attr( $input_name ); ?>" id="<?php echo esc_attr( $input_name ); ?>"
+												class="large-text" value="<?php echo esc_attr( $stored ); ?>"
+												placeholder="<?php echo esc_attr( $default ); ?>" />
+										<?php endif; ?>
 									</div>
 								<?php endforeach; ?>
 							</div>
@@ -677,88 +686,6 @@ class RadioUdaan_Admin_Settings_Page {
 			<?php submit_button( __( 'Save all settings', 'radioudaan-app-api' ), 'primary', 'submit', false, array( 'class' => 'ru-btn-large' ) ); ?>
 		</div>
 		<?php
-	}
-
-	/**
-	 * @return array<string,string>
-	 */
-	private static function copy_option_map() {
-		return array(
-			'copy_bootstrap_loading'       => RadioUdaan_App_Branding::OPTION_COPY_BOOTSTRAP_LOADING,
-			'copy_sign_in_intro'           => RadioUdaan_App_Branding::OPTION_COPY_SIGN_IN_INTRO,
-			'copy_radio_intro'             => RadioUdaan_App_Branding::OPTION_COPY_RADIO_INTRO,
-			'copy_radio_live_label'        => RadioUdaan_App_Branding::OPTION_COPY_RADIO_LIVE_LABEL,
-			'copy_tab_radio'               => RadioUdaan_App_Branding::OPTION_COPY_TAB_RADIO,
-			'copy_tab_library'             => RadioUdaan_App_Branding::OPTION_COPY_TAB_LIBRARY,
-			'copy_tab_events'              => RadioUdaan_App_Branding::OPTION_COPY_TAB_EVENTS,
-			'copy_tab_more'                => RadioUdaan_App_Branding::OPTION_COPY_TAB_MORE,
-			'copy_events_empty'            => RadioUdaan_App_Branding::OPTION_COPY_EVENTS_EMPTY,
-			'copy_library_shows'           => RadioUdaan_App_Branding::OPTION_COPY_LIBRARY_SHOWS,
-			'copy_library_whats_new'       => RadioUdaan_App_Branding::OPTION_COPY_LIBRARY_WHATS_NEW,
-			'copy_verify_intro'            => RadioUdaan_App_Branding::OPTION_COPY_VERIFY_INTRO,
-			'copy_submit_registration'     => RadioUdaan_App_Branding::OPTION_COPY_SUBMIT_REGISTRATION,
-			'copy_registration_success'    => RadioUdaan_App_Branding::OPTION_COPY_REGISTRATION_SUCCESS_PREFIX,
-			'copy_library_shows_empty'     => RadioUdaan_App_Branding::OPTION_COPY_LIBRARY_SHOWS_EMPTY,
-			'copy_library_whats_new_empty' => RadioUdaan_App_Branding::OPTION_COPY_LIBRARY_WHATS_NEW_EMPTY,
-			'copy_unsupported_fields'      => RadioUdaan_App_Branding::OPTION_COPY_UNSUPPORTED_FIELDS_NOTICE,
-		);
-	}
-
-	/**
-	 * @param array<string,string> $map Option map.
-	 * @param array<string,string> $defaults Default copy strings.
-	 * @return array<string,array<string,array{0:string,1:string}>>
-	 */
-	private static function copy_groups_ui( array $map, array $defaults ) {
-		$fields = array(
-			'copy_bootstrap_loading' => array( __( 'Splash loading', 'radioudaan-app-api' ), 'bootstrap_loading' ),
-			'copy_sign_in_intro'     => array( __( 'Sign-in intro', 'radioudaan-app-api' ), 'sign_in_intro' ),
-			'copy_verify_intro'      => array( __( 'OTP verify intro', 'radioudaan-app-api' ), 'verify_intro' ),
-			'copy_tab_radio'         => array( __( 'Tab: Live radio', 'radioudaan-app-api' ), 'tab_radio' ),
-			'copy_tab_library'       => array( __( 'Tab: Library', 'radioudaan-app-api' ), 'tab_library' ),
-			'copy_tab_events'        => array( __( 'Tab: Events', 'radioudaan-app-api' ), 'tab_events' ),
-			'copy_tab_more'          => array( __( 'Tab: More', 'radioudaan-app-api' ), 'tab_more' ),
-			'copy_radio_intro'       => array( __( 'Live radio intro', 'radioudaan-app-api' ), 'radio_intro' ),
-			'copy_radio_live_label'  => array( __( 'Live badge', 'radioudaan-app-api' ), 'radio_live_label' ),
-			'copy_events_empty'      => array( __( 'Events empty', 'radioudaan-app-api' ), 'events_empty' ),
-			'copy_submit_registration' => array( __( 'Submit button', 'radioudaan-app-api' ), 'submit_registration' ),
-			'copy_registration_success' => array( __( 'Success message', 'radioudaan-app-api' ), 'registration_success_prefix' ),
-			'copy_unsupported_fields' => array( __( 'Unsupported fields', 'radioudaan-app-api' ), 'unsupported_fields_notice' ),
-			'copy_library_shows'     => array( __( 'Section: Shows', 'radioudaan-app-api' ), 'library_shows' ),
-			'copy_library_whats_new' => array( __( "Section: What's new", 'radioudaan-app-api' ), 'library_whats_new' ),
-			'copy_library_shows_empty' => array( __( 'Shows empty', 'radioudaan-app-api' ), 'library_shows_empty' ),
-			'copy_library_whats_new_empty' => array( __( "What's new empty", 'radioudaan-app-api' ), 'library_whats_new_empty' ),
-		);
-
-		return array(
-			__( 'General & navigation', 'radioudaan-app-api' ) => array(
-				'copy_bootstrap_loading' => $fields['copy_bootstrap_loading'],
-				'copy_tab_radio'         => $fields['copy_tab_radio'],
-				'copy_tab_library'       => $fields['copy_tab_library'],
-				'copy_tab_events'        => $fields['copy_tab_events'],
-				'copy_tab_more'          => $fields['copy_tab_more'],
-			),
-			__( 'Sign-in & OTP', 'radioudaan-app-api' ) => array(
-				'copy_sign_in_intro' => $fields['copy_sign_in_intro'],
-				'copy_verify_intro'  => $fields['copy_verify_intro'],
-			),
-			__( 'Live radio', 'radioudaan-app-api' ) => array(
-				'copy_radio_intro'      => $fields['copy_radio_intro'],
-				'copy_radio_live_label' => $fields['copy_radio_live_label'],
-			),
-			__( 'Events & registration', 'radioudaan-app-api' ) => array(
-				'copy_events_empty'         => $fields['copy_events_empty'],
-				'copy_submit_registration'  => $fields['copy_submit_registration'],
-				'copy_registration_success' => $fields['copy_registration_success'],
-				'copy_unsupported_fields'   => $fields['copy_unsupported_fields'],
-			),
-			__( 'Library', 'radioudaan-app-api' ) => array(
-				'copy_library_shows'           => $fields['copy_library_shows'],
-				'copy_library_whats_new'       => $fields['copy_library_whats_new'],
-				'copy_library_shows_empty'     => $fields['copy_library_shows_empty'],
-				'copy_library_whats_new_empty' => $fields['copy_library_whats_new_empty'],
-			),
-		);
 	}
 
 	/**

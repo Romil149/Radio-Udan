@@ -3,7 +3,6 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/router/app_router.dart';
@@ -23,6 +22,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
+  AppCopy get _copy => ref.read(appCopyProvider);
+
   final _phoneInput = PhoneCountryInputController();
   final _passwordController = TextEditingController();
   String? _error;
@@ -51,8 +52,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _startOtpLogin() async {
     final phone = _phoneInput.e164;
     if (phone == null) {
-      setState(() => _error = AppStrings.phoneInvalid);
-      _announce(AppStrings.phoneInvalid);
+      setState(() => _error = _copy.phoneInvalid);
+      _announce(_copy.phoneInvalid);
       return;
     }
 
@@ -75,13 +76,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final password = _passwordController.text;
 
     if (phone == null) {
-      setState(() => _error = AppStrings.phoneInvalid);
-      _announce(AppStrings.phoneInvalid);
+      setState(() => _error = _copy.phoneInvalid);
+      _announce(_copy.phoneInvalid);
       return;
     }
     if (password.isEmpty) {
-      setState(() => _error = AppStrings.passwordRequired);
-      _announce(AppStrings.passwordRequired);
+      setState(() => _error = _copy.passwordRequired);
+      _announce(_copy.passwordRequired);
       return;
     }
 
@@ -122,7 +123,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget _passwordVisibilityToggle() {
     return Semantics(
       button: true,
-      label: _obscurePassword ? AppStrings.showPassword : AppStrings.hidePassword,
+      label: _obscurePassword ? _copy.showPassword : _copy.hidePassword,
       child: IconButton(
         icon: Icon(
           _obscurePassword
@@ -137,6 +138,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final copy = ref.watch(appCopyProvider);
     final branding = ref.watch(appBrandingProvider);
 
     return Scaffold(
@@ -149,19 +151,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             children: [
               UdaanAuthLogoHeader(
                 branding: branding,
-                subtitle: AppStrings.loginMobileIntro,
+                subtitle: _copy.loginMobileIntro,
               ),
               const SizedBox(height: 32),
               UdaanPhoneField(
+                copy: copy,
                 controller: _phoneInput,
                 textInputAction: TextInputAction.next,
                 required: true,
               ),
               const SizedBox(height: 20),
               UdaanLabeledField(
-                label: AppStrings.passwordLabel,
+                label: _copy.passwordLabel,
                 controller: _passwordController,
-                hint: AppStrings.loginPasswordHint,
+                hint: _copy.loginPasswordHint,
                 obscureText: _obscurePassword,
                 textInputAction: TextInputAction.done,
                 prefixIcon: Icons.lock_outline,
@@ -173,7 +176,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: UdaanAuthLink(
-                  label: AppStrings.forgotPasswordLink,
+                  label: _copy.forgotPasswordLink,
                   onPressed: _loading || _otpLoading
                       ? null
                       : () => context.push('/forgot-password'),
@@ -196,21 +199,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ],
               const SizedBox(height: 28),
               UdaanPrimaryButton(
-                label: AppStrings.loginButton,
+                label: _copy.loginButton,
                 icon: Icons.login_rounded,
                 loading: _loading,
                 onPressed: _loading || _otpLoading ? null : _submit,
               ),
               const SizedBox(height: 16),
               UdaanOutlineButton(
-                label: AppStrings.signInWithOtp,
+                label: _copy.signInWithOtp,
                 icon: Icons.sms_outlined,
                 loading: _otpLoading,
                 onPressed: _loading || _otpLoading ? null : _startOtpLogin,
               ),
               const SizedBox(height: 16),
               UdaanOutlineButton(
-                label: AppStrings.signInWithEmail,
+                label: _copy.signInWithEmail,
                 icon: Icons.mail_outline,
                 onPressed: _loading || _otpLoading
                     ? null
@@ -218,8 +221,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 32),
               UdaanAuthFooterPrompt(
-                prompt: AppStrings.dontHaveAccount,
-                actionLabel: AppStrings.registerHere,
+                prompt: _copy.dontHaveAccount,
+                actionLabel: _copy.registerHere,
                 onAction: _loading || _otpLoading
                     ? null
                     : () => context.push('/register'),

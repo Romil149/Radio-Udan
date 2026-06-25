@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/constants/app_strings.dart';
+import '../../../core/config/app_branding.dart';
+import '../../../core/config/app_copy_accessors.dart';
 import '../../../core/theme/udaan_colors.dart';
 
 /// Six-digit OTP entry with manual SMS entry only (no READ_SMS).
 class UdaanOtpPinRow extends StatefulWidget {
   const UdaanOtpPinRow({
+    required this.copy,
     required this.controller,
     required this.length,
     this.enabled = true,
@@ -15,6 +17,7 @@ class UdaanOtpPinRow extends StatefulWidget {
     super.key,
   });
 
+  final AppCopy copy;
   final TextEditingController controller;
   final int length;
   final bool enabled;
@@ -50,12 +53,12 @@ class _UdaanOtpPinRowState extends State<UdaanOtpPinRow> {
     });
 
     return Semantics(
-      label: AppStrings.otpPinRowLabel,
-      hint: widget.semanticsHint ?? AppStrings.otpPinRowSmsHint(widget.length),
+      label: widget.copy.otpPinRowLabel,
+      hint: widget.semanticsHint ?? widget.copy.otpPinRowSmsHint(widget.length),
       textField: true,
       value: code.isEmpty
-          ? AppStrings.otpPinRowEmpty
-          : AppStrings.otpPinRowValue(code),
+          ? widget.copy.otpPinRowEmpty
+          : widget.copy.otpPinRowValue(code),
       child: GestureDetector(
         onTap: widget.enabled ? () => _focusNode.requestFocus() : null,
         child: Stack(

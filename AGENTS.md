@@ -40,6 +40,8 @@ Staging site: https://nexusfleck.com/radioudaan/
 
 ```bash
 cd radio_udaan_app && dart analyze lib
+bash scripts/verify-wp-plugin.sh
+bash scripts/staging-api-smoke.sh
 ```
 
 For touched PHP plugin files:
@@ -47,6 +49,8 @@ For touched PHP plugin files:
 ```bash
 php -l path/to/file.php
 ```
+
+**Mandatory gate:** see `.cursor/rules/verification-gate.mdc` — no task is done without the PASS/FAIL table and command evidence.
 
 ### Staging API health (needs network)
 

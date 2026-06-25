@@ -30,6 +30,8 @@
 
 ## Patterns to Follow
 - **Primary audience**: blind and low-vision users — see `.cursor/rules/accessibility-blind-users.mdc` (56px targets, persistent labels, Semantics + liveRegion, no icon-only controls).
+- **100% WP-driven copy (non-negotiable)**: All user-visible strings come from `GET /config` → `copy` map + `branding`. Flutter `appCopyProvider` / `AppCopy` accessors in UI; `AppStrings` + `app_copy_defaults.dart` are offline fallbacks only. WP admin: Settings → App copy (full `RadioUdaan_App_Copy_Catalog`).
+- **Fast cold start (non-negotiable)**: Never block first frame on network. `ConfigCacheStorage` stale-while-revalidate; single `/config` fetch (parallel with `/auth/me` when logged in); WP transient cache 5 min. No extra startup API calls for copy.
 - **Live radio background**: `audio_service` + `just_audio` — `RadioAudioHandler` in `lib/features/radio/`, init in `main.dart`; Android FGS `mediaPlayback` + notification play/pause; iOS `UIBackgroundModes` → `audio`.
 - Write acceptance criteria as **pass/fail** checks.
 - Accessibility-first: TalkBack + VoiceOver requirements per screen/flow.

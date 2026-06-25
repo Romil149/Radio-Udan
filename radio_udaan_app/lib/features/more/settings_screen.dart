@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/models/app_user_settings.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/providers/app_settings_provider.dart';
@@ -21,6 +20,8 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  AppCopy get _copy => ref.read(appCopyProvider);
+
   late AppUserSettings _draft;
   late AppUserSettings _savedBaseline;
   bool _saving = false;
@@ -74,11 +75,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       await ref.read(appSettingsProvider.notifier).save(_draft);
       _saved = true;
       if (!mounted) return;
-      _announce(AppStrings.preferencesSaved);
+      _announce(_copy.preferencesSaved);
       Navigator.of(context).pop();
     } catch (_) {
       if (mounted) {
-        _announce(AppStrings.preferencesSaveFailed);
+        _announce(_copy.preferencesSaveFailed);
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -160,6 +161,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final copy = ref.watch(appCopyProvider);
     ref.watch(appSettingsProvider);
     final palette = context.udaan;
 
@@ -167,7 +169,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       onPopInvokedWithResult: (didPop, _) {
         if (didPop && !_saved) {
           _restoreBaseline();
-          _announce(AppStrings.preferencesDiscarded);
+          _announce(_copy.preferencesDiscarded);
         }
       },
       child: Scaffold(
@@ -180,7 +182,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   horizontal: BrandTokens.screenPadding,
                 ),
                 child: UdaanAuthTopBar(
-                  title: AppStrings.settingsTitle,
+                copy: copy,
+                title: _copy.settingsTitle,
                   onBack: () => Navigator.of(context).pop(),
                 ),
               ),
@@ -189,18 +192,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   padding: const EdgeInsets.all(BrandTokens.screenPadding),
                   children: [
                     Text(
-                      AppStrings.settingsIntro,
+                      _copy.settingsIntro,
                       style: udaanTextStyle(
                         context,
                         fontSize: 16,
                         color: palette.onSurfaceVariant,
                       ),
                     ),
-                    _sectionTitle(context, AppStrings.accessibilitySection),
+                    _sectionTitle(context, _copy.accessibilitySection),
                     _toggleCard(
                       context: context,
-                      title: AppStrings.highContrastMode,
-                      subtitle: AppStrings.highContrastModeHint,
+                      title: _copy.highContrastMode,
+                      subtitle: _copy.highContrastModeHint,
                       value: _draft.highContrast,
                       onChanged: (v) =>
                           _updateDraft(_draft.copyWith(highContrast: v)),
@@ -220,7 +223,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  AppStrings.textSize,
+                                  _copy.textSize,
                                   style: udaanTextStyle(
                                     context,
                                     fontSize: 17,
@@ -240,8 +243,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ],
                           ),
                           Semantics(
-                            label: AppStrings.textSize,
-                            hint: AppStrings.textSizeSliderHint,
+                            label: _copy.textSize,
+                            hint: _copy.textSizeSliderHint,
                             value: '${_draft.textScale.toStringAsFixed(1)}x',
                             child: Slider(
                               min: 1.0,
@@ -255,7 +258,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 _textScaleAnnounceTimer = Timer(
                                   const Duration(milliseconds: 400),
                                   () => _announce(
-                                    '${AppStrings.textSize} ${v.toStringAsFixed(1)}x',
+                                    '${_copy.textSize} ${v.toStringAsFixed(1)}x',
                                   ),
                                 );
                               },
@@ -265,7 +268,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                AppStrings.textSizeSlower,
+                                _copy.textSizeSlower,
                                 style: udaanTextStyle(
                                   context,
                                   fontSize: 13,
@@ -273,7 +276,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 ),
                               ),
                               Text(
-                                AppStrings.textSizeNormal,
+                                _copy.textSizeNormal,
                                 style: udaanTextStyle(
                                   context,
                                   fontSize: 13,
@@ -281,7 +284,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 ),
                               ),
                               Text(
-                                AppStrings.textSizeFaster,
+                                _copy.textSizeFaster,
                                 style: udaanTextStyle(
                                   context,
                                   fontSize: 13,
@@ -295,25 +298,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     _toggleCard(
                       context: context,
-                      title: AppStrings.boldText,
-                      subtitle: AppStrings.boldTextHint,
+                      title: _copy.boldText,
+                      subtitle: _copy.boldTextHint,
                       value: _draft.boldText,
                       onChanged: (v) =>
                           _updateDraft(_draft.copyWith(boldText: v)),
                     ),
                     _toggleCard(
                       context: context,
-                      title: AppStrings.reduceMotion,
-                      subtitle: AppStrings.reduceMotionHint,
+                      title: _copy.reduceMotion,
+                      subtitle: _copy.reduceMotionHint,
                       value: _draft.reduceMotion,
                       onChanged: (v) =>
                           _updateDraft(_draft.copyWith(reduceMotion: v)),
                     ),
-                    _sectionTitle(context, AppStrings.notificationsSection),
+                    _sectionTitle(context, _copy.notificationsSection),
                     _toggleCard(
                       context: context,
-                      title: AppStrings.notifyLiveBroadcasts,
-                      subtitle: AppStrings.tabRadio,
+                      title: _copy.notifyLiveBroadcasts,
+                      subtitle: _copy.tabRadio,
                       icon: Icons.radio,
                       value: _draft.notifyLiveBroadcasts,
                       onChanged: (v) => _updateDraft(
@@ -322,8 +325,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     _toggleCard(
                       context: context,
-                      title: AppStrings.notifyEventAlerts,
-                      subtitle: AppStrings.tabEvents,
+                      title: _copy.notifyEventAlerts,
+                      subtitle: _copy.tabEvents,
                       icon: Icons.event,
                       value: _draft.notifyEventAlerts,
                       onChanged: (v) =>
@@ -331,8 +334,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     _toggleCard(
                       context: context,
-                      title: AppStrings.notifyPromotions,
-                      subtitle: AppStrings.joinCommunity,
+                      title: _copy.notifyPromotions,
+                      subtitle: _copy.joinCommunity,
                       icon: Icons.campaign_outlined,
                       value: _draft.notifyPromotions,
                       onChanged: (v) =>
@@ -340,7 +343,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     const SizedBox(height: 16),
                     UdaanPrimaryButton(
-                      label: AppStrings.savePreferences,
+                      label: _copy.savePreferences,
                       loading: _saving,
                       onPressed: _saving ? null : _save,
                     ),

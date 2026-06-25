@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/constants/app_strings.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/brand_tokens.dart';
@@ -22,6 +21,8 @@ class ChangePasswordScreen extends ConsumerStatefulWidget {
 }
 
 class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
+  AppCopy get _copy => ref.read(appCopyProvider);
+
   final _currentController = TextEditingController();
   final _newController = TextEditingController();
   final _confirmController = TextEditingController();
@@ -63,8 +64,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
   Future<void> _submit() async {
     if (!_hasMinLength || !_passwordsMatch) {
-      setState(() => _error = AppStrings.passwordRequirementsNotMet);
-      _announce(AppStrings.passwordRequirementsNotMet);
+      setState(() => _error = _copy.passwordRequirementsNotMet);
+      _announce(_copy.passwordRequirementsNotMet);
       return;
     }
 
@@ -82,7 +83,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       if (!mounted) return;
       SemanticsService.sendAnnouncement(
         View.of(context),
-        AppStrings.passwordChangedSignInAgain,
+        _copy.passwordChangedSignInAgain,
         Directionality.of(context),
       );
       context.go('/login');
@@ -126,8 +127,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 suffixIcon: Semantics(
                   button: true,
                   label: obscure
-                      ? AppStrings.showPassword
-                      : AppStrings.hidePassword,
+                      ? _copy.showPassword
+                      : _copy.hidePassword,
                   child: IconButton(
                     onPressed: onToggle,
                     icon: Icon(
@@ -151,8 +152,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Semantics(
         label: met
-            ? AppStrings.passwordRequirementMet(text)
-            : AppStrings.passwordRequirementNotMet(text),
+            ? _copy.passwordRequirementMet(text)
+            : _copy.passwordRequirementNotMet(text),
         child: Row(
           children: [
             ExcludeSemantics(
@@ -183,6 +184,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final copy = ref.watch(appCopyProvider);
     final branding = ref.watch(appBrandingProvider);
 
     return Scaffold(
@@ -195,6 +197,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 horizontal: BrandTokens.screenPadding,
               ),
               child: UdaanAuthTopBar(
+                copy: copy,
                 title: branding.appName,
                 onBack: () => Navigator.of(context).pop(),
               ),
@@ -206,7 +209,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                   Semantics(
                     header: true,
                     child: Text(
-                      AppStrings.changePasswordTitle,
+                      _copy.changePasswordTitle,
                       style: GoogleFonts.atkinsonHyperlegible(
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
@@ -216,7 +219,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    AppStrings.changePasswordIntro,
+                    _copy.changePasswordIntro,
                     style: GoogleFonts.atkinsonHyperlegible(
                       fontSize: 16,
                       color: UdaanColors.onSurfaceVariant,
@@ -225,7 +228,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                   const SizedBox(height: 20),
                   _passwordField(
                     context: context,
-                    label: AppStrings.currentPassword,
+                    label: _copy.currentPassword,
                     controller: _currentController,
                     obscure: _obscureCurrent,
                     onToggle: () =>
@@ -233,7 +236,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                   ),
                   _passwordField(
                     context: context,
-                    label: AppStrings.newPassword,
+                    label: _copy.newPassword,
                     controller: _newController,
                     obscure: _obscureNew,
                     onToggle: () =>
@@ -258,7 +261,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                   const SizedBox(height: 16),
                   _passwordField(
                     context: context,
-                    label: AppStrings.confirmNewPassword,
+                    label: _copy.confirmNewPassword,
                     controller: _confirmController,
                     obscure: _obscureConfirm,
                     onToggle: () =>
@@ -276,7 +279,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     ),
                   const SizedBox(height: 20),
                   UdaanPrimaryButton(
-                    label: AppStrings.saveNewPassword,
+                    label: _copy.saveNewPassword,
                     icon: Icons.lock_outline,
                     loading: _loading,
                     onPressed: _loading ? null : _submit,
