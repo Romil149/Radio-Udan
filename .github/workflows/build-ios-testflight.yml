@@ -38,7 +38,7 @@ env:
 jobs:
   build-ios-ipa:
     name: iOS IPA → TestFlight
-    runs-on: macos-15
+    runs-on: macos-26
     defaults:
       run:
         working-directory: radio_udaan_app
@@ -94,8 +94,11 @@ jobs:
       - name: Use CocoaPods only (disable Swift Package Manager on CI)
         run: flutter config --no-enable-swift-package-manager
 
-      - name: Show Xcode version
-        run: xcodebuild -version
+      - name: Select Xcode 26 (required for App Store Connect uploads)
+        run: |
+          sudo xcode-select -s /Applications/Xcode_26.5.app
+          xcodebuild -version
+          xcrun --show-sdk-version --sdk iphoneos
 
       - name: Import signing certificate
         env:
