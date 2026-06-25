@@ -129,13 +129,13 @@ jobs:
           IOS_PROVISIONING_PROFILE_NAME: ${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}
         run: bash ../scripts/ios-ci-configure-signing.sh "$APPLE_TEAM_ID" "$IOS_PROVISIONING_PROFILE_NAME"
 
+      - name: Install dependencies
+        run: flutter pub get
+
       - name: Install CocoaPods
         run: |
           cd ios
           pod install --repo-update
-
-      - name: Install dependencies
-        run: flutter pub get
 
       - name: Analyze (fail fast)
         run: dart analyze lib
