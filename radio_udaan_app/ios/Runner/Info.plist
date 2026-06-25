@@ -41,6 +41,12 @@
 	<true/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Radio Udaan uses the camera when you choose to take a profile photo or attach a photo to an event registration.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Radio Udaan uses the microphone only when you record or attach audio or video for an event registration.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Radio Udaan uses your photo library when you choose a profile picture or attach images to an event registration.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
