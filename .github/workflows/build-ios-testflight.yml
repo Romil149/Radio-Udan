@@ -1,15 +1,11 @@
-# Build Radio Udaan iOS IPA in the cloud (download artifact → upload manually to TestFlight).
-# No App Store Connect API key required.
+# Build Radio Udaan iOS IPA in the cloud; optionally upload to TestFlight.
 #
-# Required repo secrets (Settings → Secrets and variables → Actions):
-#   APPLE_TEAM_ID                          — 10-char Team ID (Membership details)
-#   IOS_DISTRIBUTION_CERTIFICATE_BASE64    — Apple Distribution .p12 (base64)
-#   IOS_DISTRIBUTION_CERTIFICATE_PASSWORD  — .p12 export password
-#   IOS_PROVISIONING_PROFILE_BASE64        — App Store profile for org.reactjs.native.example.Radio
-#   IOS_PROVISIONING_PROFILE_NAME          — Exact profile name in Apple Developer
+# Required signing secrets (5):
+#   APPLE_TEAM_ID, IOS_DISTRIBUTION_CERTIFICATE_BASE64, IOS_DISTRIBUTION_CERTIFICATE_PASSWORD,
+#   IOS_PROVISIONING_PROFILE_BASE64, IOS_PROVISIONING_PROFILE_NAME
 #
-# After the workflow finishes: Actions → run → Artifacts → download .ipa
-# Upload with Transporter (Mac) or Xcode Organizer to App Store Connect → TestFlight.
+# Optional TestFlight auto-upload (3):
+#   APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_KEY_ID, APP_STORE_CONNECT_API_PRIVATE_KEY
 #
 # Setup guide: scripts/ios-github-secrets-setup.sh
 name: Build iOS IPA
@@ -21,6 +17,11 @@ on:
         description: 'API base URL baked into the build'
         required: false
         default: 'https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1'
+      upload_testflight:
+        description: 'Upload to TestFlight when API secrets are configured'
+        required: false
+        default: true
+        type: boolean
   push:
     branches: [main, master, staging]
     paths:
@@ -36,7 +37,7 @@ env:
 
 jobs:
   build-ios-ipa:
-    name: iOS IPA (manual TestFlight upload)
+    name: iOS IPA → TestFlight
     runs-on: macos-14
     defaults:
       run:
@@ -67,6 +68,21 @@ jobs:
           IOS_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
           IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
           IOS_PROVISIONING_PROFILE_NAME: ${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}
+
+      - name: Check TestFlight API secrets
+        id: testflight_api
+        run: |
+          if [ -n "$ISSUER" ] && [ -n "$KEY_ID" ] && [ -n "$PRIVATE_KEY" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "TestFlight API secrets found — will upload after build."
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "TestFlight API secrets missing — IPA artifact only (manual upload)."
+          fi
+        env:
+          ISSUER: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -139,10 +155,24 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
+      - name: Upload to TestFlight
+        if: >-
+          steps.testflight_api.outputs.ready == 'true' &&
+          (github.event_name != 'workflow_dispatch' || inputs.upload_testflight)
+        uses: apple-actions/upload-testflight-build@v3
+        with:
+          app-path: ${{ steps.ipa.outputs.path }}
+          issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
+
       - name: Build summary
         run: |
           ls -lh build/ios/ipa/
           echo "Bundle ID: ${{ env.IOS_BUNDLE_ID }}"
           echo "API_BASE_URL=${{ github.event.inputs.api_base_url || env.STAGING_API_BASE_URL }}"
-          echo ""
-          echo "Download the .ipa from this workflow's Artifacts, then upload with Transporter or Xcode."
+          if [ "${{ steps.testflight_api.outputs.ready }}" = "true" ]; then
+            echo "TestFlight upload: attempted (check App Store Connect → TestFlight)."
+          else
+            echo "TestFlight upload: skipped — add APP_STORE_CONNECT_* secrets or download Artifacts."
+          fi
