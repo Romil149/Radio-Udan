@@ -101,12 +101,12 @@ jobs:
       - name: Install provisioning profile
         env:
           BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
-          KEYCHAIN_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           set -euo pipefail
           PP_PATH="$RUNNER_TEMP/build_pp.mobileprovision"
-          python3 -c "import os,base64; open(os.environ['PP_PATH'],'wb').write(base64.b64decode(os.environ['PP_B64'].strip()))" \
-            PP_PATH="$PP_PATH" PP_B64="$BUILD_PROVISION_PROFILE_BASE64"
+          export PP_PATH
+          export PP_B64="$BUILD_PROVISION_PROFILE_BASE64"
+          python3 -c "import os,base64; open(os.environ['PP_PATH'],'wb').write(base64.b64decode(os.environ['PP_B64'].strip()))"
           PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< "$(security cms -D -i "$PP_PATH")")
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/"$PROFILE_UUID".mobileprovision
