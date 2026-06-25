@@ -6,6 +6,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/theme/accessibility_scope.dart';
 import '../../../core/theme/brand_tokens.dart';
 import '../../../core/theme/udaan_text_styles.dart';
+import '../../../core/widgets/offline_brand_logo.dart';
 
 /// Top bar: back + centered app title (OTP verify and similar flows).
 class UdaanAuthTopBar extends StatelessWidget {
@@ -230,7 +231,6 @@ class UdaanAuthLogoHeader extends StatelessWidget {
   final AppBranding branding;
   final String? subtitle;
 
-  static const String _assetLogo = 'assets/images/radio_udaan_logo.png';
   static const double _logoHeight = 120;
 
   @override
@@ -238,16 +238,7 @@ class UdaanAuthLogoHeader extends StatelessWidget {
     final palette = context.udaan;
     return Column(
       children: [
-        Semantics(
-          label: AppStrings.brandingLogoSemantics(branding.appName),
-          image: true,
-          child: Image.asset(
-            _assetLogo,
-            height: _logoHeight,
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.high,
-          ),
-        ),
+        OfflineBrandLogo(branding: branding, height: _logoHeight),
         const SizedBox(height: 20),
         Semantics(
           header: true,
@@ -588,19 +579,11 @@ class UdaanAuthLink extends StatelessWidget {
 class UdaanAuthCompactLogo extends StatelessWidget {
   const UdaanAuthCompactLogo({super.key});
 
-  static const String _assetLogo = 'assets/images/radio_udaan_logo.png';
-
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      label: AppStrings.appLogoSemantics,
-      image: true,
-      child: Image.asset(
-        _assetLogo,
-        height: 100,
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.high,
-      ),
+    return OfflineBrandLogo(
+      branding: AppBranding.defaults,
+      height: 100,
     );
   }
 }

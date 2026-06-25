@@ -6,6 +6,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/theme/accessibility_scope.dart';
 import '../../../core/theme/udaan_colors.dart';
 import '../../../core/theme/udaan_text_styles.dart';
+import '../../../core/widgets/offline_brand_logo.dart';
 
 /// Stitch splash / bootstrap loading layout (`stitch/splash_screen`).
 class SplashBody extends StatelessWidget {
@@ -145,21 +146,11 @@ class _SplashLogo extends StatelessWidget {
   const _SplashLogo({required this.branding});
 
   final AppBranding branding;
-  static const String _assetLogo = 'assets/images/radio_udaan_logo.png';
   static const double _logoHeight = 168;
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      label: '${branding.appName} logo',
-      image: true,
-      child: Image.asset(
-        _assetLogo,
-        height: _logoHeight,
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.high,
-      ),
-    );
+    return OfflineBrandLogo(branding: branding, height: _logoHeight);
   }
 }
 
