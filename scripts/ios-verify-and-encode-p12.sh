@@ -4,6 +4,7 @@ set -euo pipefail
 
 P12="${1:-.ios-signing/distribution.p12}"
 OUT="${2:-.ios-signing/certificate-base64.txt}"
+P12_PASS="${3:-}"
 
 if [[ ! -f "$P12" ]]; then
   echo "Missing: $P12"
@@ -14,8 +15,10 @@ if [[ ! -f "$P12" ]]; then
   exit 1
 fi
 
-read -r -s -p "Enter the .p12 password to verify: " P12_PASS
-echo ""
+if [[ -z "$P12_PASS" ]]; then
+  read -r -s -p "Enter the .p12 password to verify: " P12_PASS
+  echo ""
+fi
 
 if ! openssl pkcs12 -in "$P12" -passin "pass:${P12_PASS}" -noout 2>/dev/null; then
   echo ""
