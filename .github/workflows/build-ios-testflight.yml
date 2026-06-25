@@ -129,6 +129,17 @@ jobs:
             ios/ExportOptions.plist > ios/ExportOptions.ci.plist
           /usr/libexec/PlistBuddy -c 'Print' ios/ExportOptions.ci.plist
 
+      - name: Configure manual signing for CI
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          IOS_PROVISIONING_PROFILE_NAME: ${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}
+        run: bash ../scripts/ios-ci-configure-signing.sh "$APPLE_TEAM_ID" "$IOS_PROVISIONING_PROFILE_NAME"
+
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install --repo-update
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -145,7 +156,10 @@ jobs:
 
       - name: Locate IPA
         id: ipa
-        run: echo "path=$(ls build/ios/ipa/*.ipa | head -1)" >> "$GITHUB_OUTPUT"
+        run: |
+          IPA_REL=$(ls build/ios/ipa/*.ipa | head -1)
+          echo "path=radio_udaan_app/${IPA_REL}" >> "$GITHUB_OUTPUT"
+          ls -lh "$IPA_REL"
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
