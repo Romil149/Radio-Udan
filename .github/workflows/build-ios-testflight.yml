@@ -38,7 +38,7 @@ env:
 jobs:
   build-ios-ipa:
     name: iOS IPA → TestFlight
-    runs-on: macos-14
+    runs-on: macos-15
     defaults:
       run:
         working-directory: radio_udaan_app
@@ -90,6 +90,12 @@ jobs:
           channel: stable
           flutter-version: '3.44.1'
           cache: true
+
+      - name: Use CocoaPods only (disable Swift Package Manager on CI)
+        run: flutter config --no-enable-swift-package-manager
+
+      - name: Show Xcode version
+        run: xcodebuild -version
 
       - name: Import signing certificate
         env:
