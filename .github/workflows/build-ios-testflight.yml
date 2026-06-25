@@ -106,6 +106,12 @@ jobs:
           echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o "$CERTIFICATE_PATH"
           echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o "$PP_PATH"
 
+          if ! openssl pkcs12 -in "$CERTIFICATE_PATH" -passin "pass:${P12_PASSWORD}" -noout 2>/dev/null; then
+            echo "::error::Cannot open .p12 — wrong IOS_DISTRIBUTION_CERTIFICATE_PASSWORD or corrupted IOS_DISTRIBUTION_CERTIFICATE_BASE64."
+            echo "Fix locally: bash scripts/ios-verify-and-encode-p12.sh .ios-signing/distribution.p12"
+            exit 1
+          fi
+
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
