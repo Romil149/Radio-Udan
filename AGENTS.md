@@ -64,13 +64,14 @@ Do **not** rely on local `flutter build apk`. Use GitHub Actions:
 - Trigger: push to `main` or manual **Run workflow**
 - Artifact: `app-release.apk` with staging API baked in
 
-### iOS TestFlight (no local Mac)
+### iOS IPA (GitHub build, manual TestFlight upload)
 
-After one-time GitHub secrets setup (`bash scripts/ios-github-secrets-setup.sh`):
+After one-time GitHub signing secrets (`bash scripts/ios-github-secrets-setup.sh`):
 
-- Workflow: **Build iOS TestFlight** (`.github/workflows/build-ios-testflight.yml`)
-- Trigger: push to `main` or manual **Run workflow**
-- Uploads to App Store Connect → **TestFlight** (bundle ID `org.reactjs.native.example.Radio`)
+- Workflow: **Build iOS IPA** (`.github/workflows/build-ios-testflight.yml`)
+- Download `.ipa` from Actions **Artifacts**
+- Upload with **Transporter** on Mac → App Store Connect → **TestFlight**
+- Bundle ID: `org.reactjs.native.example.Radio`
 
 ### Typical user requests → your actions
 

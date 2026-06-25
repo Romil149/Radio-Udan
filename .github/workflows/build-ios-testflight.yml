@@ -1,5 +1,5 @@
-# Build Radio Udaan iOS IPA in the cloud and upload to TestFlight.
-# No local Mac required after GitHub secrets are configured.
+# Build Radio Udaan iOS IPA in the cloud (download artifact → upload manually to TestFlight).
+# No App Store Connect API key required.
 #
 # Required repo secrets (Settings → Secrets and variables → Actions):
 #   APPLE_TEAM_ID                          — 10-char Team ID (Membership details)
@@ -7,12 +7,12 @@
 #   IOS_DISTRIBUTION_CERTIFICATE_PASSWORD  — .p12 export password
 #   IOS_PROVISIONING_PROFILE_BASE64        — App Store profile for org.reactjs.native.example.Radio
 #   IOS_PROVISIONING_PROFILE_NAME          — Exact profile name in Apple Developer
-#   APP_STORE_CONNECT_ISSUER_ID            — App Store Connect API → Issuer ID
-#   APP_STORE_CONNECT_KEY_ID               — API key Key ID
-#   APP_STORE_CONNECT_API_PRIVATE_KEY      — Contents of AuthKey_XXXX.p8
+#
+# After the workflow finishes: Actions → run → Artifacts → download .ipa
+# Upload with Transporter (Mac) or Xcode Organizer to App Store Connect → TestFlight.
 #
 # Setup guide: scripts/ios-github-secrets-setup.sh
-name: Build iOS TestFlight
+name: Build iOS IPA
 
 on:
   workflow_dispatch:
@@ -35,8 +35,8 @@ env:
   IOS_BUNDLE_ID: org.reactjs.native.example.Radio
 
 jobs:
-  build-ios-testflight:
-    name: iOS IPA → TestFlight
+  build-ios-ipa:
+    name: iOS IPA (manual TestFlight upload)
     runs-on: macos-14
     defaults:
       run:
@@ -46,10 +46,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate secrets
+      - name: Validate signing secrets
         run: |
           missing=0
-          for key in APPLE_TEAM_ID IOS_DISTRIBUTION_CERTIFICATE_BASE64 IOS_DISTRIBUTION_CERTIFICATE_PASSWORD IOS_PROVISIONING_PROFILE_BASE64 IOS_PROVISIONING_PROFILE_NAME APP_STORE_CONNECT_ISSUER_ID APP_STORE_CONNECT_KEY_ID APP_STORE_CONNECT_API_PRIVATE_KEY; do
+          for key in APPLE_TEAM_ID IOS_DISTRIBUTION_CERTIFICATE_BASE64 IOS_DISTRIBUTION_CERTIFICATE_PASSWORD IOS_PROVISIONING_PROFILE_BASE64 IOS_PROVISIONING_PROFILE_NAME; do
             if [ -z "${!key:-}" ]; then
               echo "::error::Missing secret: $key"
               missing=1
@@ -67,9 +67,6 @@ jobs:
           IOS_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
           IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
           IOS_PROVISIONING_PROFILE_NAME: ${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          APP_STORE_CONNECT_API_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -142,16 +139,10 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
-      - name: Upload to TestFlight
-        uses: apple-actions/upload-testflight-build@v3
-        with:
-          app-path: ${{ steps.ipa.outputs.path }}
-          issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          api-key-id: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
-
       - name: Build summary
         run: |
           ls -lh build/ios/ipa/
           echo "Bundle ID: ${{ env.IOS_BUNDLE_ID }}"
           echo "API_BASE_URL=${{ github.event.inputs.api_base_url || env.STAGING_API_BASE_URL }}"
+          echo ""
+          echo "Download the .ipa from this workflow's Artifacts, then upload with Transporter or Xcode."

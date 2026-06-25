@@ -7,14 +7,16 @@ This doc covers operator steps to enable APNs → FCM → app delivery. **Do not
 
 ---
 
-## 0. GitHub Actions → TestFlight (no local Mac)
+## 0. GitHub Actions → iOS IPA (manual TestFlight upload)
 
-Workflow: `.github/workflows/build-ios-testflight.yml`  
+Workflow: `.github/workflows/build-ios-testflight.yml` (job name: **Build iOS IPA**)  
 Setup script: `bash scripts/ios-github-secrets-setup.sh`
 
-**GitHub secrets required:** `APPLE_TEAM_ID`, `IOS_DISTRIBUTION_CERTIFICATE_BASE64`, `IOS_DISTRIBUTION_CERTIFICATE_PASSWORD`, `IOS_PROVISIONING_PROFILE_BASE64`, `IOS_PROVISIONING_PROFILE_NAME`, `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_API_PRIVATE_KEY`
+**GitHub secrets required (5):** `APPLE_TEAM_ID`, `IOS_DISTRIBUTION_CERTIFICATE_BASE64`, `IOS_DISTRIBUTION_CERTIFICATE_PASSWORD`, `IOS_PROVISIONING_PROFILE_BASE64`, `IOS_PROVISIONING_PROFILE_NAME`
 
-After secrets are set: **Actions** → **Build iOS TestFlight** → **Run workflow**. Build appears under App Store Connect → **Radio Udaan** → **TestFlight**.
+**No App Store Connect API key** unless you add automatic upload later.
+
+After the workflow: **Actions** → run → **Artifacts** → download `.ipa` → upload with **Transporter** (Mac) → **TestFlight**.
 
 ---
 
