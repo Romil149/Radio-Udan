@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/bootstrap/app_bootstrap.dart';
 import '../../core/providers/app_providers.dart';
-import '../../core/theme/udaan_colors.dart';
 import 'widgets/splash_body.dart';
 
 /// Cold start: load config, restore session, then route to home or login.

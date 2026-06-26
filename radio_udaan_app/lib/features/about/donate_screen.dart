@@ -196,13 +196,13 @@ class _ScanCard extends StatelessWidget {
                   fit: BoxFit.contain,
                   height: 220,
                   memCacheHeight: 440,
-                  placeholder: (_, __) => const Center(
+                  placeholder: (_, _) => const Center(
                     child: Padding(
                       padding: EdgeInsets.all(24),
                       child: CircularProgressIndicator(),
                     ),
                   ),
-                  errorWidget: (_, __, ___) => Text(
+                  errorWidget: (_, _, _) => Text(
                     copy.linkUnavailable,
                     style: udaanGoogleFont(context, color: Colors.black87),
                   ),
