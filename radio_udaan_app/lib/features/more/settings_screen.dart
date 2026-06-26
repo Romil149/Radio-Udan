@@ -26,6 +26,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _saving = false;
   Timer? _textScaleAnnounceTimer;
   Timer? _persistTimer;
+  Timer? _notifSyncTimer;
 
   @override
   void initState() {
@@ -37,7 +38,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void dispose() {
     _textScaleAnnounceTimer?.cancel();
     _persistTimer?.cancel();
+    _notifSyncTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _syncNotificationsToServer(AppUserSettings draft) async {
+    final token = ref.read(authTokenProvider);
+    if (token == null || token.isEmpty) return;
+    try {
+      await ref.read(radioudaanApiProvider).updateNotificationPreferences(
+            liveBroadcastsEnabled: draft.notifyLiveBroadcasts,
+            eventsEnabled: draft.notifyEventAlerts,
+            promotionsEnabled: draft.notifyPromotions,
+          );
+    } catch (_) {
+      // Best-effort sync; explicit Save still surfaces errors.
+    }
+  }
+
+  void _queueNotificationSync(AppUserSettings draft) {
+    _notifSyncTimer?.cancel();
+    _notifSyncTimer = Timer(const Duration(milliseconds: 400), () {
+      unawaited(_syncNotificationsToServer(draft));
+    });
   }
 
   Future<void> _persistAccessibility({bool immediate = true}) async {
@@ -72,12 +95,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _updateNotifications(AppUserSettings next) {
     setState(() => _draft = next);
     unawaited(_persistDraft());
+    _queueNotificationSync(next);
   }
 
   Future<void> _flushDraftOnExit() async {
     _persistTimer?.cancel();
+    _notifSyncTimer?.cancel();
     await ref.read(appSettingsProvider.notifier).saveAccessibility(_draft);
     await ref.read(appSettingsProvider.notifier).save(_draft);
+    await _syncNotificationsToServer(_draft);
   }
 
   void _announce(String message) {
