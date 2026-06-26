@@ -20,6 +20,21 @@ class AboutSocialFooter extends StatelessWidget {
   final List<SocialLinkConfig> links;
   final VoidCallback? onLaunchFailed;
 
+  Widget _leadingFor(BuildContext context, String id, Color color) {
+    if (id == 'x' || id == 'twitter') {
+      return Text(
+        'X',
+        style: udaanGoogleFont(
+          context,
+          fontSize: 20,
+          fontWeight: FontWeight.w900,
+          color: color,
+        ),
+      );
+    }
+    return Icon(_iconFor(id), color: color);
+  }
+
   IconData _iconFor(String id) {
     switch (id) {
       case 'facebook':
@@ -92,10 +107,7 @@ class AboutSocialFooter extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              _iconFor(link.id),
-                              color: palette.primaryGlow,
-                            ),
+                            _leadingFor(context, link.id, palette.primaryGlow),
                             const SizedBox(width: 8),
                             Text(
                               link.label,

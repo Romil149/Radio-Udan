@@ -202,6 +202,7 @@ class RadioUdaan_Admin_Pages {
 		$donate_bank_address       = (string) get_option( RadioUdaan_App_Info_Hub::OPTION_DONATE_BANK_ADDRESS, '' );
 		$social_facebook_url       = (string) get_option( RadioUdaan_App_Info_Hub::OPTION_SOCIAL_FACEBOOK, '' );
 		$social_instagram_url      = (string) get_option( RadioUdaan_App_Info_Hub::OPTION_SOCIAL_INSTAGRAM, '' );
+		$social_x_url              = (string) get_option( RadioUdaan_App_Info_Hub::OPTION_SOCIAL_X, '' );
 		$social_youtube_url        = (string) get_option( RadioUdaan_App_Info_Hub::OPTION_SOCIAL_YOUTUBE, '' );
 		$social_website_url        = (string) get_option( RadioUdaan_App_Info_Hub::OPTION_SOCIAL_WEBSITE, '' );
 		$fcm_project_id   = RadioUdaan_App_Settings::get_fcm_project_id();
@@ -296,6 +297,7 @@ class RadioUdaan_Admin_Pages {
 					'donate_bank_address'       => $donate_bank_address,
 					'social_facebook_url'       => $social_facebook_url,
 					'social_instagram_url'      => $social_instagram_url,
+					'social_x_url'              => $social_x_url,
 					'social_youtube_url'        => $social_youtube_url,
 					'social_website_url'        => $social_website_url,
 					'fcm_project_id'    => $fcm_project_id,

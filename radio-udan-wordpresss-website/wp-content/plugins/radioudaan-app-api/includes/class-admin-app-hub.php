@@ -414,6 +414,7 @@ class RadioUdaan_Admin_App_Hub {
 		$social_fields = array(
 			'social_facebook_url'  => RadioUdaan_App_Info_Hub::OPTION_SOCIAL_FACEBOOK,
 			'social_instagram_url' => RadioUdaan_App_Info_Hub::OPTION_SOCIAL_INSTAGRAM,
+			'social_x_url'         => RadioUdaan_App_Info_Hub::OPTION_SOCIAL_X,
 			'social_youtube_url'   => RadioUdaan_App_Info_Hub::OPTION_SOCIAL_YOUTUBE,
 			'social_website_url'   => RadioUdaan_App_Info_Hub::OPTION_SOCIAL_WEBSITE,
 		);

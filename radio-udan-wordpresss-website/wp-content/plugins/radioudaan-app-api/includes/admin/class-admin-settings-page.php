@@ -576,6 +576,7 @@ class RadioUdaan_Admin_Settings_Page {
 				$social_admin = array(
 					'social_facebook_url'  => array( __( 'Facebook URL', 'radioudaan-app-api' ), $c['social_facebook_url'] ?? '' ),
 					'social_instagram_url' => array( __( 'Instagram URL', 'radioudaan-app-api' ), $c['social_instagram_url'] ?? '' ),
+					'social_x_url'         => array( __( 'X (Twitter) URL', 'radioudaan-app-api' ), $c['social_x_url'] ?? '' ),
 					'social_youtube_url'   => array( __( 'YouTube URL', 'radioudaan-app-api' ), $c['social_youtube_url'] ?? '' ),
 					'social_website_url'   => array( __( 'Website URL', 'radioudaan-app-api' ), $c['social_website_url'] ?? '' ),
 				);

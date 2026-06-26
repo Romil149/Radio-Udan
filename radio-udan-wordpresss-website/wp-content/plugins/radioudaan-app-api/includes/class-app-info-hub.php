@@ -27,6 +27,7 @@ class RadioUdaan_App_Info_Hub {
 	const OPTION_DONATE_BANK_ADDRESS       = 'radioudaan_donate_bank_address';
 	const OPTION_SOCIAL_FACEBOOK           = 'radioudaan_social_facebook_url';
 	const OPTION_SOCIAL_INSTAGRAM          = 'radioudaan_social_instagram_url';
+	const OPTION_SOCIAL_X                  = 'radioudaan_social_x_url';
 	const OPTION_SOCIAL_YOUTUBE            = 'radioudaan_social_youtube_url';
 	const OPTION_SOCIAL_WEBSITE            = 'radioudaan_social_website_url';
 
@@ -73,6 +74,11 @@ class RadioUdaan_App_Info_Hub {
 				'id'    => 'instagram',
 				'label' => __( 'Instagram', 'radioudaan-app-api' ),
 				'url'   => self::get_url( self::OPTION_SOCIAL_INSTAGRAM ),
+			),
+			array(
+				'id'    => 'x',
+				'label' => __( 'X', 'radioudaan-app-api' ),
+				'url'   => self::get_url( self::OPTION_SOCIAL_X ),
 			),
 			array(
 				'id'    => 'youtube',
