@@ -41,6 +41,7 @@ require_once RADIOUDAAN_APP_API_PATH . 'includes/class-entry-source.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-event-meta-ui.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-settings.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-legal-pages.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-info-hub.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-cpt-ru-event.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-event-sync.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-otp-msg91.php';

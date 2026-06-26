@@ -4,6 +4,8 @@ import 'app_branding.dart';
 extension AppCopyStrings on AppCopy {
   String get aboutUs => text('about_us');
   String get aboutUsSubtitle => text('about_us_subtitle');
+  String get aboutOptionsIntro => text('about_options_intro');
+  String get aboutOptionsTitle => text('about_options_title');
   String get accessibilitySection => text('accessibility_section');
   String get accountDeleteFailed => text('account_delete_failed');
   String get accountDeletedSigningOut => text('account_deleted_signing_out');
@@ -27,6 +29,12 @@ extension AppCopyStrings on AppCopy {
   String get contactFormTitle => text('contact_form_title');
   String get contactSupport => text('contact_support');
   String get contactTitle => text('contact_title');
+  String get contactEmailSubtitle => text('contact_email_subtitle');
+  String get contactEmailTitle => text('contact_email_title');
+  String get contactNumberSubtitle => text('contact_number_subtitle');
+  String get contactNumberTitle => text('contact_number_title');
+  String get copiedToClipboard => text('copied_to_clipboard');
+  String get copyValue => text('copy_value');
   String get createAccount => text('create_account');
   String get currentPassword => text('current_password');
   String get deleteAccount => text('delete_account');
@@ -34,6 +42,11 @@ extension AppCopyStrings on AppCopy {
   String get deleteAccountConfirmTitle => text('delete_account_confirm_title');
   String get deleteAccountSubtitle => text('delete_account_subtitle');
   String get dontHaveAccount => text('dont_have_account');
+  String get donateBankDetailsTitle => text('donate_bank_details_title');
+  String get donateScanCaption => text('donate_scan_caption');
+  String get donateScanTitle => text('donate_scan_title');
+  String get donateUs => text('donate_us');
+  String get donateUsSubtitle => text('donate_us_subtitle');
   String get editProfileTitle => text('edit_profile_title');
   String get emailHint => text('email_hint');
   String get emailInvalid => text('email_invalid');
@@ -56,6 +69,7 @@ extension AppCopyStrings on AppCopy {
   String get forgotPasswordLink => text('forgot_password_link');
   String get forgotPasswordPhoneNote => text('forgot_password_phone_note');
   String get forgotPasswordTitle => text('forgot_password_title');
+  String get followUs => text('follow_us');
   String get hasAccountLink => text('has_account_link');
   String get hasAccountPrompt => text('has_account_prompt');
   String get helpAndContact => text('help_and_contact');
@@ -71,6 +85,14 @@ extension AppCopyStrings on AppCopy {
   String get joinCommunity => text('join_community');
   String get joinTheDiscussion => text('join_the_discussion');
   String get joinWhatsAppChannel => text('join_whats_app_channel');
+  String get labelAccountName => text('label_account_name');
+  String get labelAccountNumber => text('label_account_number');
+  String get labelBankAddress => text('label_bank_address');
+  String get labelBankName => text('label_bank_name');
+  String get labelBranchName => text('label_branch_name');
+  String get labelIfsc => text('label_ifsc');
+  String get labelMicr => text('label_micr');
+  String get labelUpiId => text('label_upi_id');
   String get legalSection => text('legal_section');
   String get libraryDurationPrefix => text('library_duration_prefix');
   String get libraryLoading => text('library_loading');
@@ -263,6 +285,7 @@ extension AppCopyStrings on AppCopy {
   String get splashTagline => text('splash_tagline');
   String get stillNeedHelp => text('still_need_help');
   String get submitRegistration => text('submit_registration');
+  String get tabAbout => text('tab_about');
   String get tabEvents => text('tab_events');
   String get tabLibrary => text('tab_library');
   String get tabMore => text('tab_more');

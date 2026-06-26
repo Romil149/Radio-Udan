@@ -379,6 +379,50 @@ class RadioUdaan_Admin_App_Hub {
 				strtolower( sanitize_email( wp_unslash( $_POST['support_email'] ) ) )
 			);
 		}
+
+		$info_text_fields = array(
+			'donate_badge'              => RadioUdaan_App_Info_Hub::OPTION_DONATE_BADGE,
+			'donate_headline'           => RadioUdaan_App_Info_Hub::OPTION_DONATE_HEADLINE,
+			'donate_intro'              => RadioUdaan_App_Info_Hub::OPTION_DONATE_INTRO,
+			'donate_accessibility_note' => RadioUdaan_App_Info_Hub::OPTION_DONATE_ACCESSIBILITY_NOTE,
+			'donate_upi_id'             => RadioUdaan_App_Info_Hub::OPTION_DONATE_UPI_ID,
+			'donate_account_name'       => RadioUdaan_App_Info_Hub::OPTION_DONATE_ACCOUNT_NAME,
+			'donate_account_number'     => RadioUdaan_App_Info_Hub::OPTION_DONATE_ACCOUNT_NUMBER,
+			'donate_bank_name'          => RadioUdaan_App_Info_Hub::OPTION_DONATE_BANK_NAME,
+			'donate_branch_name'        => RadioUdaan_App_Info_Hub::OPTION_DONATE_BRANCH_NAME,
+			'donate_ifsc'               => RadioUdaan_App_Info_Hub::OPTION_DONATE_IFSC,
+			'donate_micr'               => RadioUdaan_App_Info_Hub::OPTION_DONATE_MICR,
+			'donate_bank_address'       => RadioUdaan_App_Info_Hub::OPTION_DONATE_BANK_ADDRESS,
+		);
+		foreach ( $info_text_fields as $post_key => $option_key ) {
+			if ( ! isset( $_POST[ $post_key ] ) ) {
+				continue;
+			}
+			$raw = wp_unslash( $_POST[ $post_key ] );
+			if ( in_array( $post_key, array( 'donate_intro', 'donate_accessibility_note', 'donate_bank_address' ), true ) ) {
+				update_option( $option_key, sanitize_textarea_field( $raw ) );
+			} else {
+				update_option( $option_key, sanitize_text_field( $raw ) );
+			}
+		}
+		if ( isset( $_POST['donate_qr_attachment_id'] ) ) {
+			update_option(
+				RadioUdaan_App_Info_Hub::OPTION_DONATE_QR_ATTACHMENT_ID,
+				max( 0, (int) $_POST['donate_qr_attachment_id'] )
+			);
+		}
+		$social_fields = array(
+			'social_facebook_url'  => RadioUdaan_App_Info_Hub::OPTION_SOCIAL_FACEBOOK,
+			'social_instagram_url' => RadioUdaan_App_Info_Hub::OPTION_SOCIAL_INSTAGRAM,
+			'social_youtube_url'   => RadioUdaan_App_Info_Hub::OPTION_SOCIAL_YOUTUBE,
+			'social_website_url'   => RadioUdaan_App_Info_Hub::OPTION_SOCIAL_WEBSITE,
+		);
+		foreach ( $social_fields as $post_key => $option_key ) {
+			if ( isset( $_POST[ $post_key ] ) ) {
+				update_option( $option_key, esc_url_raw( trim( wp_unslash( $_POST[ $post_key ] ) ) ) );
+			}
+		}
+
 		if ( isset( $_POST['fcm_project_id'] ) ) {
 			update_option(
 				RadioUdaan_App_Settings::OPTION_FCM_PROJECT_ID,

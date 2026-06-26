@@ -11,7 +11,6 @@ import '../../core/theme/accessibility_scope.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
 import '../../core/theme/udaan_google_fonts.dart';
-import '../../core/utils/external_link.dart';
 import '../../core/widgets/live_badge.dart';
 import '../../core/models/radio_schedule.dart';
 import '../../core/widgets/main_tab_app_bar.dart';
@@ -181,15 +180,6 @@ class _RadioTabState extends ConsumerState<RadioTab> {
                     // Best-effort volume control.
                   }
                 },
-              ),
-            ],
-            if (live.showWhatsapp && live.hasWhatsappUrl) ...[
-              const SizedBox(height: 18),
-              _WhatsAppCard(
-                title: live.whatsappLabel,
-                subtitle: _copy.joinTheDiscussion,
-                onPressed: () => openExternalUrl(context, live.whatsappUrl),
-                accent: branding.colors.secondary,
               ),
             ],
             const SizedBox(height: 18),
@@ -461,79 +451,6 @@ class _VolumeCard extends StatelessWidget {
             child: Icon(Icons.volume_up_outlined, color: UdaanColors.primaryGlow),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _WhatsAppCard extends StatelessWidget {
-  const _WhatsAppCard({
-    required this.title,
-    required this.subtitle,
-    required this.onPressed,
-    required this.accent,
-  });
-
-  final String title;
-  final String subtitle;
-  final VoidCallback onPressed;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: '$title, $subtitle',
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: UdaanColors.surfaceContainer,
-            borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-            border: Border.all(color: UdaanColors.outlineVariant),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: accent,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.chat_bubble_outline, color: Colors.black),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.atkinsonHyperlegible(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        color: UdaanColors.onBackground,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: GoogleFonts.atkinsonHyperlegible(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: UdaanColors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right, color: UdaanColors.primaryGlow),
-            ],
-          ),
-        ),
       ),
     );
   }

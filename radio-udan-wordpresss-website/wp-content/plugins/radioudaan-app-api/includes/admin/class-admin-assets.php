@@ -86,11 +86,12 @@ class RadioUdaan_Admin_Assets {
 			);
 			wp_enqueue_media();
 			wp_enqueue_script( 'jquery-ui-sortable' );
+			$settings_js_path = RADIOUDAAN_APP_API_PATH . 'assets/js/admin-settings.js';
 			wp_enqueue_script(
 				'radioudaan-app-settings',
 				RADIOUDAAN_APP_API_URL . 'assets/js/admin-settings.js',
-				array( 'jquery', 'jquery-ui-sortable' ),
-				RADIOUDAAN_APP_API_VERSION,
+				array( 'jquery', 'jquery-ui-sortable', 'media-editor', 'media-views' ),
+				is_readable( $settings_js_path ) ? (string) filemtime( $settings_js_path ) : RADIOUDAAN_APP_API_VERSION,
 				true
 			);
 			wp_localize_script(

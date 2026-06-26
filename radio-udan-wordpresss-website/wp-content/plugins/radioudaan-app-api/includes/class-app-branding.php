@@ -29,6 +29,7 @@ class RadioUdaan_App_Branding {
 	const OPTION_COPY_TAB_RADIO         = 'radioudaan_copy_tab_radio';
 	const OPTION_COPY_TAB_LIBRARY       = 'radioudaan_copy_tab_library';
 	const OPTION_COPY_TAB_EVENTS        = 'radioudaan_copy_tab_events';
+	const OPTION_COPY_TAB_ABOUT         = 'radioudaan_copy_tab_about';
 	const OPTION_COPY_TAB_MORE          = 'radioudaan_copy_tab_more';
 	const OPTION_COPY_EVENTS_EMPTY      = 'radioudaan_copy_events_empty';
 	const OPTION_COPY_LIBRARY_SHOWS     = 'radioudaan_copy_library_shows';

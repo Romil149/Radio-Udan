@@ -1,4 +1,5 @@
 import 'app_branding.dart';
+import 'info_hub_config.dart';
 import 'legal_pages_config.dart';
 import 'live_radio_config.dart';
 
@@ -22,6 +23,7 @@ class RemoteConfig {
     this.contactUrl,
     this.legalPages = const LegalPagesConfig(),
     this.support = const SupportConfig(),
+    this.infoHub = const InfoHubConfig(),
     this.notificationDefaults = const NotificationPreferenceDefaults(),
   });
 
@@ -57,6 +59,9 @@ class RemoteConfig {
       support: SupportConfig.fromJson(
         json['support'] as Map<String, dynamic>?,
       ),
+      infoHub: InfoHubConfig.fromJson(
+        json['info_hub'] as Map<String, dynamic>?,
+      ),
       notificationDefaults: NotificationPreferenceDefaults.fromJson(
         json['notification_preferences'] as Map<String, dynamic>?,
       ),
@@ -86,6 +91,7 @@ class RemoteConfig {
   final String? contactUrl;
   final LegalPagesConfig legalPages;
   final SupportConfig support;
+  final InfoHubConfig infoHub;
   final NotificationPreferenceDefaults notificationDefaults;
 }
 

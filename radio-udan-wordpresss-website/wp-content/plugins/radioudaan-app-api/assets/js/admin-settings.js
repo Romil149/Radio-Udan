@@ -141,6 +141,47 @@
 		});
 	}
 
+	function initDonateQrPicker() {
+		var frame;
+
+		function openDonateQrFrame() {
+			if (typeof wp === 'undefined' || !wp.media) {
+				window.alert('Media library is not available. Refresh the page and try again.');
+				return;
+			}
+			if (frame) {
+				frame.open();
+				return;
+			}
+			frame = wp.media({
+				title: 'Choose UPI QR image',
+				button: { text: 'Use this image' },
+				multiple: false
+			});
+			frame.on('select', function () {
+				var attachment = frame.state().get('selection').first().toJSON();
+				$('#donate_qr_attachment_id').val(attachment.id);
+				$('#ru-donate-qr-preview').html(
+					'<img src="' + attachment.url + '" alt="" style="max-width:220px;border-radius:8px;" />'
+				);
+				$('#ru-remove-donate-qr').show();
+			});
+			frame.open();
+		}
+
+		$(document).on('click', '#ru-pick-donate-qr', function (e) {
+			e.preventDefault();
+			openDonateQrFrame();
+		});
+
+		$(document).on('click', '#ru-remove-donate-qr', function (e) {
+			e.preventDefault();
+			$('#donate_qr_attachment_id').val('0');
+			$('#ru-donate-qr-preview').empty();
+			$(this).hide();
+		});
+	}
+
 	function initLiveHeroPicker() {
 		var frame;
 		$('#ru-pick-live-hero').on('click', function (e) {
@@ -458,6 +499,7 @@
 		initFormSubmit();
 		initPreview();
 		initLogoPicker();
+		initDonateQrPicker();
 		initLiveHeroPicker();
 		initColorHex();
 		initYoutubePlaylistLoader();

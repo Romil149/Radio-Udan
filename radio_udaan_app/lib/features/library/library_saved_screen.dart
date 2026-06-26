@@ -108,14 +108,15 @@ class _SavedRadioTile extends ConsumerWidget {
 
     return Semantics(
       label: '$title. ${hosts.isNotEmpty ? hosts : copy.radioFavorite}',
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        decoration: BoxDecoration(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Material(
           color: UdaanColors.surfaceContainer,
-          borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-          border: Border.all(color: UdaanColors.outlineVariant),
-        ),
-        child: ListTile(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+            side: const BorderSide(color: UdaanColors.outlineVariant),
+          ),
+          child: ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           minVerticalPadding: 12,
           leading: item.thumbnailUrl != null && item.thumbnailUrl!.isNotEmpty
@@ -187,6 +188,7 @@ class _SavedRadioTile extends ConsumerWidget {
             ),
           ),
           onTap: () => showRadioScheduleSheet(context),
+          ),
         ),
       ),
     );

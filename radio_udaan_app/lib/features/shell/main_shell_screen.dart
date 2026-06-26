@@ -7,16 +7,18 @@ import '../../core/providers/app_settings_provider.dart';
 import '../../core/push/notification_permission_flow.dart';
 import '../../core/theme/accessibility_scope.dart';
 import '../more/notifications_providers.dart';
+import '../about/about_tab.dart';
 import '../events/events_tab.dart';
 import '../library/library_tab.dart';
 import '../more/more_tab.dart';
 import '../radio/radio_tab.dart';
 
-/// Primary navigation: four top-level product areas (Gate A scope).
+/// Primary navigation: five top-level product areas.
 class MainShellScreen extends ConsumerStatefulWidget {
   const MainShellScreen({super.key});
 
-  static const int moreTabIndex = 3;
+  static const int aboutTabIndex = 3;
+  static const int moreTabIndex = 4;
 
   @override
   ConsumerState<MainShellScreen> createState() => _MainShellScreenState();
@@ -47,6 +49,11 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
         selected: Icons.video_library,
       ),
       (label: copy.tabEvents, icon: Icons.event_outlined, selected: Icons.event),
+      (
+        label: copy.tabAbout,
+        icon: Icons.info_outline,
+        selected: Icons.info,
+      ),
       (label: copy.tabMore, icon: Icons.menu, selected: Icons.menu),
     ];
 
@@ -60,6 +67,7 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
           RepaintBoundary(child: RadioTab()),
           RepaintBoundary(child: LibraryTab()),
           RepaintBoundary(child: EventsTab()),
+          RepaintBoundary(child: AboutTab()),
           RepaintBoundary(child: MoreTab()),
         ],
       ),

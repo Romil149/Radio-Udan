@@ -8,11 +8,13 @@ class MoreHeroCard extends StatelessWidget {
   const MoreHeroCard({
     required this.title,
     required this.intro,
+    this.backgroundIcon = Icons.settings_outlined,
     super.key,
   });
 
   final String title;
   final String intro;
+  final IconData backgroundIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +37,7 @@ class MoreHeroCard extends StatelessWidget {
               right: 0,
               top: 0,
               child: Icon(
-                Icons.settings_outlined,
+                backgroundIcon,
                 size: 88,
                 color: palette.primaryGlow.withValues(alpha: 0.12),
               ),

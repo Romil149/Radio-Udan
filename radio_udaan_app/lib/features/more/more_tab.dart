@@ -18,7 +18,6 @@ import '../../core/router/app_router.dart';
 import '../../core/widgets/main_tab_app_bar.dart';
 import 'edit_profile_screen.dart';
 import 'legal_content_screen.dart';
-import 'help_contact_screen.dart';
 import 'notifications_screen.dart';
 import 'settings_screen.dart';
 import 'notifications_providers.dart';
@@ -142,27 +141,6 @@ class MoreTab extends ConsumerWidget {
                 onTap: () => _push(context, const SettingsScreen()),
               ),
             ],
-            MoreMenuTile(
-              title: copy.helpAndContact,
-              subtitle: copy.helpAndContactSubtitle,
-              icon: Icons.support_agent,
-              iconBackground: UdaanColors.surfaceContainerHigh,
-              iconColor: UdaanColors.onBackground,
-              onTap: () => _push(context, const HelpContactScreen()),
-            ),
-            if (config?.legalPages.about != null)
-              MoreMenuTile(
-                title: copy.aboutUs,
-                icon: Icons.info_outline,
-                iconBackground: UdaanColors.secondary,
-                onTap: () => _openLegalContent(
-                  context,
-                  ref,
-                  copy,
-                  title: copy.aboutUs,
-                  content: config?.legalPages.about,
-                ),
-              ),
             if (isSignedIn && user != null && !user.emailVerified) ...[
               const SizedBox(height: 4),
               MoreMenuTile(

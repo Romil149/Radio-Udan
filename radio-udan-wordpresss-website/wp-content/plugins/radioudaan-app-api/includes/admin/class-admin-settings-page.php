@@ -28,6 +28,7 @@ class RadioUdaan_Admin_Settings_Page {
 			'youtube_library' => array( __( 'YouTube library', 'radioudaan-app-api' ), 'dashicons-video-alt3' ),
 			'auth'       => array( __( 'App accounts', 'radioudaan-app-api' ), 'dashicons-groups' ),
 			'legal'      => array( __( 'Legal URLs', 'radioudaan-app-api' ), 'dashicons-shield' ),
+			'about_tab'  => array( __( 'About tab', 'radioudaan-app-api' ), 'dashicons-info-outline' ),
 			'uploads'    => array( __( 'Uploads', 'radioudaan-app-api' ), 'dashicons-upload' ),
 			'security'   => array( __( 'OTP & limits', 'radioudaan-app-api' ), 'dashicons-lock' ),
 			'sms'           => array( __( 'SMS (MSG91)', 'radioudaan-app-api' ), 'dashicons-email-alt' ),
@@ -243,22 +244,6 @@ class RadioUdaan_Admin_Settings_Page {
 			</div>
 			<div class="ru-settings-panel__card">
 				<h3><?php esc_html_e( 'Action buttons', 'radioudaan-app-api' ); ?></h3>
-				<div class="ru-admin__toggle">
-					<input type="checkbox" name="live_show_whatsapp" id="live_show_whatsapp" value="1" <?php checked( $c['live_show_whatsapp'] ); ?> />
-					<div>
-						<label for="live_show_whatsapp"><strong><?php esc_html_e( 'WhatsApp channel button', 'radioudaan-app-api' ); ?></strong></label>
-						<div class="ru-admin__field">
-							<label for="live_whatsapp_label"><?php esc_html_e( 'Button label', 'radioudaan-app-api' ); ?></label>
-							<input type="text" name="live_whatsapp_label" id="live_whatsapp_label" class="large-text"
-								value="<?php echo esc_attr( $c['live_whatsapp_label'] ); ?>" />
-						</div>
-						<div class="ru-admin__field">
-							<label for="live_whatsapp_url"><?php esc_html_e( 'WhatsApp URL', 'radioudaan-app-api' ); ?></label>
-							<input type="url" name="live_whatsapp_url" id="live_whatsapp_url" class="large-text"
-								value="<?php echo esc_attr( $c['live_whatsapp_url'] ); ?>" />
-						</div>
-					</div>
-				</div>
 				<div class="ru-admin__toggle">
 					<input type="checkbox" name="live_show_share" id="live_show_share" value="1" <?php checked( $c['live_show_share'] ); ?> />
 					<div>
@@ -496,6 +481,111 @@ class RadioUdaan_Admin_Settings_Page {
 						placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>" />
 					<p class="description"><?php esc_html_e( 'In-app contact form messages are sent here (falls back to WP admin email).', 'radioudaan-app-api' ); ?></p>
 				</div>
+			</div>
+		</section>
+
+		<!-- About tab (app) -->
+		<section class="ru-settings-panel" data-panel="about_tab" role="tabpanel" aria-labelledby="ru-tab-about_tab">
+			<p class="description" style="margin-top:0;">
+				<?php esc_html_e( 'Content for the mobile app About tab: Donate Us screen and social icons at the bottom. Sent via GET /config → info_hub.', 'radioudaan-app-api' ); ?>
+			</p>
+			<div class="ru-settings-panel__card">
+				<h3><?php esc_html_e( 'Donate', 'radioudaan-app-api' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'Shown when users open About → Donate Us. Choose a UPI QR image from your Media Library uploads.', 'radioudaan-app-api' ); ?></p>
+				<?php
+				$donate_fields_before_qr = array(
+					'donate_badge'              => array( __( 'Badge label', 'radioudaan-app-api' ), 'text', $c['donate_badge'] ?? '' ),
+					'donate_headline'           => array( __( 'Headline', 'radioudaan-app-api' ), 'text', $c['donate_headline'] ?? '' ),
+					'donate_intro'              => array( __( 'Introduction', 'radioudaan-app-api' ), 'textarea', $c['donate_intro'] ?? '' ),
+					'donate_accessibility_note' => array( __( 'Accessibility note', 'radioudaan-app-api' ), 'textarea', $c['donate_accessibility_note'] ?? '' ),
+					'donate_upi_id'             => array( __( 'UPI ID', 'radioudaan-app-api' ), 'text', $c['donate_upi_id'] ?? '' ),
+				);
+				$donate_fields_after_qr = array(
+					'donate_account_name'   => array( __( 'Bank account name', 'radioudaan-app-api' ), 'text', $c['donate_account_name'] ?? '' ),
+					'donate_account_number' => array( __( 'Account number', 'radioudaan-app-api' ), 'text', $c['donate_account_number'] ?? '' ),
+					'donate_bank_name'      => array( __( 'Bank name', 'radioudaan-app-api' ), 'text', $c['donate_bank_name'] ?? '' ),
+					'donate_branch_name'    => array( __( 'Branch', 'radioudaan-app-api' ), 'text', $c['donate_branch_name'] ?? '' ),
+					'donate_ifsc'           => array( __( 'IFSC', 'radioudaan-app-api' ), 'text', $c['donate_ifsc'] ?? '' ),
+					'donate_micr'           => array( __( 'MICR', 'radioudaan-app-api' ), 'text', $c['donate_micr'] ?? '' ),
+					'donate_bank_address'   => array( __( 'Bank address', 'radioudaan-app-api' ), 'textarea', $c['donate_bank_address'] ?? '' ),
+				);
+				$donate_qr_id = (int) ( $c['donate_qr_attachment_id'] ?? 0 );
+				foreach ( array( $donate_fields_before_qr, $donate_fields_after_qr ) as $donate_field_group ) :
+					foreach ( $donate_field_group as $name => $meta ) :
+						if ( 'donate_upi_id' === $name ) :
+							?>
+							<div class="ru-admin__field">
+								<label for="<?php echo esc_attr( $name ); ?>"><?php echo esc_html( $meta[0] ); ?></label>
+								<input type="text" name="<?php echo esc_attr( $name ); ?>" id="<?php echo esc_attr( $name ); ?>" class="large-text" value="<?php echo esc_attr( (string) $meta[2] ); ?>" />
+							</div>
+							<div class="ru-admin__field">
+								<label><?php esc_html_e( 'UPI QR image', 'radioudaan-app-api' ); ?></label>
+								<input type="hidden" name="donate_qr_attachment_id" id="donate_qr_attachment_id" value="<?php echo $donate_qr_id; ?>" />
+								<div id="ru-donate-qr-preview" class="ru-admin__logo-preview">
+									<?php if ( ! empty( $c['donate_qr_url'] ) ) : ?>
+										<img src="<?php echo esc_url( $c['donate_qr_url'] ); ?>" alt="" style="max-width:220px;border-radius:8px;" />
+									<?php endif; ?>
+								</div>
+								<p>
+									<button type="button" class="button button-secondary" id="ru-pick-donate-qr"><?php esc_html_e( 'Choose from uploads', 'radioudaan-app-api' ); ?></button>
+									<button type="button" class="button" id="ru-remove-donate-qr" <?php echo $donate_qr_id ? '' : 'style="display:none;"'; ?>><?php esc_html_e( 'Remove', 'radioudaan-app-api' ); ?></button>
+								</p>
+								<p class="description"><?php esc_html_e( 'Square PNG or JPG recommended. Shown in the app Donate screen for UPI scan-to-pay.', 'radioudaan-app-api' ); ?></p>
+							</div>
+							<?php
+							continue;
+						endif;
+						?>
+					<div class="ru-admin__field">
+						<label for="<?php echo esc_attr( $name ); ?>"><?php echo esc_html( $meta[0] ); ?></label>
+						<?php if ( 'textarea' === $meta[1] ) : ?>
+							<textarea name="<?php echo esc_attr( $name ); ?>" id="<?php echo esc_attr( $name ); ?>" class="large-text" rows="3"><?php echo esc_textarea( (string) $meta[2] ); ?></textarea>
+						<?php else : ?>
+							<input type="text" name="<?php echo esc_attr( $name ); ?>" id="<?php echo esc_attr( $name ); ?>" class="large-text" value="<?php echo esc_attr( (string) $meta[2] ); ?>" />
+						<?php endif; ?>
+					</div>
+					<?php
+					endforeach;
+				endforeach;
+				?>
+			</div>
+			<div class="ru-settings-panel__card">
+				<h3><?php esc_html_e( 'Join WhatsApp', 'radioudaan-app-api' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'Shown in the app About tab. Opens your WhatsApp community or channel link.', 'radioudaan-app-api' ); ?></p>
+				<div class="ru-admin__toggle">
+					<input type="checkbox" name="live_show_whatsapp" id="live_show_whatsapp" value="1" <?php checked( $c['live_show_whatsapp'] ); ?> />
+					<div>
+						<label for="live_show_whatsapp"><strong><?php esc_html_e( 'Show Join WhatsApp on About tab', 'radioudaan-app-api' ); ?></strong></label>
+						<div class="ru-admin__field">
+							<label for="live_whatsapp_label"><?php esc_html_e( 'Menu label', 'radioudaan-app-api' ); ?></label>
+							<input type="text" name="live_whatsapp_label" id="live_whatsapp_label" class="large-text"
+								value="<?php echo esc_attr( $c['live_whatsapp_label'] ); ?>" />
+						</div>
+						<div class="ru-admin__field">
+							<label for="live_whatsapp_url"><?php esc_html_e( 'WhatsApp URL', 'radioudaan-app-api' ); ?></label>
+							<input type="url" name="live_whatsapp_url" id="live_whatsapp_url" class="large-text"
+								value="<?php echo esc_attr( $c['live_whatsapp_url'] ); ?>" />
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="ru-settings-panel__card">
+				<h3><?php esc_html_e( 'Social links', 'radioudaan-app-api' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'Icons at the bottom of the About tab. Leave blank to hide.', 'radioudaan-app-api' ); ?></p>
+				<?php
+				$social_admin = array(
+					'social_facebook_url'  => array( __( 'Facebook URL', 'radioudaan-app-api' ), $c['social_facebook_url'] ?? '' ),
+					'social_instagram_url' => array( __( 'Instagram URL', 'radioudaan-app-api' ), $c['social_instagram_url'] ?? '' ),
+					'social_youtube_url'   => array( __( 'YouTube URL', 'radioudaan-app-api' ), $c['social_youtube_url'] ?? '' ),
+					'social_website_url'   => array( __( 'Website URL', 'radioudaan-app-api' ), $c['social_website_url'] ?? '' ),
+				);
+				foreach ( $social_admin as $name => $meta ) :
+					?>
+					<div class="ru-admin__field">
+						<label for="<?php echo esc_attr( $name ); ?>"><?php echo esc_html( $meta[0] ); ?></label>
+						<input type="url" name="<?php echo esc_attr( $name ); ?>" id="<?php echo esc_attr( $name ); ?>" class="large-text" value="<?php echo esc_attr( (string) $meta[1] ); ?>" />
+					</div>
+				<?php endforeach; ?>
 			</div>
 		</section>
 

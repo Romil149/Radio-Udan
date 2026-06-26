@@ -151,39 +151,40 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     IconData? icon,
   }) {
     final palette = context.udaan;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
         color: palette.surfaceContainer,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: palette.outlineVariant),
-      ),
-      child: SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        secondary: icon != null
-            ? Icon(icon, color: palette.primaryGlow)
-            : null,
-        title: Text(
-          title,
-          style: udaanTextStyle(
-            context,
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-          ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: palette.outlineVariant),
         ),
-        subtitle: Text(
-          subtitle,
-          style: udaanTextStyle(
-            context,
-            fontSize: 14,
-            color: palette.onSurfaceVariant,
+        child: SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          secondary: icon != null
+              ? Icon(icon, color: palette.primaryGlow)
+              : null,
+          title: Text(
+            title,
+            style: udaanTextStyle(
+              context,
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+            ),
           ),
+          subtitle: Text(
+            subtitle,
+            style: udaanTextStyle(
+              context,
+              fontSize: 14,
+              color: palette.onSurfaceVariant,
+            ),
+          ),
+          value: value,
+          activeThumbColor: palette.onPrimary,
+          activeTrackColor: palette.primary,
+          onChanged: onChanged,
         ),
-        value: value,
-        activeThumbColor: palette.onPrimary,
-        activeTrackColor: palette.primary,
-        onChanged: onChanged,
       ),
     );
   }
