@@ -123,7 +123,7 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
     final helpline = support?.helplinePhone ?? '';
 
     return Scaffold(
-      backgroundColor: UdaanColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [

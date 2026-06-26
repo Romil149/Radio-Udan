@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/app_providers.dart';
 import '../theme/accessibility_scope.dart';
+import '../theme/brand_tokens.dart';
 import '../theme/udaan_text_styles.dart';
 
-/// Dark Udaan app bar used on main tabs.
-class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
+/// Dark Udaan app bar for pushed screens and main tabs.
+class BrandAppBar extends ConsumerWidget implements PreferredSizeWidget {
   const BrandAppBar({
     super.key,
     required this.title,
@@ -24,17 +27,36 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final palette = context.udaan;
+    final copy = ref.watch(appCopyProvider);
+    final canPop = Navigator.canPop(context);
+    final showBack = automaticallyImplyLeading ?? canPop;
+
+    Widget? resolvedLeading = leading;
+    if (resolvedLeading == null && showBack && canPop) {
+      resolvedLeading = Semantics(
+        button: true,
+        label: copy.backButton,
+        child: IconButton(
+          onPressed: () => Navigator.of(context).maybePop(),
+          constraints: const BoxConstraints(
+            minWidth: BrandTokens.a11yMinTapTarget,
+            minHeight: BrandTokens.a11yMinTapTarget,
+          ),
+          icon: Icon(Icons.arrow_back, color: palette.onBackground),
+        ),
+      );
+    }
+
     return AppBar(
       backgroundColor: palette.background,
       foregroundColor: palette.onBackground,
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: centerTitle,
-      leading: leading,
-      automaticallyImplyLeading:
-          automaticallyImplyLeading ?? leading != null,
+      leading: resolvedLeading,
+      automaticallyImplyLeading: false,
       title: Text(
         title,
         style: udaanTextStyle(

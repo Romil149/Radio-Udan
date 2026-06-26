@@ -65,7 +65,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final unreadCount = notifications.valueOrNull?.unreadCount ?? 0;
 
     return Scaffold(
-      backgroundColor: UdaanColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

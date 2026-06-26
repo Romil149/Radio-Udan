@@ -7,8 +7,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/providers/app_providers.dart';
+import '../../core/theme/accessibility_scope.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
+import '../../core/theme/udaan_google_fonts.dart';
 import '../../core/utils/external_link.dart';
 import '../../core/widgets/live_badge.dart';
 import '../../core/models/radio_schedule.dart';
@@ -125,7 +127,7 @@ class _RadioTabState extends ConsumerState<RadioTab> {
     });
 
     return Scaffold(
-      backgroundColor: UdaanColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: MainTabAppBar(title: branding.appName),
       body: SafeArea(
         child: ListView(
@@ -250,13 +252,14 @@ class _HeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    final palette = context.udaan;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: palette.surfaceContainer,
         borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-        border: Border.all(color: UdaanColors.outlineVariant),
+        border: Border.all(color: palette.outlineVariant),
       ),
       child: Column(
         children: [
@@ -287,10 +290,11 @@ class _HeroCard extends StatelessWidget {
             child: Text(
               title,
               textAlign: TextAlign.center,
-              style: GoogleFonts.atkinsonHyperlegible(
+              style: udaanGoogleFont(
+                context,
                 fontSize: 24,
                 fontWeight: FontWeight.w900,
-                color: UdaanColors.onBackground,
+                color: palette.onBackground,
               ),
             ),
           ),
@@ -299,10 +303,11 @@ class _HeroCard extends StatelessWidget {
             Text(
               hosts,
               textAlign: TextAlign.center,
-              style: GoogleFonts.atkinsonHyperlegible(
+              style: udaanGoogleFont(
+                context,
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: UdaanColors.onSurfaceVariant,
+                color: palette.onSurfaceVariant,
               ),
             ),
           ],
@@ -553,7 +558,8 @@ class _UpcomingSegmentsCard extends StatelessWidget {
 
     final subtitleParts = <String>[
       if ((next?.timeRangeLabel() ?? '').isNotEmpty) next!.timeRangeLabel(),
-      if ((next?.hosts ?? '').trim().isNotEmpty) next!.hosts,
+      if (next != null && next!.hosts.trim().isNotEmpty)
+        formatRadioHostsLine(next!.hosts, copy),
     ];
     final subtitle = subtitleParts.join(' • ');
 

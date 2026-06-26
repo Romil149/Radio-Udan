@@ -31,7 +31,7 @@ Future<void> showRadioScheduleSheet(BuildContext context) async {
   await showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: UdaanColors.background,
+    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
     showDragHandle: true,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),

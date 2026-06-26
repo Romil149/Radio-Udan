@@ -91,7 +91,7 @@ class _LibraryTabState extends ConsumerState<LibraryTab> {
         : null;
 
     return Scaffold(
-      backgroundColor: UdaanColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: MainTabAppBar(title: _copy.tabLibrary),
       body: SafeArea(
         child: Semantics(

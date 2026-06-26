@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/theme/accessibility_scope.dart';
 import '../../../core/theme/brand_tokens.dart';
-import '../../../core/theme/udaan_colors.dart';
+import '../../../core/theme/udaan_google_fonts.dart';
 
 class MoreHeroCard extends StatelessWidget {
   const MoreHeroCard({
@@ -16,6 +16,8 @@ class MoreHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.udaan;
+
     return Semantics(
       header: true,
       label: '$title. $intro',
@@ -23,9 +25,9 @@ class MoreHeroCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 20),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: UdaanColors.surfaceContainer,
+          color: palette.surfaceContainer,
           borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-          border: Border.all(color: UdaanColors.outlineVariant),
+          border: Border.all(color: palette.outlineVariant),
         ),
         child: Stack(
           children: [
@@ -35,7 +37,7 @@ class MoreHeroCard extends StatelessWidget {
               child: Icon(
                 Icons.settings_outlined,
                 size: 88,
-                color: UdaanColors.primaryGlow.withValues(alpha: 0.12),
+                color: palette.primaryGlow.withValues(alpha: 0.12),
               ),
             ),
             Column(
@@ -43,19 +45,21 @@ class MoreHeroCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.atkinsonHyperlegible(
+                  style: udaanGoogleFont(
+                    context,
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
-                    color: UdaanColors.primaryGlow,
+                    color: palette.primaryGlow,
                   ),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   intro,
-                  style: GoogleFonts.atkinsonHyperlegible(
+                  style: udaanGoogleFont(
+                    context,
                     fontSize: 16,
                     height: 1.4,
-                    color: UdaanColors.onSurfaceVariant,
+                    color: palette.onSurfaceVariant,
                   ),
                 ),
               ],

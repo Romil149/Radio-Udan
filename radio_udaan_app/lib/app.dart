@@ -20,11 +20,20 @@ class RadioUdaanApp extends ConsumerWidget {
     final palette = settings.highContrast
         ? UdaanPalette.highContrast()
         : branding.colors.udaanPalette;
-    final theme = settings.highContrast
-        ? UdaanTheme.highContrast(branding)
-        : UdaanTheme.dark(branding);
+    final theme = UdaanTheme.fromPalette(
+      palette: palette,
+      branding: branding,
+      settings: settings,
+    );
+    final settingsKey = Object.hash(
+      settings.highContrast,
+      settings.textScale,
+      settings.boldText,
+      settings.reduceMotion,
+    );
 
     return MaterialApp.router(
+      key: ValueKey(settingsKey),
       title: branding.appName,
       theme: theme,
       routerConfig: router,

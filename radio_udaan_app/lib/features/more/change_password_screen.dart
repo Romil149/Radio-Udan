@@ -188,7 +188,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     final branding = ref.watch(appBrandingProvider);
 
     return Scaffold(
-      backgroundColor: UdaanColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [

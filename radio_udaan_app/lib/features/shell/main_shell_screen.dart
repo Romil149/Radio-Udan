@@ -3,6 +3,7 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers/app_providers.dart';
+import '../../core/providers/app_settings_provider.dart';
 import '../../core/push/notification_permission_flow.dart';
 import '../../core/theme/accessibility_scope.dart';
 import '../more/notifications_providers.dart';
@@ -34,6 +35,7 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
   @override
   Widget build(BuildContext context) {
     final copy = ref.watch(appCopyProvider);
+    ref.watch(appSettingsProvider);
     final index = ref.watch(mainShellTabIndexProvider);
     final unreadAsync = ref.watch(notificationUnreadCountProvider);
     final unreadCount = unreadAsync.value ?? 0;

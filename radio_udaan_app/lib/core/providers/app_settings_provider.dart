@@ -24,6 +24,19 @@ class AppSettingsNotifier extends StateNotifier<AppUserSettings> {
     await storage.save(next);
   }
 
+  /// Persists accessibility fields immediately without touching notifications.
+  Future<void> saveAccessibility(AppUserSettings next) async {
+    final merged = state.copyWith(
+      highContrast: next.highContrast,
+      textScale: next.textScale,
+      boldText: next.boldText,
+      reduceMotion: next.reduceMotion,
+    );
+    state = merged;
+    final storage = await _ref.read(settingsStorageProvider.future);
+    await storage.save(merged);
+  }
+
   Future<void> patch(AppUserSettings Function(AppUserSettings) update) async {
     await save(update(state));
   }

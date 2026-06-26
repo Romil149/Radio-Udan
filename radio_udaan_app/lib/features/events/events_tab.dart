@@ -39,7 +39,7 @@ class EventsTab extends ConsumerWidget {
     final events = ref.watch(eventsProvider);
 
     return Scaffold(
-      backgroundColor: UdaanColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: MainTabAppBar(title: copy.tabEvents),
       body: SafeArea(
         child: events.when(

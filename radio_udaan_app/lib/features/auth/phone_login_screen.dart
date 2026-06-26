@@ -81,7 +81,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
     final copy = ref.watch(appCopyProvider);
 
     return Scaffold(
-      backgroundColor: UdaanColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),

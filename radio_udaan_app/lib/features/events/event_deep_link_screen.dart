@@ -30,7 +30,7 @@ class _EventDeepLinkScreenState extends ConsumerState<EventDeepLinkScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: UdaanColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Semantics(
           label: _copy.eventDeepLinkLoading,

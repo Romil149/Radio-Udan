@@ -119,7 +119,7 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
     final branding = ref.watch(appBrandingProvider);
 
     return Scaffold(
-      backgroundColor: UdaanColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),

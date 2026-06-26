@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/theme/accessibility_scope.dart';
 import '../../core/theme/brand_tokens.dart';
-import '../../core/theme/udaan_colors.dart';
+import '../../core/theme/udaan_google_fonts.dart';
+import '../../core/utils/legal_html_sanitizer.dart';
 import '../../core/utils/wp_media_url.dart';
 import '../../core/widgets/brand_app_bar.dart';
 
@@ -29,16 +30,94 @@ class LegalContentScreen extends StatelessWidget {
     return launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
+  Map<String, String>? _stylesForElement(BuildContext context, dynamic element) {
+    final palette = context.udaan;
+    final tag = element.localName?.toLowerCase();
+    final classes = element.classes.map((c) => c.toString().toLowerCase()).toSet();
+
+    if (classes.contains('ru-about-tag') ||
+        classes.contains('ru-highlight-label')) {
+      return {
+        'color': _hex(palette.primaryGlow),
+        'font-size': '14px',
+        'font-weight': '700',
+        'margin-bottom': '8px',
+      };
+    }
+    if (classes.contains('ru-about-title') ||
+        classes.contains('ru-highlight-number')) {
+      return {
+        'color': _hex(palette.onBackground),
+        'font-size': '26px',
+        'font-weight': '800',
+        'line-height': '1.25',
+        'margin-bottom': '12px',
+      };
+    }
+    if (classes.contains('ru-about-text') ||
+        classes.contains('ru-highlight-text')) {
+      return {
+        'color': _hex(palette.onSurfaceVariant),
+        'font-size': '16px',
+        'line-height': '1.5',
+        'margin-bottom': '12px',
+      };
+    }
+    if (classes.contains('ru-highlight-box') || classes.contains('ru-about-note')) {
+      return {
+        'color': _hex(palette.onBackground),
+        'background-color': _hex(palette.surfaceContainer),
+        'border': '1px solid ${_hex(palette.outlineVariant)}',
+        'border-radius': '12px',
+        'padding': '16px',
+        'margin': '16px 0',
+      };
+    }
+
+    switch (tag) {
+      case 'h1':
+      case 'h2':
+      case 'h3':
+      case 'h4':
+        return {
+          'color': _hex(palette.onBackground),
+          'font-weight': '800',
+          'margin-top': '1.2em',
+          'margin-bottom': '0.5em',
+        };
+      case 'a':
+        return {
+          'color': _hex(palette.primaryGlow),
+          'text-decoration': 'underline',
+        };
+      case 'p':
+      case 'li':
+        return {
+          'color': _hex(palette.onSurfaceVariant),
+          'margin-bottom': '0.75em',
+          'line-height': '1.5',
+        };
+      default:
+        return null;
+    }
+  }
+
+  String _hex(Color color) =>
+      '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
+
   @override
   Widget build(BuildContext context) {
-    final bodyHtml = rewriteWpHtmlMediaUrls(
-      html,
-      apiBaseUrl: apiBaseUrl,
-      siteUrl: siteUrl,
+    final palette = context.udaan;
+    final bodyHtml = sanitizeLegalPageHtml(
+      rewriteWpHtmlMediaUrls(
+        html,
+        apiBaseUrl: apiBaseUrl,
+        siteUrl: siteUrl,
+      ),
     );
 
     return Scaffold(
-      backgroundColor: UdaanColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: BrandAppBar(title: title),
       body: SafeArea(
         child: Semantics(
@@ -49,40 +128,15 @@ class LegalContentScreen extends StatelessWidget {
             children: [
               HtmlWidget(
                 bodyHtml,
-                textStyle: GoogleFonts.atkinsonHyperlegible(
+                textStyle: udaanGoogleFont(
+                  context,
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   height: 1.5,
-                  color: UdaanColors.onSurfaceVariant,
+                  color: palette.onSurfaceVariant,
                 ),
-                customStylesBuilder: (element) {
-                  switch (element.localName) {
-                    case 'h1':
-                    case 'h2':
-                    case 'h3':
-                    case 'h4':
-                      return {
-                        'color': '#E8EAED',
-                        'font-weight': '800',
-                        'margin-top': '1.2em',
-                        'margin-bottom': '0.5em',
-                      };
-                    case 'a':
-                      return {
-                        'color': '#7DD3FC',
-                        'text-decoration': 'underline',
-                      };
-                    case 'p':
-                    case 'li':
-                      return {
-                        'color': '#C5C9D0',
-                        'margin-bottom': '0.75em',
-                      };
-                    default:
-                      return null;
-                  }
-                },
-                onTapUrl: (url) => _openExternalLink(url),
+                customStylesBuilder: (element) => _stylesForElement(context, element),
+                onTapUrl: _openExternalLink,
               ),
             ],
           ),

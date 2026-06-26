@@ -23,22 +23,61 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   AppCopy get _copy => ref.read(appCopyProvider);
 
   late AppUserSettings _draft;
-  late AppUserSettings _savedBaseline;
   bool _saving = false;
-  bool _saved = false;
   Timer? _textScaleAnnounceTimer;
+  Timer? _persistTimer;
 
   @override
   void initState() {
     super.initState();
-    _savedBaseline = ref.read(appSettingsProvider);
-    _draft = _savedBaseline;
+    _draft = ref.read(appSettingsProvider);
   }
 
   @override
   void dispose() {
     _textScaleAnnounceTimer?.cancel();
+    _persistTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _persistAccessibility({bool immediate = true}) async {
+    _persistTimer?.cancel();
+    if (!immediate) {
+      _persistTimer = Timer(const Duration(milliseconds: 400), () {
+        unawaited(
+          ref.read(appSettingsProvider.notifier).saveAccessibility(_draft),
+        );
+      });
+      return;
+    }
+    await ref.read(appSettingsProvider.notifier).saveAccessibility(_draft);
+  }
+
+  Future<void> _persistDraft({bool immediate = true}) async {
+    _persistTimer?.cancel();
+    if (!immediate) {
+      _persistTimer = Timer(const Duration(milliseconds: 400), () {
+        unawaited(ref.read(appSettingsProvider.notifier).save(_draft));
+      });
+      return;
+    }
+    await ref.read(appSettingsProvider.notifier).save(_draft);
+  }
+
+  void _updateAccessibility(AppUserSettings next, {bool debouncePersist = false}) {
+    setState(() => _draft = next);
+    unawaited(_persistAccessibility(immediate: !debouncePersist));
+  }
+
+  void _updateNotifications(AppUserSettings next) {
+    setState(() => _draft = next);
+    unawaited(_persistDraft());
+  }
+
+  Future<void> _flushDraftOnExit() async {
+    _persistTimer?.cancel();
+    await ref.read(appSettingsProvider.notifier).saveAccessibility(_draft);
+    await ref.read(appSettingsProvider.notifier).save(_draft);
   }
 
   void _announce(String message) {
@@ -50,15 +89,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         Directionality.of(context),
       );
     });
-  }
-
-  void _updateDraft(AppUserSettings next) {
-    setState(() => _draft = next);
-    ref.read(appSettingsProvider.notifier).preview(next);
-  }
-
-  Future<void> _restoreBaseline() async {
-    await ref.read(appSettingsProvider.notifier).load();
   }
 
   Future<void> _save() async {
@@ -73,7 +103,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             );
       }
       await ref.read(appSettingsProvider.notifier).save(_draft);
-      _saved = true;
       if (!mounted) return;
       _announce(_copy.preferencesSaved);
       Navigator.of(context).pop();
@@ -167,9 +196,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     return PopScope(
       onPopInvokedWithResult: (didPop, _) {
-        if (didPop && !_saved) {
-          _restoreBaseline();
-          _announce(_copy.preferencesDiscarded);
+        if (didPop) {
+          unawaited(_flushDraftOnExit());
         }
       },
       child: Scaffold(
@@ -182,9 +210,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   horizontal: BrandTokens.screenPadding,
                 ),
                 child: UdaanAuthTopBar(
-                copy: copy,
-                title: _copy.settingsTitle,
-                  onBack: () => Navigator.of(context).pop(),
+                  copy: copy,
+                  title: _copy.settingsTitle,
+                  onBack: () async {
+                    await _flushDraftOnExit();
+                    if (context.mounted) Navigator.of(context).pop();
+                  },
                 ),
               ),
               Expanded(
@@ -206,7 +237,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       subtitle: _copy.highContrastModeHint,
                       value: _draft.highContrast,
                       onChanged: (v) =>
-                          _updateDraft(_draft.copyWith(highContrast: v)),
+                          _updateAccessibility(_draft.copyWith(highContrast: v)),
                     ),
                     Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -253,7 +284,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               value: _draft.textScale.clamp(1.0, 1.4),
                               activeColor: palette.primary,
                               onChanged: (v) {
-                                _updateDraft(_draft.copyWith(textScale: v));
+                                _updateAccessibility(
+                                  _draft.copyWith(textScale: v),
+                                  debouncePersist: true,
+                                );
                                 _textScaleAnnounceTimer?.cancel();
                                 _textScaleAnnounceTimer = Timer(
                                   const Duration(milliseconds: 400),
@@ -302,7 +336,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       subtitle: _copy.boldTextHint,
                       value: _draft.boldText,
                       onChanged: (v) =>
-                          _updateDraft(_draft.copyWith(boldText: v)),
+                          _updateAccessibility(_draft.copyWith(boldText: v)),
                     ),
                     _toggleCard(
                       context: context,
@@ -310,7 +344,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       subtitle: _copy.reduceMotionHint,
                       value: _draft.reduceMotion,
                       onChanged: (v) =>
-                          _updateDraft(_draft.copyWith(reduceMotion: v)),
+                          _updateAccessibility(_draft.copyWith(reduceMotion: v)),
                     ),
                     _sectionTitle(context, _copy.notificationsSection),
                     _toggleCard(
@@ -319,7 +353,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       subtitle: _copy.tabRadio,
                       icon: Icons.radio,
                       value: _draft.notifyLiveBroadcasts,
-                      onChanged: (v) => _updateDraft(
+                      onChanged: (v) => _updateNotifications(
                         _draft.copyWith(notifyLiveBroadcasts: v),
                       ),
                     ),
@@ -330,7 +364,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       icon: Icons.event,
                       value: _draft.notifyEventAlerts,
                       onChanged: (v) =>
-                          _updateDraft(_draft.copyWith(notifyEventAlerts: v)),
+                          _updateNotifications(_draft.copyWith(notifyEventAlerts: v)),
                     ),
                     _toggleCard(
                       context: context,
@@ -339,7 +373,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       icon: Icons.campaign_outlined,
                       value: _draft.notifyPromotions,
                       onChanged: (v) =>
-                          _updateDraft(_draft.copyWith(notifyPromotions: v)),
+                          _updateNotifications(_draft.copyWith(notifyPromotions: v)),
                     ),
                     const SizedBox(height: 16),
                     UdaanPrimaryButton(

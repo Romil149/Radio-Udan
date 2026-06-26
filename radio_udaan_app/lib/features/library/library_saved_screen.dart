@@ -8,6 +8,7 @@ import '../../core/models/youtube_video.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
+import '../../core/widgets/brand_app_bar.dart';
 import '../../core/widgets/empty_state.dart';
 import '../favorites/app_favorites_provider.dart';
 import '../radio/radio_schedule_sheet.dart';
@@ -32,21 +33,8 @@ class LibrarySavedScreen extends ConsumerWidget {
     final isEmpty = radioItems.isEmpty && videoItems.isEmpty;
 
     return Scaffold(
-      backgroundColor: UdaanColors.background,
-      appBar: AppBar(
-        backgroundColor: UdaanColors.background,
-        foregroundColor: UdaanColors.onBackground,
-        title: Semantics(
-          header: true,
-          label: copy.librarySavedScreenTitle,
-          child: Text(
-            copy.librarySavedScreenTitle,
-            style: GoogleFonts.atkinsonHyperlegible(
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-      ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: BrandAppBar(title: copy.librarySavedScreenTitle),
       body: SafeArea(
         child: isEmpty
             ? EmptyState(

@@ -329,7 +329,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
 
     if (_bootstrapping) {
       return Scaffold(
-        backgroundColor: UdaanColors.background,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: Center(
           child: Semantics(
             label: copy.semanticsLoading,
@@ -373,7 +373,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
           );
 
     return Scaffold(
-      backgroundColor: UdaanColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),

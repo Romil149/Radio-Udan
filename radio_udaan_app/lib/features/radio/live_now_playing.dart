@@ -33,8 +33,19 @@ class LiveNowPlaying {
 String formatRadioHostsLine(String hosts, AppCopy copy) {
   final trimmed = hosts.trim();
   if (trimmed.isEmpty) return '';
-  if (trimmed.toLowerCase().startsWith('with ')) return trimmed;
-  return '${copy.radioWithHostsPrefix}$trimmed';
+
+  var names = trimmed;
+  final lower = names.toLowerCase();
+  if (lower.startsWith('with ')) {
+    names = names.substring(5).trim();
+  } else if (lower.startsWith('with')) {
+    names = names.substring(4).trim();
+  }
+  if (names.isEmpty) return '';
+
+  final prefix = copy.radioWithHostsPrefix.trim();
+  if (prefix.isEmpty) return 'with $names';
+  return prefix.endsWith(' ') ? '$prefix$names' : '$prefix $names';
 }
 
 LiveNowPlaying resolveLiveNowPlaying({

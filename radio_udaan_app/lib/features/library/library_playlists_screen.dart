@@ -25,7 +25,7 @@ class LibraryPlaylistsScreen extends ConsumerWidget {
     final playlists = ref.watch(allYoutubePlaylistsProvider);
 
     return Scaffold(
-      backgroundColor: UdaanColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: BrandAppBar(title: copy.libraryPlaylists),
       body: SafeArea(
         child: playlists.when(

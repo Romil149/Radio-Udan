@@ -21,7 +21,7 @@ abstract final class ScheduleTimeDisplay {
     return DateTime.now().timeZoneOffset != stationOffset;
   }
 
-  /// Visible time chip: station only in IST; dual label when user TZ differs.
+  /// Visible time chip: station clock in IST only (no local "your time" line).
   static String label({
     required RadioScheduleSegment segment,
     required Duration stationOffset,
@@ -35,20 +35,7 @@ abstract final class ScheduleTimeDisplay {
 
     if (stationWall.isEmpty) return '';
 
-    if (!deviceDiffersFromStation(stationOffset)) {
-      return stationWall;
-    }
-
-    final starts = segment.startsAt;
-    if (starts == null) {
-      return copy.radioScheduleStationTimeLabel(stationWall);
-    }
-
-    final localWall = fmt.format(starts.toLocal());
-    return copy.radioScheduleDualTimeLabel(
-      stationTime: stationWall,
-      localTime: localWall,
-    );
+    return copy.radioScheduleStationTimeLabel(stationWall);
   }
 
   static Iterable<RadioScheduleSegment> _allSegments(

@@ -166,7 +166,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     final passwordHint = _copy.passwordMinHint(_passwordMinLength);
 
     return Scaffold(
-      backgroundColor: UdaanColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),

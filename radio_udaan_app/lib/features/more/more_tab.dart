@@ -83,7 +83,7 @@ class MoreTab extends ConsumerWidget {
     final unreadCount = ref.watch(notificationUnreadCountProvider).value ?? 0;
 
     return Scaffold(
-      backgroundColor: UdaanColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: MainTabAppBar(
         title: copy.tabMore,
         onProfileTap: isSignedIn

@@ -106,7 +106,24 @@ class RadioUdaan_App_Legal_Pages {
 			return '';
 		}
 
+		$html = self::sanitize_for_mobile_app( $html );
+
 		return wp_kses_post( $html );
+	}
+
+	/**
+	 * Elementor pages embed <style> blocks; the Flutter HTML widget shows them as text.
+	 *
+	 * @param string $html Raw page HTML.
+	 * @return string
+	 */
+	private static function sanitize_for_mobile_app( $html ) {
+		$html = (string) $html;
+		$html = preg_replace( '/<style\\b[^>]*>.*?<\\/style>/is', '', $html );
+		$html = preg_replace( '/<script\\b[^>]*>.*?<\\/script>/is', '', $html );
+		$html = preg_replace( '/<!--.*?-->/s', '', $html );
+
+		return trim( $html );
 	}
 
 	/**

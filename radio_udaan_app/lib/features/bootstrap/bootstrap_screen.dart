@@ -60,7 +60,7 @@ class _BootstrapScreenState extends ConsumerState<BootstrapScreen> {
     });
 
     return Scaffold(
-      backgroundColor: UdaanColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: bootstrap.when(
         data: (result) {
           _navigate(result);

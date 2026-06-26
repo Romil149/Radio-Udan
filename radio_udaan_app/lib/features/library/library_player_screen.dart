@@ -43,6 +43,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
 
   YoutubePlayerController? _controller;
   StreamSubscription<YoutubePlayerValue>? _playerSubscription;
+  StreamSubscription<YoutubeVideoState>? _videoStateSubscription;
   Timer? _playbackTimeoutTimer;
   PlayerState? _lastAnnouncedPlayerState;
   bool _playerError = false;
@@ -68,8 +69,44 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
   void dispose() {
     _cancelPlaybackTimeout();
     _playerSubscription?.cancel();
+    _videoStateSubscription?.cancel();
     _controller?.close();
     super.dispose();
+  }
+
+  void _clearStartingPlayback() {
+    _cancelPlaybackTimeout();
+    if (!_startingPlayback || !mounted) return;
+    setState(() => _startingPlayback = false);
+  }
+
+  bool _isActivePlaybackState(PlayerState state) {
+    return state == PlayerState.playing ||
+        state == PlayerState.buffering ||
+        state == PlayerState.paused;
+  }
+
+  Future<void> _pollUntilPlaybackStarts(YoutubePlayerController controller) async {
+    const pollInterval = Duration(milliseconds: 400);
+    final deadline = DateTime.now().add(_playbackStartTimeout);
+
+    while (mounted && _startingPlayback && DateTime.now().isBefore(deadline)) {
+      try {
+        final state = await controller.playerState;
+        if (_isActivePlaybackState(state)) {
+          _clearStartingPlayback();
+          return;
+        }
+        final elapsed = await controller.currentTime;
+        if (elapsed > 0.25) {
+          _clearStartingPlayback();
+          return;
+        }
+      } catch (_) {
+        // Player iframe may not be ready yet.
+      }
+      await Future<void>.delayed(pollInterval);
+    }
   }
 
   void _cancelPlaybackTimeout() {
@@ -98,6 +135,8 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
 
   void _bindPlayerListener(YoutubePlayerController controller) {
     _playerSubscription?.cancel();
+    _videoStateSubscription?.cancel();
+
     _playerSubscription = controller.listen((value) {
       if (value.hasError) {
         _handlePlayerFailure();
@@ -105,11 +144,8 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
       }
 
       final state = value.playerState;
-      if (state == PlayerState.playing) {
-        _cancelPlaybackTimeout();
-        if (_startingPlayback && mounted) {
-          setState(() => _startingPlayback = false);
-        }
+      if (_isActivePlaybackState(state)) {
+        _clearStartingPlayback();
       }
 
       if (state == _lastAnnouncedPlayerState) return;
@@ -130,6 +166,22 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
           break;
       }
     });
+
+    _videoStateSubscription = controller.videoStateStream.listen((state) {
+      if (state.position.inMilliseconds > 250) {
+        _clearStartingPlayback();
+      }
+    });
+  }
+
+  Future<void> _loadAndPlay(YoutubePlayerController controller, String videoId) async {
+    try {
+      await controller.loadVideoById(videoId: videoId);
+      await controller.playVideo();
+      unawaited(_pollUntilPlaybackStarts(controller));
+    } catch (_) {
+      _handlePlayerFailure();
+    }
   }
 
   Future<void> _startPlayback() async {
@@ -155,7 +207,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
         if (mounted) setState(() {});
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
-          unawaited(created.loadVideoById(videoId: videoId));
+          unawaited(_loadAndPlay(created, videoId));
         });
       } else {
         await controller.playVideo();
@@ -171,6 +223,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
   void _resetPlayer() {
     _cancelPlaybackTimeout();
     _playerSubscription?.cancel();
+    _videoStateSubscription?.cancel();
     _controller?.close();
     setState(() {
       _controller = null;
@@ -195,7 +248,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
 
     if (videoId == null) {
       return Scaffold(
-        backgroundColor: UdaanColors.background,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: BrandAppBar(title: video.title),
         body: SafeArea(
           child: Padding(
@@ -232,7 +285,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
 
     if (controller == null) {
       return Scaffold(
-        backgroundColor: UdaanColors.background,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: BrandAppBar(title: video.title),
         body: SafeArea(
           child: ListView(
@@ -267,7 +320,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
       aspectRatio: 16 / 9,
       builder: (context, player) {
         return Scaffold(
-          backgroundColor: UdaanColors.background,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: BrandAppBar(title: video.title),
           body: SafeArea(
             child: ListView(
