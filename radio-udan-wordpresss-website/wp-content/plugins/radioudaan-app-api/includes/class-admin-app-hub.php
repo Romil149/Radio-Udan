@@ -190,6 +190,9 @@ class RadioUdaan_Admin_App_Hub {
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Settings::OPTION_TERMS_URL );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Settings::OPTION_ABOUT_URL );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Settings::OPTION_CONTACT_URL );
+		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Legal_Pages::OPTION_PRIVACY_PAGE_ID );
+		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Legal_Pages::OPTION_TERMS_PAGE_ID );
+		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Legal_Pages::OPTION_ABOUT_PAGE_ID );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Settings::OPTION_SUPPORT_HELPLINE_PHONE );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Settings::OPTION_SUPPORT_EMAIL );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Settings::OPTION_FCM_SERVICE_ACCOUNT );
@@ -352,6 +355,17 @@ class RadioUdaan_Admin_App_Hub {
 		foreach ( $url_fields as $post_key => $option_key ) {
 			if ( isset( $_POST[ $post_key ] ) ) {
 				update_option( $option_key, esc_url_raw( trim( wp_unslash( $_POST[ $post_key ] ) ) ) );
+			}
+		}
+
+		$page_fields = array(
+			'legal_privacy_page_id' => RadioUdaan_App_Legal_Pages::OPTION_PRIVACY_PAGE_ID,
+			'legal_terms_page_id'   => RadioUdaan_App_Legal_Pages::OPTION_TERMS_PAGE_ID,
+			'legal_about_page_id'   => RadioUdaan_App_Legal_Pages::OPTION_ABOUT_PAGE_ID,
+		);
+		foreach ( $page_fields as $post_key => $option_key ) {
+			if ( isset( $_POST[ $post_key ] ) ) {
+				update_option( $option_key, max( 0, (int) $_POST[ $post_key ] ) );
 			}
 		}
 

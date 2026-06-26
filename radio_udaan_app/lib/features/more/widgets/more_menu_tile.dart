@@ -8,7 +8,7 @@ import '../../../core/theme/udaan_colors.dart';
 class MoreMenuTile extends StatelessWidget {
   const MoreMenuTile({
     required this.title,
-    required this.subtitle,
+    this.subtitle,
     required this.icon,
     required this.iconBackground,
     required this.onTap,
@@ -21,7 +21,7 @@ class MoreMenuTile extends StatelessWidget {
   });
 
   final String title;
-  final String subtitle;
+  final String? subtitle;
   final String? semanticsLabel;
   final IconData icon;
   final Color iconBackground;
@@ -38,7 +38,10 @@ class MoreMenuTile extends StatelessWidget {
       child: Semantics(
         button: true,
         enabled: onTap != null,
-        label: semanticsLabel ?? '$title. $subtitle',
+        label: semanticsLabel ??
+            (subtitle != null && subtitle!.isNotEmpty
+                ? '$title. $subtitle'
+                : title),
         child: Material(
           color: UdaanColors.surfaceContainer,
           borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
@@ -78,14 +81,16 @@ class MoreMenuTile extends StatelessWidget {
                             color: titleColor ?? UdaanColors.onBackground,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          subtitle,
-                          style: GoogleFonts.atkinsonHyperlegible(
-                            fontSize: 14,
-                            color: UdaanColors.onSurfaceVariant,
+                        if (subtitle != null && subtitle!.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            subtitle!,
+                            style: GoogleFonts.atkinsonHyperlegible(
+                              fontSize: 14,
+                              color: UdaanColors.onSurfaceVariant,
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),

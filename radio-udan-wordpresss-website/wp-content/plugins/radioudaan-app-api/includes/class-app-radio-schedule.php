@@ -30,9 +30,9 @@ class RadioUdaan_App_Radio_Schedule {
 	 */
 	public static function build_schedule( $days_count = 2 ) {
 		$days_count = min( 14, max( 1, (int) $days_count ) );
-		$tz         = wp_timezone();
+		$tz         = self::get_schedule_timezone();
 		$now        = new DateTimeImmutable( 'now', $tz );
-		$timezone   = wp_timezone_string();
+		$timezone   = $tz->getName();
 
 		$query = new WP_Query(
 			array(
@@ -126,6 +126,27 @@ class RadioUdaan_App_Radio_Schedule {
 			'next'     => $next,
 			'days'     => $days,
 		);
+	}
+
+	/**
+	 * Timezone for parsing ACF broadcast_time and on-air windows.
+	 *
+	 * ACF times are entered to match the station clock (India). When WordPress
+	 * is still on UTC (+00:00), treat schedules as Asia/Kolkata so API matches the site.
+	 *
+	 * @return DateTimeZone
+	 */
+	private static function get_schedule_timezone() {
+		if ( defined( 'RADIOUDAAN_SCHEDULE_TIMEZONE' ) && is_string( RADIOUDAAN_SCHEDULE_TIMEZONE ) && RADIOUDAAN_SCHEDULE_TIMEZONE !== '' ) {
+			return new DateTimeZone( RADIOUDAAN_SCHEDULE_TIMEZONE );
+		}
+
+		$wp_string = wp_timezone_string();
+		if ( in_array( $wp_string, array( 'UTC', '+00:00', 'Etc/UTC', 'Etc/GMT' ), true ) ) {
+			return new DateTimeZone( 'Asia/Kolkata' );
+		}
+
+		return wp_timezone();
 	}
 
 	/**

@@ -164,6 +164,7 @@ class RadioScheduleDay {
 /// Response for `GET /library/schedule?days=2`.
 class RadioScheduleResponse {
   const RadioScheduleResponse({
+    this.timezone,
     required this.onAir,
     required this.next,
     required this.days,
@@ -179,6 +180,7 @@ class RadioScheduleResponse {
         .toList();
 
     return RadioScheduleResponse(
+      timezone: json['timezone']?.toString(),
       onAir: onAirJson is Map<String, dynamic>
           ? RadioScheduleSegment.fromJson(onAirJson)
           : null,
@@ -189,6 +191,7 @@ class RadioScheduleResponse {
     );
   }
 
+  final String? timezone;
   final RadioScheduleSegment? onAir;
   final RadioScheduleSegment? next;
   final List<RadioScheduleDay> days;

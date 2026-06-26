@@ -1,5 +1,18 @@
 # Task History
 
+### 2026-06-25 — Form schema v2: full parity (validation, conditions, types)
+**Requested by**: User (100% validation, conditions, file types — WP-driven future forms)
+**What was done**: Schema v2 (`supported_field_types_version: 2`): `choice_options`, address/name `subfields`, `info` HTML blocks, `consent_html`, `page_index`, `form_warnings`, `app_submittable`. Full visibility operators (date/day/month/n-days). Server `class-form-field-validator.php`. Per-field upload limits. Multi-file upload. Flutter: pagination, blocking banners, subfields, slider/rating, info HTML, client validation, multi-upload.
+**Files changed**: `class-form-field-validator.php`, `class-form-visibility.php`, `class-form-schema-builder.php`, `class-registration-handler.php`, `class-app-uploads.php`, `form_schema.dart`, `form_visibility.dart`, `form_field_validator.dart`, `event_registration_screen.dart`, `registration_draft_storage.dart`
+**Status**: 🟡 `dart analyze` + `php -l` + `verify-wp-plugin.sh` pass; hot restart + plugin deploy to staging
+**Notes**: Cannot support Stripe/PayPal/CAPTCHA in-app (blocks submit). Signature still unsupported. Sync local Forminator conditions from staging for OMM.
+
+**Requested by**: User (go with B)
+**What was done**: WP `class-app-legal-pages.php` — page pickers in Settings → Legal, Elementor-aware body HTML in `GET /config` → `legal_pages`. Flutter `LegalContentScreen` with `flutter_widget_from_html`; removed WebView legal screen.
+**Files changed**: `class-app-legal-pages.php`, `class-app-config.php`, admin settings/hub/pages, `legal_pages_config.dart`, `legal_content_screen.dart`, `more_tab.dart`, `remote_config.dart`, `wp_media_url.dart`
+**Status**: ✅ Local `/config` returns privacy HTML (page 3); `dart analyze` pass
+**Notes**: Pick Terms/About pages in wp-admin or rely on URL auto-resolve; upload plugin to staging; hot restart app to refresh config cache.
+
 ### 2026-06-13 — P3 sprint: deploy zip, QA automation, iOS links, MSG91 gate
 **Requested by**: User (continue in order, full AI agents team)
 **Agents**: shell (package-staging-plugin + staging-qa-automated) + Flutter/iOS (Universal Links entitlements) + WP (India OTP fail-loud) + docs (ios-push-setup.md)

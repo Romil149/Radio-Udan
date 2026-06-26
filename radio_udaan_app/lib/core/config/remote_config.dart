@@ -1,4 +1,5 @@
 import 'app_branding.dart';
+import 'legal_pages_config.dart';
 import 'live_radio_config.dart';
 
 /// Public payload from `GET /config`.
@@ -19,6 +20,7 @@ class RemoteConfig {
     this.termsUrl,
     this.aboutUrl,
     this.contactUrl,
+    this.legalPages = const LegalPagesConfig(),
     this.support = const SupportConfig(),
     this.notificationDefaults = const NotificationPreferenceDefaults(),
   });
@@ -49,6 +51,9 @@ class RemoteConfig {
       termsUrl: _parseOptionalUrl(json['terms_url']),
       aboutUrl: _parseOptionalUrl(json['about_url']),
       contactUrl: _parseOptionalUrl(json['contact_url']),
+      legalPages: LegalPagesConfig.fromJson(
+        json['legal_pages'] as Map<String, dynamic>?,
+      ),
       support: SupportConfig.fromJson(
         json['support'] as Map<String, dynamic>?,
       ),
@@ -79,6 +84,7 @@ class RemoteConfig {
   final String? termsUrl;
   final String? aboutUrl;
   final String? contactUrl;
+  final LegalPagesConfig legalPages;
   final SupportConfig support;
   final NotificationPreferenceDefaults notificationDefaults;
 }

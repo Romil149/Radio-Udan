@@ -9,12 +9,14 @@ import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
+import '../favorites/app_favorites_provider.dart';
 import 'library_image_url.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/main_tab_app_bar.dart';
 import 'library_playlist_videos_screen.dart';
 import 'library_playlists_screen.dart';
 import 'library_providers.dart';
+import 'library_saved_screen.dart';
 import 'widgets/library_playlist_tile.dart';
 import 'widgets/library_search_field.dart';
 import 'widgets/library_section_heading.dart';
@@ -102,6 +104,10 @@ class _LibraryTabState extends ConsumerState<LibraryTab> {
               padding: const EdgeInsets.only(bottom: 24),
               children: [
                 LibrarySearchField(controller: _searchController),
+                if (!isSearching) ...[
+                  _SavedEntryTile(copy: _copy),
+                  const SizedBox(height: 8),
+                ],
                 if (isSearching) ...[
                   _SearchResultsSection(
                     results: searchResults,
@@ -402,6 +408,109 @@ class _ErrorBlock extends StatelessWidget {
         icon: Icons.error_outline,
         actionLabel: retryLabel,
         onAction: onRetry,
+      ),
+    );
+  }
+}
+
+class _SavedEntryTile extends ConsumerWidget {
+  const _SavedEntryTile({required this.copy});
+
+  final AppCopy copy;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final count = ref.watch(appFavoritesProvider).length;
+    final countLabel = count > 0 ? ' ($count)' : '';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        BrandTokens.screenPadding,
+        8,
+        BrandTokens.screenPadding,
+        0,
+      ),
+      child: Semantics(
+        button: true,
+        label:
+            '${copy.librarySavedScreenTitle}$countLabel. ${copy.librarySavedEntrySubtitle}',
+        child: Material(
+          color: UdaanColors.surfaceContainer,
+          borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const LibrarySavedScreen(),
+              ),
+            ),
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 56),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+                border: Border.all(color: UdaanColors.outlineVariant),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.bookmark,
+                    color: UdaanColors.primaryGlow,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          copy.librarySavedScreenTitle,
+                          style: GoogleFonts.atkinsonHyperlegible(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
+                            color: UdaanColors.onBackground,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          copy.librarySavedEntrySubtitle,
+                          style: GoogleFonts.atkinsonHyperlegible(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: UdaanColors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (count > 0)
+                    ExcludeSemantics(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: UdaanColors.primary.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '$count',
+                          style: GoogleFonts.atkinsonHyperlegible(
+                            fontWeight: FontWeight.w800,
+                            color: UdaanColors.primaryGlow,
+                          ),
+                        ),
+                      ),
+                    ),
+                  const Icon(
+                    Icons.chevron_right,
+                    color: UdaanColors.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

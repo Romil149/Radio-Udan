@@ -3,6 +3,7 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers/app_providers.dart';
+import '../../core/push/notification_permission_flow.dart';
 import '../../core/theme/accessibility_scope.dart';
 import '../more/notifications_providers.dart';
 import '../events/events_tab.dart';
@@ -11,13 +12,27 @@ import '../more/more_tab.dart';
 import '../radio/radio_tab.dart';
 
 /// Primary navigation: four top-level product areas (Gate A scope).
-class MainShellScreen extends ConsumerWidget {
+class MainShellScreen extends ConsumerStatefulWidget {
   const MainShellScreen({super.key});
 
   static const int moreTabIndex = 3;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MainShellScreen> createState() => _MainShellScreenState();
+}
+
+class _MainShellScreenState extends ConsumerState<MainShellScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      NotificationPermissionFlow.maybeShow(context, ref);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final copy = ref.watch(appCopyProvider);
     final index = ref.watch(mainShellTabIndexProvider);
     final unreadAsync = ref.watch(notificationUnreadCountProvider);
@@ -68,22 +83,22 @@ class MainShellScreen extends ConsumerWidget {
               NavigationDestination(
                 icon: Semantics(
                   selected: index == i,
-                  label: i == moreTabIndex && unreadCount > 0
+                  label: i == MainShellScreen.moreTabIndex && unreadCount > 0
                       ? '${tabs[i].label}. ${copy.unreadNotificationsBadge(unreadCount)}'
                       : tabs[i].label,
                   child: _TabIcon(
                     icon: tabs[i].icon,
-                    badgeCount: i == moreTabIndex ? unreadCount : 0,
+                    badgeCount: i == MainShellScreen.moreTabIndex ? unreadCount : 0,
                   ),
                 ),
                 selectedIcon: Semantics(
                   selected: true,
-                  label: i == moreTabIndex && unreadCount > 0
+                  label: i == MainShellScreen.moreTabIndex && unreadCount > 0
                       ? '${tabs[i].label}, selected. ${copy.unreadNotificationsBadge(unreadCount)}'
                       : '${tabs[i].label}, selected',
                   child: _TabIcon(
                     icon: tabs[i].selected,
-                    badgeCount: i == moreTabIndex ? unreadCount : 0,
+                    badgeCount: i == MainShellScreen.moreTabIndex ? unreadCount : 0,
                   ),
                 ),
                 label: tabs[i].label,

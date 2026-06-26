@@ -40,6 +40,7 @@ require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-password-auth.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-entry-source.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-event-meta-ui.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-settings.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-legal-pages.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-cpt-ru-event.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-event-sync.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-otp-msg91.php';
@@ -57,6 +58,7 @@ require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-user-notification-pre
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-support.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-fcm-sender.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-notifications.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-favorites.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-radioudaan-app-api.php';
 
 /**
@@ -67,6 +69,7 @@ function radioudaan_app_api_init() {
 	RadioUdaan_App_Users::init();
 	RadioUdaan_App_Support::init();
 	RadioUdaan_App_Notifications::init();
+	RadioUdaan_App_Favorites::init();
 	RadioUdaan_Upload_Cleanup::init();
 	RadioUdaan_Event_Meta_Ui::init();
 	RadioUdaan_Entry_Source::init();

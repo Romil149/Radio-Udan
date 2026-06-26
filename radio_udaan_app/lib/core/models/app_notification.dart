@@ -35,6 +35,22 @@ class AppNotification {
   final Map<String, dynamic> data;
 }
 
+extension AppNotificationReadState on AppNotification {
+  AppNotification asRead() {
+    if (isRead) return this;
+    return AppNotification(
+      id: id,
+      type: type,
+      title: title,
+      body: body,
+      isRead: true,
+      readAt: DateTime.now().toUtc().toIso8601String(),
+      createdAt: createdAt,
+      data: data,
+    );
+  }
+}
+
 class NotificationListResult {
   const NotificationListResult({
     required this.items,
@@ -63,6 +79,19 @@ class NotificationListResult {
   final int total;
   final int totalPages;
   final int unreadCount;
+
+  NotificationListResult copyWith({
+    List<AppNotification>? items,
+    int? unreadCount,
+  }) {
+    return NotificationListResult(
+      items: items ?? this.items,
+      page: page,
+      total: total,
+      totalPages: totalPages,
+      unreadCount: unreadCount ?? this.unreadCount,
+    );
+  }
 }
 
 class NotificationPreferences {

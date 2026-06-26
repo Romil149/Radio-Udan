@@ -15,7 +15,7 @@ import '../../core/models/radio_schedule.dart';
 import '../../core/widgets/main_tab_app_bar.dart';
 import 'live_now_playing.dart';
 import 'radio_audio_service.dart';
-import 'radio_favorites_storage.dart';
+import '../favorites/app_favorites_provider.dart';
 import 'radio_player_controller.dart';
 import 'radio_schedule_sheet.dart';
 
@@ -674,9 +674,12 @@ class _ActionRow extends ConsumerWidget {
             icon: isFavorite ? Icons.favorite : Icons.favorite_border,
             onPressed: hasFavorite
                 ? () async {
-                    await ref
-                        .read(radioFavoritesProvider.notifier)
-                        .toggle(favoriteShowId);
+                    await ref.read(appFavoritesProvider.notifier).toggleRadioShow(
+                          showId: favoriteShowId,
+                          title: favoriteShowTitle.trim().isNotEmpty
+                              ? favoriteShowTitle.trim()
+                              : copy.unknown,
+                        );
                     final showTitle = favoriteShowTitle.trim().isNotEmpty
                         ? favoriteShowTitle.trim()
                         : copy.unknown;

@@ -11,10 +11,22 @@ import '../../core/models/youtube_video.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
-import '../../core/utils/external_link.dart';
 import '../../core/widgets/brand_app_bar.dart';
 import 'library_formatters.dart';
 import 'library_image_url.dart';
+
+/// Mobile WebView embed params — `youtube-nocookie` origin avoids YouTube error 15/153.
+const _libraryYoutubeParams = YoutubePlayerParams(
+  showControls: true,
+  showFullscreenButton: true,
+  origin: 'https://www.youtube-nocookie.com',
+  enableCaption: false,
+  showVideoAnnotations: false,
+  playsInline: true,
+  pointerEvents: PointerEvents.auto,
+);
+
+const _playbackStartTimeout = Duration(seconds: 15);
 
 /// In-app YouTube playback with Udaan chrome (IFrame API — stream only, store compliant).
 class LibraryPlayerScreen extends ConsumerStatefulWidget {
@@ -31,6 +43,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
 
   YoutubePlayerController? _controller;
   StreamSubscription<YoutubePlayerValue>? _playerSubscription;
+  Timer? _playbackTimeoutTimer;
   PlayerState? _lastAnnouncedPlayerState;
   bool _playerError = false;
   bool _startingPlayback = false;
@@ -53,28 +66,50 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
 
   @override
   void dispose() {
+    _cancelPlaybackTimeout();
     _playerSubscription?.cancel();
     _controller?.close();
     super.dispose();
+  }
+
+  void _cancelPlaybackTimeout() {
+    _playbackTimeoutTimer?.cancel();
+    _playbackTimeoutTimer = null;
+  }
+
+  void _startPlaybackTimeout() {
+    _cancelPlaybackTimeout();
+    _playbackTimeoutTimer = Timer(_playbackStartTimeout, () {
+      if (!mounted || !_startingPlayback) return;
+      _handlePlayerFailure();
+    });
+  }
+
+  void _handlePlayerFailure() {
+    _cancelPlaybackTimeout();
+    if (!mounted) return;
+    if (_playerError && !_startingPlayback) return;
+    setState(() {
+      _playerError = true;
+      _startingPlayback = false;
+    });
+    _announce(_copy.libraryEmbedError);
   }
 
   void _bindPlayerListener(YoutubePlayerController controller) {
     _playerSubscription?.cancel();
     _playerSubscription = controller.listen((value) {
       if (value.hasError) {
-        if (!_playerError && mounted) {
-          setState(() {
-            _playerError = true;
-            _startingPlayback = false;
-          });
-          _announce(_copy.libraryEmbedError);
-        }
+        _handlePlayerFailure();
         return;
       }
 
       final state = value.playerState;
-      if (state == PlayerState.playing && _startingPlayback && mounted) {
-        setState(() => _startingPlayback = false);
+      if (state == PlayerState.playing) {
+        _cancelPlaybackTimeout();
+        if (_startingPlayback && mounted) {
+          setState(() => _startingPlayback = false);
+        }
       }
 
       if (state == _lastAnnouncedPlayerState) return;
@@ -105,42 +140,36 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
       _startingPlayback = true;
       _playerError = false;
     });
+    _startPlaybackTimeout();
 
     try {
       final controller = _controller;
       if (controller == null) {
-        final created = YoutubePlayerController.fromVideoId(
-          videoId: videoId,
-          autoPlay: true,
-          params: const YoutubePlayerParams(
-            showControls: true,
-            showFullscreenButton: true,
-            strictRelatedVideos: true,
-            enableCaption: false,
-            showVideoAnnotations: false,
-            playsInline: true,
-            pointerEvents: PointerEvents.auto,
-          ),
+        final created = YoutubePlayerController(
+          params: _libraryYoutubeParams,
+          key: videoId,
+          onWebResourceError: (_) => _handlePlayerFailure(),
         );
         _controller = created;
         _bindPlayerListener(created);
         if (mounted) setState(() {});
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          unawaited(created.loadVideoById(videoId: videoId));
+        });
       } else {
         await controller.playVideo();
         if (mounted) setState(() => _startingPlayback = false);
+        _cancelPlaybackTimeout();
       }
       _announce('Playing ${widget.video.title}');
     } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _playerError = true;
-        _startingPlayback = false;
-      });
-      _announce(_copy.libraryEmbedError);
+      _handlePlayerFailure();
     }
   }
 
   void _resetPlayer() {
+    _cancelPlaybackTimeout();
     _playerSubscription?.cancel();
     _controller?.close();
     setState(() {
@@ -149,10 +178,6 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
       _startingPlayback = false;
       _lastAnnouncedPlayerState = null;
     });
-  }
-
-  void _openInYoutube() {
-    openExternalUrl(context, widget.video.watchUrl);
   }
 
   @override
@@ -202,7 +227,6 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
       duration: duration,
       uploaded: uploaded,
       playerError: _playerError,
-      onOpenInYoutube: _openInYoutube,
       onRetry: _resetPlayer,
     );
 
@@ -292,7 +316,6 @@ class _PlayerMetadata extends StatelessWidget {
     required this.duration,
     required this.uploaded,
     required this.playerError,
-    required this.onOpenInYoutube,
     required this.onRetry,
   });
 
@@ -302,7 +325,6 @@ class _PlayerMetadata extends StatelessWidget {
   final String duration;
   final String uploaded;
   final bool playerError;
-  final VoidCallback onOpenInYoutube;
   final VoidCallback onRetry;
 
   @override
@@ -335,19 +357,6 @@ class _PlayerMetadata extends StatelessWidget {
               ),
               icon: const Icon(Icons.refresh),
               label: Text(copy.retry),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Semantics(
-            button: true,
-            label: copy.libraryOpenInYoutube,
-            child: OutlinedButton.icon(
-              onPressed: onOpenInYoutube,
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 56),
-              ),
-              icon: const Icon(Icons.open_in_new),
-              label: Text(copy.libraryOpenInYoutube),
             ),
           ),
         ],

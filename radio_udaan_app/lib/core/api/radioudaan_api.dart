@@ -13,6 +13,7 @@ import '../models/otp_verify_result.dart';
 import '../models/radio_schedule.dart';
 import '../models/register_result.dart';
 import '../models/registration_result.dart';
+import '../models/saved_favorite.dart';
 import '../models/upload_result.dart';
 import 'api_client.dart';
 import 'api_error.dart';
@@ -427,6 +428,13 @@ class RadioUdaanApi {
     return AppNotification.fromJson(notification ?? {});
   }
 
+  Future<int> markAllNotificationsRead() async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/notifications/read-all',
+    );
+    return (response.data?['marked'] as num?)?.toInt() ?? 0;
+  }
+
   Future<NotificationPreferences> fetchNotificationPreferences() async {
     final response = await _dio.get<Map<String, dynamic>>(
       '/auth/notification-preferences',
@@ -454,5 +462,40 @@ class RadioUdaanApi {
       data: data,
     );
     return NotificationPreferences.fromJson(response.data ?? {});
+  }
+
+  Future<List<SavedFavorite>> listFavorites() async {
+    final response = await _dio.get<Map<String, dynamic>>('/me/favorites');
+    return SavedFavorite.listFromJson(response.data?['items'] as List<dynamic>?);
+  }
+
+  Future<List<SavedFavorite>> syncFavorites({
+    required List<SavedFavorite> localItems,
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/me/favorites',
+      data: {
+        'items': localItems.map((item) => item.toApiJson()).toList(),
+      },
+    );
+    return SavedFavorite.listFromJson(response.data?['items'] as List<dynamic>?);
+  }
+
+  Future<List<SavedFavorite>> toggleFavorite({
+    required SavedFavoriteType type,
+    required String itemId,
+    required String title,
+    Map<String, String> meta = const {},
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/me/favorites/toggle',
+      data: {
+        'type': type.apiValue,
+        'item_id': itemId,
+        'title': title,
+        if (meta.isNotEmpty) 'meta': meta,
+      },
+    );
+    return SavedFavorite.listFromJson(response.data?['items'] as List<dynamic>?);
   }
 }

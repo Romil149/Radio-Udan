@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
+import '../../core/router/app_router.dart';
 import '../../core/router/event_deep_link.dart';
 import '../../core/theme/udaan_colors.dart';
 import 'auth_session_helper.dart';
@@ -73,16 +74,21 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
           );
       await persistAuthSession(ref, session);
       if (!mounted) return;
-      navigateAfterAuth(context, ref);
+      final requireEmail = ref
+              .read(remoteConfigProvider)
+              ?.authPolicy
+              .requireEmailVerification ??
+          false;
+      if (requireEmail && !session.emailVerified) {
+        context.go(
+          '/verify-email',
+          extra: VerifyEmailRouteArgs(email: session.email ?? ''),
+        );
+      } else {
+        navigateAfterAuth(context, ref);
+      }
     } catch (e) {
       final apiError = parseApiError(e);
-      if (apiError.code == 'email_verification_required' ||
-          apiError.code == 'email_not_verified') {
-        // /auth/email/* requires a bearer token; login returns 403 without one.
-        setState(() => _error = apiError.message);
-        _announce(apiError.message);
-        return;
-      }
       final message = apiError.message;
       setState(() => _error = message);
       _announce(message);

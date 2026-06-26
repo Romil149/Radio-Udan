@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 
-import '../../core/models/app_notification.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
+import '../../core/widgets/empty_state.dart';
 import '../auth/widgets/udaan_auth_widgets.dart';
+import 'notification_time_formatter.dart';
 import 'notifications_providers.dart';
+import 'widgets/notification_list_card.dart';
 
 enum _NotificationFilter { all, unread }
 
@@ -38,16 +40,29 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     }
   }
 
-  String _formatWhen(String? raw) {
-    final parsed = DateTime.tryParse(raw ?? '');
-    if (parsed == null) return '';
-    return DateFormat.yMMMd().add_jm().format(parsed.toLocal());
+  void _announce(String message) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      SemanticsService.sendAnnouncement(
+        View.of(context),
+        message,
+        Directionality.of(context),
+      );
+    });
+  }
+
+  Future<void> _markAllRead() async {
+    await ref.read(notificationsListProvider.notifier).markAllRead();
+    if (!mounted) return;
+    _announce(_copy.notificationsMarkedAll);
   }
 
   @override
   Widget build(BuildContext context) {
     final copy = ref.watch(appCopyProvider);
     final notifications = ref.watch(notificationsListProvider);
+    final markingAll = ref.watch(notificationsMarkingAllProvider);
+    final unreadCount = notifications.valueOrNull?.unreadCount ?? 0;
 
     return Scaffold(
       backgroundColor: UdaanColors.background,
@@ -71,15 +86,51 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               ),
               child: Row(
                 children: [
-                  _filterChip(_copy.notificationsFilterAll,
-                      _filter == _NotificationFilter.all, () {
-                    setState(() => _filter = _NotificationFilter.all);
-                  }),
+                  _filterChip(
+                    _copy.notificationsFilterAll,
+                    _filter == _NotificationFilter.all,
+                    () => setState(() => _filter = _NotificationFilter.all),
+                  ),
                   const SizedBox(width: 8),
-                  _filterChip(_copy.notificationsFilterUnread,
-                      _filter == _NotificationFilter.unread, () {
-                    setState(() => _filter = _NotificationFilter.unread);
-                  }),
+                  _filterChip(
+                    unreadCount > 0
+                        ? _copy.notificationsFilterUnreadCount(unreadCount)
+                        : _copy.notificationsFilterUnread,
+                    _filter == _NotificationFilter.unread,
+                    () => setState(() => _filter = _NotificationFilter.unread),
+                  ),
+                  const Spacer(),
+                  if (unreadCount > 0)
+                    Semantics(
+                      button: true,
+                      label: _copy.notificationsMarkAllRead,
+                      child: TextButton(
+                        onPressed: markingAll ? null : _markAllRead,
+                        style: TextButton.styleFrom(
+                          foregroundColor: UdaanColors.primaryGlow,
+                          minimumSize: const Size(
+                            BrandTokens.minTapTarget,
+                            BrandTokens.minTapTarget,
+                          ),
+                        ),
+                        child: markingAll
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: UdaanColors.primary,
+                                ),
+                              )
+                            : Text(
+                                _copy.notificationsMarkAllRead,
+                                style: GoogleFonts.atkinsonHyperlegible(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 14,
+                                ),
+                              ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -87,10 +138,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             Expanded(
               child: RefreshIndicator(
                 color: UdaanColors.primary,
-                onRefresh: () async {
-                  ref.invalidate(notificationsListProvider);
-                  await ref.read(notificationsListProvider.future);
-                },
+                onRefresh: () =>
+                    ref.read(notificationsListProvider.notifier).refresh(),
                 child: notifications.when(
                   data: (result) {
                     final items = _filter == _NotificationFilter.unread
@@ -99,19 +148,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                     if (items.isEmpty) {
                       return ListView(
                         children: [
-                          const SizedBox(height: 80),
-                          Center(
-                            child: Semantics(
-                              liveRegion: true,
-                              child: Text(
-                                _filter == _NotificationFilter.unread
-                                    ? _copy.notificationsUnreadEmpty
-                                    : _copy.notificationsEmpty,
-                                style: GoogleFonts.atkinsonHyperlegible(
-                                  fontSize: 16,
-                                  color: UdaanColors.onSurfaceVariant,
-                                ),
-                              ),
+                          SizedBox(
+                            height: MediaQuery.sizeOf(context).height * 0.25,
+                            child: EmptyState(
+                              icon: Icons.notifications_none_outlined,
+                              message: _filter == _NotificationFilter.unread
+                                  ? _copy.notificationsUnreadEmpty
+                                  : _copy.notificationsEmpty,
                             ),
                           ),
                         ],
@@ -122,20 +165,17 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                       itemCount: items.length,
                       itemBuilder: (context, index) {
                         final item = items[index];
-                        return _NotificationCard(
+                        return NotificationListCard(
                           item: item,
+                          copy: copy,
                           accent: _accentForType(item.type),
-                          when: _formatWhen(item.createdAt),
-                          readLabel: _copy.notificationRead,
-                          unreadLabel: _copy.notificationUnread,
-                          onTap: () async {
-                            if (!item.isRead) {
-                              await ref
-                                  .read(radioudaanApiProvider)
-                                  .markNotificationRead(item.id);
-                              invalidateNotificationBadges(ref);
-                            }
-                          },
+                          when: formatNotificationRelativeTime(
+                            item.createdAt,
+                            copy,
+                          ),
+                          onTap: () => ref
+                              .read(notificationsListProvider.notifier)
+                              .markRead(item.id),
                         );
                       },
                     );
@@ -143,6 +183,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   loading: () => Center(
                     child: Semantics(
                       label: _copy.notificationsLoading,
+                      liveRegion: true,
                       child: const CircularProgressIndicator(
                         color: UdaanColors.primary,
                       ),
@@ -150,12 +191,20 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   ),
                   error: (e, _) {
                     final message = parseApiError(e).message;
-                    return Center(
-                      child: Semantics(
-                        liveRegion: true,
-                        label: message,
-                        child: Text(message),
-                      ),
+                    return ListView(
+                      children: [
+                        SizedBox(
+                          height: MediaQuery.sizeOf(context).height * 0.2,
+                          child: EmptyState(
+                            message: message,
+                            icon: Icons.error_outline,
+                            actionLabel: _copy.retry,
+                            onAction: () => ref
+                                .read(notificationsListProvider.notifier)
+                                .refresh(),
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),
@@ -181,101 +230,6 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           labelStyle: GoogleFonts.atkinsonHyperlegible(
             fontWeight: FontWeight.w700,
             color: selected ? UdaanColors.onPrimary : UdaanColors.onBackground,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NotificationCard extends StatelessWidget {
-  const _NotificationCard({
-    required this.item,
-    required this.accent,
-    required this.when,
-    required this.readLabel,
-    required this.unreadLabel,
-    required this.onTap,
-  });
-
-  final AppNotification item;
-  final Color accent;
-  final String when;
-  final String readLabel;
-  final String unreadLabel;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final status = item.isRead ? readLabel : unreadLabel;
-    final whenPart = when.isNotEmpty ? '$when. ' : '';
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Semantics(
-        button: true,
-        label: '$status. $whenPart${item.title}. ${item.body}',
-        child: Material(
-          color: UdaanColors.surfaceContainer,
-          borderRadius: BorderRadius.circular(12),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: UdaanColors.outlineVariant),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(
-                    width: 4,
-                    decoration: BoxDecoration(
-                      color: accent,
-                      borderRadius: const BorderRadius.horizontal(
-                        left: Radius.circular(12),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (when.isNotEmpty)
-                            Text(
-                              when,
-                              style: GoogleFonts.atkinsonHyperlegible(
-                                fontSize: 13,
-                                color: UdaanColors.onSurfaceVariant,
-                              ),
-                            ),
-                          const SizedBox(height: 6),
-                          Text(
-                            item.title,
-                            style: GoogleFonts.atkinsonHyperlegible(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w800,
-                              color: UdaanColors.onBackground,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            item.body,
-                            style: GoogleFonts.atkinsonHyperlegible(
-                              fontSize: 15,
-                              color: UdaanColors.onSurfaceVariant,
-                              height: 1.35,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ),
         ),
       ),

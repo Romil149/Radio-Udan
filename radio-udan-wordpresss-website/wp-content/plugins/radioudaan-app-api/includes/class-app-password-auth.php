@@ -136,20 +136,8 @@ class RadioUdaan_App_Password_Auth {
 			return new WP_Error( 'phone_not_verified', __( 'Verify your mobile number to continue.', 'radioudaan-app-api' ), array( 'status' => 403 ) );
 		}
 
-		if ( strpos( $identifier, '@' ) !== false && ! (int) $user->email_verified ) {
-			return new WP_Error(
-				'email_verification_required',
-				__( 'Verify your email to sign in with email.', 'radioudaan-app-api' ),
-				array( 'status' => 403 )
-			);
-		}
-
-		if ( RadioUdaan_App_Settings::require_email_verification() && ! (int) $user->email_verified ) {
-			return new WP_Error(
-				'email_verification_required',
-				__( 'Verify your email to continue.', 'radioudaan-app-api' ),
-				array( 'status' => 403 )
-			);
+		if ( ! (int) $user->email_verified ) {
+			self::send_email_verification_code( $user );
 		}
 
 		return self::issue_session_for_user( $user );
@@ -293,7 +281,7 @@ class RadioUdaan_App_Password_Auth {
 		RadioUdaan_App_Users::activate_phone( $user_id );
 		$user = RadioUdaan_App_Users::get_by_id( $user_id );
 
-		if ( RadioUdaan_App_Settings::require_email_verification() && ! (int) $user->email_verified ) {
+		if ( ! (int) $user->email_verified ) {
 			self::send_email_verification_code( $user );
 		}
 

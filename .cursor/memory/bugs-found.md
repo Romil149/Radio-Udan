@@ -12,7 +12,7 @@
 | BUG-014 | 🟠 High | `class-rate-limiter.php` | Rate limits trusted spoofable `X-Forwarded-For` | Multi-agent audit | Fixed (REMOTE_ADDR default; proxy opt-in) |
 | BUG-006 | 🔴 Critical | `radio_player_controller.dart` / `MainActivity.kt` | Live radio failed on Android — `AudioService.init` failed because `MainActivity` did not extend `AudioServiceActivity` | User report | Fixed: `AudioServiceActivity` + init retry + just_audio fallback |
 | BUG-007 | 🟡 Medium | Staging WP YouTube settings | Library playlists/videos return 503 `youtube_not_configured` — no API key on staging | User report | Fixed (WP admin key added) |
-| BUG-008 | 🔴 Critical | `library_player_screen.dart` | Tap to play did nothing on Android — WebView under poster stole touches / wrong embed origin | User report | Fixed: defer WebView until tap; loadVideoById+autoPlay; retry button |
+| BUG-008 | 🔴 Critical | `library_player_screen.dart` | YouTube embed “Video unavailable” (error 15/153) on all videos in mobile WebView; endless loader | User report | Fixed: `origin: youtube-nocookie.com`; load after scaffold init; 15s timeout; Retry only (no external YouTube) |
 | BUG-004 | 🟢 Low | `go_router` | Direct URL `#/events` fails (`no routes for location: /events`); tabs are shell-only (`/`). | Agent 12 | Open (by design) |
 | BUG-017 | 🔴 Critical | `assets/images/radio_udaan_logo.png` | Logo asset declared in pubspec but missing from repo — `Image.asset` on splash/auth crashes cold start (iOS + Android) | User report | Fixed (asset added + OfflineBrandLogo fallback) |
 | BUG-001 | 🟡 Medium | `.cursor/agents/README.md` | README referenced non-existent `agent-03-wp-app-api.md` (fixed) | Developer | Closed |

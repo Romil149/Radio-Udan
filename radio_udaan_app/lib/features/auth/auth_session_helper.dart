@@ -2,6 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/auth_session.dart';
 import '../../core/providers/app_providers.dart';
+import '../../core/push/push_notification_service.dart';
+import '../../core/storage/settings_storage.dart';
+import '../../features/favorites/app_favorites_provider.dart';
 
 /// Persists token storage and in-memory auth state after a successful auth call.
 Future<void> persistAuthSession(WidgetRef ref, AuthSession session) async {
@@ -17,6 +20,17 @@ Future<void> persistAuthSession(WidgetRef ref, AuthSession session) async {
   ref.read(authUserProvider.notifier).state = session;
   if (session.phoneE164.isNotEmpty) {
     ref.read(authPhoneProvider.notifier).state = session.phoneE164;
+  }
+
+  if (session.token.isNotEmpty) {
+    await ref.read(appFavoritesProvider.notifier).mergeWithServerAfterLogin();
+  }
+
+  final storage = await SettingsStorage.create();
+  if (storage.notificationPermissionPromptSeen) {
+    final push = ref.read(pushNotificationServiceProvider);
+    await push.initialize();
+    await push.registerDeviceToken();
   }
 }
 

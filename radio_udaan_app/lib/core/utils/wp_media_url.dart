@@ -77,3 +77,27 @@ bool _looksLikeWpMedia(Uri uri) {
   if (uri.host == 'radio') return true;
   return false;
 }
+
+/// Rewrites `src` / `href` attributes in HTML from WP hosts to the app API origin.
+String rewriteWpHtmlMediaUrls(
+  String html, {
+  required String apiBaseUrl,
+  String? siteUrl,
+}) {
+  if (html.trim().isEmpty) return html;
+
+  return html.replaceAllMapped(
+    RegExp(r'''((?:src|href)=["'])([^"']+)(["'])''', caseSensitive: false),
+    (match) {
+      final prefix = match.group(1) ?? '';
+      final rawUrl = match.group(2) ?? '';
+      final suffix = match.group(3) ?? '';
+      final resolved = resolveWpMediaUrl(
+        rawUrl,
+        apiBaseUrl: apiBaseUrl,
+        siteUrl: siteUrl,
+      );
+      return '$prefix$resolved$suffix';
+    },
+  );
+}

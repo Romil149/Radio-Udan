@@ -55,6 +55,13 @@ class SettingsStorage {
 
   String? get apiBaseUrlOverride => _prefs.getString('api_base_url_override');
 
+  bool get notificationPermissionPromptSeen =>
+      _prefs.getBool('${_prefix}notification_permission_prompt_seen') ?? false;
+
+  Future<void> setNotificationPermissionPromptSeen() async {
+    await _prefs.setBool('${_prefix}notification_permission_prompt_seen', true);
+  }
+
   Future<void> setApiBaseUrlOverride(String? url) async {
     if (url == null || url.isEmpty) {
       await _prefs.remove('api_base_url_override');

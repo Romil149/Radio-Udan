@@ -179,6 +179,43 @@ final class RadioUdaan_App_Api {
 
 		register_rest_route(
 			'radioudaan/v1',
+			'/notifications/read-all',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'notifications_mark_all_read' ),
+				'permission_callback' => array( 'RadioUdaan_App_Auth', 'require_auth' ),
+			)
+		);
+
+		register_rest_route(
+			'radioudaan/v1',
+			'/me/favorites',
+			array(
+				array(
+					'methods'             => 'GET',
+					'callback'            => array( $this, 'me_favorites_list' ),
+					'permission_callback' => array( 'RadioUdaan_App_Auth', 'require_auth' ),
+				),
+				array(
+					'methods'             => 'POST',
+					'callback'            => array( $this, 'me_favorites_sync' ),
+					'permission_callback' => array( 'RadioUdaan_App_Auth', 'require_auth' ),
+				),
+			)
+		);
+
+		register_rest_route(
+			'radioudaan/v1',
+			'/me/favorites/toggle',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'me_favorites_toggle' ),
+				'permission_callback' => array( 'RadioUdaan_App_Auth', 'require_auth' ),
+			)
+		);
+
+		register_rest_route(
+			'radioudaan/v1',
 			'/auth/register',
 			array(
 				'methods'             => 'POST',
@@ -743,6 +780,7 @@ final class RadioUdaan_App_Api {
 
 		$user    = RadioUdaan_App_Users::get_by_id( $user_id );
 		$phone   = $user ? $user->phone_e164 : '';
+		RadioUdaan_App_Favorites::delete_for_user( $user_id );
 		$removed = RadioUdaan_App_Users::soft_delete( $user_id );
 
 		RadioUdaan_App_Auth::revoke_all_tokens_for_user_id( $user_id );
@@ -760,6 +798,76 @@ final class RadioUdaan_App_Api {
 				'status'  => 'account_deleted',
 				'removed' => $removed,
 			),
+			200
+		);
+	}
+
+	/**
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function me_favorites_list( WP_REST_Request $request ) {
+		$user_id = RadioUdaan_App_Auth::get_user_id_from_request( $request );
+		if ( ! $user_id ) {
+			return new WP_Error( 'unauthorized', __( 'Authentication required.', 'radioudaan-app-api' ), array( 'status' => 401 ) );
+		}
+
+		return new WP_REST_Response(
+			array( 'items' => RadioUdaan_App_Favorites::list_for_user( $user_id ) ),
+			200
+		);
+	}
+
+	/**
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function me_favorites_sync( WP_REST_Request $request ) {
+		$user_id = RadioUdaan_App_Auth::get_user_id_from_request( $request );
+		if ( ! $user_id ) {
+			return new WP_Error( 'unauthorized', __( 'Authentication required.', 'radioudaan-app-api' ), array( 'status' => 401 ) );
+		}
+
+		$body   = $request->get_json_params();
+		$result = RadioUdaan_App_Favorites::sync( $user_id, is_array( $body ) ? $body : array() );
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		return new WP_REST_Response( $result, 200 );
+	}
+
+	/**
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function me_favorites_toggle( WP_REST_Request $request ) {
+		$user_id = RadioUdaan_App_Auth::get_user_id_from_request( $request );
+		if ( ! $user_id ) {
+			return new WP_Error( 'unauthorized', __( 'Authentication required.', 'radioudaan-app-api' ), array( 'status' => 401 ) );
+		}
+
+		$body   = $request->get_json_params();
+		$result = RadioUdaan_App_Favorites::toggle( $user_id, is_array( $body ) ? $body : array() );
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		return new WP_REST_Response( $result, 200 );
+	}
+
+	/**
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function notifications_mark_all_read( WP_REST_Request $request ) {
+		$user_id = RadioUdaan_App_Auth::get_user_id_from_request( $request );
+		if ( ! $user_id ) {
+			return new WP_Error( 'unauthorized', __( 'Authentication required.', 'radioudaan-app-api' ), array( 'status' => 401 ) );
+		}
+
+		return new WP_REST_Response(
+			RadioUdaan_App_Notifications::mark_all_read( $user_id ),
 			200
 		);
 	}

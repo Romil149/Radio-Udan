@@ -262,12 +262,8 @@ class RadioUdaan_Otp_Service {
 				);
 			}
 
-			if ( RadioUdaan_App_Settings::require_email_verification() && ! (int) $user->email_verified ) {
-				return new WP_Error(
-					'email_verification_required',
-					__( 'Verify your email to continue.', 'radioudaan-app-api' ),
-					array( 'status' => 403 )
-				);
+			if ( ! (int) $user->email_verified ) {
+				RadioUdaan_App_Password_Auth::resend_email_verification( (int) $user->id );
 			}
 
 			return RadioUdaan_App_Password_Auth::issue_session_for_user( $user );

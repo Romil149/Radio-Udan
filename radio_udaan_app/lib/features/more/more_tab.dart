@@ -3,9 +3,9 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api/api_error.dart';
+import '../../core/config/legal_pages_config.dart';
 import '../../core/config/remote_config.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/network/dio_exception_mapper.dart';
@@ -17,6 +17,7 @@ import '../auth/auth_session_helper.dart';
 import '../../core/router/app_router.dart';
 import '../../core/widgets/main_tab_app_bar.dart';
 import 'edit_profile_screen.dart';
+import 'legal_content_screen.dart';
 import 'help_contact_screen.dart';
 import 'notifications_screen.dart';
 import 'settings_screen.dart';
@@ -42,6 +43,33 @@ class MoreTab extends ConsumerWidget {
   void _push(BuildContext context, Widget screen) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => screen),
+    );
+  }
+
+  void _openLegalContent(
+    BuildContext context,
+    WidgetRef ref,
+    AppCopy copy, {
+    required String title,
+    required LegalPageContent? content,
+  }) {
+    if (content == null || !content.hasHtml) {
+      _announce(context, copy.linkUnavailable);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(copy.linkUnavailable)),
+      );
+      return;
+    }
+
+    final config = ref.read(remoteConfigProvider);
+    _push(
+      context,
+      LegalContentScreen(
+        title: title,
+        html: content.html,
+        apiBaseUrl: ref.read(apiBaseUrlProvider),
+        siteUrl: config?.siteUrl,
+      ),
     );
   }
 
@@ -122,13 +150,18 @@ class MoreTab extends ConsumerWidget {
               iconColor: UdaanColors.onBackground,
               onTap: () => _push(context, const HelpContactScreen()),
             ),
-            if (config?.aboutUrl != null)
+            if (config?.legalPages.about != null)
               MoreMenuTile(
                 title: copy.aboutUs,
-                subtitle: copy.aboutUsSubtitle,
                 icon: Icons.info_outline,
                 iconBackground: UdaanColors.secondary,
-                onTap: () => _openExternalUrl(context, config!.aboutUrl!, copy),
+                onTap: () => _openLegalContent(
+                  context,
+                  ref,
+                  copy,
+                  title: copy.aboutUs,
+                  content: config?.legalPages.about,
+                ),
               ),
             if (isSignedIn && user != null && !user.emailVerified) ...[
               const SizedBox(height: 4),
@@ -139,9 +172,12 @@ class MoreTab extends ConsumerWidget {
                     : copy.emailNotVerified,
                 icon: Icons.mark_email_unread_outlined,
                 iconBackground: UdaanColors.primary,
-                onTap: () => context.go(
+                onTap: () => context.push(
                   '/verify-email',
-                  extra: VerifyEmailRouteArgs(email: user.email ?? ''),
+                  extra: VerifyEmailRouteArgs(
+                    email: user.email ?? '',
+                    sendCodeOnOpen: true,
+                  ),
                 ),
               ),
             ],
@@ -160,7 +196,7 @@ class MoreTab extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              ..._legalTiles(context, config, copy),
+              ..._legalTiles(context, ref, config, copy),
             ],
             const SizedBox(height: 8),
             MoreMenuTile(
@@ -221,63 +257,40 @@ class MoreTab extends ConsumerWidget {
 
   List<Widget> _legalTiles(
     BuildContext context,
+    WidgetRef ref,
     RemoteConfig config,
     AppCopy copy,
   ) {
-    final links = <({String title, String? url, IconData icon})>[
-      (title: copy.privacyPolicy, url: config.privacyPolicyUrl, icon: Icons.privacy_tip_outlined),
-      (title: copy.termsOfUse, url: config.termsUrl, icon: Icons.description_outlined),
+    final links = <({String title, LegalPageContent? content, IconData icon})>[
+      (
+        title: copy.privacyPolicy,
+        content: config.legalPages.privacy,
+        icon: Icons.privacy_tip_outlined,
+      ),
+      (
+        title: copy.termsOfUse,
+        content: config.legalPages.terms,
+        icon: Icons.description_outlined,
+      ),
     ];
 
     return [
       for (final link in links)
-        if (link.url != null)
+        if (link.content != null)
           MoreMenuTile(
             title: link.title,
-            subtitle: copy.linkOpensInBrowser,
             icon: link.icon,
             iconBackground: UdaanColors.surfaceContainerHigh,
             iconColor: UdaanColors.primaryGlow,
-            onTap: () => _openExternalUrl(context, link.url!, copy),
+            onTap: () => _openLegalContent(
+              context,
+              ref,
+              copy,
+              title: link.title,
+              content: link.content,
+            ),
           ),
     ];
-  }
-
-  Future<void> _openExternalUrl(
-    BuildContext context,
-    String url,
-    AppCopy copy,
-  ) async {
-    final uri = Uri.tryParse(url);
-    if (uri == null || !uri.hasScheme) {
-      if (context.mounted) {
-        _announce(context, copy.linkUnavailable);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(copy.linkUnavailable)),
-        );
-      }
-      return;
-    }
-
-    try {
-      final launched = await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
-      if (!launched && context.mounted) {
-        _announce(context, copy.linkOpenFailed);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(copy.linkOpenFailed)),
-        );
-      }
-    } catch (_) {
-      if (context.mounted) {
-        _announce(context, copy.linkOpenFailed);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(copy.linkOpenFailed)),
-        );
-      }
-    }
   }
 
   Future<void> _confirmDeleteAccount(

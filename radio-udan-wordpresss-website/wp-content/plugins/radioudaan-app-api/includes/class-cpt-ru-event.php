@@ -181,6 +181,7 @@ class RadioUdaan_Cpt_Ru_Event {
 					);
 					?>
 					<p class="description"><?php esc_html_e( 'Forminator form used for web and mobile registrations.', 'radioudaan-app-api' ); ?></p>
+					<?php self::render_form_compatibility_panel( $form_id ); ?>
 				</div>
 
 				<div class="ru-event-field">
@@ -224,6 +225,55 @@ class RadioUdaan_Cpt_Ru_Event {
 				<?php RadioUdaan_Event_Meta_Ui::render_select( 'ru_success_preset', 'ru_success_preset', RadioUdaan_Event_Meta_Ui::get_success_message_presets(), '' ); ?>
 				<textarea name="ru_success_message" id="ru_success_message" class="widefat" rows="3" placeholder="<?php esc_attr_e( 'Shown after a successful registration in the mobile app.', 'radioudaan-app-api' ); ?>"><?php echo esc_textarea( $success ); ?></textarea>
 			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Live Forminator → app compatibility summary for editors.
+	 *
+	 * @param int $form_id Forminator form post ID.
+	 */
+	private static function render_form_compatibility_panel( $form_id ) {
+		if ( $form_id <= 0 || ! class_exists( 'RadioUdaan_Form_Schema_Builder' ) ) {
+			return;
+		}
+
+		$report = RadioUdaan_Form_Schema_Builder::get_compatibility_report( $form_id );
+		if ( ! $report ) {
+			return;
+		}
+
+		$ok       = ! empty( $report['app_submittable'] );
+		$compat   = isset( $report['form_compatibility'] ) && is_array( $report['form_compatibility'] )
+			? $report['form_compatibility']
+			: array();
+		$warnings = isset( $report['warnings'] ) && is_array( $report['warnings'] )
+			? $report['warnings']
+			: array();
+		?>
+		<div class="ru-event-compat" style="margin-top:10px;padding:10px 12px;border-left:4px solid <?php echo $ok ? '#46b450' : '#dc3232'; ?>;background:#fff;">
+			<p style="margin:0 0 6px;font-weight:600;">
+				<?php echo $ok ? esc_html__( 'Mobile app: ready', 'radioudaan-app-api' ) : esc_html__( 'Mobile app: blocked', 'radioudaan-app-api' ); ?>
+			</p>
+			<ul style="margin:0 0 6px 18px;list-style:disc;">
+				<li><?php echo esc_html( sprintf( __( '%d supported fields', 'radioudaan-app-api' ), (int) ( $compat['supported_field_count'] ?? 0 ) ) ); ?></li>
+				<li><?php echo esc_html( sprintf( __( '%d conditional fields (show/hide)', 'radioudaan-app-api' ), (int) ( $compat['conditional_field_count'] ?? 0 ) ) ); ?></li>
+				<li><?php echo esc_html( sprintf( __( '%d pages', 'radioudaan-app-api' ), (int) ( $compat['page_count'] ?? 0 ) ) ); ?></li>
+				<?php if ( ! empty( $compat['unsupported_field_count'] ) ) : ?>
+					<li><?php echo esc_html( sprintf( __( '%d unsupported fields', 'radioudaan-app-api' ), (int) $compat['unsupported_field_count'] ) ); ?></li>
+				<?php endif; ?>
+			</ul>
+			<?php if ( ! empty( $warnings ) ) : ?>
+				<ul style="margin:0 0 6px 18px;list-style:disc;color:#8a2424;">
+					<?php foreach ( $warnings as $warning ) : ?>
+						<li><?php echo esc_html( (string) $warning ); ?></li>
+					<?php endforeach; ?>
+				</ul>
+			<?php endif; ?>
+			<p class="description" style="margin:0;">
+				<?php esc_html_e( 'The app loads this form live from Forminator — fields, conditions, uploads, and validation sync automatically. Avoid CAPTCHA, payment, calculation, and required hidden fields.', 'radioudaan-app-api' ); ?>
+			</p>
 		</div>
 		<?php
 	}

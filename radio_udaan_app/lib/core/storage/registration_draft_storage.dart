@@ -88,6 +88,9 @@ class RegistrationDraftStorage {
             .where((s) => s.isNotEmpty)
             .toList();
         if (list.isNotEmpty) out[entry.key] = list;
+      } else if (v is Map) {
+        final map = v.map((k, val) => MapEntry(k.toString(), val?.toString() ?? ''));
+        if (map.values.any((s) => s.isNotEmpty)) out[entry.key] = map;
       }
     }
     return out;
@@ -101,6 +104,10 @@ class RegistrationDraftStorage {
         out[entry.key] = v;
       } else if (v is List) {
         out[entry.key] = v.map((e) => e.toString()).toList();
+      } else if (v is Map) {
+        out[entry.key] = Map<String, dynamic>.from(
+          v.map((k, val) => MapEntry(k.toString(), val)),
+        );
       }
     }
     return out;

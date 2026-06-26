@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../core/providers/app_providers.dart';
-import 'android_media_notification_permission.dart';
 import 'live_now_playing.dart';
 import 'radio_audio_service.dart';
 
@@ -118,9 +117,6 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
 
     final branding = _ref.read(appBrandingProvider);
     final nowPlaying = _ref.read(liveNowPlayingProvider);
-
-    // Android 13+: system dialog for media notification only; playback still starts if denied.
-    await requestAndroidMediaNotificationPermissionIfNeeded();
 
     final streamUri = Uri.parse(url);
     final handler = radioAudioHandler;

@@ -440,8 +440,32 @@ class RadioUdaan_Admin_Settings_Page {
 			}
 			?>
 			<div class="ru-settings-panel__card">
-				<h3><?php esc_html_e( 'Legal & support', 'radioudaan-app-api' ); ?></h3>
-				<p class="description"><?php esc_html_e( 'Opened in the device browser from the More tab.', 'radioudaan-app-api' ); ?></p>
+				<h3><?php esc_html_e( 'In-app legal content', 'radioudaan-app-api' ); ?></h3>
+				<p class="description">
+					<?php esc_html_e( 'Choose WordPress pages (Elementor or classic). The app shows page body only — no site header or footer. Edit text in Pages or Elementor as usual.', 'radioudaan-app-api' ); ?>
+				</p>
+				<?php
+				$legal_pages = array(
+					'legal_privacy_page_id' => array( __( 'Privacy policy page', 'radioudaan-app-api' ), (int) $c['legal_privacy_page_id'] ),
+					'legal_terms_page_id'   => array( __( 'Terms page', 'radioudaan-app-api' ), (int) $c['legal_terms_page_id'] ),
+					'legal_about_page_id'   => array( __( 'About page', 'radioudaan-app-api' ), (int) $c['legal_about_page_id'] ),
+				);
+				$page_choices = isset( $c['page_choices'] ) && is_array( $c['page_choices'] ) ? $c['page_choices'] : array();
+				foreach ( $legal_pages as $name => $meta ) :
+					?>
+					<div class="ru-admin__field">
+						<label for="<?php echo esc_attr( $name ); ?>"><?php echo esc_html( $meta[0] ); ?></label>
+						<select name="<?php echo esc_attr( $name ); ?>" id="<?php echo esc_attr( $name ); ?>" class="widefat">
+							<?php foreach ( $page_choices as $id => $label ) : ?>
+								<option value="<?php echo (int) $id; ?>" <?php selected( $meta[1], $id ); ?>><?php echo esc_html( $label ); ?></option>
+							<?php endforeach; ?>
+						</select>
+					</div>
+				<?php endforeach; ?>
+			</div>
+			<div class="ru-settings-panel__card">
+				<h3><?php esc_html_e( 'Public URLs (stores & web)', 'radioudaan-app-api' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'HTTPS links for App Store / Play listings. In-app content comes from the pages above.', 'radioudaan-app-api' ); ?></p>
 				<?php
 				$legal = array(
 					'privacy_policy_url' => array( __( 'Privacy policy', 'radioudaan-app-api' ), $c['privacy_ov'], $c['privacy_url'] ),

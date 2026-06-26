@@ -13,7 +13,8 @@ import '../../core/utils/wp_media_url.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
 import 'live_now_playing.dart';
-import 'radio_favorites_storage.dart';
+import '../favorites/app_favorites_provider.dart';
+import 'schedule_time_display.dart';
 
 /// Refreshes on a timer so hero title / RJ update when the slot changes.
 final radioScheduleProvider = FutureProvider<RadioScheduleResponse>((ref) async {
@@ -77,8 +78,7 @@ class RadioScheduleSheet extends ConsumerWidget {
           Expanded(
             child: scheduleAsync.when(
               data: (data) => _ScheduleList(
-                days: data.days,
-                onAirId: data.onAir?.id ?? '',
+                schedule: data,
                 scrollController: scrollController,
               ),
               loading: () => const _ScheduleLoading(),
@@ -93,18 +93,20 @@ class RadioScheduleSheet extends ConsumerWidget {
 
 class _ScheduleList extends ConsumerWidget {
   const _ScheduleList({
-    required this.days,
-    required this.onAirId,
+    required this.schedule,
     required this.scrollController,
   });
 
-  final List<RadioScheduleDay> days;
-  final String onAirId;
+  final RadioScheduleResponse schedule;
   final ScrollController scrollController;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final copy = ref.watch(appCopyProvider);
+    final days = schedule.days;
+    final onAirId = schedule.onAir?.id ?? '';
+    final stationOffset =
+        ScheduleTimeDisplay.stationOffsetFromSchedule(schedule);
     if (days.isEmpty) {
       return Center(
         child: Padding(
@@ -171,6 +173,7 @@ class _ScheduleList extends ConsumerWidget {
                 (segment) => _ScheduleSegmentCard(
                   segment: segment,
                   timeFmt: timeFmt,
+                  stationOffset: stationOffset,
                   isFavorite: segment.hasId && favorites.contains(segment.id),
                   isOnAir: onAirId.isNotEmpty && segment.id == onAirId,
                 ),
@@ -187,12 +190,14 @@ class _ScheduleSegmentCard extends ConsumerWidget {
   const _ScheduleSegmentCard({
     required this.segment,
     required this.timeFmt,
+    required this.stationOffset,
     required this.isFavorite,
     required this.isOnAir,
   });
 
   final RadioScheduleSegment segment;
   final DateFormat timeFmt;
+  final Duration stationOffset;
   final bool isFavorite;
   final bool isOnAir;
 
@@ -201,7 +206,12 @@ class _ScheduleSegmentCard extends ConsumerWidget {
     final copy = ref.watch(appCopyProvider);
     final title =
         segment.title.isNotEmpty ? segment.title : copy.unknown;
-    final time = segment.timeRangeLabel(timeFormat: timeFmt);
+    final time = ScheduleTimeDisplay.label(
+      segment: segment,
+      stationOffset: stationOffset,
+      copy: copy,
+      timeFormat: timeFmt,
+    );
     final hostsLine = segment.hasHosts
         ? formatRadioHostsLine(segment.hosts, copy)
         : '';
@@ -313,8 +323,19 @@ class _ScheduleSegmentCard extends ConsumerWidget {
                   onPressed: segment.hasId
                       ? () async {
                           await ref
-                              .read(radioFavoritesProvider.notifier)
-                              .toggle(segment.id);
+                              .read(appFavoritesProvider.notifier)
+                              .toggleRadioShow(
+                                showId: segment.id,
+                                title: title,
+                                meta: {
+                                  if (segment.imageUrl.trim().isNotEmpty)
+                                    'thumbnail_url': segment.imageUrl.trim(),
+                                  if (segment.hosts.trim().isNotEmpty)
+                                    'hosts': segment.hosts.trim(),
+                                  if (segment.category.trim().isNotEmpty)
+                                    'category': segment.category.trim(),
+                                },
+                              );
                           if (!context.mounted) return;
                           SemanticsService.sendAnnouncement(
                             View.of(context),

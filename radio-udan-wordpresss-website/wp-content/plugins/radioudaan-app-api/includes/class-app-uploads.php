@@ -7,6 +7,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
+require_once RADIOUDAAN_APP_API_PATH . 'includes/class-form-schema-builder.php';
+
 /**
  * Upload staging (upload_id → attachment + paths for Forminator).
  */
@@ -67,11 +69,17 @@ class RadioUdaan_App_Uploads {
 		}
 		RadioUdaan_Rate_Limiter::bump( 'upload_ip_' . $ip, HOUR_IN_SECONDS );
 
+		$allowed_ext = self::parse_ext_param( $request->get_param( 'allowed_ext' ) );
+		$max_size_mb = $request->get_param( 'max_size_mb' );
+		$max_size_mb = is_numeric( $max_size_mb ) ? (int) $max_size_mb : null;
+
 		$result = self::store_file(
 			$files['file'],
 			(int) $event['form_id'],
 			$field_key,
-			$phone
+			$phone,
+			$allowed_ext,
+			$max_size_mb
 		);
 
 		if ( is_wp_error( $result ) ) {
@@ -87,13 +95,15 @@ class RadioUdaan_App_Uploads {
 	}
 
 	/**
-	 * @param array  $file      $_FILES slice.
-	 * @param int    $form_id   Forminator form ID.
-	 * @param string $field_key Field element id.
-	 * @param string $phone     Owner phone.
+	 * @param array       $file         $_FILES slice.
+	 * @param int         $form_id      Forminator form ID.
+	 * @param string      $field_key    Field element id.
+	 * @param string      $phone        Owner phone.
+	 * @param string[]|null $allowed_ext Optional allowed extensions.
+	 * @param int|null    $max_size_mb  Optional max size in MB.
 	 * @return array|WP_Error
 	 */
-	public static function store_file( $file, $form_id, $field_key, $phone ) {
+	public static function store_file( $file, $form_id, $field_key, $phone, $allowed_ext = null, $max_size_mb = null ) {
 		if ( ! empty( $file['error'] ) ) {
 			return new WP_Error(
 				'upload_error',
@@ -102,18 +112,58 @@ class RadioUdaan_App_Uploads {
 			);
 		}
 
-		$max_mb = RadioUdaan_App_Settings::get_max_upload_mb();
-		$max_b  = $max_mb * 1024 * 1024;
+		$schema_field = $field_key
+			? RadioUdaan_Form_Schema_Builder::get_field_by_key( (int) $form_id, $field_key )
+			: null;
+
+		if ( null === $allowed_ext && $schema_field && ! empty( $schema_field['allowed_ext'] ) ) {
+			$allowed_ext = $schema_field['allowed_ext'];
+		}
+
+		if ( null === $max_size_mb ) {
+			if ( $schema_field && ! empty( $schema_field['max_size_mb'] ) ) {
+				$max_size_mb = (int) $schema_field['max_size_mb'];
+			} else {
+				$max_size_mb = RadioUdaan_App_Settings::get_max_upload_mb();
+			}
+		}
+
+		$max_b = (int) $max_size_mb * 1024 * 1024;
 		if ( ! empty( $file['size'] ) && (int) $file['size'] > $max_b ) {
 			return new WP_Error(
 				'upload_too_large',
 				sprintf(
 					/* translators: %d: megabytes */
 					__( 'File exceeds %d MB limit.', 'radioudaan-app-api' ),
-					$max_mb
+					(int) $max_size_mb
 				),
 				array( 'status' => 400 )
 			);
+		}
+
+		if ( ! empty( $allowed_ext ) && is_array( $allowed_ext ) && ! empty( $file['name'] ) ) {
+			$parts = explode( '.', (string) $file['name'] );
+			if ( count( $parts ) < 2 ) {
+				return new WP_Error(
+					'upload_type_rejected',
+					__( 'File type is not allowed for this field.', 'radioudaan-app-api' ),
+					array( 'status' => 400 )
+				);
+			}
+			$ext = strtolower( (string) end( $parts ) );
+			$allowed = array_map(
+				static function ( $item ) {
+					return strtolower( ltrim( (string) $item, '.' ) );
+				},
+				$allowed_ext
+			);
+			if ( ! in_array( $ext, $allowed, true ) ) {
+				return new WP_Error(
+					'upload_type_rejected',
+					__( 'File type is not allowed for this field.', 'radioudaan-app-api' ),
+					array( 'status' => 400 )
+				);
+			}
 		}
 
 		$private = RadioUdaan_App_Settings::use_private_uploads();
@@ -210,6 +260,38 @@ class RadioUdaan_App_Uploads {
 			'mime'       => $record['mime'],
 			'size_bytes' => $record['size_bytes'],
 		);
+	}
+
+	/**
+	 * @param mixed $raw Request param.
+	 * @return string[]|null
+	 */
+	private static function parse_ext_param( $raw ) {
+		if ( null === $raw || '' === $raw ) {
+			return null;
+		}
+
+		if ( is_array( $raw ) ) {
+			$ext = array();
+			foreach ( $raw as $item ) {
+				$item = strtolower( trim( (string) $item ) );
+				if ( '' !== $item ) {
+					$ext[] = ltrim( $item, '.' );
+				}
+			}
+			return $ext ? $ext : null;
+		}
+
+		$parts = array_map( 'trim', explode( ',', (string) $raw ) );
+		$ext     = array();
+		foreach ( $parts as $part ) {
+			$part = strtolower( ltrim( $part, '.' ) );
+			if ( '' !== $part ) {
+				$ext[] = $part;
+			}
+		}
+
+		return $ext ? $ext : null;
 	}
 
 	/**

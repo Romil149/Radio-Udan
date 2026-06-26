@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
+import '../../core/push/notification_permission_flow.dart';
 import '../../core/router/app_router.dart';
 import '../../core/router/event_deep_link.dart';
 import '../../core/theme/udaan_colors.dart';
@@ -30,6 +31,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _loading = false;
   bool _otpLoading = false;
   bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      NotificationPermissionFlow.maybeShow(context, ref);
+    });
+  }
 
   @override
   void dispose() {

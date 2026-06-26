@@ -70,11 +70,19 @@ class PushNotificationService {
     _initialized = true;
   }
 
-  Future<void> registerIfSignedIn() async {
+  Future<void> requestSystemPermission() async {
+    if (kIsWeb || !_initialized) return;
+    try {
+      await FirebaseMessaging.instance.requestPermission();
+    } catch (e) {
+      debugPrint('Push permission request failed: $e');
+    }
+  }
+
+  Future<void> registerDeviceToken() async {
     if (kIsWeb || !_initialized) return;
     try {
       final messaging = FirebaseMessaging.instance;
-      await messaging.requestPermission();
       final token = await messaging.getToken();
       if (token == null || token.length < 20) return;
 
@@ -90,6 +98,10 @@ class PushNotificationService {
     } catch (e) {
       debugPrint('Push registration failed: $e');
     }
+  }
+
+  Future<void> registerIfSignedIn() async {
+    await registerDeviceToken();
   }
 
   Future<void> _onForegroundMessage(RemoteMessage message) async {

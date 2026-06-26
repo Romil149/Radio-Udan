@@ -10,7 +10,7 @@ import '../../../core/theme/brand_tokens.dart';
 import '../../../core/theme/udaan_colors.dart';
 import '../library_formatters.dart' show formatLibraryRelativeDate, summarizeYoutubeDescription;
 import '../library_player_screen.dart';
-import '../library_saved_storage.dart';
+import '../../favorites/app_favorites_provider.dart';
 
 const double _libraryMinTapTarget = 56;
 
@@ -65,7 +65,7 @@ class LibraryVideoCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final copy = ref.watch(appCopyProvider);
     final savedIds = ref.watch(librarySavedVideoIdsProvider);
-    final savedNotifier = ref.read(librarySavedVideoIdsProvider.notifier);
+    final favoritesNotifier = ref.read(appFavoritesProvider.notifier);
     final isSaved = savedIds.contains(video.id.trim());
     final uploaded = video.publishedAtDate != null
         ? formatLibraryRelativeDate(video.publishedAtDate!, copy)
@@ -150,13 +150,18 @@ class LibraryVideoCard extends ConsumerWidget {
                       _SaveButton(
                         copy: copy,
                         isSaved: isSaved,
-                        onPressed: () {
-                          savedNotifier.toggle(video.id);
+                        onPressed: () async {
+                          await favoritesNotifier.toggleLibraryVideo(
+                            video: video,
+                            thumbnailUrl: thumbnailUrl,
+                          );
+                          if (!context.mounted) return;
+                          final nowSaved = !isSaved;
                           _announce(
                             context,
-                            isSaved
-                                ? copy.libraryVideoUnsaved
-                                : copy.libraryVideoSaved,
+                            nowSaved
+                                ? copy.libraryVideoSaved
+                                : copy.libraryVideoUnsaved,
                           );
                         },
                       ),

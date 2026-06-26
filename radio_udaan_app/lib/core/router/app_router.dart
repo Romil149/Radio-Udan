@@ -85,7 +85,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (loggedIn && _isAuthRoute(path)) {
         if (path == '/verify-email' &&
             user != null &&
-            requireEmail &&
             !user.emailVerified) {
           return null;
         }
@@ -215,9 +214,15 @@ class OtpRouteArgs {
 }
 
 class VerifyEmailRouteArgs {
-  const VerifyEmailRouteArgs({this.email = ''});
+  const VerifyEmailRouteArgs({
+    this.email = '',
+    this.sendCodeOnOpen = false,
+  });
 
   final String email;
+
+  /// When true, requests a verification email on screen open (e.g. from More tab).
+  final bool sendCodeOnOpen;
 }
 
 class ResetPasswordRouteArgs {

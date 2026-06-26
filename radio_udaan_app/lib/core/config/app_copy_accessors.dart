@@ -80,6 +80,11 @@ extension AppCopyStrings on AppCopy {
   String get libraryPlayerPaused => text('library_player_paused');
   String get libraryPlaylists => text('library_playlists');
   String get libraryPlaylistsEmpty => text('library_playlists_empty');
+  String get librarySavedScreenTitle => text('library_saved_screen_title');
+  String get librarySavedEntrySubtitle => text('library_saved_entry_subtitle');
+  String get librarySavedRadioSection => text('library_saved_radio_section');
+  String get librarySavedVideosSection => text('library_saved_videos_section');
+  String get librarySavedEmpty => text('library_saved_empty');
   String get libraryRecentUploads => text('library_recent_uploads');
   String get libraryRecentUploadsEmpty => text('library_recent_uploads_empty');
   String get librarySaveVideo => text('library_save_video');
@@ -127,6 +132,20 @@ extension AppCopyStrings on AppCopy {
   String get notSignedIn => text('not_signed_in');
   String get notificationRead => text('notification_read');
   String get notificationUnread => text('notification_unread');
+  String get notificationTimeJustNow => text('notification_time_just_now');
+  String get notificationTimeMinuteAgo => text('notification_time_minute_ago');
+  String get notificationTimeHourAgo => text('notification_time_hour_ago');
+  String get notificationTimeYesterday => text('notification_time_yesterday');
+  String get notificationsMarkAllRead => text('notifications_mark_all_read');
+  String get notificationsMarkedAll => text('notifications_marked_all');
+  String notificationTimeMinutesAgo(int minutes) =>
+      text('notification_time_minutes_ago').replaceAll('{count}', '$minutes');
+  String notificationTimeHoursAgo(int hours) =>
+      text('notification_time_hours_ago').replaceAll('{count}', '$hours');
+  String notificationTimeDaysAgo(int days) =>
+      text('notification_time_days_ago').replaceAll('{count}', '$days');
+  String notificationsFilterUnreadCount(int count) =>
+      '${text('notifications_filter_unread')} ($count)';
   String get notificationsEmpty => text('notifications_empty');
   String get notificationsFilterAll => text('notifications_filter_all');
   String get notificationsFilterUnread => text('notifications_filter_unread');
@@ -135,6 +154,10 @@ extension AppCopyStrings on AppCopy {
   String get notificationsSubtitle => text('notifications_subtitle');
   String get notificationsTitle => text('notifications_title');
   String get notificationsUnreadEmpty => text('notifications_unread_empty');
+  String get notificationPermissionTitle => text('notification_permission_title');
+  String get notificationPermissionBody => text('notification_permission_body');
+  String get notificationPermissionContinue => text('notification_permission_continue');
+  String get notificationPermissionNotNow => text('notification_permission_not_now');
   String get notifyEventAlerts => text('notify_event_alerts');
   String get notifyLiveBroadcasts => text('notify_live_broadcasts');
   String get notifyPromotions => text('notify_promotions');
@@ -295,6 +318,15 @@ extension AppCopyStrings on AppCopy {
   String get profileMobileLockedHint => text('profile_mobile_locked_hint');
   String get radioAudioUnavailable => text('radio_audio_unavailable');
   String get radioScheduleFailed => text('radio_schedule_failed');
+  String radioScheduleStationTimeLabel(String stationTime) =>
+      text('radio_schedule_station_time_label').replaceAll('{station_time}', stationTime);
+  String radioScheduleDualTimeLabel({
+    required String stationTime,
+    required String localTime,
+  }) =>
+      text('radio_schedule_dual_time_label')
+          .replaceAll('{station_time}', stationTime)
+          .replaceAll('{local_time}', localTime);
   String get radioStreamMissing => text('radio_stream_missing');
   String get registerCopyright => text('register_copyright');
   String get registrationAccountLockedHint => text('registration_account_locked_hint');
@@ -304,6 +336,15 @@ extension AppCopyStrings on AppCopy {
   String get registrationPickerDateTimeHint => text('registration_picker_date_time_hint');
   String get registrationPickerTimeHint => text('registration_picker_time_hint');
   String get registrationSuccessPrefix => text('registration_success_prefix');
+  String get registrationSuccessTitle => text('registration_success_title');
+  String get registrationSuccessBack => text('registration_success_back');
+  String get registrationErrorTitle => text('registration_error_title');
+  String registrationSuccessBody(String eventTitle) =>
+      text('registration_success_body')
+          .replaceAll('{event_title}', eventTitle);
+  String registrationSuccessReference(int entryId) =>
+      text('registration_success_reference')
+          .replaceAll('{entry_id}', '$entryId');
   String get resendingCodePleaseWait => text('resending_code_please_wait');
   String get resetEmailCodeRequired => text('reset_email_code_required');
   String get resetPasswordSuccess => text('reset_password_success');

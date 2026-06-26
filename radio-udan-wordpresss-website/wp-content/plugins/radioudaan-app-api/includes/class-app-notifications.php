@@ -301,6 +301,35 @@ class RadioUdaan_App_Notifications {
 	}
 
 	/**
+	 * Mark every unread notification for a user as read.
+	 *
+	 * @param int $user_id User id.
+	 * @return array<string,int|string>
+	 */
+	public static function mark_all_read( $user_id ) {
+		self::maybe_create_tables();
+
+		global $wpdb;
+
+		$table = self::notifications_table();
+		$now   = current_time( 'mysql', true );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$marked = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$table} SET read_at = %s WHERE user_id = %d AND read_at IS NULL",
+				$now,
+				(int) $user_id
+			)
+		);
+
+		return array(
+			'status' => 'read_all',
+			'marked' => false === $marked ? 0 : (int) $marked,
+		);
+	}
+
+	/**
 	 * Users who have at least one registered push device.
 	 *
 	 * @return array<int,array<string,mixed>>

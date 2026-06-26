@@ -1,7 +1,7 @@
 name: radio_udaan_app
 description: Radio Udaan — accessibility-first community radio app (Android + iOS).
 publish_to: 'none'
-version: 2.0.0+16
+version: 2.0.0+17
 
 environment:
   sdk: ^3.12.1
@@ -32,6 +32,7 @@ dependencies:
   firebase_crashlytics: ^4.3.5
   firebase_messaging: ^15.2.5
   flutter_local_notifications: ^19.0.0
+  flutter_widget_from_html: ^0.16.0
 
 dev_dependencies:
   flutter_test:

@@ -33,8 +33,11 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   String? _error;
   bool _loading = false;
   bool _resending = false;
+  bool _initialSendDone = false;
   int _resendSecondsRemaining = 0;
   Timer? _resendTimer;
+
+  static const int _resendCooldownSec = 60;
 
   @override
   void initState() {
@@ -44,8 +47,23 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     _emailController = TextEditingController(
       text: fromArgs.isNotEmpty ? fromArgs : fromUser,
     );
-    _startResendCountdown(60);
     _prefillEmailFromStorage();
+    if (widget.args?.sendCodeOnOpen ?? false) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _sendInitialCode();
+      });
+    }
+  }
+
+  Future<void> _sendInitialCode() async {
+    if (_initialSendDone) return;
+    final token = ref.read(authTokenProvider);
+    if (token == null || token.isEmpty) return;
+    final user = ref.read(authUserProvider);
+    if (user?.emailVerified == true) return;
+    _initialSendDone = true;
+    await _resend(announceOnSuccess: false);
   }
 
   Future<void> _prefillEmailFromStorage() async {
@@ -99,7 +117,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     return fromArgs.isNotEmpty || userEmail.isNotEmpty;
   }
 
-  Future<void> _resend() async {
+  Future<void> _resend({bool announceOnSuccess = true}) async {
     setState(() {
       _error = null;
       _resending = true;
@@ -107,8 +125,10 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
 
     try {
       await ref.read(radioudaanApiProvider).resendVerificationEmail();
-      _startResendCountdown(60);
-      _announce(_copy.verificationCodeResent);
+      _startResendCountdown(_resendCooldownSec);
+      if (announceOnSuccess) {
+        _announce(_copy.verificationCodeResent);
+      }
     } catch (e) {
       final message = parseApiError(e).message;
       setState(() => _error = message);
@@ -259,7 +279,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                       : _resendSecondsRemaining > 0
                           ? _copy.resendInSeconds(_resendSecondsRemaining)
                           : _copy.resendCode,
-                  onPressed: _canResend ? _resend : null,
+                  onPressed: _canResend ? () => _resend() : null,
                 ),
               ),
               if (_error != null) ...[

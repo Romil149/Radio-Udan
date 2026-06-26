@@ -13,8 +13,8 @@ Track progress here. Check boxes when done: `- [x]`. Partial: note in **Status**
 - [x] Re-deploy **full** `radioudaan-app-api` plugin to staging (include fixed `require_once` for copy catalog) — **local:** verified at `https://radio` (354 copy keys, 2026-06-25)
 - [x] Confirm wp-admin loads (no critical error) — **local** `https://radio` PASS (2026-06-25)
 - [x] Confirm `GET /config` returns **≥300** copy keys on staging — **local:** 354 ✅ · **staging:** 17 ⬜ (needs plugin upload)
-- [ ] Commit + push local changes (icons, WP copy, Flutter migration)
-- [ ] Bump build to **2.0.0+16** and trigger CI (APK + TestFlight)
+- [x] Commit + push local changes (icons, WP copy, Flutter migration) — `e8d91ae` on `main` (2026-06-25)
+- [x] Bump build to **2.0.0+16** and trigger CI (APK + TestFlight) — `74e2613` pushed (2026-06-25)
 
 ---
 
@@ -22,20 +22,20 @@ Track progress here. Check boxes when done: `- [x]`. Partial: note in **Status**
 
 | Done | Task | Status | Notes |
 |:----:|------|--------|-------|
-| [ ] | Add app icon | 🟡 | Generated locally (`flutter_launcher_icons`); not committed / not in TestFlight |
-| [ ] | Everything works on Android and iOS | 🟡 | TestFlight 2.0.0+15 OK; large local changes unshipped; full device QA open |
+| [x] | Add app icon | ✅ | Logo on black; Android + iOS generated; shipped in `e8d91ae` / build **+16** |
+| [ ] | Everything works on Android and iOS | ⏭️ | Skipped for now — retest on build +16 when ready |
 | [x] | Remove top-left **More** menu (☰) | ✅ | Removed from `main_tab_app_bar.dart`; profile top-right + bottom More tab unchanged |
-| [ ] | Check schedule properly | 🟡 | Schedule API + UI exist; needs QA on real broadcast data |
-| [ ] | Live radio works in **background** | 🟡 | `audio_service` + Android FGS wired; needs iOS + Android device QA |
-| [ ] | Ask notification permission on **app open**, not when playing | ⬜ | Today: media permission on play; push in `push_notification_service` — redesign needed |
-| [ ] | If user **blocks** notification, audio should still play? | ❓ | Product decision — Android 13+ FGS may need notification; document + graceful fallback |
-| [ ] | YouTube: “video unavailable” + endless loader (mobile) | ⬜ | Open bug — embed/API/device investigation |
-| [ ] | Events page shows **website event page** | ⬜ | Today: API cards only; no WP page content in app |
-| [ ] | About Us, Privacy, Terms **stay in the app** | 🟡 | Today: external browser via `url_launcher`; need in-app WebView screens |
-| [ ] | Verify email — full flow working | 🟡 | Screen + routes exist; E2E on staging needs QA |
-| [ ] | **Saved** favorites — list UI + **DB** (not local only) | ⬜ | Can save shows/videos; no Saved screen; radio/library = local storage; need WP API |
-| [ ] | Event registration success/error — clear, polished UI | 🟡 | Messages + `liveRegion` exist; improve visual design |
-| [ ] | Improve **Notifications** read/unread section | ⬜ | Needs UX suggestion + implementation |
+| [~] | Check schedule properly | 🟡 | WP→Kolkata (you); plugin IST fallback kept; app shows dual time only if user TZ ≠ station; on-air from API |
+| [x] | Live radio works in **background** | ✅ | User verified on Android + iOS (2026-06-25); report if regressions |
+| [x] | Ask notification permission on **app open**, not when playing | ✅ | First-open a11y sheet on login/shell; Android media + FCM on Continue |
+| [x] | If user **blocks** notification, audio should still play? | ✅ | Radio plays without permission; prompt removed from Play |
+| [~] | YouTube: “video unavailable” + endless loader (mobile) | 🟡 | `youtube-nocookie.com` origin + 15s timeout + Retry only; needs device retest |
+| [ ] | Event **banner / featured image** shows on event cards | 🟡 | API+UI wired; staging returns `banner_image: null`; local 1216 has image — env + where image was set |
+| [x] | About Us, Privacy, Terms **stay in the app** | ✅ | WP page picker + `legal_pages` in `/config` (Elementor-aware); native HTML screen |
+| [~] | **Saved** favorites — list UI + **DB** (not local only) | 🟡 | WP `/me/favorites` + Saved screen in Library; merge on login; plugin deploy + hot restart |
+| [~] | Verify email — full flow working | 🟡 | Code done; staging plugin deploy + user QA |
+| [~] | Event registration success/error — clear, polished UI | 🟡 | Success screen + top error banner; hot restart to test |
+| [~] | Improve **Notifications** read/unread section | 🟡 | Unread styling, relative time, mark all read API, optimistic updates; hot restart |
 
 ---
 
