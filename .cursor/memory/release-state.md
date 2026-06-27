@@ -4,10 +4,9 @@
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
 | Local WP plugin | 354 copy keys on `/config` | yes | 2026-06-25 | `https://radio` — `verify-wp-plugin.sh` PASS |
-| GitHub `main` | `e8d91ae` (copy catalog, icons, migration) | yes | 2026-06-25 | Pushed |
-| Staging WP plugin | old (17 copy keys on `/config`) | partial | 2026-06-25 | **BUG-018**: missing `require_once` for copy catalog caused wp-admin fatal when new files deployed |
-| TestFlight iOS | 2.0.0+16 building | CI | 2026-06-25 | Triggered by push `74e2613` |
-| Staging API smoke | 14/14 | — | 2026-06-25 | Public site + REST OK; wp-admin was broken |
+| GitHub `main` | `6a6f69d` | yes | 2026-06-27 | A11y fixes on PR #4 branch only (not merged) |
+| TestFlight iOS | 2.0.0+20 (PR #4) | CI pending merge | 2026-06-27 | Run **Build iOS IPA** after merge to `main` |
+| Staging API smoke | 14/14 | — | 2026-06-27 | PASS from cloud agent |
 
 ## Open deploy blockers
 

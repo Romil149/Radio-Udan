@@ -1,6 +1,12 @@
 # Task History
 
-### 2026-06-25 — Form schema v2: full parity (validation, conditions, types)
+### 2026-06-27 — Blind-user a11y: VoiceOver keyboard + double-speech fixes
+**Requested by**: User (fix audit gaps; TestFlight path)
+**What was done**: Global keyboard dismiss; ExcludeSemantics across auth/registration/library/radio/more; accessible country picker; native library video controls; AccessibleHtmlContent; liveRegion labels; build 2.0.0+20. Branch `cursor/a11y-voiceover-keyboard-fixes-1ab5`, PR #4.
+**Files changed**: 50+ Flutter files under `radio_udaan_app/lib/`
+**Status**: ✅ `dart analyze` PASS (0 errors); staging smoke 14/14; **not merged to main**; device VoiceOver QA pending
+**Notes**: Merge PR → GitHub Actions Build iOS IPA → TestFlight. YouTube WebView controls still inaccessible (native row below).
+
 **Requested by**: User (100% validation, conditions, file types — WP-driven future forms)
 **What was done**: Schema v2 (`supported_field_types_version: 2`): `choice_options`, address/name `subfields`, `info` HTML blocks, `consent_html`, `page_index`, `form_warnings`, `app_submittable`. Full visibility operators (date/day/month/n-days). Server `class-form-field-validator.php`. Per-field upload limits. Multi-file upload. Flutter: pagination, blocking banners, subfields, slider/rating, info HTML, client validation, multi-upload.
 **Files changed**: `class-form-field-validator.php`, `class-form-visibility.php`, `class-form-schema-builder.php`, `class-registration-handler.php`, `class-app-uploads.php`, `form_schema.dart`, `form_visibility.dart`, `form_field_validator.dart`, `event_registration_screen.dart`, `registration_draft_storage.dart`
