@@ -1,7 +1,7 @@
 name: radio_udaan_app
 description: Radio Udaan — accessibility-first community radio app (Android + iOS).
 publish_to: 'none'
-version: 2.0.0+20
+version: 2.0.0+21
 
 environment:
   sdk: ^3.12.1
@@ -46,9 +46,9 @@ flutter_launcher_icons:
   ios: true
   # Same asset as WP RadioUdaan_App_Branding::get_logo_url() theme fallback (logo.png).
   image_path: assets/images/radio_udaan_logo.png
-  adaptive_icon_background: '#000000'
+  adaptive_icon_background: '#FFFFFF'
   adaptive_icon_foreground: assets/images/radio_udaan_logo.png
-  background_color_ios: '#000000'
+  background_color_ios: '#FFFFFF'
   remove_alpha_ios: true
 
 flutter:
