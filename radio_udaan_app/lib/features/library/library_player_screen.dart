@@ -207,7 +207,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
             _startingPlayback = false;
             _isPlaying = true;
           });
-          _announce('${copy.libraryPlayVideo}. ${widget.video.title}');
+          _announce('${_copy.libraryPlayVideo}. ${widget.video.title}');
         }
         _cancelPlaybackTimeout();
       }

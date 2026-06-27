@@ -303,6 +303,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   if (_error != null) ...[
                     const SizedBox(height: 8),
                     Semantics(
+                      label: _error,
                       liveRegion: true,
                       child: ExcludeSemantics(
                         child: Text(                        _error!,

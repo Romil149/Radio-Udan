@@ -35,6 +35,7 @@ class EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Semantics(
+              label: message,
               liveRegion: true,
               child: ExcludeSemantics(
                 child: Text(                message,

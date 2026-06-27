@@ -38,6 +38,7 @@ class ContactEmailScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(BrandTokens.screenPadding),
           child: email.isEmpty
               ? Semantics(
+                  label: copy.linkUnavailable,
                   liveRegion: true,
                   child: ExcludeSemantics(
                     child: Text(                    copy.linkUnavailable,

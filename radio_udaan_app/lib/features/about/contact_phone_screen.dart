@@ -38,6 +38,7 @@ class ContactPhoneScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(BrandTokens.screenPadding),
           child: phone.isEmpty
               ? Semantics(
+                  label: copy.linkUnavailable,
                   liveRegion: true,
                   child: ExcludeSemantics(
                     child: Text(                    copy.linkUnavailable,

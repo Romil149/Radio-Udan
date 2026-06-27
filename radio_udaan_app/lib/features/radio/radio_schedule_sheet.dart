@@ -112,6 +112,7 @@ class _ScheduleList extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.all(BrandTokens.screenPadding),
           child: Semantics(
+            label: copy.radioScheduleEmpty,
             liveRegion: true,
             child: ExcludeSemantics(
               child: Text(              copy.radioScheduleEmpty,
@@ -496,6 +497,7 @@ class _ScheduleError extends ConsumerWidget {
       padding: const EdgeInsets.all(BrandTokens.screenPadding),
       child: Center(
         child: Semantics(
+          label: copy.radioScheduleFailed,
           liveRegion: true,
           child: ExcludeSemantics(
             child: Text(            copy.radioScheduleFailed,
