@@ -7,6 +7,7 @@ import 'core/router/app_router.dart';
 import 'core/theme/accessibility_scope.dart';
 import 'core/theme/udaan_colors.dart';
 import 'core/theme/udaan_theme.dart';
+import 'core/widgets/dismiss_keyboard.dart';
 
 /// Root widget: WordPress-driven theme, routing, accessibility defaults.
 class RadioUdaanApp extends ConsumerWidget {
@@ -52,7 +53,9 @@ class RadioUdaanApp extends ConsumerWidget {
               style: settings.boldText
                   ? const TextStyle(fontWeight: FontWeight.w700)
                   : const TextStyle(),
-              child: child ?? const SizedBox.shrink(),
+              child: DismissKeyboard(
+                child: child ?? const SizedBox.shrink(),
+              ),
             ),
           ),
         );

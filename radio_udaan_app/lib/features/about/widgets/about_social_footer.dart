@@ -68,13 +68,16 @@ class AboutSocialFooter extends StatelessWidget {
         children: [
           Semantics(
             header: true,
-            child: Text(
-              copy.followUs,
-              style: udaanGoogleFont(
-                context,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: palette.onSurfaceVariant,
+            label: copy.followUs,
+            child: ExcludeSemantics(
+              child: Text(
+                copy.followUs,
+                style: udaanGoogleFont(
+                  context,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: palette.onSurfaceVariant,
+                ),
               ),
             ),
           ),
@@ -95,30 +98,36 @@ class AboutSocialFooter extends StatelessWidget {
                       borderRadius:
                           BorderRadius.circular(BrandTokens.cardRadius),
                       onTap: () => _open(Uri.parse(link.url)),
-                      child: Container(
-                        constraints: const BoxConstraints(
-                          minWidth: BrandTokens.a11yMinTapTarget,
-                          minHeight: BrandTokens.a11yMinTapTarget,
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _leadingFor(context, link.id, palette.primaryGlow),
-                            const SizedBox(width: 8),
-                            Text(
-                              link.label,
-                              style: udaanGoogleFont(
+                      child: ExcludeSemantics(
+                        child: Container(
+                          constraints: const BoxConstraints(
+                            minWidth: BrandTokens.a11yMinTapTarget,
+                            minHeight: BrandTokens.a11yMinTapTarget,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _leadingFor(
                                 context,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: palette.onBackground,
+                                link.id,
+                                palette.primaryGlow,
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 8),
+                              Text(
+                                link.label,
+                                style: udaanGoogleFont(
+                                  context,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: palette.onBackground,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

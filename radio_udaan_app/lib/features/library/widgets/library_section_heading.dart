@@ -25,12 +25,14 @@ class LibrarySectionHeading extends StatelessWidget {
       child: Semantics(
         header: true,
         label: title,
-        child: Text(
-          title,
-          style: GoogleFonts.atkinsonHyperlegible(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            color: UdaanColors.primaryGlow,
+        child: ExcludeSemantics(
+          child: Text(
+            title,
+            style: GoogleFonts.atkinsonHyperlegible(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: UdaanColors.primaryGlow,
+            ),
           ),
         ),
       ),

@@ -38,13 +38,15 @@ class BrandAppBar extends ConsumerWidget implements PreferredSizeWidget {
       resolvedLeading = Semantics(
         button: true,
         label: copy.backButton,
-        child: IconButton(
-          onPressed: () => Navigator.of(context).maybePop(),
-          constraints: const BoxConstraints(
-            minWidth: BrandTokens.a11yMinTapTarget,
-            minHeight: BrandTokens.a11yMinTapTarget,
+        child: ExcludeSemantics(
+          child: IconButton(
+            onPressed: () => Navigator.of(context).maybePop(),
+            constraints: const BoxConstraints(
+              minWidth: BrandTokens.a11yMinTapTarget,
+              minHeight: BrandTokens.a11yMinTapTarget,
+            ),
+            icon: Icon(Icons.arrow_back, color: palette.onBackground),
           ),
-          icon: Icon(Icons.arrow_back, color: palette.onBackground),
         ),
       );
     }

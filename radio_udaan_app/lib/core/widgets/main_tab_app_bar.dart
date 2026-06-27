@@ -37,13 +37,15 @@ class MainTabAppBar extends ConsumerWidget implements PreferredSizeWidget {
         Semantics(
           button: true,
           label: onProfileTap != null ? copy.profile : copy.tabMore,
-          child: IconButton(
-            constraints: const BoxConstraints(
-              minWidth: BrandTokens.a11yMinTapTarget,
-              minHeight: BrandTokens.a11yMinTapTarget,
+          child: ExcludeSemantics(
+            child: IconButton(
+              constraints: const BoxConstraints(
+                minWidth: BrandTokens.a11yMinTapTarget,
+                minHeight: BrandTokens.a11yMinTapTarget,
+              ),
+              onPressed: onProfileTap ?? () => _openMoreTab(ref),
+              icon: const Icon(Icons.person_outline),
             ),
-            onPressed: onProfileTap ?? () => _openMoreTab(ref),
-            icon: const Icon(Icons.person_outline),
           ),
         ),
       ],

@@ -185,27 +185,29 @@ class _RegisterButton extends StatelessWidget {
       label: semanticsLabel,
       child: SizedBox(
         width: double.infinity,
-        child: FilledButton(
-          onPressed: registrationOpen ? onRegister : null,
-          style: FilledButton.styleFrom(
-            minimumSize: const Size(double.infinity, _eventMinTapTarget),
-            backgroundColor: registrationOpen
-                ? UdaanColors.primary
-                : UdaanColors.surfaceContainerHigh,
-            foregroundColor: registrationOpen
-                ? UdaanColors.onPrimary
-                : UdaanColors.onSurfaceMuted,
-            disabledBackgroundColor: UdaanColors.surfaceContainerHigh,
-            disabledForegroundColor: UdaanColors.onSurfaceMuted,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+        child: ExcludeSemantics(
+          child: FilledButton(
+            onPressed: registrationOpen ? onRegister : null,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(double.infinity, _eventMinTapTarget),
+              backgroundColor: registrationOpen
+                  ? UdaanColors.primary
+                  : UdaanColors.surfaceContainerHigh,
+              foregroundColor: registrationOpen
+                  ? UdaanColors.onPrimary
+                  : UdaanColors.onSurfaceMuted,
+              disabledBackgroundColor: UdaanColors.surfaceContainerHigh,
+              disabledForegroundColor: UdaanColors.onSurfaceMuted,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
-          ),
-          child: Text(
-            label,
-            style: GoogleFonts.atkinsonHyperlegible(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
+            child: Text(
+              label,
+              style: GoogleFonts.atkinsonHyperlegible(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ),

@@ -54,9 +54,6 @@ class MoreTab extends ConsumerWidget {
   }) {
     if (content == null || !content.hasHtml) {
       _announce(context, copy.linkUnavailable);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(copy.linkUnavailable)),
-      );
       return;
     }
 
@@ -312,9 +309,6 @@ class MoreTab extends ConsumerWidget {
       final message = parseApiError(e).message;
       if (context.mounted) {
         _announce(context, message);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
       }
       return;
     }

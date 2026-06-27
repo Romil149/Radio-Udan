@@ -61,51 +61,53 @@ class MoreMenuTile extends StatelessWidget {
                   color: borderColor ?? palette.outlineVariant,
                 ),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: iconBackground,
-                      shape: BoxShape.circle,
+              child: ExcludeSemantics(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: iconBackground,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(icon, color: resolvedIconColor, size: 22),
                     ),
-                    child: Icon(icon, color: resolvedIconColor, size: 22),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: udaanGoogleFont(
-                            context,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: resolvedTitleColor,
-                          ),
-                        ),
-                        if (subtitle != null && subtitle!.isNotEmpty) ...[
-                          const SizedBox(height: 4),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            subtitle!,
+                            title,
                             style: udaanGoogleFont(
                               context,
-                              fontSize: 14,
-                              color: palette.onSurfaceVariant,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: resolvedTitleColor,
                             ),
                           ),
+                          if (subtitle != null && subtitle!.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              subtitle!,
+                              style: udaanGoogleFont(
+                                context,
+                                fontSize: 14,
+                                color: palette.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
-                    ),
-                  ),
-                  trailing ??
-                      Icon(
-                        Icons.chevron_right,
-                        color: resolvedTitleColor,
                       ),
-                ],
+                    ),
+                    trailing ??
+                        Icon(
+                          Icons.chevron_right,
+                          color: resolvedTitleColor,
+                        ),
+                  ],
+                ),
               ),
             ),
           ),

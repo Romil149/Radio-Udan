@@ -373,6 +373,9 @@ const Map<String, String> appCopyDefaults = {
   'registration_picker_date_hint': 'Double tap to choose date',
   'registration_picker_date_time_hint': 'Double tap to choose date and time',
   'registration_picker_time_hint': 'Double tap to choose time',
+  'registration_previous_page': 'Previous',
+  'registration_next_page': 'Next',
+  'registration_page_label': 'Page {current} of {total}',
   'registration_success_prefix': 'Registration submitted successfully. Reference: entry',
   'registration_success_title': 'Registration submitted',
   'registration_success_body':

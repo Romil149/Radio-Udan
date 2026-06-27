@@ -6,6 +6,7 @@ import '../../../core/config/app_copy_accessors.dart';
 import '../../../core/theme/accessibility_scope.dart';
 import '../../../core/theme/brand_tokens.dart';
 import '../../../core/theme/udaan_text_styles.dart';
+import '../../../core/utils/keyboard_dismiss.dart';
 import '../../../core/widgets/offline_brand_logo.dart';
 
 /// Top bar: back + centered app title (OTP verify and similar flows).
@@ -36,15 +37,17 @@ class UdaanAuthTopBar extends StatelessWidget {
             child: Semantics(
               button: true,
               label: copy.backButton,
-              child: IconButton(
-                onPressed: onBack,
-                constraints: const BoxConstraints(
-                  minWidth: BrandTokens.a11yMinTapTarget,
-                  minHeight: BrandTokens.a11yMinTapTarget,
-                ),
-                icon: Icon(
-                  Icons.arrow_back,
-                  color: palette.onBackground,
+              child: ExcludeSemantics(
+                child: IconButton(
+                  onPressed: onBack,
+                  constraints: const BoxConstraints(
+                    minWidth: BrandTokens.a11yMinTapTarget,
+                    minHeight: BrandTokens.a11yMinTapTarget,
+                  ),
+                  icon: Icon(
+                    Icons.arrow_back,
+                    color: palette.onBackground,
+                  ),
                 ),
               ),
             ),
@@ -52,13 +55,15 @@ class UdaanAuthTopBar extends StatelessWidget {
           Semantics(
             header: true,
             label: title,
-            child: Text(
-              title,
-              style: udaanTextStyle(
-                context,
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: palette.primaryGlow,
+            child: ExcludeSemantics(
+              child: Text(
+                title,
+                style: udaanTextStyle(
+                  context,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: palette.primaryGlow,
+                ),
               ),
             ),
           ),
@@ -149,27 +154,29 @@ class UdaanForgotPasswordHelpCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: palette.outlineVariant),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              Icons.info_outline,
-              color: palette.primaryGlow.withValues(alpha: 0.95),
-              size: 22,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                copy.forgotPasswordHelpBody,
-                style: udaanTextStyle(
-                  context,
-                  fontSize: 14,
-                  height: 1.45,
-                  color: palette.onBackground.withValues(alpha: 0.88),
+        child: ExcludeSemantics(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: palette.primaryGlow.withValues(alpha: 0.95),
+                size: 22,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  copy.forgotPasswordHelpBody,
+                  style: udaanTextStyle(
+                    context,
+                    fontSize: 14,
+                    height: 1.45,
+                    color: palette.onBackground.withValues(alpha: 0.88),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -255,15 +262,17 @@ class UdaanAuthLogoHeader extends StatelessWidget {
         Semantics(
           header: true,
           label: branding.appName,
-          child: Text(
-            branding.appName,
-            textAlign: TextAlign.center,
-            style: udaanTextStyle(
-              context,
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              color: palette.primaryGlow,
-              height: 1.15,
+          child: ExcludeSemantics(
+            child: Text(
+              branding.appName,
+              textAlign: TextAlign.center,
+              style: udaanTextStyle(
+                context,
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+                color: palette.primaryGlow,
+                height: 1.15,
+              ),
             ),
           ),
         ),
@@ -360,7 +369,11 @@ class UdaanLabeledField extends StatelessWidget {
             obscureText: obscureText,
             autofillHints: autofillHints,
             inputFormatters: inputFormatters,
-            onSubmitted: onSubmitted,
+            onSubmitted: (value) {
+              dismissKeyboard(context);
+              onSubmitted?.call(value);
+            },
+            onTapOutside: (_) => dismissKeyboard(context),
             style: udaanTextStyle(
               context,
               fontSize: 18,
@@ -438,19 +451,25 @@ class UdaanPrimaryButton extends StatelessWidget {
       button: true,
       label: label,
       enabled: onPressed != null && !loading,
-      child: FilledButton(
-        onPressed: loading ? null : onPressed,
-        style: FilledButton.styleFrom(
-          backgroundColor: palette.primary,
-          foregroundColor: palette.onPrimary,
-          disabledBackgroundColor: palette.primary.withValues(alpha: 0.5),
-          minimumSize: const Size.fromHeight(56),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+      child: ExcludeSemantics(
+        child: FilledButton(
+          onPressed: loading
+              ? null
+              : () {
+                  dismissKeyboard(context);
+                  onPressed?.call();
+                },
+          style: FilledButton.styleFrom(
+            backgroundColor: palette.primary,
+            foregroundColor: palette.onPrimary,
+            disabledBackgroundColor: palette.primary.withValues(alpha: 0.5),
+            minimumSize: const Size.fromHeight(56),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
-        ),
-        child: loading
+          child: loading
             ? SizedBox(
                 height: 24,
                 width: 24,
@@ -477,6 +496,7 @@ class UdaanPrimaryButton extends StatelessWidget {
                   ),
                 ],
               ),
+        ),
       ),
     );
   }
@@ -503,18 +523,24 @@ class UdaanOutlineButton extends StatelessWidget {
       button: true,
       label: label,
       enabled: onPressed != null && !loading,
-      child: OutlinedButton(
-        onPressed: loading ? null : onPressed,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: palette.primaryGlow,
-          side: BorderSide(color: palette.primaryGlow, width: 1.5),
-          minimumSize: const Size.fromHeight(56),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+      child: ExcludeSemantics(
+        child: OutlinedButton(
+          onPressed: loading
+              ? null
+              : () {
+                  dismissKeyboard(context);
+                  onPressed?.call();
+                },
+          style: OutlinedButton.styleFrom(
+            foregroundColor: palette.primaryGlow,
+            side: BorderSide(color: palette.primaryGlow, width: 1.5),
+            minimumSize: const Size.fromHeight(56),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
-        ),
-        child: loading
+          child: loading
             ? SizedBox(
                 height: 24,
                 width: 24,
@@ -541,6 +567,7 @@ class UdaanOutlineButton extends StatelessWidget {
                   ),
                 ],
               ),
+        ),
       ),
     );
   }
@@ -562,24 +589,29 @@ class UdaanAuthLink extends StatelessWidget {
     return Semantics(
       button: true,
       label: label,
-      child: TextButton(
-        onPressed: onPressed,
-        style: TextButton.styleFrom(
-          foregroundColor: palette.primaryGlow,
-          padding: EdgeInsets.zero,
-          minimumSize: const Size(
-            BrandTokens.a11yMinTapTarget,
-            BrandTokens.a11yMinTapTarget,
+      child: ExcludeSemantics(
+        child: TextButton(
+          onPressed: () {
+            dismissKeyboard(context);
+            onPressed?.call();
+          },
+          style: TextButton.styleFrom(
+            foregroundColor: palette.primaryGlow,
+            padding: EdgeInsets.zero,
+            minimumSize: const Size(
+              BrandTokens.a11yMinTapTarget,
+              BrandTokens.a11yMinTapTarget,
+            ),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-        child: Text(
-          label,
-          style: udaanTextStyle(
-            context,
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: palette.primaryGlow,
+          child: Text(
+            label,
+            style: udaanTextStyle(
+              context,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: palette.primaryGlow,
+            ),
           ),
         ),
       ),
@@ -620,39 +652,41 @@ class UdaanAccessibilityAssistCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: palette.outlineVariant),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  color: palette.secondary,
-                  size: 22,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  copy.registerA11yTitle,
-                  style: udaanTextStyle(
-                    context,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+        child: ExcludeSemantics(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
                     color: palette.secondary,
+                    size: 22,
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              copy.registerA11yBody,
-              style: udaanTextStyle(
-                context,
-                fontSize: 14,
-                height: 1.45,
-                color: palette.onBackground.withValues(alpha: 0.88),
+                  const SizedBox(width: 8),
+                  Text(
+                    copy.registerA11yTitle,
+                    style: udaanTextStyle(
+                      context,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: palette.secondary,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 10),
+              Text(
+                copy.registerA11yBody,
+                style: udaanTextStyle(
+                  context,
+                  fontSize: 14,
+                  height: 1.45,
+                  color: palette.onBackground.withValues(alpha: 0.88),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -690,26 +724,31 @@ class UdaanContactSupportPrompt extends StatelessWidget {
           Semantics(
             button: true,
             label: copy.contactSupport,
-            child: TextButton(
-              onPressed: onContactSupport,
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-                minimumSize: const Size(
-                  BrandTokens.a11yMinTapTarget,
-                  BrandTokens.a11yMinTapTarget,
+            child: ExcludeSemantics(
+              child: TextButton(
+                onPressed: () {
+                  dismissKeyboard(context);
+                  onContactSupport?.call();
+                },
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(
+                    BrandTokens.a11yMinTapTarget,
+                    BrandTokens.a11yMinTapTarget,
+                  ),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Text(
-                copy.contactSupport,
-                style: udaanTextStyle(
-                  context,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: palette.primaryGlow,
-                ).copyWith(
-                  decoration: TextDecoration.underline,
-                  decorationColor: palette.primaryGlow,
+                child: Text(
+                  copy.contactSupport,
+                  style: udaanTextStyle(
+                    context,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: palette.primaryGlow,
+                  ).copyWith(
+                    decoration: TextDecoration.underline,
+                    decorationColor: palette.primaryGlow,
+                  ),
                 ),
               ),
             ),
@@ -749,26 +788,31 @@ class UdaanSignInPrompt extends StatelessWidget {
           Semantics(
             button: true,
             label: copy.signInHere,
-            child: TextButton(
-              onPressed: onSignIn,
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-                minimumSize: const Size(
-                  BrandTokens.a11yMinTapTarget,
-                  BrandTokens.a11yMinTapTarget,
+            child: ExcludeSemantics(
+              child: TextButton(
+                onPressed: () {
+                  dismissKeyboard(context);
+                  onSignIn?.call();
+                },
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(
+                    BrandTokens.a11yMinTapTarget,
+                    BrandTokens.a11yMinTapTarget,
+                  ),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Text(
-                copy.signInHere,
-                style: udaanTextStyle(
-                  context,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: palette.primaryGlow,
-                ).copyWith(
-                  decoration: TextDecoration.underline,
-                  decorationColor: palette.primaryGlow,
+                child: Text(
+                  copy.signInHere,
+                  style: udaanTextStyle(
+                    context,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: palette.primaryGlow,
+                  ).copyWith(
+                    decoration: TextDecoration.underline,
+                    decorationColor: palette.primaryGlow,
+                  ),
                 ),
               ),
             ),
@@ -809,21 +853,26 @@ class UdaanAuthFooterPrompt extends StatelessWidget {
         Semantics(
           button: true,
           label: actionLabel,
-          child: TextButton(
-            onPressed: onAction,
-            style: TextButton.styleFrom(
-              minimumSize: const Size(
-                BrandTokens.a11yMinTapTarget,
-                BrandTokens.a11yMinTapTarget,
+          child: ExcludeSemantics(
+            child: TextButton(
+              onPressed: () {
+                dismissKeyboard(context);
+                onAction?.call();
+              },
+              style: TextButton.styleFrom(
+                minimumSize: const Size(
+                  BrandTokens.a11yMinTapTarget,
+                  BrandTokens.a11yMinTapTarget,
+                ),
               ),
-            ),
-            child: Text(
-              actionLabel,
-              style: udaanTextStyle(
-                context,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: palette.primaryGlow,
+              child: Text(
+                actionLabel,
+                style: udaanTextStyle(
+                  context,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: palette.primaryGlow,
+                ),
               ),
             ),
           ),

@@ -130,7 +130,6 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
       _playerError = true;
       _startingPlayback = false;
     });
-    _announce(_copy.libraryEmbedError);
   }
 
   void _bindPlayerListener(YoutubePlayerController controller) {
@@ -260,10 +259,12 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
                 color: UdaanColors.surfaceContainer,
                 child: Padding(
                   padding: const EdgeInsets.all(20),
-                  child: Text(
-                    copy.libraryNoVideo,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                    textAlign: TextAlign.center,
+                  child: ExcludeSemantics(
+                    child: Text(
+                      copy.libraryNoVideo,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
               ),
@@ -390,12 +391,14 @@ class _PlayerMetadata extends StatelessWidget {
           Semantics(
             liveRegion: true,
             label: copy.libraryEmbedError,
-            child: Text(
-              copy.libraryEmbedError,
-              style: const TextStyle(
-                color: UdaanColors.error,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+            child: ExcludeSemantics(
+              child: Text(
+                copy.libraryEmbedError,
+                style: const TextStyle(
+                  color: UdaanColors.error,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
@@ -403,13 +406,15 @@ class _PlayerMetadata extends StatelessWidget {
           Semantics(
             button: true,
             label: copy.retry,
-            child: OutlinedButton.icon(
-              onPressed: onRetry,
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 56),
+            child: ExcludeSemantics(
+              child: OutlinedButton.icon(
+                onPressed: onRetry,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 56),
+                ),
+                icon: const Icon(Icons.refresh),
+                label: Text(copy.retry),
               ),
-              icon: const Icon(Icons.refresh),
-              label: Text(copy.retry),
             ),
           ),
         ],

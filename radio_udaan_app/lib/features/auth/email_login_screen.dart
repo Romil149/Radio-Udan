@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -36,29 +35,16 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
     super.dispose();
   }
 
-  void _announce(String message) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      SemanticsService.sendAnnouncement(
-        View.of(context),
-        message,
-        Directionality.of(context),
-      );
-    });
-  }
-
   Future<void> _submit() async {
     final email = _emailController.text.trim().toLowerCase();
     final password = _passwordController.text;
 
     if (!isValidEmail(email)) {
       setState(() => _error = _copy.emailInvalid);
-      _announce(_copy.emailInvalid);
       return;
     }
     if (password.isEmpty) {
       setState(() => _error = _copy.passwordRequired);
-      _announce(_copy.passwordRequired);
       return;
     }
 
@@ -91,7 +77,6 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
       final apiError = parseApiError(e);
       final message = apiError.message;
       setState(() => _error = message);
-      _announce(message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -101,14 +86,16 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
     return Semantics(
       button: true,
       label: _obscurePassword ? _copy.showPassword : _copy.hidePassword,
-      child: IconButton(
-        icon: Icon(
-          _obscurePassword
-              ? Icons.visibility_outlined
-              : Icons.visibility_off_outlined,
-          color: UdaanColors.primaryGlow,
+      child: ExcludeSemantics(
+        child: IconButton(
+          icon: Icon(
+            _obscurePassword
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
+            color: UdaanColors.primaryGlow,
+          ),
+          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
         ),
-        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
       ),
     );
   }
@@ -186,12 +173,13 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
                 Semantics(
                   label: _error,
                   liveRegion: true,
-                  child: Text(
-                    _error!,
+                  child: ExcludeSemantics(
+                    child: Text(                    _error!,
                     style: const TextStyle(
                       color: UdaanColors.error,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
+                    ),
                     ),
                   ),
                 ),

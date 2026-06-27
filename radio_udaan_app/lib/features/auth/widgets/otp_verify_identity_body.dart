@@ -83,48 +83,54 @@ class OtpVerifyIdentityBody extends StatelessWidget {
         Semantics(
           header: true,
           label: copy.verifyIdentityTitle,
-          child: Text(
-            copy.verifyIdentityTitle,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.atkinsonHyperlegible(
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              color: UdaanColors.onBackground,
+          child: ExcludeSemantics(
+            child: Text(
+              copy.verifyIdentityTitle,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.atkinsonHyperlegible(
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+                color: UdaanColors.onBackground,
+              ),
             ),
           ),
         ),
         const SizedBox(height: 14),
         Semantics(
           label: '${copy.verifyIdentityIntro} $maskedPhone',
-          child: Column(
-            children: [
-              Text(
-                copy.verifyIdentityIntro,
-                textAlign: TextAlign.center,
-                style: bodyStyle,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                maskedPhone,
-                textAlign: TextAlign.center,
-                style: bodyStyle.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: UdaanColors.primaryGlow,
+          child: ExcludeSemantics(
+            child: Column(
+              children: [
+                Text(
+                  copy.verifyIdentityIntro,
+                  textAlign: TextAlign.center,
+                  style: bodyStyle,
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  maskedPhone,
+                  textAlign: TextAlign.center,
+                  style: bodyStyle.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: UdaanColors.primaryGlow,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         if (kDebugMode && devOtp != null) ...[
           const SizedBox(height: 8),
           Semantics(
             label: copy.verifyDevHint,
-            child: Text(
-              copy.verifyDevHint,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.atkinsonHyperlegible(
-                fontSize: 14,
-                color: UdaanColors.onSurfaceVariant,
+            child: ExcludeSemantics(
+              child: Text(
+                copy.verifyDevHint,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.atkinsonHyperlegible(
+                  fontSize: 14,
+                  color: UdaanColors.onSurfaceVariant,
+                ),
               ),
             ),
           ),
@@ -141,13 +147,15 @@ class OtpVerifyIdentityBody extends StatelessWidget {
           Semantics(
             label: error,
             liveRegion: true,
-            child: Text(
-              error!,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: UdaanColors.error,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+            child: ExcludeSemantics(
+              child: Text(
+                error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: UdaanColors.error,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),

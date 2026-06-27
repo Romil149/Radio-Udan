@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/brand_tokens.dart';
+import '../../../core/utils/keyboard_dismiss.dart';
 import '../../../core/theme/udaan_colors.dart';
 import '../library_providers.dart';
 import 'library_section_heading.dart';
@@ -40,6 +41,7 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
             textField: true,
             child: TextField(
               controller: widget.controller,
+              onTapOutside: (_) => dismissKeyboard(context),
               style: GoogleFonts.atkinsonHyperlegible(
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
@@ -56,15 +58,18 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
                     ? Semantics(
                         button: true,
                         label: _copy.cancel,
-                        child: IconButton(
-                          onPressed: () {
-                            widget.controller.clear();
-                            ref.read(librarySearchQueryProvider.notifier).state =
-                                '';
-                          },
-                          icon: const Icon(
-                            Icons.clear,
-                            color: UdaanColors.primaryGlow,
+                        child: ExcludeSemantics(
+                          child: IconButton(
+                            onPressed: () {
+                              widget.controller.clear();
+                              ref
+                                  .read(librarySearchQueryProvider.notifier)
+                                  .state = '';
+                            },
+                            icon: const Icon(
+                              Icons.clear,
+                              color: UdaanColors.primaryGlow,
+                            ),
                           ),
                         ),
                       )

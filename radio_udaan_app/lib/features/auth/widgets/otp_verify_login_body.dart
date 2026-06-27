@@ -64,13 +64,15 @@ class OtpVerifyLoginBody extends StatelessWidget {
         Semantics(
           header: true,
           label: copy.otpEnterTitle,
-          child: Text(
-            copy.otpEnterTitle,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.atkinsonHyperlegible(
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              color: UdaanColors.onBackground,
+          child: ExcludeSemantics(
+            child: Text(
+              copy.otpEnterTitle,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.atkinsonHyperlegible(
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+                color: UdaanColors.onBackground,
+              ),
             ),
           ),
         ),
@@ -99,12 +101,14 @@ class OtpVerifyLoginBody extends StatelessWidget {
           const SizedBox(height: 8),
           Semantics(
             label: copy.verifyDevHint,
-            child: Text(
-              copy.verifyDevHint,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.atkinsonHyperlegible(
-                fontSize: 14,
-                color: UdaanColors.onSurfaceVariant,
+            child: ExcludeSemantics(
+              child: Text(
+                copy.verifyDevHint,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.atkinsonHyperlegible(
+                  fontSize: 14,
+                  color: UdaanColors.onSurfaceVariant,
+                ),
               ),
             ),
           ),
@@ -121,13 +125,15 @@ class OtpVerifyLoginBody extends StatelessWidget {
           Semantics(
             label: error,
             liveRegion: true,
-            child: Text(
-              error!,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: UdaanColors.error,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+            child: ExcludeSemantics(
+              child: Text(
+                error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: UdaanColors.error,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
@@ -142,16 +148,17 @@ class OtpVerifyLoginBody extends StatelessWidget {
         if (resendSecondsRemaining > 0) ...[
           const SizedBox(height: 16),
           Semantics(
-            liveRegion: true,
             label:
                 '${copy.otpWaitPrompt}${copy.otpWaitTimer(resendSecondsRemaining)}',
-            child: Text(
-              '${copy.otpWaitPrompt}${copy.otpWaitTimer(resendSecondsRemaining)}',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.atkinsonHyperlegible(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: UdaanColors.primaryGlow,
+            child: ExcludeSemantics(
+              child: Text(
+                '${copy.otpWaitPrompt}${copy.otpWaitTimer(resendSecondsRemaining)}',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.atkinsonHyperlegible(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: UdaanColors.primaryGlow,
+                ),
               ),
             ),
           ),

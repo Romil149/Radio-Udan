@@ -7,6 +7,7 @@ import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
+import '../../core/utils/keyboard_dismiss.dart';
 import '../auth/widgets/udaan_auth_widgets.dart';
 import '../events/widgets/registration_form_styles.dart';
 import 'widgets/contact_support_actions_card.dart';
@@ -79,13 +80,6 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
         _subjectController.clear();
         _messageController.clear();
       });
-      if (mounted) {
-        SemanticsService.sendAnnouncement(
-          View.of(context),
-          _copy.messageSent,
-          Directionality.of(context),
-        );
-      }
     } catch (e) {
       final message = parseApiError(e).message;
       setState(() => _error = message);
@@ -179,23 +173,29 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
                   ),
                   if (_error != null)
                     Semantics(
+                      label: _error,
                       liveRegion: true,
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: Text(
-                          _error!,
-                          style: const TextStyle(color: UdaanColors.error),
+                        child: ExcludeSemantics(
+                          child: Text(
+                            _error!,
+                            style: const TextStyle(color: UdaanColors.error),
+                          ),
                         ),
                       ),
                     ),
                   if (_success != null)
                     Semantics(
+                      label: _success,
                       liveRegion: true,
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: Text(
-                          _success!,
-                          style: const TextStyle(color: UdaanColors.secondary),
+                        child: ExcludeSemantics(
+                          child: Text(
+                            _success!,
+                            style: const TextStyle(color: UdaanColors.secondary),
+                          ),
                         ),
                       ),
                     ),
@@ -233,7 +233,9 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(label, style: registrationFieldLabelStyle(context)),
+          ExcludeSemantics(
+            child: Text(label, style: registrationFieldLabelStyle(context)),
+          ),
           const SizedBox(height: 8),
           Semantics(
             label: '$label, required',
@@ -242,6 +244,7 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
               controller: controller,
               keyboardType: keyboardType,
               maxLines: maxLines,
+              onTapOutside: (_) => dismissKeyboard(context),
               style: registrationFieldInputStyle(context),
               decoration: registrationFieldDecoration(context),
             ),

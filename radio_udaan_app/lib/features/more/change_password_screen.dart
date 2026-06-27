@@ -51,21 +51,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       _newController.text.isNotEmpty &&
       _newController.text == _confirmController.text;
 
-  void _announce(String message) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      SemanticsService.sendAnnouncement(
-        View.of(context),
-        message,
-        Directionality.of(context),
-      );
-    });
-  }
-
   Future<void> _submit() async {
     if (!_hasMinLength || !_passwordsMatch) {
       setState(() => _error = _copy.passwordRequirementsNotMet);
-      _announce(_copy.passwordRequirementsNotMet);
       return;
     }
 
@@ -90,7 +78,6 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     } catch (e) {
       final message = parseApiError(e).message;
       setState(() => _error = message);
-      _announce(message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -129,13 +116,15 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                   label: obscure
                       ? _copy.showPassword
                       : _copy.hidePassword,
-                  child: IconButton(
-                    onPressed: onToggle,
-                    icon: Icon(
-                      obscure
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: UdaanColors.primaryGlow,
+                  child: ExcludeSemantics(
+                    child: IconButton(
+                      onPressed: onToggle,
+                      icon: Icon(
+                        obscure
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        color: UdaanColors.primaryGlow,
+                      ),
                     ),
                   ),
                 ),
@@ -269,11 +258,13 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                   ),
                   if (_error != null)
                     Semantics(
+                      label: _error,
                       liveRegion: true,
-                      child: Text(
-                        _error!,
+                      child: ExcludeSemantics(
+                        child: Text(                        _error!,
                         style: GoogleFonts.atkinsonHyperlegible(
                           color: UdaanColors.error,
+                        ),
                         ),
                       ),
                     ),

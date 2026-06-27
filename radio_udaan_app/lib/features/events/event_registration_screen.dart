@@ -13,6 +13,7 @@ import '../../core/storage/registration_draft_storage.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/accessibility_scope.dart';
 import '../../core/theme/udaan_text_styles.dart';
+import '../../core/utils/keyboard_dismiss.dart';
 import '../auth/widgets/udaan_auth_widgets.dart';
 import '../shell/main_shell_screen.dart';
 import 'form_field_validator.dart';
@@ -61,9 +62,7 @@ class _EventRegistrationScreenState
   bool _submitting = false;
   bool _draftLoaded = false;
   bool _accountDefaultsApplied = false;
-  bool _unsupportedAnnounced = false;
   int _currentPageIndex = 0;
-  final _uploadAnnouncedMilestones = <String, int>{};
   Timer? _draftSaveDebounce;
 
   AppCopy get _copy => ref.read(appCopyProvider);
@@ -307,21 +306,6 @@ class _EventRegistrationScreenState
     return accountValueForField(field, user) != null;
   }
 
-  void _announceUploadMilestone(FormFieldSchema field, double progress) {
-    final percent = (progress * 100).round().clamp(0, 100);
-    final uploadLabel = registrationFieldDisplayLabel(field.label);
-    for (final milestone in const [25, 50, 75, 100]) {
-      if (percent >= milestone &&
-          (_uploadAnnouncedMilestones[field.key] ?? 0) < milestone) {
-        _uploadAnnouncedMilestones[field.key] = milestone;
-        _announce(
-          _copy.registrationUploadProgressLabel(uploadLabel, milestone),
-        );
-        break;
-      }
-    }
-  }
-
   InputDecoration _fieldDecoration(
     BuildContext context,
     FormFieldSchema field,
@@ -351,11 +335,13 @@ class _EventRegistrationScreenState
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (labelText.isNotEmpty)
-            Text(
-              labelText,
-              style: registrationFieldLabelStyle(
-                context,
-                required: field.required,
+            ExcludeSemantics(
+              child: Text(
+                labelText,
+                style: registrationFieldLabelStyle(
+                  context,
+                  required: field.required,
+                ),
               ),
             ),
           if (labelText.isNotEmpty) const SizedBox(height: 8),
@@ -366,12 +352,14 @@ class _EventRegistrationScreenState
               child: Semantics(
                 label: _validationMessage,
                 liveRegion: true,
-                child: Text(
-                  _validationMessage!,
-                  style: udaanTextStyle(
-                    context,
-                    fontSize: 14,
-                    color: context.udaan.error,
+                child: ExcludeSemantics(
+                  child: Text(
+                    _validationMessage!,
+                    style: udaanTextStyle(
+                      context,
+                      fontSize: 14,
+                      color: context.udaan.error,
+                    ),
                   ),
                 ),
               ),
@@ -403,26 +391,30 @@ class _EventRegistrationScreenState
             : (hintOverride ?? field.placeholder),
         textField: true,
         readOnly: isAccountLocked,
-        child: TextFormField(
-          controller: controller,
-          readOnly: isAccountLocked,
-          style: registrationFieldInputStyle(
-            context,
+        child: ExcludeSemantics(
+          child: TextFormField(
+            controller: controller,
             readOnly: isAccountLocked,
+            style: registrationFieldInputStyle(
+              context,
+              readOnly: isAccountLocked,
+            ),
+            decoration: _fieldDecoration(context, field).copyWith(
+              hintText: hintOverride ?? field.placeholder,
+              suffixIcon: isAccountLocked
+                  ? Icon(
+                      Icons.lock_outline,
+                      color: palette.onSurfaceVariant,
+                    )
+                  : null,
+            ),
+            keyboardType: keyboardType,
+            maxLines: maxLines,
+            textCapitalization: textCapitalization,
+            onTapOutside: (_) => dismissKeyboard(context),
+            onChanged:
+                isAccountLocked ? null : (v) => _onTextFieldChanged(field, v),
           ),
-          decoration: _fieldDecoration(context, field).copyWith(
-            hintText: hintOverride ?? field.placeholder,
-            suffixIcon: isAccountLocked
-                ? Icon(
-                    Icons.lock_outline,
-                    color: palette.onSurfaceVariant,
-                  )
-                : null,
-          ),
-          keyboardType: keyboardType,
-          maxLines: maxLines,
-          textCapitalization: textCapitalization,
-          onChanged: isAccountLocked ? null : (v) => _onTextFieldChanged(field, v),
         ),
       ),
       errorOnDecoration: true,
@@ -618,7 +610,6 @@ class _EventRegistrationScreenState
       _error = null;
       _uploadErrors.remove(field.key);
       _uploadProgress[field.key] = 0;
-      _uploadAnnouncedMilestones.remove(field.key);
       if (_validationFieldKey == field.key) {
         _validationFieldKey = null;
         _validationMessage = null;
@@ -635,7 +626,6 @@ class _EventRegistrationScreenState
               if (!mounted || total <= 0) return;
               final progress = sent / total;
               setState(() => _uploadProgress[field.key] = progress);
-              _announceUploadMilestone(field, progress);
             },
           );
       if (!mounted) return;
@@ -655,7 +645,6 @@ class _EventRegistrationScreenState
       setState(() {
         _setUploadValue(field, ids, names);
         _uploadProgress.remove(field.key);
-        _uploadAnnouncedMilestones.remove(field.key);
         _uploadErrors.remove(field.key);
         _pendingUploads.remove(field.key);
       });
@@ -666,10 +655,8 @@ class _EventRegistrationScreenState
       final message = parseApiError(e).message;
       setState(() {
         _uploadProgress.remove(field.key);
-        _uploadAnnouncedMilestones.remove(field.key);
         _uploadErrors[field.key] = message;
       });
-      _announce('${field.label}. $message');
     }
   }
 
@@ -679,7 +666,6 @@ class _EventRegistrationScreenState
       final message =
           'You can upload at most ${field.maxFiles} files for ${field.label}.';
       setState(() => _uploadErrors[field.key] = message);
-      _announce('${field.label}. $message');
       return;
     }
 
@@ -702,14 +688,12 @@ class _EventRegistrationScreenState
             ? 'This file type is not allowed.'
             : 'Allowed file types: $allowed.';
         setState(() => _uploadErrors[field.key] = message);
-        _announce('${field.label}. $message');
         return;
       }
 
       final sizeError = _uploadSizeError(schema, field, file);
       if (sizeError != null) {
         setState(() => _uploadErrors[field.key] = sizeError);
-        _announce('${field.label}. $sizeError');
         return;
       }
 
@@ -750,7 +734,6 @@ class _EventRegistrationScreenState
         _validationFieldKey = invalid.key;
         _validationMessage = message;
       });
-      _announce(message);
       _scrollToField(invalid.key);
       return;
     }
@@ -778,7 +761,6 @@ class _EventRegistrationScreenState
     if (_submitBlocked(schema)) {
       final message = _submitBlockedMessage(schema) ?? _copy.registrationIncomplete;
       setState(() => _error = message);
-      _announce(message);
       _scrollToTop();
       return;
     }
@@ -793,7 +775,6 @@ class _EventRegistrationScreenState
         _validationFieldKey = invalid.key;
         _validationMessage = message;
       });
-      _announce(message);
       if (schema.pages.isNotEmpty) {
         setState(() => _currentPageIndex = invalid.pageIndex);
       }
@@ -819,8 +800,6 @@ class _EventRegistrationScreenState
       final eventTitle = schema.event.title.trim().isNotEmpty
           ? schema.event.title.trim()
           : widget.title.trim();
-      final announceMessage =
-          '${_copy.registrationSuccessTitle}. ${_copy.registrationSuccessBody(eventTitle)} ${_copy.registrationSuccessReference(result.entryId)}';
       setState(() {
         _values.clear();
         _uploadLabels.clear();
@@ -831,11 +810,9 @@ class _EventRegistrationScreenState
           controller.clear();
         }
       });
-      _announce(announceMessage);
     } catch (e) {
       final message = parseApiError(e).message;
       setState(() => _error = message);
-      _announce('${_copy.registrationErrorTitle}. $message');
       _scrollToTop();
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -924,13 +901,14 @@ class _EventRegistrationScreenState
                         Semantics(
                           label: parseApiError(e).message,
                           liveRegion: true,
-                          child: Text(
-                            parseApiError(e).message,
+                          child: ExcludeSemantics(
+                            child: Text(                            parseApiError(e).message,
                             textAlign: TextAlign.center,
                             style: udaanTextStyle(
                               context,
                               fontSize: 18,
                               color: palette.onBackground,
+                            ),
                             ),
                           ),
                         ),
@@ -1011,23 +989,25 @@ class _EventRegistrationScreenState
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: palette.error),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final warning in schema.formWarnings)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Text(
-                        warning,
-                        style: udaanTextStyle(
-                          context,
-                          fontSize: 16,
-                          color: palette.error,
-                          height: 1.35,
+              child: ExcludeSemantics(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final warning in schema.formWarnings)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Text(
+                          warning,
+                          style: udaanTextStyle(
+                            context,
+                            fontSize: 16,
+                            color: palette.error,
+                            height: 1.35,
+                          ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -1045,13 +1025,15 @@ class _EventRegistrationScreenState
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: palette.error),
               ),
-              child: Text(
-                _submitBlockedMessage(schema) ?? _copy.registrationIncomplete,
-                style: udaanTextStyle(
-                  context,
-                  fontSize: 16,
-                  color: palette.error,
-                  height: 1.35,
+              child: ExcludeSemantics(
+                child: Text(
+                  _submitBlockedMessage(schema) ?? _copy.registrationIncomplete,
+                  style: udaanTextStyle(
+                    context,
+                    fontSize: 16,
+                    color: palette.error,
+                    height: 1.35,
+                  ),
                 ),
               ),
             ),
@@ -1088,44 +1070,39 @@ class _EventRegistrationScreenState
         ),
         if (schema.pages.isNotEmpty) ...[
           const SizedBox(height: 12),
-          Semantics(
-            label: schema.pages[_currentPageIndex.clamp(0, schema.pages.length - 1)]
-                    .title
-                    .isNotEmpty
-                ? 'Page ${_currentPageIndex + 1} of ${schema.pages.length}. '
-                    '${schema.pages[_currentPageIndex].title}'
-                : 'Page ${_currentPageIndex + 1} of ${schema.pages.length}',
-            child: Text(
-              schema.pages[_currentPageIndex.clamp(0, schema.pages.length - 1)]
-                      .title
-                      .isNotEmpty
-                  ? schema.pages[_currentPageIndex].title
-                  : 'Page ${_currentPageIndex + 1} of ${schema.pages.length}',
-              style: udaanTextStyle(
-                context,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: palette.onBackground,
-              ),
-            ),
+          Builder(
+            builder: (context) {
+              final page = schema
+                  .pages[_currentPageIndex.clamp(0, schema.pages.length - 1)];
+              final pageLabel = _copy.registrationPageLabel(
+                _currentPageIndex + 1,
+                schema.pages.length,
+              );
+              final semanticsLabel = page.title.isNotEmpty
+                  ? '$pageLabel. ${page.title}'
+                  : pageLabel;
+              final displayText =
+                  page.title.isNotEmpty ? page.title : pageLabel;
+              return Semantics(
+                label: semanticsLabel,
+                child: ExcludeSemantics(
+                  child: Text(
+                    displayText,
+                    style: udaanTextStyle(
+                      context,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: palette.onBackground,
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ],
         if (schema.unsupportedFields.isNotEmpty) ...[
           Builder(
             builder: (context) {
-              if (!_unsupportedAnnounced) {
-                _unsupportedAnnounced = true;
-                final fieldNames = schema.unsupportedFields
-                    .map((f) => registrationFieldDisplayLabel(f.label))
-                    .join(', ');
-                final notice = _copy.registrationUnsupportedFieldsSemantics(
-                  notice: _copy.unsupportedFieldsNotice,
-                  fieldNames: fieldNames,
-                );
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) _announce(notice);
-                });
-              }
               final fieldNames = schema.unsupportedFields
                   .map((f) => registrationFieldDisplayLabel(f.label))
                   .join(', ');
@@ -1139,30 +1116,32 @@ class _EventRegistrationScreenState
                       fieldNames: fieldNames,
                     ),
                     liveRegion: true,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          _copy.unsupportedFieldsNotice,
-                          style: udaanTextStyle(
-                            context,
-                            fontSize: 16,
-                            color: palette.error,
-                            height: 1.35,
+                    child: ExcludeSemantics(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            _copy.unsupportedFieldsNotice,
+                            style: udaanTextStyle(
+                              context,
+                              fontSize: 16,
+                              color: palette.error,
+                              height: 1.35,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          fieldNames,
-                          style: udaanTextStyle(
-                            context,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: palette.onBackground,
-                            height: 1.35,
+                          const SizedBox(height: 8),
+                          Text(
+                            fieldNames,
+                            style: udaanTextStyle(
+                              context,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: palette.onBackground,
+                              height: 1.35,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -1197,19 +1176,21 @@ class _EventRegistrationScreenState
         if (schema.pages.isNotEmpty && _currentPageIndex > 0) ...[
           Semantics(
             button: true,
-            label: 'Previous page',
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 56),
-                side: BorderSide(color: palette.primaryGlow),
-              ),
-              onPressed: _goToPreviousPage,
-              child: Text(
-                'Previous',
-                style: udaanTextStyle(
-                  context,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
+            label: '${_copy.registrationPreviousPage} page',
+            child: ExcludeSemantics(
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 56),
+                  side: BorderSide(color: palette.primaryGlow),
+                ),
+                onPressed: _goToPreviousPage,
+                child: Text(
+                  _copy.registrationPreviousPage,
+                  style: udaanTextStyle(
+                    context,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
@@ -1219,20 +1200,22 @@ class _EventRegistrationScreenState
         if (schema.pages.isNotEmpty && !onLastPage) ...[
           Semantics(
             button: true,
-            label: 'Next page',
-            child: FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: palette.primary,
-                foregroundColor: palette.onPrimary,
-                minimumSize: const Size(double.infinity, 56),
-              ),
-              onPressed: () => _goToNextPage(schema),
-              child: Text(
-                'Next',
-                style: udaanTextStyle(
-                  context,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+            label: '${_copy.registrationNextPage} page',
+            child: ExcludeSemantics(
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: palette.primary,
+                  foregroundColor: palette.onPrimary,
+                  minimumSize: const Size(double.infinity, 56),
+                ),
+                onPressed: () => _goToNextPage(schema),
+                child: Text(
+                  _copy.registrationNextPage,
+                  style: udaanTextStyle(
+                    context,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
@@ -1244,46 +1227,48 @@ class _EventRegistrationScreenState
                 ? _copy.submittingRegistrationPleaseWait
                 : _copy.submitRegistration,
             enabled: !_submitting && !submitBlocked,
-            child: FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: palette.primary,
-                foregroundColor: palette.onPrimary,
-                disabledBackgroundColor:
-                    palette.primary.withValues(alpha: 0.5),
-                minimumSize: const Size(double.infinity, 56),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            child: ExcludeSemantics(
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: palette.primary,
+                  foregroundColor: palette.onPrimary,
+                  disabledBackgroundColor:
+                      palette.primary.withValues(alpha: 0.5),
+                  minimumSize: const Size(double.infinity, 56),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-              ),
-              onPressed: _submitting || submitBlocked
-                  ? null
-                  : () => _submit(schema),
-              child: _submitting
-                  ? SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: palette.onPrimary,
-                      ),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          _copy.submitRegistration,
-                          style: udaanTextStyle(
-                            context,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
+                onPressed: _submitting || submitBlocked
+                    ? null
+                    : () => _submit(schema),
+                child: _submitting
+                    ? SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: palette.onPrimary,
                         ),
-                        const SizedBox(width: 10),
-                        const Icon(Icons.arrow_forward, size: 22),
-                      ],
-                    ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            _copy.submitRegistration,
+                            style: udaanTextStyle(
+                              context,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const Icon(Icons.arrow_forward, size: 22),
+                        ],
+                      ),
+              ),
             ),
           ),
         ],
@@ -1395,32 +1380,37 @@ class _EventRegistrationScreenState
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           for (final sub in field.subfields) ...[
-            Text(
-              sub.required ? '${sub.label} *' : sub.label,
-              style: registrationFieldLabelStyle(
-                context,
-                required: sub.required,
+            ExcludeSemantics(
+              child: Text(
+                sub.required ? '${sub.label} *' : sub.label,
+                style: registrationFieldLabelStyle(
+                  context,
+                  required: sub.required,
+                ),
               ),
             ),
             const SizedBox(height: 8),
             Semantics(
               label: sub.required ? '${sub.label}, required' : sub.label,
               textField: true,
-              child: TextFormField(
-                initialValue: map[sub.key]?.toString() ?? '',
-                style: registrationFieldInputStyle(context),
-                decoration: registrationFieldDecoration(
-                  context,
-                  hint: sub.label,
-                  errorText: _validationFieldKey == field.key
-                      ? _validationMessage
-                      : null,
+              child: ExcludeSemantics(
+                child: TextFormField(
+                  initialValue: map[sub.key]?.toString() ?? '',
+                  style: registrationFieldInputStyle(context),
+                  decoration: registrationFieldDecoration(
+                    context,
+                    hint: sub.label,
+                    errorText: _validationFieldKey == field.key
+                        ? _validationMessage
+                        : null,
+                  ),
+                  keyboardType: field.type == 'address'
+                      ? TextInputType.streetAddress
+                      : TextInputType.name,
+                  textCapitalization: TextCapitalization.words,
+                  onTapOutside: (_) => dismissKeyboard(context),
+                  onChanged: (v) => _setSubfieldValue(field, sub, v),
                 ),
-                keyboardType: field.type == 'address'
-                    ? TextInputType.streetAddress
-                    : TextInputType.name,
-                textCapitalization: TextCapitalization.words,
-                onChanged: (v) => _setSubfieldValue(field, sub, v),
               ),
             ),
             const SizedBox(height: 12),
@@ -1637,30 +1627,32 @@ class _EventRegistrationScreenState
                               ),
                     value: uploadValue,
                     enabled: !uploading && !_submitting && !atMax,
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: palette.surfaceContainerHigh,
-                        foregroundColor: palette.onBackground,
-                        minimumSize: const Size(
-                          double.infinity,
-                          BrandTokens.minTapTarget,
+                    child: ExcludeSemantics(
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: palette.surfaceContainerHigh,
+                          foregroundColor: palette.onBackground,
+                          minimumSize: const Size(
+                            double.infinity,
+                            BrandTokens.minTapTarget,
+                          ),
                         ),
-                      ),
-                      onPressed: uploading || _submitting || atMax
-                          ? null
-                          : () => _pickFile(field, schema),
-                      child: Text(
-                        atMax
-                            ? 'Maximum ${field.maxFiles} files selected'
-                            : (field.isMultiFileUpload
-                                ? _copy.chooseFile
-                                : (_uploadNames(field).isEmpty
-                                    ? _copy.chooseFile
-                                    : _uploadNames(field).first)),
-                        style: udaanTextStyle(
-                          context,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
+                        onPressed: uploading || _submitting || atMax
+                            ? null
+                            : () => _pickFile(field, schema),
+                        child: Text(
+                          atMax
+                              ? 'Maximum ${field.maxFiles} files selected'
+                              : (field.isMultiFileUpload
+                                  ? _copy.chooseFile
+                                  : (_uploadNames(field).isEmpty
+                                      ? _copy.chooseFile
+                                      : _uploadNames(field).first)),
+                          style: udaanTextStyle(
+                            context,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -1697,12 +1689,14 @@ class _EventRegistrationScreenState
                     Semantics(
                       label: uploadError,
                       liveRegion: true,
-                      child: Text(
-                        uploadError,
-                        style: udaanTextStyle(
-                          context,
-                          fontSize: 14,
-                          color: palette.error,
+                      child: ExcludeSemantics(
+                        child: Text(
+                          uploadError,
+                          style: udaanTextStyle(
+                            context,
+                            fontSize: 14,
+                            color: palette.error,
+                          ),
                         ),
                       ),
                     ),
@@ -1713,11 +1707,13 @@ class _EventRegistrationScreenState
                         field.label,
                       ),
                       enabled: !uploading && !_submitting,
-                      child: TextButton(
-                        onPressed: uploading || _submitting
-                            ? null
-                            : () => _retryUpload(field, schema),
-                        child: Text(_copy.retry),
+                      child: ExcludeSemantics(
+                        child: TextButton(
+                          onPressed: uploading || _submitting
+                              ? null
+                              : () => _retryUpload(field, schema),
+                          child: Text(_copy.retry),
+                        ),
                       ),
                     ),
                   ],

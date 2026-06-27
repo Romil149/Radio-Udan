@@ -162,15 +162,17 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 trailing: Semantics(
                   button: true,
                   label: _copy.settingsTitle,
-                  child: IconButton(
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const SettingsScreen(),
+                  child: ExcludeSemantics(
+                    child: IconButton(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const SettingsScreen(),
+                        ),
                       ),
-                    ),
-                    icon: const Icon(
-                      Icons.settings_outlined,
-                      color: UdaanColors.onBackground,
+                      icon: const Icon(
+                        Icons.settings_outlined,
+                        color: UdaanColors.onBackground,
+                      ),
                     ),
                   ),
                 ),
@@ -221,11 +223,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ),
                   const SizedBox(height: 8),
                   Center(
-                    child: Text(
-                      _copy.tapToUpdatePhoto,
-                      style: GoogleFonts.atkinsonHyperlegible(
-                        fontSize: 14,
-                        color: UdaanColors.primaryGlow,
+                    child: ExcludeSemantics(
+                      child: Text(
+                        _copy.tapToUpdatePhoto,
+                        style: GoogleFonts.atkinsonHyperlegible(
+                          fontSize: 14,
+                          color: UdaanColors.primaryGlow,
+                        ),
                       ),
                     ),
                   ),
@@ -278,18 +282,20 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   Semantics(
                     button: true,
                     label: _copy.changePasswordTitle,
-                    child: TextButton(
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const ChangePasswordScreen(),
+                    child: ExcludeSemantics(
+                      child: TextButton(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const ChangePasswordScreen(),
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        _copy.changePasswordTitle,
-                        style: GoogleFonts.atkinsonHyperlegible(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: UdaanColors.primaryGlow,
+                        child: Text(
+                          _copy.changePasswordTitle,
+                          style: GoogleFonts.atkinsonHyperlegible(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: UdaanColors.primaryGlow,
+                          ),
                         ),
                       ),
                     ),
@@ -298,10 +304,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     const SizedBox(height: 8),
                     Semantics(
                       liveRegion: true,
-                      child: Text(
-                        _error!,
+                      child: ExcludeSemantics(
+                        child: Text(                        _error!,
                         style: GoogleFonts.atkinsonHyperlegible(
                           color: UdaanColors.error,
+                        ),
                         ),
                       ),
                     ),
@@ -348,17 +355,21 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            label,
-            style: registrationFieldLabelStyle(context),
+          ExcludeSemantics(
+            child: Text(
+              label,
+              style: registrationFieldLabelStyle(context),
+            ),
           ),
           if (hint != null && hint.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(
-              hint,
-              style: GoogleFonts.atkinsonHyperlegible(
-                fontSize: 14,
-                color: UdaanColors.onSurfaceVariant,
+            ExcludeSemantics(
+              child: Text(
+                hint,
+                style: GoogleFonts.atkinsonHyperlegible(
+                  fontSize: 14,
+                  color: UdaanColors.onSurfaceVariant,
+                ),
               ),
             ),
           ],

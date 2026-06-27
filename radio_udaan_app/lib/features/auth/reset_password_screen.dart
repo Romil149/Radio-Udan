@@ -84,14 +84,16 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     return Semantics(
       button: true,
       label: obscured ? _copy.showPassword : _copy.hidePassword,
-      child: IconButton(
-        icon: Icon(
-          obscured
-              ? Icons.visibility_outlined
-              : Icons.visibility_off_outlined,
-          color: UdaanColors.primaryGlow,
+      child: ExcludeSemantics(
+        child: IconButton(
+          icon: Icon(
+            obscured
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
+            color: UdaanColors.primaryGlow,
+          ),
+          onPressed: onToggle,
         ),
-        onPressed: onToggle,
       ),
     );
   }
@@ -105,22 +107,18 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
 
     if (!_smsReset && token.isEmpty) {
       setState(() => _error = _copy.resetTokenRequired);
-      _announce(_copy.resetTokenRequired);
       return;
     }
     if (!_smsReset && code.length != 6) {
       setState(() => _error = _copy.resetEmailCodeRequired);
-      _announce(_copy.resetEmailCodeRequired);
       return;
     }
     if (!isValidPassword(password, minLength: minLen)) {
       setState(() => _error = _copy.passwordTooShort);
-      _announce(_copy.passwordTooShort);
       return;
     }
     if (password != confirm) {
       setState(() => _error = _copy.passwordMismatch);
-      _announce(_copy.passwordMismatch);
       return;
     }
 
@@ -139,14 +137,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           );
       if (!mounted) return;
       _announce(_copy.resetPasswordSuccess);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_copy.resetPasswordSuccess)),
-      );
       context.go('/login');
     } catch (e) {
       final message = parseApiError(e).message;
       setState(() => _error = message);
-      _announce(message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -276,13 +270,14 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 Semantics(
                   label: _error,
                   liveRegion: true,
-                  child: Text(
-                    _error!,
+                  child: ExcludeSemantics(
+                    child: Text(                    _error!,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: UdaanColors.error,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
+                    ),
                     ),
                   ),
                 ),

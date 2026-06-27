@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -48,22 +47,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  void _announce(String message) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      SemanticsService.sendAnnouncement(
-        View.of(context),
-        message,
-        Directionality.of(context),
-      );
-    });
-  }
-
   Future<void> _startOtpLogin() async {
     final phone = _phoneInput.e164;
     if (phone == null) {
       setState(() => _error = _copy.phoneInvalid);
-      _announce(_copy.phoneInvalid);
       return;
     }
 
@@ -76,7 +63,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!mounted) return;
     if (message != null) {
       setState(() => _error = message);
-      _announce(message);
     }
     setState(() => _otpLoading = false);
   }
@@ -87,12 +73,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (phone == null) {
       setState(() => _error = _copy.phoneInvalid);
-      _announce(_copy.phoneInvalid);
       return;
     }
     if (password.isEmpty) {
       setState(() => _error = _copy.passwordRequired);
-      _announce(_copy.passwordRequired);
       return;
     }
 
@@ -124,7 +108,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       final message = parseApiError(e).message;
       setState(() => _error = message);
-      _announce(message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -134,14 +117,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Semantics(
       button: true,
       label: _obscurePassword ? _copy.showPassword : _copy.hidePassword,
-      child: IconButton(
-        icon: Icon(
-          _obscurePassword
-              ? Icons.visibility_outlined
-              : Icons.visibility_off_outlined,
-          color: UdaanColors.primaryGlow,
+      child: ExcludeSemantics(
+        child: IconButton(
+          icon: Icon(
+            _obscurePassword
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
+            color: UdaanColors.primaryGlow,
+          ),
+          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
         ),
-        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
       ),
     );
   }
@@ -197,12 +182,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Semantics(
                   label: _error,
                   liveRegion: true,
-                  child: Text(
-                    _error!,
+                  child: ExcludeSemantics(
+                    child: Text(                    _error!,
                     style: const TextStyle(
                       color: UdaanColors.error,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
+                    ),
                     ),
                   ),
                 ),

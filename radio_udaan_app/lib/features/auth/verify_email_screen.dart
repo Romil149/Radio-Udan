@@ -132,7 +132,6 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     } catch (e) {
       final message = parseApiError(e).message;
       setState(() => _error = message);
-      _announce(message);
     } finally {
       if (mounted) setState(() => _resending = false);
     }
@@ -143,7 +142,6 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
 
     if (code.length != 6) {
       setState(() => _error = _copy.verificationCodeRequired);
-      _announce(_copy.verificationCodeRequired);
       return;
     }
 
@@ -162,7 +160,6 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     } catch (e) {
       final message = parseApiError(e).message;
       setState(() => _error = message);
-      _announce(message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -287,13 +284,14 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                 Semantics(
                   label: _error,
                   liveRegion: true,
-                  child: Text(
-                    _error!,
+                  child: ExcludeSemantics(
+                    child: Text(                    _error!,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: UdaanColors.error,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
+                    ),
                     ),
                   ),
                 ),

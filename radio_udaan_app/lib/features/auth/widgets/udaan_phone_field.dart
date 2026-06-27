@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/udaan_colors.dart';
+import '../../../core/utils/keyboard_dismiss.dart';
 import '../../../core/utils/phone_country.dart';
 import '../../../core/utils/phone_e164.dart';
 
@@ -219,29 +220,31 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: UdaanColors.primaryGlow),
                       ),
-                      child: Row(
-                        children: [
-                          Text(
-                            country.flagEmoji,
-                            style: const TextStyle(fontSize: 22),
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              '+${country.phoneCode}',
-                              style: GoogleFonts.atkinsonHyperlegible(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w700,
-                                color: UdaanColors.onBackground,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                      child: ExcludeSemantics(
+                        child: Row(
+                          children: [
+                            Text(
+                              country.flagEmoji,
+                              style: const TextStyle(fontSize: 22),
                             ),
-                          ),
-                          const Icon(
-                            Icons.arrow_drop_down,
-                            color: UdaanColors.primaryGlow,
-                          ),
-                        ],
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                '+${country.phoneCode}',
+                                style: GoogleFonts.atkinsonHyperlegible(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700,
+                                  color: UdaanColors.onBackground,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const Icon(
+                              Icons.arrow_drop_down,
+                              color: UdaanColors.primaryGlow,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -263,6 +266,7 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
                     LengthLimitingTextInputFormatter(_input.maxNationalDigits),
                   ],
                   onSubmitted: widget.onSubmitted,
+                  onTapOutside: (_) => dismissKeyboard(context),
                   style: GoogleFonts.atkinsonHyperlegible(
                     fontSize: 18,
                     color: UdaanColors.onBackground,

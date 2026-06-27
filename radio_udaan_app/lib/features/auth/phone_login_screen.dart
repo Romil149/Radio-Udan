@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -42,22 +41,10 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
     super.dispose();
   }
 
-  void _announceError(String message) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      SemanticsService.sendAnnouncement(
-        View.of(context),
-        message,
-        Directionality.of(context),
-      );
-    });
-  }
-
   Future<void> _submit() async {
     final phone = _phoneInput.e164;
     if (phone == null) {
       setState(() => _error = _copy.phoneInvalid);
-      _announceError(_copy.phoneInvalid);
       return;
     }
 
@@ -70,7 +57,6 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
     if (!mounted) return;
     if (message != null) {
       setState(() => _error = message);
-      _announceError(message);
     }
     setState(() => _loading = false);
   }
@@ -119,13 +105,14 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                 Semantics(
                   label: _error,
                   liveRegion: true,
-                  child: Text(
-                    _error!,
+                  child: ExcludeSemantics(
+                    child: Text(                    _error!,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: UdaanColors.error,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
+                    ),
                     ),
                   ),
                 ),

@@ -39,12 +39,13 @@ class ContactEmailScreen extends ConsumerWidget {
           child: email.isEmpty
               ? Semantics(
                   liveRegion: true,
-                  child: Text(
-                    copy.linkUnavailable,
+                  child: ExcludeSemantics(
+                    child: Text(                    copy.linkUnavailable,
                     style: udaanGoogleFont(
                       context,
                       fontSize: 16,
                       color: palette.onSurfaceVariant,
+                    ),
                     ),
                   ),
                 )

@@ -123,28 +123,30 @@ Widget registrationChoiceTile({
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                Icon(
-                  isRadio
-                      ? (selected
-                          ? Icons.radio_button_checked
-                          : Icons.radio_button_off)
-                      : (selected
-                          ? Icons.check_box
-                          : Icons.check_box_outline_blank),
-                  color: palette.primaryGlow,
-                  size: 26,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: registrationChoiceOptionStyle(context),
-                    softWrap: true,
+            child: ExcludeSemantics(
+              child: Row(
+                children: [
+                  Icon(
+                    isRadio
+                        ? (selected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_off)
+                        : (selected
+                            ? Icons.check_box
+                            : Icons.check_box_outline_blank),
+                    color: palette.primaryGlow,
+                    size: 26,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: registrationChoiceOptionStyle(context),
+                      softWrap: true,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

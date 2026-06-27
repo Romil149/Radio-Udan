@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -47,17 +46,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
-  void _announce(String message) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      SemanticsService.sendAnnouncement(
-        View.of(context),
-        message,
-        Directionality.of(context),
-      );
-    });
-  }
-
   Widget _visibilityToggle({
     required bool obscured,
     required VoidCallback onToggle,
@@ -65,12 +53,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     return Semantics(
       button: true,
       label: obscured ? _copy.showPassword : _copy.hidePassword,
-      child: IconButton(
-        icon: Icon(
-          obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-          color: UdaanColors.primaryGlow,
+      child: ExcludeSemantics(
+        child: IconButton(
+          icon: Icon(
+            obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            color: UdaanColors.primaryGlow,
+          ),
+          onPressed: onToggle,
         ),
-        onPressed: onToggle,
       ),
     );
   }
@@ -85,27 +75,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     if (name.isEmpty) {
       setState(() => _error = _copy.nameRequired);
-      _announce(_copy.nameRequired);
       return;
     }
     if (!isValidEmail(email)) {
       setState(() => _error = _copy.emailInvalid);
-      _announce(_copy.emailInvalid);
       return;
     }
     if (phone == null) {
       setState(() => _error = _copy.phoneInvalid);
-      _announce(_copy.phoneInvalid);
       return;
     }
     if (!isValidPassword(password, minLength: minLen)) {
       setState(() => _error = _copy.passwordTooShort);
-      _announce(_copy.passwordTooShort);
       return;
     }
     if (password != confirm) {
       setState(() => _error = _copy.passwordMismatch);
-      _announce(_copy.passwordMismatch);
       return;
     }
 
@@ -125,7 +110,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
       if (!pending.needsPhoneVerification) {
         setState(() => _error = _copy.registrationIncomplete);
-        _announce(_copy.registrationIncomplete);
         return;
       }
 
@@ -148,7 +132,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } catch (e) {
       final message = parseApiError(e).message;
       setState(() => _error = message);
-      _announce(message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -273,13 +256,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 Semantics(
                   label: _error,
                   liveRegion: true,
-                  child: Text(
-                    _error!,
+                  child: ExcludeSemantics(
+                    child: Text(                    _error!,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: UdaanColors.error,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
+                    ),
                     ),
                   ),
                 ),

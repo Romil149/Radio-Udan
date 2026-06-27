@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -41,17 +40,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  void _announce(String message) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      SemanticsService.sendAnnouncement(
-        View.of(context),
-        message,
-        Directionality.of(context),
-      );
-    });
-  }
-
   void _setChannel(_ForgotChannel channel) {
     if (_channel == channel) return;
     setState(() {
@@ -70,7 +58,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           _error = _copy.emailInvalid;
           _success = null;
         });
-        _announce(_copy.emailInvalid);
         return;
       }
       identifier = email;
@@ -81,7 +68,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           _error = _copy.phoneInvalid;
           _success = null;
         });
-        _announce(_copy.phoneInvalid);
         return;
       }
       identifier = phone;
@@ -118,11 +104,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       }
 
       setState(() => _success = _copy.forgotPasswordSuccess);
-      _announce(_copy.forgotPasswordSuccess);
     } catch (e) {
       final message = parseApiError(e).message;
       setState(() => _error = message);
-      _announce(message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -263,13 +247,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 Semantics(
                   label: _error,
                   liveRegion: true,
-                  child: Text(
-                    _error!,
+                  child: ExcludeSemantics(
+                    child: Text(                    _error!,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: UdaanColors.error,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
+                    ),
                     ),
                   ),
                 ),
@@ -279,13 +264,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 Semantics(
                   label: _success,
                   liveRegion: true,
-                  child: Text(
-                    _success!,
+                  child: ExcludeSemantics(
+                    child: Text(                    _success!,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.atkinsonHyperlegible(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: UdaanColors.secondary,
+                    ),
                     ),
                   ),
                 ),

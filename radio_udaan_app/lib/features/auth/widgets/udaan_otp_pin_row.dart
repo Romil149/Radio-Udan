@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/config/app_branding.dart';
 import '../../../core/config/app_copy_accessors.dart';
 import '../../../core/theme/udaan_colors.dart';
+import '../../../core/utils/keyboard_dismiss.dart';
 
 /// Six-digit OTP entry with manual SMS entry only (no READ_SMS).
 class UdaanOtpPinRow extends StatefulWidget {
@@ -86,11 +87,14 @@ class _UdaanOtpPinRowState extends State<UdaanOtpPinRow> {
                   contentPadding: EdgeInsets.zero,
                 ),
                 onChanged: (_) => setState(() {}),
+                onTapOutside: (_) => dismissKeyboard(context),
+                onSubmitted: (_) => dismissKeyboard(context),
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(widget.length, (index) {
+            ExcludeSemantics(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(widget.length, (index) {
                 final digit = cells[index];
                 final filled = digit.isNotEmpty;
                 final active = code.length == index && _focusNode.hasFocus;
@@ -126,6 +130,7 @@ class _UdaanOtpPinRowState extends State<UdaanOtpPinRow> {
                   ),
                 );
               }),
+              ),
             ),
           ],
         ),

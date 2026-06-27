@@ -94,13 +94,11 @@ class _LibraryTabState extends ConsumerState<LibraryTab> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: MainTabAppBar(title: _copy.tabLibrary),
       body: SafeArea(
-        child: Semantics(
-          label: _copy.tabLibrary,
-          child: RefreshIndicator(
-            color: UdaanColors.primary,
-            backgroundColor: UdaanColors.surfaceContainer,
-            onRefresh: _refreshAll,
-            child: ListView(
+        child: RefreshIndicator(
+          color: UdaanColors.primary,
+          backgroundColor: UdaanColors.surfaceContainer,
+          onRefresh: _refreshAll,
+          child: ListView(
               padding: const EdgeInsets.only(bottom: 24),
               children: [
                 LibrarySearchField(controller: _searchController),
@@ -143,27 +141,29 @@ class _LibraryTabState extends ConsumerState<LibraryTab> {
                       child: Semantics(
                         button: true,
                         label: _copy.libraryViewAllPlaylists,
-                        child: TextButton(
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) =>
-                                    const LibraryPlaylistsScreen(),
+                        child: ExcludeSemantics(
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) =>
+                                      const LibraryPlaylistsScreen(),
+                                ),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              minimumSize: const Size(
+                                _libraryMinTapTarget,
+                                _libraryMinTapTarget,
                               ),
-                            );
-                          },
-                          style: TextButton.styleFrom(
-                            minimumSize: const Size(
-                              _libraryMinTapTarget,
-                              _libraryMinTapTarget,
+                              foregroundColor: UdaanColors.primary,
                             ),
-                            foregroundColor: UdaanColors.primary,
-                          ),
-                          child: Text(
-                            _copy.libraryViewAllPlaylists,
-                            style: GoogleFonts.atkinsonHyperlegible(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
+                            child: Text(
+                              _copy.libraryViewAllPlaylists,
+                              style: GoogleFonts.atkinsonHyperlegible(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                         ),
@@ -189,7 +189,6 @@ class _LibraryTabState extends ConsumerState<LibraryTab> {
                 ],
               ],
             ),
-          ),
         ),
       ),
     );
@@ -225,11 +224,12 @@ class _FeaturedPlaylistsSection extends StatelessWidget {
         child: Semantics(
           label: emptyLabel,
           liveRegion: true,
-          child: Text(
-            emptyLabel,
+          child: ExcludeSemantics(
+            child: Text(            emptyLabel,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: UdaanColors.onSurfaceVariant,
                 ),
+            ),
           ),
         ),
       );
@@ -309,11 +309,12 @@ class _VideoListSection extends ConsumerWidget {
         child: Semantics(
           label: emptyLabel,
           liveRegion: true,
-          child: Text(
-            emptyLabel,
+          child: ExcludeSemantics(
+            child: Text(            emptyLabel,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: UdaanColors.onSurfaceVariant,
                 ),
+            ),
           ),
         ),
       );

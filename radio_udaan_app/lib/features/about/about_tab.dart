@@ -46,9 +46,6 @@ class AboutTab extends ConsumerWidget {
   }) {
     if (content == null || !content.hasHtml) {
       _announce(context, copy.linkUnavailable);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(copy.linkUnavailable)),
-      );
       return;
     }
 
@@ -118,9 +115,6 @@ class AboutTab extends ConsumerWidget {
                   ? () => _push(context, const ContactEmailScreen())
                   : () {
                       _announce(context, copy.linkUnavailable);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(copy.linkUnavailable)),
-                      );
                     },
             ),
             MoreMenuTile(
@@ -134,9 +128,6 @@ class AboutTab extends ConsumerWidget {
                   ? () => _push(context, const ContactPhoneScreen())
                   : () {
                       _announce(context, copy.linkUnavailable);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(copy.linkUnavailable)),
-                      );
                     },
             ),
             if (live != null && live.showWhatsapp && live.hasWhatsappUrl)
@@ -163,9 +154,6 @@ class AboutTab extends ConsumerWidget {
               links: social,
               onLaunchFailed: () {
                 _announce(context, copy.linkOpenFailed);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(copy.linkOpenFailed)),
-                );
               },
             ),
           ],

@@ -38,30 +38,32 @@ class RegistrationErrorBanner extends StatelessWidget {
             Icon(Icons.error_outline, color: palette.error, size: 28),
             const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    copy.registrationErrorTitle,
-                    style: udaanTextStyle(
-                      context,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: palette.onBackground,
+              child: ExcludeSemantics(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      copy.registrationErrorTitle,
+                      style: udaanTextStyle(
+                        context,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: palette.onBackground,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    message,
-                    style: udaanTextStyle(
-                      context,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: palette.onBackground,
-                      height: 1.35,
+                    const SizedBox(height: 6),
+                    Text(
+                      message,
+                      style: udaanTextStyle(
+                        context,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: palette.onBackground,
+                        height: 1.35,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
@@ -129,8 +131,7 @@ class RegistrationSuccessView extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              Semantics(
-                header: true,
+              ExcludeSemantics(
                 child: Text(
                   copy.registrationSuccessTitle,
                   textAlign: TextAlign.center,
@@ -144,37 +145,41 @@ class RegistrationSuccessView extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              Text(
-                body,
-                textAlign: TextAlign.center,
-                style: udaanTextStyle(
-                  context,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: palette.primaryGlow,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                decoration: BoxDecoration(
-                  color: palette.surfaceContainer,
-                  borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-                  border: Border.all(color: palette.outlineVariant),
-                ),
+              ExcludeSemantics(
                 child: Text(
-                  reference,
+                  body,
                   textAlign: TextAlign.center,
                   style: udaanTextStyle(
                     context,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: palette.onBackground,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: palette.primaryGlow,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ExcludeSemantics(
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: palette.surfaceContainer,
+                    borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+                    border: Border.all(color: palette.outlineVariant),
+                  ),
+                  child: Text(
+                    reference,
+                    textAlign: TextAlign.center,
+                    style: udaanTextStyle(
+                      context,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: palette.onBackground,
+                    ),
                   ),
                 ),
               ),

@@ -113,13 +113,14 @@ class _ScheduleList extends ConsumerWidget {
           padding: const EdgeInsets.all(BrandTokens.screenPadding),
           child: Semantics(
             liveRegion: true,
-            child: Text(
-              copy.radioScheduleEmpty,
+            child: ExcludeSemantics(
+              child: Text(              copy.radioScheduleEmpty,
               textAlign: TextAlign.center,
               style: GoogleFonts.atkinsonHyperlegible(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: UdaanColors.onSurfaceVariant,
+              ),
               ),
             ),
           ),
@@ -496,13 +497,14 @@ class _ScheduleError extends ConsumerWidget {
       child: Center(
         child: Semantics(
           liveRegion: true,
-          child: Text(
-            copy.radioScheduleFailed,
+          child: ExcludeSemantics(
+            child: Text(            copy.radioScheduleFailed,
             textAlign: TextAlign.center,
             style: GoogleFonts.atkinsonHyperlegible(
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: UdaanColors.onSurfaceVariant,
+            ),
             ),
           ),
         ),

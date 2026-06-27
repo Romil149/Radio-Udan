@@ -36,10 +36,11 @@ class EmptyState extends StatelessWidget {
             const SizedBox(height: 16),
             Semantics(
               liveRegion: true,
-              child: Text(
-                message,
+              child: ExcludeSemantics(
+                child: Text(                message,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge,
+                ),
               ),
             ),
             if (actionLabel != null && onAction != null) ...[
@@ -49,7 +50,9 @@ class EmptyState extends StatelessWidget {
                 label: actionLabel,
                 child: FilledButton(
                   onPressed: onAction,
-                  child: Text(actionLabel!),
+                  child: ExcludeSemantics(
+                    child: Text(actionLabel!),
+                  ),
                 ),
               ),
             ],

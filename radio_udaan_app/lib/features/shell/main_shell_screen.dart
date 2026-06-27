@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers/app_providers.dart';
 import '../../core/providers/app_settings_provider.dart';
 import '../../core/push/notification_permission_flow.dart';
 import '../../core/theme/accessibility_scope.dart';
+import '../../core/utils/keyboard_dismiss.dart';
 import '../more/notifications_providers.dart';
 import '../about/about_tab.dart';
 import '../events/events_tab.dart';
@@ -71,52 +71,34 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
           RepaintBoundary(child: MoreTab()),
         ],
       ),
-      bottomNavigationBar: Semantics(
-        container: true,
-        label: copy.mainNavigation,
-        child: NavigationBar(
+      bottomNavigationBar: NavigationBar(
           backgroundColor: palette.surfaceContainerHigh,
           indicatorColor: palette.primary.withValues(alpha: 0.25),
           surfaceTintColor: Colors.transparent,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           selectedIndex: index,
           onDestinationSelected: (i) {
+            dismissKeyboard(context);
             ref.read(mainShellTabIndexProvider.notifier).state = i;
-            SemanticsService.sendAnnouncement(
-              View.of(context),
-              '${tabs[i].label} tab selected',
-              Directionality.of(context),
-            );
           },
           destinations: [
             for (var i = 0; i < tabs.length; i++)
               NavigationDestination(
-                icon: Semantics(
-                  selected: index == i,
-                  label: i == MainShellScreen.moreTabIndex && unreadCount > 0
-                      ? '${tabs[i].label}. ${copy.unreadNotificationsBadge(unreadCount)}'
-                      : tabs[i].label,
-                  child: _TabIcon(
-                    icon: tabs[i].icon,
-                    badgeCount: i == MainShellScreen.moreTabIndex ? unreadCount : 0,
-                  ),
+                icon: _TabIcon(
+                  icon: tabs[i].icon,
+                  badgeCount: i == MainShellScreen.moreTabIndex ? unreadCount : 0,
                 ),
-                selectedIcon: Semantics(
-                  selected: true,
-                  label: i == MainShellScreen.moreTabIndex && unreadCount > 0
-                      ? '${tabs[i].label}, selected. ${copy.unreadNotificationsBadge(unreadCount)}'
-                      : '${tabs[i].label}, selected',
-                  child: _TabIcon(
-                    icon: tabs[i].selected,
-                    badgeCount: i == MainShellScreen.moreTabIndex ? unreadCount : 0,
-                  ),
+                selectedIcon: _TabIcon(
+                  icon: tabs[i].selected,
+                  badgeCount: i == MainShellScreen.moreTabIndex ? unreadCount : 0,
                 ),
-                label: tabs[i].label,
-                tooltip: tabs[i].label,
+                label: i == MainShellScreen.moreTabIndex && unreadCount > 0
+                    ? '${tabs[i].label} (${unreadCount > 9 ? '9+' : unreadCount})'
+                    : tabs[i].label,
+                tooltip: '',
               ),
           ],
         ),
-      ),
     );
   }
 }
@@ -132,11 +114,13 @@ class _TabIcon extends StatelessWidget {
     if (badgeCount <= 0) return Icon(icon);
     final palette = context.udaan;
     final label = badgeCount > 9 ? '9+' : '$badgeCount';
-    return Badge(
-      label: Text(label),
-      backgroundColor: palette.primary,
-      textColor: palette.onPrimary,
-      child: Icon(icon),
+    return ExcludeSemantics(
+      child: Badge(
+        label: Text(label),
+        backgroundColor: palette.primary,
+        textColor: palette.onPrimary,
+        child: Icon(icon),
+      ),
     );
   }
 }

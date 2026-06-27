@@ -151,13 +151,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           Semantics(
             header: true,
             label: title,
-            child: Text(
-              title,
-              style: udaanTextStyle(
-                context,
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: palette.secondary,
+            child: ExcludeSemantics(
+              child: Text(
+                title,
+                style: udaanTextStyle(
+                  context,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: palette.secondary,
+                ),
               ),
             ),
           ),

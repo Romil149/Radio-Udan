@@ -358,6 +358,12 @@ extension AppCopyStrings on AppCopy {
   String get registrationPickerDateHint => text('registration_picker_date_hint');
   String get registrationPickerDateTimeHint => text('registration_picker_date_time_hint');
   String get registrationPickerTimeHint => text('registration_picker_time_hint');
+  String get registrationPreviousPage => text('registration_previous_page');
+  String get registrationNextPage => text('registration_next_page');
+  String registrationPageLabel(int current, int total) =>
+      text('registration_page_label')
+          .replaceAll('{current}', '$current')
+          .replaceAll('{total}', '$total');
   String get registrationSuccessPrefix => text('registration_success_prefix');
   String get registrationSuccessTitle => text('registration_success_title');
   String get registrationSuccessBack => text('registration_success_back');

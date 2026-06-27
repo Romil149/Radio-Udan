@@ -117,7 +117,6 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
       if (!mounted) return;
       final message = parseApiError(e).message;
       setState(() => _error = message);
-      _announce(message);
     } finally {
       if (mounted) setState(() => _bootstrapping = false);
     }
@@ -221,7 +220,6 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
     } catch (e) {
       final message = parseApiError(e).message;
       setState(() => _error = message);
-      _announce(message);
     } finally {
       if (mounted) setState(() => _resending = false);
     }
@@ -258,7 +256,6 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
     if (otp.length < otpLength) {
       final message = _copy.otpCodeIncomplete;
       setState(() => _error = message);
-      _announce(message);
       return;
     }
 
@@ -289,7 +286,6 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
       final session = result.session;
       if (session == null || !session.hasToken) {
         setState(() => _error = _copy.verificationIncomplete);
-        _announce(_copy.verificationIncomplete);
         return;
       }
 
@@ -310,12 +306,10 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
           return;
         }
         setState(() => _error = apiError.message);
-        _announce(apiError.message);
         return;
       }
       final message = apiError.message;
       setState(() => _error = message);
-      _announce(message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }

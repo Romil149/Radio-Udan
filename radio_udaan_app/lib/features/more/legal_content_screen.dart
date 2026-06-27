@@ -126,17 +126,20 @@ class LegalContentScreen extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.all(BrandTokens.screenPadding),
             children: [
-              HtmlWidget(
-                bodyHtml,
-                textStyle: udaanGoogleFont(
-                  context,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  height: 1.5,
-                  color: palette.onSurfaceVariant,
+              ExcludeSemantics(
+                child: HtmlWidget(
+                  bodyHtml,
+                  textStyle: udaanGoogleFont(
+                    context,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    height: 1.5,
+                    color: palette.onSurfaceVariant,
+                  ),
+                  customStylesBuilder: (element) =>
+                      _stylesForElement(context, element),
+                  onTapUrl: _openExternalLink,
                 ),
-                customStylesBuilder: (element) => _stylesForElement(context, element),
-                onTapUrl: _openExternalLink,
               ),
             ],
           ),

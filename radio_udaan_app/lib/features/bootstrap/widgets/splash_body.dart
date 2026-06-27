@@ -52,8 +52,8 @@ class SplashBody extends StatelessWidget {
                 Semantics(
                   label: statusMessage,
                   liveRegion: true,
-                  child: Text(
-                    statusMessage,
+                  child: ExcludeSemantics(
+                    child: Text(                    statusMessage,
                     textAlign: TextAlign.center,
                     style: udaanTextStyle(
                       context,
@@ -62,6 +62,7 @@ class SplashBody extends StatelessWidget {
                       letterSpacing: 1.2,
                       color: palette.onBackground,
                     ),
+                    ),
                   ),
                 ),
                 if (errorDetail != null) ...[
@@ -69,13 +70,14 @@ class SplashBody extends StatelessWidget {
                   Semantics(
                     label: errorDetail,
                     liveRegion: true,
-                    child: Text(
-                      errorDetail!,
+                    child: ExcludeSemantics(
+                      child: Text(                      errorDetail!,
                       textAlign: TextAlign.center,
                       style: udaanTextStyle(
                         context,
                         fontSize: 16,
                         color: palette.onSurfaceVariant.withValues(alpha: 0.85),
+                      ),
                       ),
                     ),
                   ),

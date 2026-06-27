@@ -49,15 +49,17 @@ class LibraryPlaylistFeaturedTile extends StatelessWidget {
                   size: 56,
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  playlist.title,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.atkinsonHyperlegible(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: UdaanColors.onBackground,
+                ExcludeSemantics(
+                  child: Text(
+                    playlist.title,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.atkinsonHyperlegible(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: UdaanColors.onBackground,
+                    ),
                   ),
                 ),
               ],
@@ -111,15 +113,17 @@ class LibraryPlaylistCompactTile extends StatelessWidget {
                   size: 40,
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  playlist.title,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.atkinsonHyperlegible(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: UdaanColors.onBackground,
+                ExcludeSemantics(
+                  child: Text(
+                    playlist.title,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.atkinsonHyperlegible(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: UdaanColors.onBackground,
+                    ),
                   ),
                 ),
               ],

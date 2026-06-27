@@ -35,7 +35,6 @@ class LibraryVideoCard extends ConsumerWidget {
 
   void _openPlayer(BuildContext context, AppCopy copy) {
     if (!video.hasPlayableId) {
-      _announce(context, copy.libraryNoVideo);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(copy.libraryNoVideo)),
       );
@@ -92,11 +91,13 @@ class LibraryVideoCard extends ConsumerWidget {
             Semantics(
               button: true,
               label: '${copy.libraryPlayVideo}, ${video.title}',
-              child: InkWell(
-                onTap: () => _openPlayer(context, copy),
-                child: _Thumbnail(
-                  title: video.title,
-                  thumbnailUrl: thumbnailUrl,
+              child: ExcludeSemantics(
+                child: InkWell(
+                  onTap: () => _openPlayer(context, copy),
+                  child: _Thumbnail(
+                    title: video.title,
+                    thumbnailUrl: thumbnailUrl,
+                  ),
                 ),
               ),
             ),
@@ -105,45 +106,54 @@ class LibraryVideoCard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    video.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.atkinsonHyperlegible(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: UdaanColors.onBackground,
+                  ExcludeSemantics(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          video.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.atkinsonHyperlegible(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: UdaanColors.onBackground,
+                          ),
+                        ),
+                        if (summary.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            summary,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.atkinsonHyperlegible(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: UdaanColors.onSurfaceVariant,
+                              height: 1.35,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 12),
+                        const Divider(
+                          height: 1,
+                          color: UdaanColors.outlineVariant,
+                        ),
+                      ],
                     ),
-                  ),
-                  if (summary.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      summary,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.atkinsonHyperlegible(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: UdaanColors.onSurfaceVariant,
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 12),
-                  const Divider(
-                    height: 1,
-                    color: UdaanColors.outlineVariant,
                   ),
                   const SizedBox(height: 10),
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          uploaded,
-                          style: GoogleFonts.atkinsonHyperlegible(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: UdaanColors.onSurfaceVariant,
+                        child: ExcludeSemantics(
+                          child: Text(
+                            uploaded,
+                            style: GoogleFonts.atkinsonHyperlegible(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: UdaanColors.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       ),
@@ -195,27 +205,29 @@ class _SaveButton extends StatelessWidget {
     return Semantics(
       button: true,
       label: saveLabel,
-      child: OutlinedButton.icon(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size(_libraryMinTapTarget, _libraryMinTapTarget),
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          foregroundColor: UdaanColors.primaryGlow,
-          side: const BorderSide(color: UdaanColors.outlineVariant),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+      child: ExcludeSemantics(
+        child: OutlinedButton.icon(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(_libraryMinTapTarget, _libraryMinTapTarget),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            foregroundColor: UdaanColors.primaryGlow,
+            side: const BorderSide(color: UdaanColors.outlineVariant),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
           ),
-        ),
-        icon: Icon(
-          isSaved ? Icons.bookmark : Icons.bookmark_border,
-          size: 20,
-          color: isSaved ? UdaanColors.primary : UdaanColors.primaryGlow,
-        ),
-        label: Text(
-          saveLabel,
-          style: GoogleFonts.atkinsonHyperlegible(
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
+          icon: Icon(
+            isSaved ? Icons.bookmark : Icons.bookmark_border,
+            size: 20,
+            color: isSaved ? UdaanColors.primary : UdaanColors.primaryGlow,
+          ),
+          label: Text(
+            saveLabel,
+            style: GoogleFonts.atkinsonHyperlegible(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
       ),

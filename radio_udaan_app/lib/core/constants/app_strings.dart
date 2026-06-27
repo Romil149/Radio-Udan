@@ -341,6 +341,10 @@ abstract final class AppStrings {
   static const String eventRegistrationRetryLoad =
       'Retry loading registration form';
   static const String submitRegistration = 'Submit Registration';
+  static const String registrationPreviousPage = 'Previous';
+  static const String registrationNextPage = 'Next';
+  static String registrationPageLabel(int current, int total) =>
+      'Page $current of $total';
   static const String registrationSuccessPrefix =
       'Registration submitted successfully. Reference: entry';
   static const String unsupportedFieldsNotice =

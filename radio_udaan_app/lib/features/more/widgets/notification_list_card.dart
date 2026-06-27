@@ -67,15 +67,14 @@ class NotificationListCard extends StatelessWidget {
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              if (isUnread) ...[
-                                Semantics(
-                                  label: copy.notificationUnread,
-                                  child: Container(
+                      child: ExcludeSemantics(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                if (isUnread) ...[
+                                  Container(
                                     width: 10,
                                     height: 10,
                                     margin: const EdgeInsets.only(right: 8),
@@ -84,70 +83,70 @@ class NotificationListCard extends StatelessWidget {
                                       shape: BoxShape.circle,
                                     ),
                                   ),
-                                ),
-                              ],
-                              Expanded(
-                                child: Text(
-                                  when,
-                                  style: GoogleFonts.atkinsonHyperlegible(
-                                    fontSize: 13,
-                                    fontWeight: isUnread
-                                        ? FontWeight.w700
-                                        : FontWeight.w500,
-                                    color: isUnread
-                                        ? UdaanColors.primaryGlow
-                                        : UdaanColors.onSurfaceVariant,
-                                  ),
-                                ),
-                              ),
-                              if (isUnread)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 3,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: UdaanColors.primary
-                                        .withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
+                                ],
+                                Expanded(
                                   child: Text(
-                                    copy.notificationUnread,
+                                    when,
                                     style: GoogleFonts.atkinsonHyperlegible(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w800,
-                                      color: UdaanColors.primaryGlow,
+                                      fontSize: 13,
+                                      fontWeight: isUnread
+                                          ? FontWeight.w700
+                                          : FontWeight.w500,
+                                      color: isUnread
+                                          ? UdaanColors.primaryGlow
+                                          : UdaanColors.onSurfaceVariant,
                                     ),
                                   ),
                                 ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            item.title,
-                            style: GoogleFonts.atkinsonHyperlegible(
-                              fontSize: 17,
-                              fontWeight:
-                                  isUnread ? FontWeight.w900 : FontWeight.w700,
-                              color: UdaanColors.onBackground,
+                                if (isUnread)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: UdaanColors.primary
+                                          .withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      copy.notificationUnread,
+                                      style: GoogleFonts.atkinsonHyperlegible(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w800,
+                                        color: UdaanColors.primaryGlow,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            item.body,
-                            style: GoogleFonts.atkinsonHyperlegible(
-                              fontSize: 15,
-                              fontWeight: isUnread
-                                  ? FontWeight.w600
-                                  : FontWeight.w500,
-                              color: isUnread
-                                  ? UdaanColors.onBackground
-                                      .withValues(alpha: 0.92)
-                                  : UdaanColors.onSurfaceVariant,
-                              height: 1.35,
+                            const SizedBox(height: 8),
+                            Text(
+                              item.title,
+                              style: GoogleFonts.atkinsonHyperlegible(
+                                fontSize: 17,
+                                fontWeight:
+                                    isUnread ? FontWeight.w900 : FontWeight.w700,
+                                color: UdaanColors.onBackground,
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 6),
+                            Text(
+                              item.body,
+                              style: GoogleFonts.atkinsonHyperlegible(
+                                fontSize: 15,
+                                fontWeight: isUnread
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                                color: isUnread
+                                    ? UdaanColors.onBackground
+                                        .withValues(alpha: 0.92)
+                                    : UdaanColors.onSurfaceVariant,
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

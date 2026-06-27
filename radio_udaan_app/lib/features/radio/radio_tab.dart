@@ -121,7 +121,7 @@ class _RadioTabState extends ConsumerState<RadioTab> {
             _announce(_copy.radioStopped);
           }
         case RadioPlayerStatus.error:
-          _announce(next.errorMessage ?? _copy.radioPlaybackError);
+          break;
       }
     });
 
@@ -157,12 +157,14 @@ class _RadioTabState extends ConsumerState<RadioTab> {
               Semantics(
                 label: player.errorMessage,
                 liveRegion: true,
-                child: Text(
-                  player.errorMessage!,
-                  style: const TextStyle(
-                    color: UdaanColors.error,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                child: ExcludeSemantics(
+                  child: Text(
+                    player.errorMessage!,
+                    style: const TextStyle(
+                      color: UdaanColors.error,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
@@ -352,29 +354,31 @@ class _PlayButton extends StatelessWidget {
         child: InkResponse(
           onTap: onPressed,
           radius: 56,
-          child: Container(
-            width: 96,
-            height: 96,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: ring, width: 5),
-              color: Colors.black,
-            ),
-            child: Center(
-              child: loading
-                  ? const SizedBox(
-                      width: 28,
-                      height: 28,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 3,
-                        color: UdaanColors.primaryGlow,
+          child: ExcludeSemantics(
+            child: Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: ring, width: 5),
+                color: Colors.black,
+              ),
+              child: Center(
+                child: loading
+                    ? const SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          color: UdaanColors.primaryGlow,
+                        ),
+                      )
+                    : Icon(
+                        isPlaying ? Icons.stop : Icons.play_arrow,
+                        size: 52,
+                        color: primary,
                       ),
-                    )
-                  : Icon(
-                      isPlaying ? Icons.stop : Icons.play_arrow,
-                      size: 52,
-                      color: primary,
-                    ),
+              ),
             ),
           ),
         ),
@@ -502,47 +506,49 @@ class _UpcomingSegmentsCard extends StatelessWidget {
                 const Icon(Icons.schedule, color: UdaanColors.primaryGlow),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        copy.radioUpcomingSegments,
-                        style: GoogleFonts.atkinsonHyperlegible(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          color: UdaanColors.primaryGlow,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        title,
-                        style: GoogleFonts.atkinsonHyperlegible(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                          color: UdaanColors.onBackground,
-                        ),
-                      ),
-                      if (subtitle.isNotEmpty) ...[
-                        const SizedBox(height: 2),
+                  child: ExcludeSemantics(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          subtitle,
+                          copy.radioUpcomingSegments,
                           style: GoogleFonts.atkinsonHyperlegible(
                             fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: UdaanColors.onSurfaceVariant,
+                            fontWeight: FontWeight.w900,
+                            color: UdaanColors.primaryGlow,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          title,
+                          style: GoogleFonts.atkinsonHyperlegible(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            color: UdaanColors.onBackground,
+                          ),
+                        ),
+                        if (subtitle.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            subtitle,
+                            style: GoogleFonts.atkinsonHyperlegible(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: UdaanColors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 8),
+                        Text(
+                          copy.radioViewFullSchedule,
+                          style: GoogleFonts.atkinsonHyperlegible(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: UdaanColors.primary,
                           ),
                         ),
                       ],
-                      const SizedBox(height: 8),
-                      Text(
-                        copy.radioViewFullSchedule,
-                        style: GoogleFonts.atkinsonHyperlegible(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: UdaanColors.primary,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
                 const Icon(Icons.chevron_right, color: UdaanColors.primaryGlow),
