@@ -48,6 +48,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
   PlayerState? _lastAnnouncedPlayerState;
   bool _playerError = false;
   bool _startingPlayback = false;
+  bool _isPlaying = false;
 
   String? get _videoId {
     return YoutubePlayerController.convertUrlToId(widget.video.watchUrl) ??
@@ -147,23 +148,14 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
         _clearStartingPlayback();
       }
 
-      if (state == _lastAnnouncedPlayerState) return;
-      switch (state) {
-        case PlayerState.paused:
-          _announce(_copy.libraryPlayerPaused);
-          _lastAnnouncedPlayerState = state;
-        case PlayerState.buffering:
-          _announce(_copy.libraryPlayerBuffering);
-          _lastAnnouncedPlayerState = state;
-        case PlayerState.playing:
-          _lastAnnouncedPlayerState = state;
-        case PlayerState.ended:
-        case PlayerState.cued:
-        case PlayerState.unStarted:
-        case PlayerState.unknown:
-          _lastAnnouncedPlayerState = state;
-          break;
+      final playing = state == PlayerState.playing ||
+          state == PlayerState.buffering;
+      if (playing != _isPlaying && mounted) {
+        setState(() => _isPlaying = playing);
       }
+
+      if (state == _lastAnnouncedPlayerState) return;
+      _lastAnnouncedPlayerState = state;
     });
 
     _videoStateSubscription = controller.videoStateStream.listen((state) {
@@ -210,13 +202,65 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
         });
       } else {
         await controller.playVideo();
-        if (mounted) setState(() => _startingPlayback = false);
+        if (mounted) {
+          setState(() {
+            _startingPlayback = false;
+            _isPlaying = true;
+          });
+          _announce('${copy.libraryPlayVideo}. ${widget.video.title}');
+        }
         _cancelPlaybackTimeout();
       }
-      _announce('Playing ${widget.video.title}');
     } catch (_) {
       _handlePlayerFailure();
     }
+  }
+
+  Future<void> _pausePlayback() async {
+    final controller = _controller;
+    if (controller == null) return;
+    try {
+      await controller.pauseVideo();
+      if (!mounted) return;
+      setState(() => _isPlaying = false);
+      _announce(_copy.libraryPlayerPaused);
+    } catch (_) {
+      _handlePlayerFailure();
+    }
+  }
+
+  Widget _buildVideoRegion({
+    required AppCopy copy,
+    required String title,
+    required Widget child,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(
+          label: '${copy.libraryPlayVideo}, $title',
+          hint: copy.libraryPlayerNativeHint,
+          child: ExcludeSemantics(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: child,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        _LibraryNativeControls(
+          copy: copy,
+          enabled: !_playerError,
+          loading: _startingPlayback,
+          isPlaying: _isPlaying,
+          onPlay: () => unawaited(_startPlayback()),
+          onPause: () => unawaited(_pausePlayback()),
+        ),
+      ],
+    );
   }
 
   void _resetPlayer() {
@@ -228,6 +272,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
       _controller = null;
       _playerError = false;
       _startingPlayback = false;
+      _isPlaying = false;
       _lastAnnouncedPlayerState = null;
     });
   }
@@ -292,21 +337,15 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
           child: ListView(
             padding: const EdgeInsets.all(BrandTokens.screenPadding),
             children: [
-              Semantics(
-                label: 'Video player for ${video.title}',
-                container: true,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-                  child: AspectRatio(
-                    aspectRatio: 16 / 9,
-                    child: _TapToPlayPoster(
-                      copy: copy,
-                      title: video.title,
-                      thumbnailUrl: thumbnailUrl,
-                      loading: _startingPlayback,
-                      onPlay: () => unawaited(_startPlayback()),
-                    ),
-                  ),
+              _buildVideoRegion(
+                copy: copy,
+                title: video.title,
+                child: _TapToPlayPoster(
+                  copy: copy,
+                  title: video.title,
+                  thumbnailUrl: thumbnailUrl,
+                  loading: _startingPlayback,
+                  onPlay: () => unawaited(_startPlayback()),
                 ),
               ),
               metadata,
@@ -327,29 +366,23 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
             child: ListView(
               padding: const EdgeInsets.all(BrandTokens.screenPadding),
               children: [
-                Semantics(
-                  label: 'Video player for ${video.title}',
-                  container: true,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-                    child: AspectRatio(
-                      aspectRatio: 16 / 9,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          player,
-                          if (_startingPlayback)
-                            const ColoredBox(
-                              color: Color(0xCC000000),
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  color: UdaanColors.primary,
-                                ),
-                              ),
+                _buildVideoRegion(
+                  copy: copy,
+                  title: video.title,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      player,
+                      if (_startingPlayback)
+                        const ColoredBox(
+                          color: Color(0xCC000000),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: UdaanColors.primary,
                             ),
-                        ],
-                      ),
-                    ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
                 metadata,
@@ -419,12 +452,18 @@ class _PlayerMetadata extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 16),
-        Text(
-          video.title,
-          style: GoogleFonts.atkinsonHyperlegible(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            color: UdaanColors.onBackground,
+        Semantics(
+          header: true,
+          label: video.title,
+          child: ExcludeSemantics(
+            child: Text(
+              video.title,
+              style: GoogleFonts.atkinsonHyperlegible(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: UdaanColors.onBackground,
+              ),
+            ),
           ),
         ),
         if (duration.isNotEmpty || uploaded.isNotEmpty) ...[
@@ -470,12 +509,77 @@ class _PlayerMetadata extends StatelessWidget {
         const SizedBox(height: 16),
         Semantics(
           label: copy.libraryYoutubeAttribution,
-          child: Text(
-            copy.libraryYoutubeAttribution,
-            style: GoogleFonts.atkinsonHyperlegible(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: UdaanColors.onSurfaceMuted,
+          child: ExcludeSemantics(
+            child: Text(
+              copy.libraryYoutubeAttribution,
+              style: GoogleFonts.atkinsonHyperlegible(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: UdaanColors.onSurfaceMuted,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LibraryNativeControls extends StatelessWidget {
+  const _LibraryNativeControls({
+    required this.copy,
+    required this.enabled,
+    required this.loading,
+    required this.isPlaying,
+    required this.onPlay,
+    required this.onPause,
+  });
+
+  final AppCopy copy;
+  final bool enabled;
+  final bool loading;
+  final bool isPlaying;
+  final VoidCallback onPlay;
+  final VoidCallback onPause;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Semantics(
+            button: true,
+            enabled: enabled && !loading && !isPlaying,
+            label: copy.libraryPlayVideo,
+            child: ExcludeSemantics(
+              child: FilledButton.icon(
+                onPressed:
+                    enabled && !loading && !isPlaying ? onPlay : null,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(56),
+                ),
+                icon: const Icon(Icons.play_arrow_rounded),
+                label: Text(copy.libraryPlayVideo),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Semantics(
+            button: true,
+            enabled: enabled && !loading && isPlaying,
+            label: copy.libraryPauseVideo,
+            child: ExcludeSemantics(
+              child: OutlinedButton.icon(
+                onPressed:
+                    enabled && !loading && isPlaying ? onPause : null,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(56),
+                ),
+                icon: const Icon(Icons.pause_rounded),
+                label: Text(copy.libraryPauseVideo),
+              ),
             ),
           ),
         ),
@@ -501,10 +605,7 @@ class _TapToPlayPoster extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      enabled: !loading,
-      label: '${copy.libraryPlayVideo}, $title. ${copy.libraryTapToPlay}',
+    return ExcludeSemantics(
       child: Material(
         color: UdaanColors.surfaceContainer,
         child: InkWell(

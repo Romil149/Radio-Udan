@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/udaan_colors.dart';
 import '../../../core/utils/keyboard_dismiss.dart';
+import '../../../core/widgets/accessible_country_picker_sheet.dart';
 import '../../../core/utils/phone_country.dart';
 import '../../../core/utils/phone_e164.dart';
 
@@ -106,34 +107,15 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
     if (mounted) setState(() {});
   }
 
-  void _openCountryPicker() {
-    showCountryPicker(
+  Future<void> _openCountryPicker() async {
+    dismissKeyboard(context);
+    final selected = await showAccessibleCountryPicker(
       context: context,
-      favorite: const ['IN'],
-      showPhoneCode: true,
-      countryListTheme: CountryListThemeData(
-        backgroundColor: UdaanColors.surfaceContainer,
-        textStyle: GoogleFonts.atkinsonHyperlegible(
-          fontSize: 16,
-          color: UdaanColors.onBackground,
-        ),
-        searchTextStyle: GoogleFonts.atkinsonHyperlegible(
-          fontSize: 16,
-          color: UdaanColors.onBackground,
-        ),
-        inputDecoration: InputDecoration(
-          hintText: widget.copy.phoneCountrySearchHint,
-          hintStyle: GoogleFonts.atkinsonHyperlegible(color: UdaanColors.hint),
-          filled: true,
-          fillColor: UdaanColors.background,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: UdaanColors.outlineVariant),
-          ),
-        ),
-      ),
-      onSelect: _input.selectCountry,
+      copy: widget.copy,
     );
+    if (selected != null) {
+      _input.selectCountry(selected);
+    }
   }
 
   InputDecoration _fieldDecoration({String? hint}) {

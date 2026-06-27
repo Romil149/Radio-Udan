@@ -193,6 +193,8 @@ abstract final class AppStrings {
       'Choose your country code, then enter your mobile number without the leading zero.';
   static const String phoneNationalHint = '98765 43210';
   static const String phoneCountrySearchHint = 'Search country';
+  static const String phoneCountryPickerTitle = 'Select country code';
+  static const String phoneCountryFavorites = 'Favorites';
   static const String phoneNationalFieldSemantics =
       'Mobile number without country code';
   static String phoneCountryCodeSemantics({
@@ -410,7 +412,10 @@ abstract final class AppStrings {
   static const String libraryPlayerPaused = 'Video paused';
   static const String libraryPlayerBuffering = 'Video buffering';
   static const String libraryPlayVideo = 'Play video';
+  static const String libraryPauseVideo = 'Pause video';
   static const String libraryTapToPlay = 'Tap to play';
+  static const String libraryPlayerNativeHint =
+      'Use the play and pause buttons below to control the video.';
   static const String libraryYoutubeAttribution = 'Video hosted on YouTube';
   static const String libraryNoDescription =
       'No description available for this video.';

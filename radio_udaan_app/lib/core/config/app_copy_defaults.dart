@@ -97,6 +97,9 @@ const Map<String, String> appCopyDefaults = {
   'library_loading': 'Loading library',
   'library_open_in_youtube': 'Open in YouTube',
   'library_play_video': 'Play video',
+  'library_pause_video': 'Pause video',
+  'library_player_native_hint':
+      'Use the play and pause buttons below to control the video.',
   'library_player_buffering': 'Video buffering',
   'library_player_paused': 'Video paused',
   'library_playlists': 'Playlists',
@@ -192,6 +195,8 @@ const Map<String, String> appCopyDefaults = {
   'password_mismatch': 'Passwords do not match.',
   'password_required': 'Enter your password.',
   'phone_country_search_hint': 'Search country',
+  'phone_country_picker_title': 'Select country code',
+  'phone_country_favorites': 'Favorites',
   'phone_field_helper': 'Choose your country code, then enter your mobile number without the leading zero.',
   'phone_field_label': 'Mobile number',
   'phone_national_hint': '98765 43210',

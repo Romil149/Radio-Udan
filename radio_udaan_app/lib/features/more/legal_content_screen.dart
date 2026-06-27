@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/accessibility_scope.dart';
 import '../../core/theme/brand_tokens.dart';
-import '../../core/theme/udaan_google_fonts.dart';
 import '../../core/utils/legal_html_sanitizer.dart';
 import '../../core/utils/wp_media_url.dart';
+import '../../core/widgets/accessible_html_content.dart';
 import '../../core/widgets/brand_app_bar.dart';
 
 /// Native scroll view for WP page body HTML (`GET /config` → `legal_pages`).
@@ -107,7 +106,6 @@ class LegalContentScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = context.udaan;
     final bodyHtml = sanitizeLegalPageHtml(
       rewriteWpHtmlMediaUrls(
         html,
@@ -120,29 +118,15 @@ class LegalContentScreen extends StatelessWidget {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: BrandAppBar(title: title),
       body: SafeArea(
-        child: Semantics(
-          container: true,
-          label: title,
-          child: ListView(
-            padding: const EdgeInsets.all(BrandTokens.screenPadding),
-            children: [
-              ExcludeSemantics(
-                child: HtmlWidget(
-                  bodyHtml,
-                  textStyle: udaanGoogleFont(
-                    context,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    height: 1.5,
-                    color: palette.onSurfaceVariant,
-                  ),
-                  customStylesBuilder: (element) =>
-                      _stylesForElement(context, element),
-                  onTapUrl: _openExternalLink,
-                ),
-              ),
-            ],
-          ),
+        child: ListView(
+          padding: const EdgeInsets.all(BrandTokens.screenPadding),
+          children: [
+            AccessibleHtmlContent(
+              html: bodyHtml,
+              customStylesBuilder: _stylesForElement,
+              onTapUrl: _openExternalLink,
+            ),
+          ],
         ),
       ),
     );

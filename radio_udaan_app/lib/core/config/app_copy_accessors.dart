@@ -98,6 +98,8 @@ extension AppCopyStrings on AppCopy {
   String get libraryLoading => text('library_loading');
   String get libraryOpenInYoutube => text('library_open_in_youtube');
   String get libraryPlayVideo => text('library_play_video');
+  String get libraryPauseVideo => text('library_pause_video');
+  String get libraryPlayerNativeHint => text('library_player_native_hint');
   String get libraryPlayerBuffering => text('library_player_buffering');
   String get libraryPlayerPaused => text('library_player_paused');
   String get libraryPlaylists => text('library_playlists');
@@ -196,6 +198,8 @@ extension AppCopyStrings on AppCopy {
   String get passwordMismatch => text('password_mismatch');
   String get passwordRequired => text('password_required');
   String get phoneCountrySearchHint => text('phone_country_search_hint');
+  String get phoneCountryPickerTitle => text('phone_country_picker_title');
+  String get phoneCountryFavorites => text('phone_country_favorites');
   String get phoneFieldHelper => text('phone_field_helper');
   String get phoneFieldLabel => text('phone_field_label');
   String get phoneNationalHint => text('phone_national_hint');

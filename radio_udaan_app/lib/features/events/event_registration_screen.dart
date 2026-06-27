@@ -4,7 +4,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/network/dio_exception_mapper.dart';
@@ -14,6 +13,7 @@ import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/accessibility_scope.dart';
 import '../../core/theme/udaan_text_styles.dart';
 import '../../core/utils/keyboard_dismiss.dart';
+import '../../core/widgets/accessible_html_content.dart';
 import '../auth/widgets/udaan_auth_widgets.dart';
 import '../shell/main_shell_screen.dart';
 import 'form_field_validator.dart';
@@ -1477,16 +1477,13 @@ class _EventRegistrationScreenState
             if (field.consentHtml != null &&
                 field.consentHtml!.trim().isNotEmpty) ...[
               const SizedBox(height: 8),
-              Semantics(
-                label: field.consentHtml,
-                child: HtmlWidget(
-                  field.consentHtml!,
-                  textStyle: udaanTextStyle(
-                    context,
-                    fontSize: 16,
-                    color: palette.onBackground.withValues(alpha: 0.85),
-                    height: 1.4,
-                  ),
+              AccessibleHtmlContent(
+                html: field.consentHtml!,
+                textStyle: udaanTextStyle(
+                  context,
+                  fontSize: 16,
+                  color: palette.onBackground.withValues(alpha: 0.85),
+                  height: 1.4,
                 ),
               ),
             ],
@@ -1512,12 +1509,27 @@ class _EventRegistrationScreenState
       case 'info':
         final html = field.infoHtml?.trim() ?? '';
         if (html.isEmpty) return const SizedBox.shrink();
-        return Semantics(
-          container: true,
-          label: registrationFieldDisplayLabel(field.label),
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: HtmlWidget(html),
+        final infoLabel = registrationFieldDisplayLabel(field.label);
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (infoLabel.isNotEmpty) ...[
+                Semantics(
+                  header: true,
+                  label: infoLabel,
+                  child: ExcludeSemantics(
+                    child: Text(
+                      infoLabel,
+                      style: registrationFieldLabelStyle(context),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+              AccessibleHtmlContent(html: html),
+            ],
           ),
         );
       case 'textarea':
