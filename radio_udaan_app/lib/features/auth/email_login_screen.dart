@@ -92,7 +92,7 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
             _obscurePassword
                 ? Icons.visibility_outlined
                 : Icons.visibility_off_outlined,
-            color: UdaanColors.primaryGlow,
+            color: context.udaan.primaryGlow,
           ),
           onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
         ),
@@ -144,7 +144,7 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
               Text(
                 _copy.loginEmailVerifiedNote,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: UdaanColors.onSurfaceVariant,
+                      color: context.udaan.onSurfaceVariant,
                     ),
               ),
               const SizedBox(height: 12),
@@ -175,8 +175,8 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
                   liveRegion: true,
                   child: ExcludeSemantics(
                     child: Text(                    _error!,
-                    style: const TextStyle(
-                      color: UdaanColors.error,
+                    style: TextStyle(
+                      color: context.udaan.error,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),

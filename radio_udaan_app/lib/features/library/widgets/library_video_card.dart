@@ -4,6 +4,7 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/accessibility/udaan_semantics.dart';
 import '../../../core/models/youtube_video.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/theme/brand_tokens.dart';
@@ -35,9 +36,7 @@ class LibraryVideoCard extends ConsumerWidget {
 
   void _openPlayer(BuildContext context, AppCopy copy) {
     if (!video.hasPlayableId) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(copy.libraryNoVideo)),
-      );
+      announceAndSnack(context, copy.libraryNoVideo);
       return;
     }
     Navigator.of(context).push(
@@ -71,26 +70,24 @@ class LibraryVideoCard extends ConsumerWidget {
         : '';
     final summary = _summaryLine(copy);
 
-    return Semantics(
-      label: copy.libraryVideoSemantics(
-        title: video.title,
-        duration: video.displayDuration,
-        uploaded: uploaded,
-        saved: isSaved,
+    return Container(
+      decoration: BoxDecoration(
+        color: context.udaan.surfaceContainer,
+        borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+        border: Border.all(color: context.udaan.outlineVariant),
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: UdaanColors.surfaceContainer,
-          borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-          border: Border.all(color: UdaanColors.outlineVariant),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Semantics(
               button: true,
-              label: '${copy.libraryPlayVideo}, ${video.title}',
+              label: copy.libraryVideoSemantics(
+                title: video.title,
+                duration: video.displayDuration,
+                uploaded: uploaded,
+                saved: isSaved,
+              ),
               child: ExcludeSemantics(
                 child: InkWell(
                   onTap: () => _openPlayer(context, copy),
@@ -117,7 +114,7 @@ class LibraryVideoCard extends ConsumerWidget {
                           style: GoogleFonts.atkinsonHyperlegible(
                             fontSize: 18,
                             fontWeight: FontWeight.w900,
-                            color: UdaanColors.onBackground,
+                            color: context.udaan.onBackground,
                           ),
                         ),
                         if (summary.isNotEmpty) ...[
@@ -129,15 +126,15 @@ class LibraryVideoCard extends ConsumerWidget {
                             style: GoogleFonts.atkinsonHyperlegible(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              color: UdaanColors.onSurfaceVariant,
+                              color: context.udaan.onSurfaceVariant,
                               height: 1.35,
                             ),
                           ),
                         ],
                         const SizedBox(height: 12),
-                        const Divider(
+                        Divider(
                           height: 1,
-                          color: UdaanColors.outlineVariant,
+                          color: context.udaan.outlineVariant,
                         ),
                       ],
                     ),
@@ -152,7 +149,7 @@ class LibraryVideoCard extends ConsumerWidget {
                             style: GoogleFonts.atkinsonHyperlegible(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: UdaanColors.onSurfaceVariant,
+                              color: context.udaan.onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -182,8 +179,7 @@ class LibraryVideoCard extends ConsumerWidget {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -211,8 +207,8 @@ class _SaveButton extends StatelessWidget {
           style: OutlinedButton.styleFrom(
             minimumSize: const Size(_libraryMinTapTarget, _libraryMinTapTarget),
             padding: const EdgeInsets.symmetric(horizontal: 14),
-            foregroundColor: UdaanColors.primaryGlow,
-            side: const BorderSide(color: UdaanColors.outlineVariant),
+            foregroundColor: context.udaan.primaryGlow,
+            side: BorderSide(color: context.udaan.outlineVariant),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
@@ -220,7 +216,7 @@ class _SaveButton extends StatelessWidget {
           icon: Icon(
             isSaved ? Icons.bookmark : Icons.bookmark_border,
             size: 20,
-            color: isSaved ? UdaanColors.primary : UdaanColors.primaryGlow,
+            color: isSaved ? context.udaan.primary : context.udaan.primaryGlow,
           ),
           label: Text(
             saveLabel,
@@ -269,12 +265,12 @@ class _Thumbnail extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: UdaanColors.primary,
+                  color: context.udaan.primary,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.play_arrow_rounded,
-                  color: Colors.black,
+                  color: context.udaan.onPrimary,
                   size: 36,
                 ),
               ),
@@ -292,12 +288,12 @@ class _ThumbnailPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: UdaanColors.surfaceContainerHigh,
+      color: context.udaan.surfaceContainerHigh,
       child: Center(
         child: Icon(
           Icons.video_library_outlined,
           size: 48,
-          color: UdaanColors.onSurfaceMuted.withValues(alpha: 0.7),
+          color: context.udaan.onSurfaceMuted.withValues(alpha: 0.7),
         ),
       ),
     );

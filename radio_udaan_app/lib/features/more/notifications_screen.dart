@@ -32,11 +32,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     switch (type) {
       case 'live':
       case 'radio':
-        return UdaanColors.primary;
+        return context.udaan.primary;
       case 'event':
-        return UdaanColors.secondary;
+        return context.udaan.secondary;
       default:
-        return UdaanColors.onSurfaceVariant;
+        return context.udaan.onSurfaceVariant;
     }
   }
 
@@ -104,31 +104,33 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                     Semantics(
                       button: true,
                       label: _copy.notificationsMarkAllRead,
-                      child: TextButton(
-                        onPressed: markingAll ? null : _markAllRead,
-                        style: TextButton.styleFrom(
-                          foregroundColor: UdaanColors.primaryGlow,
-                          minimumSize: const Size(
-                            BrandTokens.minTapTarget,
-                            BrandTokens.minTapTarget,
+                      child: ExcludeSemantics(
+                        child: TextButton(
+                          onPressed: markingAll ? null : _markAllRead,
+                          style: TextButton.styleFrom(
+                            foregroundColor: context.udaan.primaryGlow,
+                            minimumSize: const Size(
+                              BrandTokens.minTapTarget,
+                              BrandTokens.minTapTarget,
+                            ),
                           ),
+                          child: markingAll
+                              ? SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: context.udaan.primary,
+                                  ),
+                                )
+                              : Text(
+                                  _copy.notificationsMarkAllRead,
+                                  style: GoogleFonts.atkinsonHyperlegible(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 14,
+                                  ),
+                                ),
                         ),
-                        child: markingAll
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: UdaanColors.primary,
-                                ),
-                              )
-                            : Text(
-                                _copy.notificationsMarkAllRead,
-                                style: GoogleFonts.atkinsonHyperlegible(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 14,
-                                ),
-                              ),
                       ),
                     ),
                 ],
@@ -137,7 +139,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             const SizedBox(height: 8),
             Expanded(
               child: RefreshIndicator(
-                color: UdaanColors.primary,
+                color: context.udaan.primary,
                 onRefresh: () =>
                     ref.read(notificationsListProvider.notifier).refresh(),
                 child: notifications.when(
@@ -184,8 +186,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                     child: Semantics(
                       label: _copy.notificationsLoading,
                       liveRegion: true,
-                      child: const CircularProgressIndicator(
-                        color: UdaanColors.primary,
+                      child: CircularProgressIndicator(
+                        color: context.udaan.primary,
                       ),
                     ),
                   ),
@@ -226,10 +228,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           label: Text(label),
           selected: selected,
           onSelected: (_) => onTap(),
-          selectedColor: UdaanColors.primary,
+          selectedColor: context.udaan.primary,
           labelStyle: GoogleFonts.atkinsonHyperlegible(
             fontWeight: FontWeight.w700,
-            color: selected ? UdaanColors.onPrimary : UdaanColors.onBackground,
+            color: selected ? context.udaan.onPrimary : context.udaan.onBackground,
           ),
         ),
       ),

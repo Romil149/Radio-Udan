@@ -37,8 +37,8 @@ class LibraryPlaylistsScreen extends ConsumerWidget {
               );
             }
             return RefreshIndicator(
-              color: UdaanColors.primary,
-              backgroundColor: UdaanColors.surfaceContainer,
+              color: context.udaan.primary,
+              backgroundColor: context.udaan.surfaceContainer,
               onRefresh: () async {
                 ref.invalidate(allYoutubePlaylistsProvider);
                 await ref.read(allYoutubePlaylistsProvider.future);
@@ -70,7 +70,7 @@ class LibraryPlaylistsScreen extends ConsumerWidget {
             child: Semantics(
               label: copy.libraryLoading,
               liveRegion: true,
-              child: const CircularProgressIndicator(color: UdaanColors.primary),
+              child: CircularProgressIndicator(color: context.udaan.primary),
             ),
           ),
           error: (error, _) => EmptyState(

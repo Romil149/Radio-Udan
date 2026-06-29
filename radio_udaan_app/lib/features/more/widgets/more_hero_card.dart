@@ -19,10 +19,13 @@ class MoreHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.udaan;
+    final introText = intro.trim();
+    final semanticsLabel =
+        introText.isEmpty ? title : '$title. $introText';
 
     return Semantics(
       header: true,
-      label: '$title. $intro',
+      label: semanticsLabel,
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
         padding: const EdgeInsets.all(20),
@@ -42,29 +45,33 @@ class MoreHeroCard extends StatelessWidget {
                 color: palette.primaryGlow.withValues(alpha: 0.12),
               ),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: udaanGoogleFont(
-                    context,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    color: palette.primaryGlow,
+            ExcludeSemantics(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: udaanGoogleFont(
+                      context,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      color: palette.primaryGlow,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  intro,
-                  style: udaanGoogleFont(
-                    context,
-                    fontSize: 16,
-                    height: 1.4,
-                    color: palette.onSurfaceVariant,
-                  ),
-                ),
-              ],
+                  if (introText.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      introText,
+                      style: udaanGoogleFont(
+                        context,
+                        fontSize: 16,
+                        height: 1.4,
+                        color: palette.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           ],
         ),

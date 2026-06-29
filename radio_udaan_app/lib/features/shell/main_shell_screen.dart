@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/providers/app_settings_provider.dart';
 import '../../core/push/notification_permission_flow.dart';
@@ -59,16 +60,25 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
 
     final palette = context.udaan;
 
+    final tabBodies = [
+      RepaintBoundary(child: RadioTab()),
+      RepaintBoundary(child: LibraryTab()),
+      RepaintBoundary(child: EventsTab()),
+      RepaintBoundary(child: AboutTab()),
+      RepaintBoundary(child: MoreTab()),
+    ];
+
     return Scaffold(
       backgroundColor: palette.background,
       body: IndexedStack(
         index: index,
-        children: const [
-          RepaintBoundary(child: RadioTab()),
-          RepaintBoundary(child: LibraryTab()),
-          RepaintBoundary(child: EventsTab()),
-          RepaintBoundary(child: AboutTab()),
-          RepaintBoundary(child: MoreTab()),
+        children: [
+          for (var i = 0; i < tabs.length; i++)
+            Semantics(
+              container: true,
+              label: tabs[i].label,
+              child: tabBodies[i],
+            ),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -79,6 +89,12 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
           selectedIndex: index,
           onDestinationSelected: (i) {
             dismissKeyboard(context);
+            if (i != index) {
+              final label = i == MainShellScreen.moreTabIndex && unreadCount > 0
+                  ? '${tabs[i].label} (${unreadCount > 9 ? '9+' : unreadCount})'
+                  : tabs[i].label;
+              announce(context, label);
+            }
             ref.read(mainShellTabIndexProvider.notifier).state = i;
           },
           destinations: [

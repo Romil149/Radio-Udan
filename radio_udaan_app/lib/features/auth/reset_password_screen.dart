@@ -90,7 +90,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             obscured
                 ? Icons.visibility_outlined
                 : Icons.visibility_off_outlined,
-            color: UdaanColors.primaryGlow,
+            color: context.udaan.primaryGlow,
           ),
           onPressed: onToggle,
         ),
@@ -178,10 +178,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                   }
                 },
               ),
-              const Divider(
+              Divider(
                 height: 24,
                 thickness: 1,
-                color: UdaanColors.outlineVariant,
+                color: context.udaan.outlineVariant,
               ),
               const SizedBox(height: 8),
               Center(child: UdaanForgotPasswordHero(
@@ -191,13 +191,15 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               Semantics(
                 header: true,
                 label: _copy.resetPasswordTitle,
-                child: Text(
-                  _copy.resetPasswordTitle,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.atkinsonHyperlegible(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: UdaanColors.onBackground,
+                child: ExcludeSemantics(
+                  child: Text(
+                    _copy.resetPasswordTitle,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.atkinsonHyperlegible(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: context.udaan.onBackground,
+                    ),
                   ),
                 ),
               ),
@@ -208,7 +210,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 style: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
-                  color: UdaanColors.primaryGlow,
+                  color: context.udaan.primaryGlow,
                   height: 1.35,
                 ),
               ),
@@ -273,8 +275,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                   child: ExcludeSemantics(
                     child: Text(                    _error!,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: UdaanColors.error,
+                    style: TextStyle(
+                      color: context.udaan.error,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -293,18 +295,20 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               Semantics(
                 button: true,
                 label: _copy.backToLogin,
-                child: TextButton.icon(
-                  onPressed: _loading ? null : () => context.go('/login'),
-                  icon: const Icon(
-                    Icons.chevron_left,
-                    color: UdaanColors.secondary,
-                  ),
-                  label: Text(
-                    _copy.backToLogin,
-                    style: GoogleFonts.atkinsonHyperlegible(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: UdaanColors.secondary,
+                child: ExcludeSemantics(
+                  child: TextButton.icon(
+                    onPressed: _loading ? null : () => context.go('/login'),
+                    icon: Icon(
+                      Icons.chevron_left,
+                      color: context.udaan.secondary,
+                    ),
+                    label: Text(
+                      _copy.backToLogin,
+                      style: GoogleFonts.atkinsonHyperlegible(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: context.udaan.secondary,
+                      ),
                     ),
                   ),
                 ),

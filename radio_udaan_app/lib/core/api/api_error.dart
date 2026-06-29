@@ -35,8 +35,23 @@ class ApiError implements Exception {
         body: Map<String, dynamic>.from(data),
       );
     }
+
+    final raw = error.message ?? '';
+    final isBrowserTransportFailure = raw.contains('XMLHttpRequest') ||
+        raw.contains('connection errored') ||
+        error.type == DioExceptionType.connectionError;
+
+    if (isBrowserTransportFailure) {
+      return ApiError(
+        message: AppCopy.fallback.bootstrapOffline,
+        statusCode: error.response?.statusCode,
+      );
+    }
+
     return ApiError(
-      message: error.message ?? 'Network error. Check your connection.',
+      message: raw.isNotEmpty
+          ? raw
+          : AppCopy.fallback.bootstrapOffline,
       statusCode: error.response?.statusCode,
     );
   }

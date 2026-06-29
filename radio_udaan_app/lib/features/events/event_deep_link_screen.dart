@@ -35,7 +35,7 @@ class _EventDeepLinkScreenState extends ConsumerState<EventDeepLinkScreen> {
         child: Semantics(
           label: _copy.eventDeepLinkLoading,
           liveRegion: true,
-          child: const CircularProgressIndicator(color: UdaanColors.primary),
+          child: CircularProgressIndicator(color: context.udaan.primary),
         ),
       ),
     );

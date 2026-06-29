@@ -50,7 +50,7 @@ class OtpVerifyIdentityBody extends StatelessWidget {
     final bodyStyle = GoogleFonts.atkinsonHyperlegible(
       fontSize: 17,
       fontWeight: FontWeight.w500,
-      color: UdaanColors.onBackground.withValues(alpha: 0.92),
+      color: context.udaan.onBackground.withValues(alpha: 0.92),
       height: 1.4,
     );
 
@@ -65,15 +65,15 @@ class OtpVerifyIdentityBody extends StatelessWidget {
             label: copy.secureVerificationHero,
             child: Icon(
               Icons.verified_user_outlined,
-              color: UdaanColors.primaryGlow.withValues(alpha: 0.95),
+              color: context.udaan.primaryGlow.withValues(alpha: 0.95),
               size: 26,
             ),
           ),
         ),
-        const Divider(
+        Divider(
           height: 24,
           thickness: 1,
-          color: UdaanColors.outlineVariant,
+          color: context.udaan.outlineVariant,
         ),
         const SizedBox(height: 8),
         Center(child: UdaanOtpPadlockHero(
@@ -90,7 +90,7 @@ class OtpVerifyIdentityBody extends StatelessWidget {
               style: GoogleFonts.atkinsonHyperlegible(
                 fontSize: 28,
                 fontWeight: FontWeight.w800,
-                color: UdaanColors.onBackground,
+                color: context.udaan.onBackground,
               ),
             ),
           ),
@@ -112,7 +112,7 @@ class OtpVerifyIdentityBody extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: bodyStyle.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: UdaanColors.primaryGlow,
+                    color: context.udaan.primaryGlow,
                   ),
                 ),
               ],
@@ -129,7 +129,7 @@ class OtpVerifyIdentityBody extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 14,
-                  color: UdaanColors.onSurfaceVariant,
+                  color: context.udaan.onSurfaceVariant,
                 ),
               ),
             ),
@@ -151,8 +151,8 @@ class OtpVerifyIdentityBody extends StatelessWidget {
               child: Text(
                 error!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: UdaanColors.error,
+                style: TextStyle(
+                  color: context.udaan.error,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),

@@ -140,15 +140,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   label: _copy.accountIcon,
                   child: Icon(
                     Icons.person_outline,
-                    color: UdaanColors.primaryGlow.withValues(alpha: 0.95),
+                    color: context.udaan.primaryGlow.withValues(alpha: 0.95),
                     size: 26,
                   ),
                 ),
               ),
-              const Divider(
+              Divider(
                 height: 24,
                 thickness: 1,
-                color: UdaanColors.outlineVariant,
+                color: context.udaan.outlineVariant,
               ),
               const SizedBox(height: 8),
               Center(child: UdaanForgotPasswordHero(
@@ -158,13 +158,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               Semantics(
                 header: true,
                 label: _copy.forgotPasswordTitle,
-                child: Text(
-                  _copy.forgotPasswordTitle,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.atkinsonHyperlegible(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: UdaanColors.onBackground,
+                child: ExcludeSemantics(
+                  child: Text(
+                    _copy.forgotPasswordTitle,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.atkinsonHyperlegible(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: context.udaan.onBackground,
+                    ),
                   ),
                 ),
               ),
@@ -175,7 +177,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 style: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
-                  color: UdaanColors.primaryGlow,
+                  color: context.udaan.primaryGlow,
                   height: 1.35,
                 ),
               ),
@@ -220,7 +222,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   _copy.forgotPasswordEmailNote,
                   style: GoogleFonts.atkinsonHyperlegible(
                     fontSize: 14,
-                    color: UdaanColors.onSurfaceVariant.withValues(alpha: 0.9),
+                    color: context.udaan.onSurfaceVariant.withValues(alpha: 0.9),
                   ),
                 ),
               ] else ...[
@@ -238,7 +240,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   _copy.forgotPasswordPhoneNote,
                   style: GoogleFonts.atkinsonHyperlegible(
                     fontSize: 14,
-                    color: UdaanColors.onSurfaceVariant.withValues(alpha: 0.9),
+                    color: context.udaan.onSurfaceVariant.withValues(alpha: 0.9),
                   ),
                 ),
               ],
@@ -250,8 +252,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   child: ExcludeSemantics(
                     child: Text(                    _error!,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: UdaanColors.error,
+                    style: TextStyle(
+                      color: context.udaan.error,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -270,7 +272,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     style: GoogleFonts.atkinsonHyperlegible(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: UdaanColors.secondary,
+                      color: context.udaan.secondary,
                     ),
                     ),
                   ),
@@ -287,18 +289,20 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               Semantics(
                 button: true,
                 label: _copy.backToLogin,
-                child: TextButton.icon(
-                  onPressed: _loading ? null : () => context.go('/login'),
-                  icon: const Icon(
-                    Icons.chevron_left,
-                    color: UdaanColors.secondary,
-                  ),
-                  label: Text(
-                    _copy.backToLogin,
-                    style: GoogleFonts.atkinsonHyperlegible(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: UdaanColors.secondary,
+                child: ExcludeSemantics(
+                  child: TextButton.icon(
+                    onPressed: _loading ? null : () => context.go('/login'),
+                    icon: Icon(
+                      Icons.chevron_left,
+                      color: context.udaan.secondary,
+                    ),
+                    label: Text(
+                      _copy.backToLogin,
+                      style: GoogleFonts.atkinsonHyperlegible(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: context.udaan.secondary,
+                      ),
                     ),
                   ),
                 ),
@@ -332,31 +336,33 @@ class _ForgotChannelChip extends StatelessWidget {
       button: true,
       selected: selected,
       label: label,
-      child: Material(
-        color: selected ? UdaanColors.primary : UdaanColors.surfaceContainer,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          onTap: onTap,
+      child: ExcludeSemantics(
+        child: Material(
+          color: selected ? context.udaan.primary : context.udaan.surfaceContainer,
           borderRadius: BorderRadius.circular(12),
-          child: Container(
-            constraints: const BoxConstraints(minHeight: 48),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: selected
-                    ? UdaanColors.primary
-                    : UdaanColors.primaryGlow,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 48),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: selected
+                      ? context.udaan.primary
+                      : context.udaan.primaryGlow,
+                ),
               ),
-            ),
-            child: Text(
-              label,
-              style: GoogleFonts.atkinsonHyperlegible(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: selected
-                    ? UdaanColors.onPrimary
-                    : UdaanColors.onBackground,
+              child: Text(
+                label,
+                style: GoogleFonts.atkinsonHyperlegible(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: selected
+                      ? context.udaan.onPrimary
+                      : context.udaan.onBackground,
+                ),
               ),
             ),
           ),

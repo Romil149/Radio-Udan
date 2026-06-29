@@ -95,8 +95,8 @@ class _LibraryTabState extends ConsumerState<LibraryTab> {
       appBar: MainTabAppBar(title: _copy.tabLibrary),
       body: SafeArea(
         child: RefreshIndicator(
-          color: UdaanColors.primary,
-          backgroundColor: UdaanColors.surfaceContainer,
+          color: context.udaan.primary,
+          backgroundColor: context.udaan.surfaceContainer,
           onRefresh: _refreshAll,
           child: ListView(
               padding: const EdgeInsets.only(bottom: 24),
@@ -156,7 +156,7 @@ class _LibraryTabState extends ConsumerState<LibraryTab> {
                                 _libraryMinTapTarget,
                                 _libraryMinTapTarget,
                               ),
-                              foregroundColor: UdaanColors.primary,
+                              foregroundColor: context.udaan.primary,
                             ),
                             child: Text(
                               _copy.libraryViewAllPlaylists,
@@ -227,7 +227,7 @@ class _FeaturedPlaylistsSection extends StatelessWidget {
           child: ExcludeSemantics(
             child: Text(            emptyLabel,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: UdaanColors.onSurfaceVariant,
+                  color: context.udaan.onSurfaceVariant,
                 ),
             ),
           ),
@@ -312,7 +312,7 @@ class _VideoListSection extends ConsumerWidget {
           child: ExcludeSemantics(
             child: Text(            emptyLabel,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: UdaanColors.onSurfaceVariant,
+                  color: context.udaan.onSurfaceVariant,
                 ),
             ),
           ),
@@ -382,7 +382,7 @@ class _LoadingBlock extends StatelessWidget {
         child: Semantics(
           label: loadingLabel,
           liveRegion: true,
-          child: const CircularProgressIndicator(color: UdaanColors.primary),
+          child: CircularProgressIndicator(color: context.udaan.primary),
         ),
       ),
     );
@@ -436,7 +436,7 @@ class _SavedEntryTile extends ConsumerWidget {
         label:
             '${copy.librarySavedScreenTitle}$countLabel. ${copy.librarySavedEntrySubtitle}',
         child: Material(
-          color: UdaanColors.surfaceContainer,
+          color: context.udaan.surfaceContainer,
           borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
           child: InkWell(
             borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
@@ -450,37 +450,39 @@ class _SavedEntryTile extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-                border: Border.all(color: UdaanColors.outlineVariant),
+                border: Border.all(color: context.udaan.outlineVariant),
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.bookmark,
-                    color: UdaanColors.primaryGlow,
+                    color: context.udaan.primaryGlow,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          copy.librarySavedScreenTitle,
-                          style: GoogleFonts.atkinsonHyperlegible(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w800,
-                            color: UdaanColors.onBackground,
+                    child: ExcludeSemantics(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            copy.librarySavedScreenTitle,
+                            style: GoogleFonts.atkinsonHyperlegible(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              color: context.udaan.onBackground,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          copy.librarySavedEntrySubtitle,
-                          style: GoogleFonts.atkinsonHyperlegible(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: UdaanColors.onSurfaceVariant,
+                          const SizedBox(height: 2),
+                          Text(
+                            copy.librarySavedEntrySubtitle,
+                            style: GoogleFonts.atkinsonHyperlegible(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: context.udaan.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   if (count > 0)
@@ -491,21 +493,21 @@ class _SavedEntryTile extends ConsumerWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: UdaanColors.primary.withValues(alpha: 0.2),
+                          color: context.udaan.primary.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           '$count',
                           style: GoogleFonts.atkinsonHyperlegible(
                             fontWeight: FontWeight.w800,
-                            color: UdaanColors.primaryGlow,
+                            color: context.udaan.primaryGlow,
                           ),
                         ),
                       ),
                     ),
-                  const Icon(
+                  Icon(
                     Icons.chevron_right,
-                    color: UdaanColors.onSurfaceVariant,
+                    color: context.udaan.onSurfaceVariant,
                   ),
                 ],
               ),

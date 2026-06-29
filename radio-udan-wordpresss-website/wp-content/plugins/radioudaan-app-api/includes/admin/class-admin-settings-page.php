@@ -96,23 +96,26 @@ class RadioUdaan_Admin_Settings_Page {
 						<p class="description"><?php esc_html_e( 'Defaults match radio-udaan.com (orange #ff6b00).', 'radioudaan-app-api' ); ?></p>
 						<div class="ru-admin__field ru-admin__color-grid">
 							<?php
-							$color_labels = array(
-								'primary'      => __( 'Primary', 'radioudaan-app-api' ),
-								'on_primary'   => __( 'On primary', 'radioudaan-app-api' ),
-								'secondary'    => __( 'Secondary', 'radioudaan-app-api' ),
-								'surface'      => __( 'Light surface', 'radioudaan-app-api' ),
-								'surface_dark' => __( 'Dark header', 'radioudaan-app-api' ),
-								'error'        => __( 'Error', 'radioudaan-app-api' ),
-							);
+							$color_labels = RadioUdaan_App_Branding::color_labels();
 							foreach ( $color_labels as $key => $label ) :
-								$field_id = 'branding_color_' . $key;
+								$field_id   = 'branding_color_' . $key;
+								$hex_value  = $brand_colors[ $key ] ?? '#000000';
+								$is_scrim   = ( 'scrim' === $key );
+								$picker_hex = $is_scrim && strlen( $hex_value ) >= 7
+									? '#' . substr( ltrim( $hex_value, '#' ), -6 )
+									: $hex_value;
 								?>
 								<div class="ru-admin__color-field">
 									<label for="<?php echo esc_attr( $field_id ); ?>"><?php echo esc_html( $label ); ?></label>
+									<?php if ( ! $is_scrim ) : ?>
 									<input type="color" name="<?php echo esc_attr( $field_id ); ?>" id="<?php echo esc_attr( $field_id ); ?>"
-										value="<?php echo esc_attr( $brand_colors[ $key ] ); ?>" />
+										value="<?php echo esc_attr( $picker_hex ); ?>" />
+									<?php else : ?>
+									<input type="hidden" name="<?php echo esc_attr( $field_id ); ?>" id="<?php echo esc_attr( $field_id ); ?>"
+										value="<?php echo esc_attr( $hex_value ); ?>" />
+									<?php endif; ?>
 									<input type="text" class="ru-color-hex" data-for="<?php echo esc_attr( $field_id ); ?>"
-										value="<?php echo esc_attr( $brand_colors[ $key ] ); ?>" maxlength="7" aria-label="<?php echo esc_attr( $label ); ?> hex" />
+										value="<?php echo esc_attr( $hex_value ); ?>" maxlength="<?php echo $is_scrim ? 9 : 7; ?>" aria-label="<?php echo esc_attr( $label ); ?> hex" />
 								</div>
 							<?php endforeach; ?>
 						</div>
@@ -450,13 +453,15 @@ class RadioUdaan_Admin_Settings_Page {
 			</div>
 			<div class="ru-settings-panel__card">
 				<h3><?php esc_html_e( 'Public URLs (stores & web)', 'radioudaan-app-api' ); ?></h3>
-				<p class="description"><?php esc_html_e( 'HTTPS links for App Store / Play listings. In-app content comes from the pages above.', 'radioudaan-app-api' ); ?></p>
+				<p class="description"><?php esc_html_e( 'HTTPS links for App Store / Play listings and in-app Share (iOS → App Store, Android → Play).', 'radioudaan-app-api' ); ?></p>
 				<?php
 				$legal = array(
 					'privacy_policy_url' => array( __( 'Privacy policy', 'radioudaan-app-api' ), $c['privacy_ov'], $c['privacy_url'] ),
 					'terms_url'          => array( __( 'Terms', 'radioudaan-app-api' ), $c['terms_ov'], $c['terms_url'] ),
 					'about_url'          => array( __( 'About', 'radioudaan-app-api' ), $c['about_ov'], $c['about_url'] ),
 					'contact_url'        => array( __( 'Contact', 'radioudaan-app-api' ), $c['contact_ov'], $c['contact_url'] ),
+					'app_store_url'      => array( __( 'App Store (iOS)', 'radioudaan-app-api' ), $c['app_store_ov'], $c['app_store_url'] ),
+					'play_store_url'     => array( __( 'Google Play (Android)', 'radioudaan-app-api' ), $c['play_store_ov'], $c['play_store_url'] ),
 				);
 				foreach ( $legal as $name => $meta ) :
 					?>

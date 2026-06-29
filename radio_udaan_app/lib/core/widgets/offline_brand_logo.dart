@@ -45,14 +45,16 @@ class _TextFallback extends StatelessWidget {
     return SizedBox(
       height: height,
       child: Center(
-        child: Text(
-          branding.appName,
-          textAlign: TextAlign.center,
-          style: udaanTextStyle(
-            context,
-            fontSize: 28,
-            fontWeight: FontWeight.w800,
-            color: branding.colors.primary,
+        child: ExcludeSemantics(
+          child: Text(
+            branding.appName,
+            textAlign: TextAlign.center,
+            style: udaanTextStyle(
+              context,
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              color: branding.colors.primary,
+            ),
           ),
         ),
       ),

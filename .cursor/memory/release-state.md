@@ -4,8 +4,8 @@
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
 | Local WP plugin | 354 copy keys on `/config` | yes | 2026-06-25 | `https://radio` — `verify-wp-plugin.sh` PASS |
-| GitHub `main` | `6a6f69d` | yes | 2026-06-27 | A11y fixes on PR #4 branch only (not merged) |
-| TestFlight iOS | 2.0.0+20 (PR #4) | CI pending merge | 2026-06-27 | Run **Build iOS IPA** after merge to `main` |
+| GitHub `main` | `3fcf876` | yes | 2026-06-27 | A11y branch merged + white launcher icon |
+| TestFlight iOS | 2.0.0+21 | CI triggered | 2026-06-27 | Push `3fcf876` → **Build iOS IPA** workflow |
 | Staging API smoke | 14/14 | — | 2026-06-27 | PASS from cloud agent |
 
 ## Open deploy blockers

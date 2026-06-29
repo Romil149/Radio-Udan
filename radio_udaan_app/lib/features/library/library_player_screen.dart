@@ -7,6 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/models/youtube_video.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/brand_tokens.dart';
@@ -17,13 +20,13 @@ import 'library_image_url.dart';
 
 /// Mobile WebView embed params — `youtube-nocookie` origin avoids YouTube error 15/153.
 const _libraryYoutubeParams = YoutubePlayerParams(
-  showControls: true,
-  showFullscreenButton: true,
+  showControls: false,
+  showFullscreenButton: false,
   origin: 'https://www.youtube-nocookie.com',
-  enableCaption: false,
+  enableCaption: true,
   showVideoAnnotations: false,
   playsInline: true,
-  pointerEvents: PointerEvents.auto,
+  pointerEvents: PointerEvents.none,
 );
 
 const _playbackStartTimeout = Duration(seconds: 15);
@@ -56,14 +59,21 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
   }
 
   void _announce(String message) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    announce(context, message);
+  }
+
+  Future<void> _openInYoutube(String url) async {
+    final uri = Uri.tryParse(url.trim());
+    if (uri == null) {
       if (!mounted) return;
-      SemanticsService.sendAnnouncement(
-        View.of(context),
-        message,
-        Directionality.of(context),
-      );
-    });
+      announceAndSnack(context, _copy.linkUnavailable);
+      return;
+    }
+    final launched =
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched && mounted) {
+      announceAndSnack(context, _copy.linkOpenFailed);
+    }
   }
 
   @override
@@ -131,6 +141,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
       _playerError = true;
       _startingPlayback = false;
     });
+    announce(context, _copy.libraryEmbedError);
   }
 
   void _bindPlayerListener(YoutubePlayerController controller) {
@@ -232,6 +243,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
   Widget _buildVideoRegion({
     required AppCopy copy,
     required String title,
+    required String watchUrl,
     required Widget child,
   }) {
     return Column(
@@ -258,6 +270,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
           isPlaying: _isPlaying,
           onPlay: () => unawaited(_startPlayback()),
           onPause: () => unawaited(_pausePlayback()),
+          onOpenYoutube: () => unawaited(_openInYoutube(watchUrl)),
         ),
       ],
     );
@@ -301,7 +314,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
               label: copy.libraryNoVideo,
               liveRegion: true,
               child: Card(
-                color: UdaanColors.surfaceContainer,
+                color: context.udaan.surfaceContainer,
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: ExcludeSemantics(
@@ -340,6 +353,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
               _buildVideoRegion(
                 copy: copy,
                 title: video.title,
+                watchUrl: video.watchUrl,
                 child: _TapToPlayPoster(
                   copy: copy,
                   title: video.title,
@@ -369,16 +383,17 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
                 _buildVideoRegion(
                   copy: copy,
                   title: video.title,
+                  watchUrl: video.watchUrl,
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
                       player,
                       if (_startingPlayback)
-                        const ColoredBox(
-                          color: Color(0xCC000000),
+                        ColoredBox(
+                          color: context.udaan.scrim,
                           child: Center(
                             child: CircularProgressIndicator(
-                              color: UdaanColors.primary,
+                              color: context.udaan.primary,
                             ),
                           ),
                         ),
@@ -427,8 +442,8 @@ class _PlayerMetadata extends StatelessWidget {
             child: ExcludeSemantics(
               child: Text(
                 copy.libraryEmbedError,
-                style: const TextStyle(
-                  color: UdaanColors.error,
+                style: TextStyle(
+                  color: context.udaan.error,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -445,7 +460,7 @@ class _PlayerMetadata extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 56),
                 ),
-                icon: const Icon(Icons.refresh),
+                icon: Icon(Icons.refresh),
                 label: Text(copy.retry),
               ),
             ),
@@ -461,7 +476,7 @@ class _PlayerMetadata extends StatelessWidget {
               style: GoogleFonts.atkinsonHyperlegible(
                 fontSize: 20,
                 fontWeight: FontWeight.w900,
-                color: UdaanColors.onBackground,
+                color: context.udaan.onBackground,
               ),
             ),
           ),
@@ -487,13 +502,18 @@ class _PlayerMetadata extends StatelessWidget {
         ],
         const SizedBox(height: 14),
         if (description.isNotEmpty)
-          Text(
-            description,
-            style: GoogleFonts.atkinsonHyperlegible(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: UdaanColors.onSurfaceVariant,
-              height: 1.45,
+          Semantics(
+            label: description,
+            child: ExcludeSemantics(
+              child: Text(
+                description,
+                style: GoogleFonts.atkinsonHyperlegible(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: context.udaan.onSurfaceVariant,
+                  height: 1.45,
+                ),
+              ),
             ),
           )
         else
@@ -502,7 +522,7 @@ class _PlayerMetadata extends StatelessWidget {
             style: GoogleFonts.atkinsonHyperlegible(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: UdaanColors.onSurfaceMuted,
+              color: context.udaan.onSurfaceMuted,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -515,7 +535,7 @@ class _PlayerMetadata extends StatelessWidget {
               style: GoogleFonts.atkinsonHyperlegible(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: UdaanColors.onSurfaceMuted,
+                color: context.udaan.onSurfaceMuted,
               ),
             ),
           ),
@@ -533,6 +553,7 @@ class _LibraryNativeControls extends StatelessWidget {
     required this.isPlaying,
     required this.onPlay,
     required this.onPause,
+    required this.onOpenYoutube,
   });
 
   final AppCopy copy;
@@ -541,45 +562,66 @@ class _LibraryNativeControls extends StatelessWidget {
   final bool isPlaying;
   final VoidCallback onPlay;
   final VoidCallback onPause;
+  final VoidCallback onOpenYoutube;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: Semantics(
-            button: true,
-            enabled: enabled && !loading && !isPlaying,
-            label: copy.libraryPlayVideo,
-            child: ExcludeSemantics(
-              child: FilledButton.icon(
-                onPressed:
-                    enabled && !loading && !isPlaying ? onPlay : null,
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(56),
+        Row(
+          children: [
+            Expanded(
+              child: Semantics(
+                button: true,
+                enabled: enabled && !loading && !isPlaying,
+                label: copy.libraryPlayVideo,
+                child: ExcludeSemantics(
+                  child: FilledButton.icon(
+                    onPressed:
+                        enabled && !loading && !isPlaying ? onPlay : null,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(56),
+                    ),
+                    icon: Icon(Icons.play_arrow_rounded),
+                    label: Text(copy.libraryPlayVideo),
+                  ),
                 ),
-                icon: const Icon(Icons.play_arrow_rounded),
-                label: Text(copy.libraryPlayVideo),
               ),
             ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Semantics(
-            button: true,
-            enabled: enabled && !loading && isPlaying,
-            label: copy.libraryPauseVideo,
-            child: ExcludeSemantics(
-              child: OutlinedButton.icon(
-                onPressed:
-                    enabled && !loading && isPlaying ? onPause : null,
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(56),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Semantics(
+                button: true,
+                enabled: enabled && !loading && isPlaying,
+                label: copy.libraryPauseVideo,
+                child: ExcludeSemantics(
+                  child: OutlinedButton.icon(
+                    onPressed:
+                        enabled && !loading && isPlaying ? onPause : null,
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(56),
+                    ),
+                    icon: Icon(Icons.pause_rounded),
+                    label: Text(copy.libraryPauseVideo),
+                  ),
                 ),
-                icon: const Icon(Icons.pause_rounded),
-                label: Text(copy.libraryPauseVideo),
               ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Semantics(
+          button: true,
+          label: copy.libraryOpenInYoutube,
+          child: ExcludeSemantics(
+            child: OutlinedButton.icon(
+              onPressed: onOpenYoutube,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(56),
+              ),
+              icon: Icon(Icons.open_in_new),
+              label: Text(copy.libraryOpenInYoutube),
             ),
           ),
         ),
@@ -607,7 +649,7 @@ class _TapToPlayPoster extends StatelessWidget {
   Widget build(BuildContext context) {
     return ExcludeSemantics(
       child: Material(
-        color: UdaanColors.surfaceContainer,
+        color: context.udaan.surfaceContainer,
         child: InkWell(
           onTap: loading ? null : onPlay,
           child: Stack(
@@ -626,11 +668,11 @@ class _TapToPlayPoster extends StatelessWidget {
               else
                 const _PosterPlaceholder(),
               Container(
-                color: Colors.black.withValues(alpha: 0.25),
+                color: context.udaan.scrim.withValues(alpha: 0.25),
               ),
               Center(
                 child: loading
-                    ? const CircularProgressIndicator(color: UdaanColors.primary)
+                    ? CircularProgressIndicator(color: context.udaan.primary)
                     : ExcludeSemantics(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -639,12 +681,12 @@ class _TapToPlayPoster extends StatelessWidget {
                               width: 64,
                               height: 64,
                               decoration: BoxDecoration(
-                                color: UdaanColors.primary,
+                                color: context.udaan.primary,
                                 borderRadius: BorderRadius.circular(14),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.play_arrow_rounded,
-                                color: Colors.black,
+                                color: context.udaan.onPrimary,
                                 size: 40,
                               ),
                             ),
@@ -654,7 +696,7 @@ class _TapToPlayPoster extends StatelessWidget {
                               style: GoogleFonts.atkinsonHyperlegible(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w800,
-                                color: UdaanColors.onBackground,
+                                color: context.udaan.onBackground,
                               ),
                             ),
                           ],
@@ -675,12 +717,12 @@ class _PosterPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: UdaanColors.surfaceContainerHigh,
+      color: context.udaan.surfaceContainerHigh,
       child: Center(
         child: Icon(
           Icons.video_library_outlined,
           size: 48,
-          color: UdaanColors.onSurfaceMuted.withValues(alpha: 0.7),
+          color: context.udaan.onSurfaceMuted.withValues(alpha: 0.7),
         ),
       ),
     );
@@ -700,15 +742,15 @@ class _MetaChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: UdaanColors.surfaceContainer,
+          color: context.udaan.surfaceContainer,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: UdaanColors.outlineVariant),
+          border: Border.all(color: context.udaan.outlineVariant),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             ExcludeSemantics(
-              child: Icon(icon, size: 16, color: UdaanColors.primaryGlow),
+              child: Icon(icon, size: 16, color: context.udaan.primaryGlow),
             ),
             const SizedBox(width: 6),
             ExcludeSemantics(
@@ -717,7 +759,7 @@ class _MetaChip extends StatelessWidget {
                 style: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: UdaanColors.onSurfaceVariant,
+                  color: context.udaan.onSurfaceVariant,
                 ),
               ),
             ),

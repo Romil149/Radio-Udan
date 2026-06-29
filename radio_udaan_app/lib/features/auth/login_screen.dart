@@ -123,7 +123,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             _obscurePassword
                 ? Icons.visibility_outlined
                 : Icons.visibility_off_outlined,
-            color: UdaanColors.primaryGlow,
+            color: context.udaan.primaryGlow,
           ),
           onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
         ),
@@ -184,8 +184,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   liveRegion: true,
                   child: ExcludeSemantics(
                     child: Text(                    _error!,
-                    style: const TextStyle(
-                      color: UdaanColors.error,
+                    style: TextStyle(
+                      color: context.udaan.error,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),

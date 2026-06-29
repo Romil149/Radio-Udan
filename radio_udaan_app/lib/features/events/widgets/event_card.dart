@@ -27,25 +27,25 @@ class EventCard extends StatelessWidget {
   final String bannerUrl;
   final VoidCallback? onRegister;
 
-  Color _badgeBackground() {
+  Color _badgeBackground(BuildContext context) {
     switch (event.eventType) {
       case EventType.workshop:
-        return UdaanColors.secondary;
+        return context.udaan.secondary;
       case EventType.liveStream:
-        return UdaanColors.primary;
+        return context.udaan.primary;
       case EventType.other:
-        return UdaanColors.surfaceContainerHigh;
+        return context.udaan.surfaceContainerHigh;
     }
   }
 
-  Color _badgeForeground() {
+  Color _badgeForeground(BuildContext context) {
     switch (event.eventType) {
       case EventType.workshop:
-        return UdaanColors.onPrimary;
+        return context.udaan.onPrimary;
       case EventType.liveStream:
-        return UdaanColors.onPrimary;
+        return context.udaan.onPrimary;
       case EventType.other:
-        return UdaanColors.onBackground;
+        return context.udaan.onBackground;
     }
   }
 
@@ -58,30 +58,22 @@ class EventCard extends StatelessWidget {
 
     final registrationOpen = event.isRegistrationOpen;
 
-    return Semantics(
-      container: true,
-      label: copy.eventCardSemantics(
-        title: event.title,
-        schedule: schedule,
-        badge: event.hasBadge ? event.badgeLabel : null,
-        registrationOpen: registrationOpen,
+    return Container(
+      decoration: BoxDecoration(
+        color: context.udaan.surfaceContainer,
+        borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+        border: Border.all(color: context.udaan.outlineVariant),
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: UdaanColors.surfaceContainer,
-          borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-          border: Border.all(color: UdaanColors.outlineVariant),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _EventBanner(
               title: event.title,
               bannerUrl: bannerUrl,
               badgeLabel: event.hasBadge ? event.badgeLabel : null,
-              badgeBackground: _badgeBackground(),
-              badgeForeground: _badgeForeground(),
+              badgeBackground: _badgeBackground(context),
+              badgeForeground: _badgeForeground(context),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
@@ -92,10 +84,10 @@ class EventCard extends StatelessWidget {
                     ExcludeSemantics(
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.calendar_today_outlined,
                             size: 16,
-                            color: UdaanColors.primaryGlow,
+                            color: context.udaan.primaryGlow,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -105,7 +97,7 @@ class EventCard extends StatelessWidget {
                                 fontSize: 13,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: 0.4,
-                                color: UdaanColors.primaryGlow,
+                                color: context.udaan.primaryGlow,
                               ),
                             ),
                           ),
@@ -120,7 +112,7 @@ class EventCard extends StatelessWidget {
                       style: GoogleFonts.atkinsonHyperlegible(
                         fontSize: 20,
                         fontWeight: FontWeight.w900,
-                        color: UdaanColors.onBackground,
+                        color: context.udaan.onBackground,
                       ),
                     ),
                   ),
@@ -134,7 +126,7 @@ class EventCard extends StatelessWidget {
                         style: GoogleFonts.atkinsonHyperlegible(
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
-                          color: UdaanColors.onSurfaceVariant,
+                          color: context.udaan.onSurfaceVariant,
                           height: 1.4,
                         ),
                       ),
@@ -144,6 +136,7 @@ class EventCard extends StatelessWidget {
                   _RegisterButton(
                     copy: copy,
                     eventTitle: event.title,
+                    schedule: schedule,
                     registrationOpen: registrationOpen,
                     onRegister: onRegister,
                   ),
@@ -152,8 +145,7 @@ class EventCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -161,12 +153,14 @@ class _RegisterButton extends StatelessWidget {
   const _RegisterButton({
     required this.copy,
     required this.eventTitle,
+    required this.schedule,
     required this.registrationOpen,
     required this.onRegister,
   });
 
   final AppCopy copy;
   final String eventTitle;
+  final String schedule;
   final bool registrationOpen;
   final VoidCallback? onRegister;
 
@@ -176,7 +170,7 @@ class _RegisterButton extends StatelessWidget {
         ? copy.eventsRegisterNow
         : copy.eventsRegistrationClosed;
     final semanticsLabel = registrationOpen
-        ? '${copy.eventsRegisterNow}, $eventTitle'
+        ? '${copy.eventsRegisterNow}, $eventTitle${schedule.isNotEmpty ? ', $schedule' : ''}'
         : '${copy.eventsRegistrationClosed}, $eventTitle';
 
     return Semantics(
@@ -191,13 +185,13 @@ class _RegisterButton extends StatelessWidget {
             style: FilledButton.styleFrom(
               minimumSize: const Size(double.infinity, _eventMinTapTarget),
               backgroundColor: registrationOpen
-                  ? UdaanColors.primary
-                  : UdaanColors.surfaceContainerHigh,
+                  ? context.udaan.primary
+                  : context.udaan.surfaceContainerHigh,
               foregroundColor: registrationOpen
-                  ? UdaanColors.onPrimary
-                  : UdaanColors.onSurfaceMuted,
-              disabledBackgroundColor: UdaanColors.surfaceContainerHigh,
-              disabledForegroundColor: UdaanColors.onSurfaceMuted,
+                  ? context.udaan.onPrimary
+                  : context.udaan.onSurfaceMuted,
+              disabledBackgroundColor: context.udaan.surfaceContainerHigh,
+              disabledForegroundColor: context.udaan.onSurfaceMuted,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
@@ -265,13 +259,15 @@ class _EventBanner extends StatelessWidget {
                     color: badgeBackground,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    badgeLabel!,
-                    style: GoogleFonts.atkinsonHyperlegible(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.6,
-                      color: badgeForeground,
+                  child: ExcludeSemantics(
+                    child: Text(
+                      badgeLabel!,
+                      style: GoogleFonts.atkinsonHyperlegible(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.6,
+                        color: badgeForeground,
+                      ),
                     ),
                   ),
                 ),
@@ -289,12 +285,12 @@ class _BannerPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: UdaanColors.surfaceContainerHigh,
+      color: context.udaan.surfaceContainerHigh,
       child: Center(
         child: Icon(
           Icons.event_outlined,
           size: 48,
-          color: UdaanColors.onSurfaceMuted.withValues(alpha: 0.7),
+          color: context.udaan.onSurfaceMuted.withValues(alpha: 0.7),
         ),
       ),
     );

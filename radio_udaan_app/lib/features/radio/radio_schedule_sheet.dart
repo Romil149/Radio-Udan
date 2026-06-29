@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/models/radio_schedule.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/utils/wp_media_url.dart';
@@ -28,6 +29,8 @@ final radioScheduleProvider = FutureProvider<RadioScheduleResponse>((ref) async 
 });
 
 Future<void> showRadioScheduleSheet(BuildContext context) async {
+  final copy = ProviderScope.containerOf(context).read(appCopyProvider);
+  announce(context, copy.radioScheduleTitle);
   await showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -36,13 +39,16 @@ Future<void> showRadioScheduleSheet(BuildContext context) async {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (context) => DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.72,
-      minChildSize: 0.45,
-      maxChildSize: 0.92,
-      builder: (context, scrollController) => RadioScheduleSheet(
-        scrollController: scrollController,
+    builder: (context) => UdaanModalSheet(
+      title: copy.radioScheduleTitle,
+      child: DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.72,
+        minChildSize: 0.45,
+        maxChildSize: 0.92,
+        builder: (context, scrollController) => RadioScheduleSheet(
+          scrollController: scrollController,
+        ),
       ),
     ),
   );
@@ -65,12 +71,15 @@ class RadioScheduleSheet extends ConsumerWidget {
           const SizedBox(height: 4),
           Semantics(
             header: true,
-            child: Text(
-              copy.radioScheduleTitle,
-              style: GoogleFonts.atkinsonHyperlegible(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                color: UdaanColors.onBackground,
+            label: copy.radioScheduleTitle,
+            child: ExcludeSemantics(
+              child: Text(
+                copy.radioScheduleTitle,
+                style: GoogleFonts.atkinsonHyperlegible(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: context.udaan.onBackground,
+                ),
               ),
             ),
           ),
@@ -120,7 +129,7 @@ class _ScheduleList extends ConsumerWidget {
               style: GoogleFonts.atkinsonHyperlegible(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: UdaanColors.onSurfaceVariant,
+                color: context.udaan.onSurfaceVariant,
               ),
               ),
             ),
@@ -152,12 +161,15 @@ class _ScheduleList extends ConsumerWidget {
                 children: [
                   Semantics(
                     header: true,
-                    child: Text(
-                      day.displayLabel(),
-                      style: GoogleFonts.atkinsonHyperlegible(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: UdaanColors.primaryGlow,
+                    label: day.displayLabel(),
+                    child: ExcludeSemantics(
+                      child: Text(
+                        day.displayLabel(),
+                        style: GoogleFonts.atkinsonHyperlegible(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: context.udaan.primaryGlow,
+                        ),
                       ),
                     ),
                   ),
@@ -165,7 +177,7 @@ class _ScheduleList extends ConsumerWidget {
                   Expanded(
                     child: Container(
                       height: 1,
-                      color: UdaanColors.outlineVariant,
+                      color: context.udaan.outlineVariant,
                     ),
                   ),
                 ],
@@ -232,10 +244,10 @@ class _ScheduleSegmentCard extends ConsumerWidget {
         constraints:
             const BoxConstraints(minHeight: BrandTokens.minTapTarget + 16),
         decoration: BoxDecoration(
-          color: UdaanColors.surfaceContainer,
+          color: context.udaan.surfaceContainer,
           borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
           border: Border.all(
-            color: isOnAir ? UdaanColors.primary : UdaanColors.outlineVariant,
+            color: isOnAir ? context.udaan.primary : context.udaan.outlineVariant,
             width: isOnAir ? 2 : 1,
           ),
         ),
@@ -256,8 +268,8 @@ class _ScheduleSegmentCard extends ConsumerWidget {
                       if (isOnAir) ...[
                         _ChipLabel(
                           text: copy.radioScheduleOnAir,
-                          color: UdaanColors.primary,
-                          textColor: UdaanColors.onPrimary,
+                          color: context.udaan.primary,
+                          textColor: context.udaan.onPrimary,
                         ),
                         const SizedBox(height: 6),
                       ],
@@ -268,7 +280,7 @@ class _ScheduleSegmentCard extends ConsumerWidget {
                         style: GoogleFonts.atkinsonHyperlegible(
                           fontSize: 17,
                           fontWeight: FontWeight.w900,
-                          color: UdaanColors.onBackground,
+                          color: context.udaan.onBackground,
                           height: 1.2,
                         ),
                       ),
@@ -281,15 +293,15 @@ class _ScheduleSegmentCard extends ConsumerWidget {
                             if (time.isNotEmpty)
                               _ChipLabel(
                                 text: time,
-                                color: UdaanColors.surfaceContainerHigh,
-                                textColor: UdaanColors.primaryGlow,
+                                color: context.udaan.surfaceContainerHigh,
+                                textColor: context.udaan.primaryGlow,
                                 icon: Icons.schedule_outlined,
                               ),
                             if (segment.hasCategory)
                               _ChipLabel(
                                 text: segment.category,
-                                color: UdaanColors.surfaceContainerHigh,
-                                textColor: UdaanColors.onSurfaceVariant,
+                                color: context.udaan.surfaceContainerHigh,
+                                textColor: context.udaan.onSurfaceVariant,
                               ),
                           ],
                         ),
@@ -303,7 +315,7 @@ class _ScheduleSegmentCard extends ConsumerWidget {
                           style: GoogleFonts.atkinsonHyperlegible(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
-                            color: UdaanColors.onSurfaceVariant,
+                            color: context.udaan.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -317,44 +329,46 @@ class _ScheduleSegmentCard extends ConsumerWidget {
                   showTitle: title,
                   isFavorite: isFavorite,
                 ),
-                child: IconButton(
-                  constraints: const BoxConstraints(
-                    minWidth: BrandTokens.minTapTarget,
-                    minHeight: BrandTokens.minTapTarget,
-                  ),
-                  onPressed: segment.hasId
-                      ? () async {
-                          await ref
-                              .read(appFavoritesProvider.notifier)
-                              .toggleRadioShow(
-                                showId: segment.id,
-                                title: title,
-                                meta: {
-                                  if (segment.imageUrl.trim().isNotEmpty)
-                                    'thumbnail_url': segment.imageUrl.trim(),
-                                  if (segment.hosts.trim().isNotEmpty)
-                                    'hosts': segment.hosts.trim(),
-                                  if (segment.category.trim().isNotEmpty)
-                                    'category': segment.category.trim(),
-                                },
-                              );
-                          if (!context.mounted) return;
-                          SemanticsService.sendAnnouncement(
-                            View.of(context),
-                            copy.radioFavoriteAnnouncement(
-                              showTitle: title,
-                              added: !isFavorite,
-                            ),
-                            Directionality.of(context),
-                          );
-                        }
-                      : null,
-                  icon: Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                    size: 26,
-                    color: isFavorite
-                        ? UdaanColors.primary
-                        : UdaanColors.primaryGlow,
+                child: ExcludeSemantics(
+                  child: IconButton(
+                    constraints: const BoxConstraints(
+                      minWidth: BrandTokens.minTapTarget,
+                      minHeight: BrandTokens.minTapTarget,
+                    ),
+                    onPressed: segment.hasId
+                        ? () async {
+                            await ref
+                                .read(appFavoritesProvider.notifier)
+                                .toggleRadioShow(
+                                  showId: segment.id,
+                                  title: title,
+                                  meta: {
+                                    if (segment.imageUrl.trim().isNotEmpty)
+                                      'thumbnail_url': segment.imageUrl.trim(),
+                                    if (segment.hosts.trim().isNotEmpty)
+                                      'hosts': segment.hosts.trim(),
+                                    if (segment.category.trim().isNotEmpty)
+                                      'category': segment.category.trim(),
+                                  },
+                                );
+                            if (!context.mounted) return;
+                            SemanticsService.sendAnnouncement(
+                              View.of(context),
+                              copy.radioFavoriteAnnouncement(
+                                showTitle: title,
+                                added: !isFavorite,
+                              ),
+                              Directionality.of(context),
+                            );
+                          }
+                        : null,
+                    icon: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      size: 26,
+                      color: isFavorite
+                          ? context.udaan.primary
+                          : context.udaan.primaryGlow,
+                    ),
                   ),
                 ),
               ),
@@ -413,12 +427,12 @@ class _ThumbnailPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: UdaanColors.surfaceContainerHigh,
-      child: const Center(
+      color: context.udaan.surfaceContainerHigh,
+      child: Center(
         child: Icon(
           Icons.mic_none_outlined,
           size: 32,
-          color: UdaanColors.primaryGlow,
+          color: context.udaan.primaryGlow,
         ),
       ),
     );
@@ -445,7 +459,7 @@ class _ChipLabel extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: UdaanColors.outlineVariant),
+        border: Border.all(color: context.udaan.outlineVariant),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -477,10 +491,10 @@ class _ScheduleLoading extends ConsumerWidget {
     return Semantics(
       label: copy.semanticsLoading,
       liveRegion: true,
-      child: const Padding(
+      child: Padding(
         padding: EdgeInsets.all(24),
         child: Center(
-          child: CircularProgressIndicator(color: UdaanColors.primaryGlow),
+          child: CircularProgressIndicator(color: context.udaan.primaryGlow),
         ),
       ),
     );
@@ -505,7 +519,7 @@ class _ScheduleError extends ConsumerWidget {
             style: GoogleFonts.atkinsonHyperlegible(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: UdaanColors.onSurfaceVariant,
+              color: context.udaan.onSurfaceVariant,
             ),
             ),
           ),

@@ -71,7 +71,7 @@ class OtpVerifyLoginBody extends StatelessWidget {
               style: GoogleFonts.atkinsonHyperlegible(
                 fontSize: 28,
                 fontWeight: FontWeight.w800,
-                color: UdaanColors.onBackground,
+                color: context.udaan.onBackground,
               ),
             ),
           ),
@@ -83,7 +83,7 @@ class OtpVerifyLoginBody extends StatelessWidget {
           style: GoogleFonts.atkinsonHyperlegible(
             fontSize: 18,
             fontWeight: FontWeight.w500,
-            color: UdaanColors.onBackground.withValues(alpha: 0.9),
+            color: context.udaan.onBackground.withValues(alpha: 0.9),
             height: 1.35,
           ),
         ),
@@ -94,7 +94,7 @@ class OtpVerifyLoginBody extends StatelessWidget {
           style: GoogleFonts.atkinsonHyperlegible(
             fontSize: 20,
             fontWeight: FontWeight.w700,
-            color: UdaanColors.onBackground,
+            color: context.udaan.onBackground,
           ),
         ),
         if (kDebugMode && devOtp != null) ...[
@@ -107,7 +107,7 @@ class OtpVerifyLoginBody extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 14,
-                  color: UdaanColors.onSurfaceVariant,
+                  color: context.udaan.onSurfaceVariant,
                 ),
               ),
             ),
@@ -129,8 +129,8 @@ class OtpVerifyLoginBody extends StatelessWidget {
               child: Text(
                 error!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: UdaanColors.error,
+                style: TextStyle(
+                  color: context.udaan.error,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -157,7 +157,7 @@ class OtpVerifyLoginBody extends StatelessWidget {
                 style: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: UdaanColors.primaryGlow,
+                  color: context.udaan.primaryGlow,
                 ),
               ),
             ),

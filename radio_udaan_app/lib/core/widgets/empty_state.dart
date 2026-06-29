@@ -49,9 +49,9 @@ class EmptyState extends StatelessWidget {
               Semantics(
                 button: true,
                 label: actionLabel,
-                child: FilledButton(
-                  onPressed: onAction,
-                  child: ExcludeSemantics(
+                child: ExcludeSemantics(
+                  child: FilledButton(
+                    onPressed: onAction,
                     child: Text(actionLabel!),
                   ),
                 ),

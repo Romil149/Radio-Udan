@@ -22,7 +22,7 @@ class UdaanTheme {
       surface: palette.surfaceContainer,
       onSurface: palette.onBackground,
       error: palette.error,
-      onError: Colors.white,
+      onError: palette.onError,
     );
 
     final textTheme = GoogleFonts.atkinsonHyperlegibleTextTheme(
@@ -153,7 +153,7 @@ class UdaanTheme {
   /// Stronger borders and higher contrast for low-vision users.
   static ThemeData highContrast(AppBranding branding) {
     return fromPalette(
-      palette: UdaanPalette.highContrast(),
+      palette: UdaanPalette.highContrastFrom(branding.colors),
       branding: branding,
       settings: const AppUserSettings(highContrast: true, boldText: true),
     );

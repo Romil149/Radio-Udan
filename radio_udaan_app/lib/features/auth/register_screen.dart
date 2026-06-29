@@ -57,7 +57,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         child: IconButton(
           icon: Icon(
             obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-            color: UdaanColors.primaryGlow,
+            color: context.udaan.primaryGlow,
           ),
           onPressed: onToggle,
         ),
@@ -168,13 +168,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               Semantics(
                 header: true,
                 label: _copy.registerTitle,
-                child: Text(
-                  _copy.registerTitle,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.atkinsonHyperlegible(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: UdaanColors.onBackground,
+                child: ExcludeSemantics(
+                  child: Text(
+                    _copy.registerTitle,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.atkinsonHyperlegible(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: context.udaan.onBackground,
+                    ),
                   ),
                 ),
               ),
@@ -185,7 +187,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 style: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: UdaanColors.primaryGlow,
+                  color: context.udaan.primaryGlow,
                   height: 1.4,
                 ),
               ),
@@ -259,8 +261,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   child: ExcludeSemantics(
                     child: Text(                    _error!,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: UdaanColors.error,
+                    style: TextStyle(
+                      color: context.udaan.error,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -290,7 +292,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 12,
-                  color: UdaanColors.onSurfaceMuted,
+                  color: context.udaan.onSurfaceMuted,
                 ),
               ),
             ],

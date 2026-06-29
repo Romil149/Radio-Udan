@@ -87,7 +87,7 @@ class AboutTab extends ConsumerWidget {
                 title: copy.aboutUs,
                 subtitle: copy.aboutUsSubtitle,
                 icon: Icons.info_outline,
-                iconBackground: UdaanColors.secondary,
+                iconBackground: context.udaan.secondary,
                 onTap: () => _openLegalContent(
                   context,
                   ref,
@@ -100,8 +100,8 @@ class AboutTab extends ConsumerWidget {
               title: copy.helpAndContact,
               subtitle: copy.helpAndContactSubtitle,
               icon: Icons.support_agent,
-              iconBackground: UdaanColors.surfaceContainerHigh,
-              iconColor: UdaanColors.onBackground,
+              iconBackground: context.udaan.surfaceContainerHigh,
+              iconColor: context.udaan.onBackground,
               onTap: () => _push(context, const HelpContactScreen()),
             ),
             MoreMenuTile(
@@ -110,7 +110,7 @@ class AboutTab extends ConsumerWidget {
                   ? supportEmail
                   : copy.contactEmailSubtitle,
               icon: Icons.mail_outline,
-              iconBackground: UdaanColors.primary,
+              iconBackground: context.udaan.primary,
               onTap: supportEmail.isNotEmpty
                   ? () => _push(context, const ContactEmailScreen())
                   : () {
@@ -123,7 +123,7 @@ class AboutTab extends ConsumerWidget {
                   ? supportPhone
                   : copy.contactNumberSubtitle,
               icon: Icons.phone_outlined,
-              iconBackground: UdaanColors.secondary,
+              iconBackground: context.udaan.secondary,
               onTap: supportPhone.isNotEmpty
                   ? () => _push(context, const ContactPhoneScreen())
                   : () {
@@ -135,7 +135,7 @@ class AboutTab extends ConsumerWidget {
                 title: live.whatsappLabel,
                 subtitle: copy.joinTheDiscussion,
                 icon: Icons.chat_outlined,
-                iconBackground: UdaanColors.secondary,
+                iconBackground: context.udaan.secondary,
                 onTap: () => openExternalUrl(
                   context,
                   live.whatsappUrl,
@@ -146,7 +146,7 @@ class AboutTab extends ConsumerWidget {
               title: copy.donateUs,
               subtitle: copy.donateUsSubtitle,
               icon: Icons.favorite_outline,
-              iconBackground: UdaanColors.primary,
+              iconBackground: context.udaan.primary,
               onTap: () => _push(context, const DonateScreen()),
             ),
             AboutSocialFooter(

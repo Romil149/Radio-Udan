@@ -27,7 +27,7 @@ class LibraryPlaylistFeaturedTile extends StatelessWidget {
       button: true,
       label: playlist.title,
       child: Material(
-        color: UdaanColors.surfaceContainer,
+        color: context.udaan.surfaceContainer,
         borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
         child: InkWell(
           onTap: onTap,
@@ -37,7 +37,7 @@ class LibraryPlaylistFeaturedTile extends StatelessWidget {
             constraints: const BoxConstraints(minHeight: _libraryMinTapTarget),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-              border: Border.all(color: UdaanColors.outlineVariant),
+              border: Border.all(color: context.udaan.outlineVariant),
             ),
             padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
             child: Column(
@@ -58,7 +58,7 @@ class LibraryPlaylistFeaturedTile extends StatelessWidget {
                     style: GoogleFonts.atkinsonHyperlegible(
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
-                      color: UdaanColors.onBackground,
+                      color: context.udaan.onBackground,
                     ),
                   ),
                 ),
@@ -92,7 +92,7 @@ class LibraryPlaylistCompactTile extends StatelessWidget {
       button: true,
       label: playlist.title,
       child: Material(
-        color: UdaanColors.surfaceContainer,
+        color: context.udaan.surfaceContainer,
         borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
         child: InkWell(
           onTap: onTap,
@@ -101,7 +101,7 @@ class LibraryPlaylistCompactTile extends StatelessWidget {
             constraints: const BoxConstraints(minHeight: 120),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-              border: Border.all(color: UdaanColors.outlineVariant),
+              border: Border.all(color: context.udaan.outlineVariant),
             ),
             padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
             child: Column(
@@ -122,7 +122,7 @@ class LibraryPlaylistCompactTile extends StatelessWidget {
                     style: GoogleFonts.atkinsonHyperlegible(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
-                      color: UdaanColors.onBackground,
+                      color: context.udaan.onBackground,
                     ),
                   ),
                 ),
@@ -178,10 +178,10 @@ class LibraryPlaylistListTile extends StatelessWidget {
       button: true,
       label: countLabel.isEmpty ? playlist.title : '${playlist.title}, $countLabel',
       child: Card(
-        color: UdaanColors.surfaceContainer,
+        color: context.udaan.surfaceContainer,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-          side: const BorderSide(color: UdaanColors.outlineVariant),
+          side: BorderSide(color: context.udaan.outlineVariant),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -224,7 +224,7 @@ class LibraryPlaylistListTile extends StatelessWidget {
                             style: GoogleFonts.atkinsonHyperlegible(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
-                              color: UdaanColors.onBackground,
+                              color: context.udaan.onBackground,
                             ),
                           ),
                           if (countLabel.isNotEmpty) ...[
@@ -234,7 +234,7 @@ class LibraryPlaylistListTile extends StatelessWidget {
                               style: GoogleFonts.atkinsonHyperlegible(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
-                                color: UdaanColors.onSurfaceMuted,
+                                color: context.udaan.onSurfaceMuted,
                               ),
                             ),
                           ],
@@ -242,9 +242,9 @@ class LibraryPlaylistListTile extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.chevron_right,
-                    color: UdaanColors.onSurfaceVariant,
+                    color: context.udaan.onSurfaceVariant,
                   ),
                 ],
               ),
@@ -300,7 +300,7 @@ class _IconBadge extends StatelessWidget {
     return Icon(
       icon,
       size: size,
-      color: UdaanColors.primaryGlow,
+      color: context.udaan.primaryGlow,
     );
   }
 }
@@ -311,12 +311,12 @@ class _PlaylistPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: UdaanColors.surfaceContainerHigh,
+      color: context.udaan.surfaceContainerHigh,
       child: Center(
         child: Icon(
           Icons.playlist_play,
           size: 36,
-          color: UdaanColors.onSurfaceMuted.withValues(alpha: 0.7),
+          color: context.udaan.onSurfaceMuted.withValues(alpha: 0.7),
         ),
       ),
     );

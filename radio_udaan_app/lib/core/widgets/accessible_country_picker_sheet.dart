@@ -2,6 +2,7 @@ import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../accessibility/udaan_semantics.dart';
 import '../config/app_branding.dart';
 import '../config/app_copy_accessors.dart';
 import '../theme/brand_tokens.dart';
@@ -18,14 +19,20 @@ Future<Country?> showAccessibleCountryPicker({
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    backgroundColor: UdaanColors.surfaceContainer,
+    backgroundColor: context.udaan.surfaceContainer,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
-    builder: (context) => _AccessibleCountryPickerSheet(
-      copy: copy,
-      favoriteIso: favoriteIso,
-    ),
+    builder: (sheetContext) {
+      announce(sheetContext, copy.phoneCountryPickerTitle);
+      return UdaanModalSheet(
+        title: copy.phoneCountryPickerTitle,
+        child: _AccessibleCountryPickerSheet(
+          copy: copy,
+          favoriteIso: favoriteIso,
+        ),
+      );
+    },
   );
 }
 
@@ -118,12 +125,12 @@ class _AccessibleCountryPickerSheetState
                 header: true,
                 label: widget.copy.phoneCountryPickerTitle,
                 child: ExcludeSemantics(
-                  child: Text(
-                    widget.copy.phoneCountryPickerTitle,
+                  child: UdaanScreenHeader(
+                    title: widget.copy.phoneCountryPickerTitle,
                     style: GoogleFonts.atkinsonHyperlegible(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
-                      color: UdaanColors.onBackground,
+                      color: context.udaan.onBackground,
                     ),
                   ),
                 ),
@@ -132,25 +139,27 @@ class _AccessibleCountryPickerSheetState
               Semantics(
                 label: widget.copy.phoneCountrySearchHint,
                 textField: true,
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: (_) => setState(() {}),
-                  onTapOutside: (_) => dismissKeyboard(context),
-                  style: GoogleFonts.atkinsonHyperlegible(
-                    fontSize: 16,
-                    color: UdaanColors.onBackground,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: widget.copy.phoneCountrySearchHint,
+                child: ExcludeSemantics(
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (_) => setState(() {}),
+                    onTapOutside: (_) => dismissKeyboard(context),
+                    style: GoogleFonts.atkinsonHyperlegible(
+                      fontSize: 16,
+                      color: context.udaan.onBackground,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: widget.copy.phoneCountrySearchHint,
                     filled: true,
-                    fillColor: UdaanColors.background,
+                    fillColor: context.udaan.background,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide:
-                          const BorderSide(color: UdaanColors.outlineVariant),
+                          BorderSide(color: context.udaan.outlineVariant),
                     ),
                   ),
                 ),
+              ),
               ),
               const SizedBox(height: 12),
               Expanded(
@@ -169,7 +178,7 @@ class _AccessibleCountryPickerSheetState
                               style: GoogleFonts.atkinsonHyperlegible(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w800,
-                                color: UdaanColors.primaryGlow,
+                                color: context.udaan.primaryGlow,
                               ),
                             ),
                           ),
@@ -229,7 +238,7 @@ class _CountryTile extends StatelessWidget {
                   children: [
                     Text(
                       country.flagEmoji,
-                      style: const TextStyle(fontSize: 24),
+                      style: TextStyle(fontSize: 24),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -238,7 +247,7 @@ class _CountryTile extends StatelessWidget {
                         style: GoogleFonts.atkinsonHyperlegible(
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
-                          color: UdaanColors.onBackground,
+                          color: context.udaan.onBackground,
                         ),
                       ),
                     ),
@@ -247,7 +256,7 @@ class _CountryTile extends StatelessWidget {
                       style: GoogleFonts.atkinsonHyperlegible(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: UdaanColors.primaryGlow,
+                        color: context.udaan.primaryGlow,
                       ),
                     ),
                   ],

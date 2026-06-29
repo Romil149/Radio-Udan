@@ -36,8 +36,8 @@ class NotificationListCard extends StatelessWidget {
         label: '$statusLabel. $whenPart${item.title}. ${item.body}',
         child: Material(
           color: isUnread
-              ? UdaanColors.surfaceContainerHigh
-              : UdaanColors.surfaceContainer,
+              ? context.udaan.surfaceContainerHigh
+              : context.udaan.surfaceContainer,
           borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
           child: InkWell(
             onTap: onTap,
@@ -47,8 +47,8 @@ class NotificationListCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
                 border: Border.all(
                   color: isUnread
-                      ? UdaanColors.primaryGlow.withValues(alpha: 0.75)
-                      : UdaanColors.outlineVariant,
+                      ? context.udaan.primaryGlow.withValues(alpha: 0.75)
+                      : context.udaan.outlineVariant,
                   width: isUnread ? 1.5 : 1,
                 ),
               ),
@@ -78,8 +78,8 @@ class NotificationListCard extends StatelessWidget {
                                     width: 10,
                                     height: 10,
                                     margin: const EdgeInsets.only(right: 8),
-                                    decoration: const BoxDecoration(
-                                      color: UdaanColors.primary,
+                                    decoration: BoxDecoration(
+                                      color: context.udaan.primary,
                                       shape: BoxShape.circle,
                                     ),
                                   ),
@@ -93,8 +93,8 @@ class NotificationListCard extends StatelessWidget {
                                           ? FontWeight.w700
                                           : FontWeight.w500,
                                       color: isUnread
-                                          ? UdaanColors.primaryGlow
-                                          : UdaanColors.onSurfaceVariant,
+                                          ? context.udaan.primaryGlow
+                                          : context.udaan.onSurfaceVariant,
                                     ),
                                   ),
                                 ),
@@ -105,7 +105,7 @@ class NotificationListCard extends StatelessWidget {
                                       vertical: 3,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: UdaanColors.primary
+                                      color: context.udaan.primary
                                           .withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
@@ -114,7 +114,7 @@ class NotificationListCard extends StatelessWidget {
                                       style: GoogleFonts.atkinsonHyperlegible(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w800,
-                                        color: UdaanColors.primaryGlow,
+                                        color: context.udaan.primaryGlow,
                                       ),
                                     ),
                                   ),
@@ -127,7 +127,7 @@ class NotificationListCard extends StatelessWidget {
                                 fontSize: 17,
                                 fontWeight:
                                     isUnread ? FontWeight.w900 : FontWeight.w700,
-                                color: UdaanColors.onBackground,
+                                color: context.udaan.onBackground,
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -139,9 +139,9 @@ class NotificationListCard extends StatelessWidget {
                                     ? FontWeight.w600
                                     : FontWeight.w500,
                                 color: isUnread
-                                    ? UdaanColors.onBackground
+                                    ? context.udaan.onBackground
                                         .withValues(alpha: 0.92)
-                                    : UdaanColors.onSurfaceVariant,
+                                    : context.udaan.onSurfaceVariant,
                                 height: 1.35,
                               ),
                             ),

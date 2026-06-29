@@ -87,19 +87,21 @@ class SplashBody extends StatelessWidget {
                   Semantics(
                     button: true,
                     label: copy.retry,
-                    child: FilledButton(
-                      onPressed: onRetry,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: palette.primary,
-                        foregroundColor: Colors.black,
-                        minimumSize: const Size.fromHeight(56),
-                      ),
-                      child: Text(
-                        copy.retry,
-                        style: udaanTextStyle(
-                          context,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
+                    child: ExcludeSemantics(
+                      child: FilledButton(
+                        onPressed: onRetry,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: palette.primary,
+                          foregroundColor: palette.onPrimary,
+                          minimumSize: const Size.fromHeight(56),
+                        ),
+                        child: Text(
+                          copy.retry,
+                          style: udaanTextStyle(
+                            context,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ),
@@ -172,14 +174,16 @@ class _SplashTitleBlock extends StatelessWidget {
       children: [
         Semantics(
           header: true,
-          child: Text(
-            branding.appName,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.lora(
-              fontSize: 32,
-              fontWeight: FontWeight.w700,
-              color: palette.onBackground,
-              height: 1.15,
+          child: ExcludeSemantics(
+            child: Text(
+              branding.appName,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.lora(
+                fontSize: 32,
+                fontWeight: FontWeight.w700,
+                color: palette.onBackground,
+                height: 1.15,
+              ),
             ),
           ),
         ),
@@ -313,25 +317,27 @@ class _SplashAccessibilityBadge extends StatelessWidget {
           borderRadius: BorderRadius.circular(999),
           border: Border.all(color: palette.outlineVariant),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.accessibility_new,
-              size: 18,
-              color: palette.onSurfaceVariant.withValues(alpha: 0.95),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              copy.splashA11yBadge,
-              style: udaanTextStyle(
-                context,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: palette.onSurfaceVariant.withValues(alpha: 0.9),
+        child: ExcludeSemantics(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.accessibility_new,
+                size: 18,
+                color: palette.onSurfaceVariant.withValues(alpha: 0.95),
               ),
-            ),
-          ],
+              const SizedBox(width: 8),
+              Text(
+                copy.splashA11yBadge,
+                style: udaanTextStyle(
+                  context,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: palette.onSurfaceVariant.withValues(alpha: 0.9),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

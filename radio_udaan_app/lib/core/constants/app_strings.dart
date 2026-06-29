@@ -455,8 +455,7 @@ abstract final class AppStrings {
 
   // More
   static const String moreOptionsTitle = 'More Options';
-  static const String moreOptionsIntro =
-      'Manage your account and learn more about our mission to empower through radio.';
+  static const String moreOptionsIntro = '';
   static const String userProfile = 'User Profile';
   static const String userProfileSubtitle = 'Update your information';
   static const String aboutUs = 'About Us';

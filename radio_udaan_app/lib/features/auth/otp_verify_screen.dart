@@ -328,7 +328,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
           child: Semantics(
             label: copy.semanticsLoading,
             liveRegion: true,
-            child: CircularProgressIndicator(color: UdaanColors.primary),
+            child: CircularProgressIndicator(color: context.udaan.primary),
           ),
         ),
       );

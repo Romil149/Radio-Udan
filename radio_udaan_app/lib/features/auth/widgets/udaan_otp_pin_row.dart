@@ -79,7 +79,7 @@ class _UdaanOtpPinRowState extends State<UdaanOtpPinRow> {
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(widget.length),
                 ],
-                style: const TextStyle(color: Colors.transparent, fontSize: 1),
+                style: TextStyle(color: Colors.transparent, fontSize: 1),
                 decoration: const InputDecoration(
                   border: InputBorder.none,
                   counterText: '',
@@ -108,14 +108,14 @@ class _UdaanOtpPinRowState extends State<UdaanOtpPinRow> {
                     height: 56,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: UdaanColors.surfaceContainer,
+                      color: context.udaan.surfaceContainer,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: active
-                            ? UdaanColors.primary
+                            ? context.udaan.primary
                             : filled
-                                ? UdaanColors.primaryGlow
-                                : UdaanColors.outlineVariant,
+                                ? context.udaan.primaryGlow
+                                : context.udaan.outlineVariant,
                         width: active ? 2 : 1,
                       ),
                     ),
@@ -124,7 +124,7 @@ class _UdaanOtpPinRowState extends State<UdaanOtpPinRow> {
                       style: GoogleFonts.atkinsonHyperlegible(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
-                        color: UdaanColors.onBackground,
+                        color: context.udaan.onBackground,
                       ),
                     ),
                   ),

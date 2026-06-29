@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../accessibility/udaan_semantics.dart';
 import '../network/dio_exception_mapper.dart';
 import '../providers/app_providers.dart';
 import '../../features/events/event_registration_screen.dart';
@@ -65,22 +65,14 @@ Future<void> openEventFromDeepLink(
   } catch (e) {
     if (!context.mounted) return;
     final message = parseApiError(e).message;
-    SemanticsService.sendAnnouncement(
-      View.of(context),
-      message,
-      Directionality.of(context),
-    );
+    announce(context, message);
     context.go('/');
     return;
   }
 
   if (!context.mounted) return;
   final copy = ref.read(appCopyProvider);
-  SemanticsService.sendAnnouncement(
-    View.of(context),
-    copy.eventDeepLinkOpening(title),
-    Directionality.of(context),
-  );
+  announce(context, copy.eventDeepLinkOpening(title));
 
   context.go('/');
   WidgetsBinding.instance.addPostFrameCallback((_) {

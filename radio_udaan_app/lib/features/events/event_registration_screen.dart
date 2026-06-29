@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/storage/registration_draft_storage.dart';
@@ -15,11 +15,11 @@ import '../../core/theme/udaan_text_styles.dart';
 import '../../core/utils/keyboard_dismiss.dart';
 import '../../core/widgets/accessible_html_content.dart';
 import '../auth/widgets/udaan_auth_widgets.dart';
-import '../shell/main_shell_screen.dart';
 import 'form_field_validator.dart';
 import 'models/form_schema.dart';
 import 'form_visibility.dart';
 import 'registration_account_prefill.dart';
+import 'widgets/event_context_banner.dart';
 import 'widgets/registration_form_styles.dart';
 import 'widgets/registration_outcome_widgets.dart';
 
@@ -62,6 +62,7 @@ class _EventRegistrationScreenState
   bool _submitting = false;
   bool _draftLoaded = false;
   bool _accountDefaultsApplied = false;
+  bool _formIntroAnnounced = false;
   int _currentPageIndex = 0;
   Timer? _draftSaveDebounce;
 
@@ -157,14 +158,31 @@ class _EventRegistrationScreenState
   }
 
   void _announce(String message) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      SemanticsService.sendAnnouncement(
-        View.of(context),
-        message,
-        Directionality.of(context),
-      );
-    });
+    announce(context, message);
+  }
+
+  void _maybeAnnounceFormIntro(FormSchema schema) {
+    if (_formIntroAnnounced) return;
+    _formIntroAnnounced = true;
+    final eventTitle = schema.event.title.isNotEmpty
+        ? schema.event.title
+        : widget.title;
+    final total = schema.pages.isEmpty ? 1 : schema.pages.length;
+    _announce(
+      '${_copy.eventRegistrationTitle}, $eventTitle. '
+      '${_copy.registrationPageLabel(1, total)}',
+    );
+  }
+
+  void _announcePageChange(FormSchema schema) {
+    if (schema.pages.isEmpty) return;
+    final page = schema.pages[_currentPageIndex.clamp(0, schema.pages.length - 1)];
+    final pageLabel = _copy.registrationPageLabel(
+      _currentPageIndex + 1,
+      schema.pages.length,
+    );
+    final label = page.title.isNotEmpty ? '$pageLabel. ${page.title}' : pageLabel;
+    _announce(label);
   }
 
   bool _submitBlocked(FormSchema schema) =>
@@ -537,13 +555,15 @@ class _EventRegistrationScreenState
               decoration: _fieldDecoration(context, field).copyWith(
                 suffixIcon: Icon(icon),
               ),
-              child: Text(
-                display ?? hint,
-                style: display == null
-                    ? theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.hintColor,
-                      )
-                    : theme.textTheme.bodyLarge,
+              child: ExcludeSemantics(
+                child: Text(
+                  display ?? hint,
+                  style: display == null
+                      ? theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.hintColor,
+                        )
+                      : theme.textTheme.bodyLarge,
+                ),
               ),
             ),
           ),
@@ -744,10 +764,11 @@ class _EventRegistrationScreenState
         _validationMessage = null;
       });
       _scrollToTop();
+      _announcePageChange(schema);
     }
   }
 
-  void _goToPreviousPage() {
+  void _goToPreviousPage(FormSchema schema) {
     if (_currentPageIndex <= 0) return;
     setState(() {
       _currentPageIndex--;
@@ -755,6 +776,7 @@ class _EventRegistrationScreenState
       _validationMessage = null;
     });
     _scrollToTop();
+    _announcePageChange(schema);
   }
 
   Future<void> _submit(FormSchema schema) async {
@@ -819,16 +841,9 @@ class _EventRegistrationScreenState
     }
   }
 
-  void _openProfileTab() {
-    Navigator.of(context).pop();
-    ref.read(mainShellTabIndexProvider.notifier).state =
-        MainShellScreen.moreTabIndex;
-  }
-
   @override
   Widget build(BuildContext context) {
     final formAsync = ref.watch(eventFormProvider(widget.eventId));
-    final branding = ref.watch(appBrandingProvider);
 
     final palette = context.udaan;
 
@@ -844,19 +859,8 @@ class _EventRegistrationScreenState
               ),
               child: UdaanAuthTopBar(
                 copy: _copy,
-                title: branding.appName,
+                title: widget.title,
                 onBack: () => Navigator.of(context).pop(),
-                trailing: Semantics(
-                  button: true,
-                  label: _copy.profile,
-                  child: IconButton(
-                    onPressed: _openProfileTab,
-                    icon: Icon(
-                      Icons.person_outline,
-                      color: palette.onBackground,
-                    ),
-                  ),
-                ),
               ),
             ),
             Expanded(
@@ -916,19 +920,21 @@ class _EventRegistrationScreenState
                         Semantics(
                           button: true,
                           label: _copy.eventRegistrationRetryLoad,
-                          child: FilledButton(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: palette.primary,
-                              foregroundColor: palette.onPrimary,
-                              minimumSize: const Size(
-                                BrandTokens.minTapTarget,
-                                BrandTokens.minTapTarget,
+                          child: ExcludeSemantics(
+                            child: FilledButton(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: palette.primary,
+                                foregroundColor: palette.onPrimary,
+                                minimumSize: const Size(
+                                  BrandTokens.minTapTarget,
+                                  BrandTokens.minTapTarget,
+                                ),
                               ),
+                              onPressed: () => ref.invalidate(
+                                eventFormProvider(widget.eventId),
+                              ),
+                              child: Text(_copy.retry),
                             ),
-                            onPressed: () => ref.invalidate(
-                              eventFormProvider(widget.eventId),
-                            ),
-                            child: Text(_copy.retry),
                           ),
                         ),
                       ],
@@ -944,6 +950,8 @@ class _EventRegistrationScreenState
   }
 
   Widget _buildForm(BuildContext context, FormSchema schema) {
+    _maybeAnnounceFormIntro(schema);
+
     if (!_accountDefaultsApplied) {
       _accountDefaultsApplied = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1040,31 +1048,36 @@ class _EventRegistrationScreenState
           ),
           const SizedBox(height: 16),
         ],
+        EventContextBanner(copy: _copy, event: schema.event),
         Semantics(
           header: true,
           label: _copy.eventRegistrationTitle,
-          child: Text(
-            _copy.eventRegistrationTitle,
-            style: udaanTextStyle(
-              context,
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              color: palette.onBackground,
-              height: 1.15,
+          child: ExcludeSemantics(
+            child: Text(
+              _copy.eventRegistrationTitle,
+              style: udaanTextStyle(
+                context,
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+                color: palette.onBackground,
+                height: 1.15,
+              ),
             ),
           ),
         ),
         const SizedBox(height: 10),
         Semantics(
           label: eventTitle,
-          child: Text(
-            eventTitle,
-            style: udaanTextStyle(
-              context,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: palette.primaryGlow,
-              height: 1.35,
+          child: ExcludeSemantics(
+            child: Text(
+              eventTitle,
+              style: udaanTextStyle(
+                context,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: palette.primaryGlow,
+                height: 1.35,
+              ),
             ),
           ),
         ),
@@ -1149,29 +1162,37 @@ class _EventRegistrationScreenState
             },
           ),
         ],
-        for (final section in schema.sections) ...[
-          if (bySection[section.id]?.isNotEmpty == true) ...[
-            if (section.title.trim().isNotEmpty &&
-                section.title.toLowerCase() != 'default') ...[
-              const SizedBox(height: 8),
-              Semantics(
-                header: true,
-                label: section.title,
-                child: Text(
-                  section.title,
-                  style: udaanTextStyle(
-                    context,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: palette.onBackground,
-                  ),
-                ),
-              ),
+        FocusTraversalGroup(
+          child: Column(
+            children: [
+              for (final section in schema.sections) ...[
+                if (bySection[section.id]?.isNotEmpty == true) ...[
+                  if (section.title.trim().isNotEmpty &&
+                      section.title.toLowerCase() != 'default') ...[
+                    const SizedBox(height: 8),
+                    Semantics(
+                      header: true,
+                      label: section.title,
+                      child: ExcludeSemantics(
+                        child: Text(
+                          section.title,
+                          style: udaanTextStyle(
+                            context,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: palette.onBackground,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                  for (final field in bySection[section.id]!)
+                    _fieldWidget(context, field, schema),
+                ],
+              ],
             ],
-            for (final field in bySection[section.id]!)
-              _fieldWidget(context, field, schema),
-          ],
-        ],
+          ),
+        ),
         const SizedBox(height: 20),
         if (schema.pages.isNotEmpty && _currentPageIndex > 0) ...[
           Semantics(
@@ -1183,7 +1204,7 @@ class _EventRegistrationScreenState
                   minimumSize: const Size(double.infinity, 56),
                   side: BorderSide(color: palette.primaryGlow),
                 ),
-                onPressed: _goToPreviousPage,
+                onPressed: () => _goToPreviousPage(schema),
                 child: Text(
                   _copy.registrationPreviousPage,
                   style: udaanTextStyle(
@@ -1265,7 +1286,7 @@ class _EventRegistrationScreenState
                             ),
                           ),
                           const SizedBox(width: 10),
-                          const Icon(Icons.arrow_forward, size: 22),
+                          Icon(Icons.arrow_forward, size: 22),
                         ],
                       ),
               ),
@@ -1298,13 +1319,15 @@ class _EventRegistrationScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              display,
-              style: udaanTextStyle(
-                context,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: palette.primaryGlow,
+            ExcludeSemantics(
+              child: Text(
+                display,
+                style: udaanTextStyle(
+                  context,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: palette.primaryGlow,
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -1477,13 +1500,15 @@ class _EventRegistrationScreenState
             if (field.consentHtml != null &&
                 field.consentHtml!.trim().isNotEmpty) ...[
               const SizedBox(height: 8),
-              AccessibleHtmlContent(
-                html: field.consentHtml!,
-                textStyle: udaanTextStyle(
-                  context,
-                  fontSize: 16,
-                  color: palette.onBackground.withValues(alpha: 0.85),
-                  height: 1.4,
+              ExcludeSemantics(
+                child: AccessibleHtmlContent(
+                  html: field.consentHtml!,
+                  textStyle: udaanTextStyle(
+                    context,
+                    fontSize: 16,
+                    color: palette.onBackground.withValues(alpha: 0.85),
+                    height: 1.4,
+                  ),
                 ),
               ),
             ],
@@ -1610,12 +1635,14 @@ class _EventRegistrationScreenState
                     for (final name in uploadNames)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 6),
-                        child: Text(
-                          name,
-                          style: udaanTextStyle(
-                            context,
-                            fontSize: 16,
-                            color: palette.onBackground,
+                        child: ExcludeSemantics(
+                          child: Text(
+                            name,
+                            style: udaanTextStyle(
+                              context,
+                              fontSize: 16,
+                              color: palette.onBackground,
+                            ),
                           ),
                         ),
                       ),

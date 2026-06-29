@@ -174,10 +174,14 @@ class RadioUdaan_Admin_Pages {
 		$terms_url    = RadioUdaan_App_Settings::get_terms_url();
 		$about_url    = RadioUdaan_App_Settings::get_about_url();
 		$contact_url  = RadioUdaan_App_Settings::get_contact_url();
+		$app_store_url = RadioUdaan_App_Settings::get_app_store_url();
+		$play_store_url = RadioUdaan_App_Settings::get_play_store_url();
 		$privacy_ov   = trim( (string) get_option( RadioUdaan_App_Settings::OPTION_PRIVACY_POLICY_URL, '' ) );
 		$terms_ov     = trim( (string) get_option( RadioUdaan_App_Settings::OPTION_TERMS_URL, '' ) );
 		$about_ov     = trim( (string) get_option( RadioUdaan_App_Settings::OPTION_ABOUT_URL, '' ) );
 		$contact_ov   = trim( (string) get_option( RadioUdaan_App_Settings::OPTION_CONTACT_URL, '' ) );
+		$app_store_ov = trim( (string) get_option( RadioUdaan_App_Settings::OPTION_APP_STORE_URL, '' ) );
+		$play_store_ov = trim( (string) get_option( RadioUdaan_App_Settings::OPTION_PLAY_STORE_URL, '' ) );
 		$legal_privacy_page_id = (int) get_option( RadioUdaan_App_Legal_Pages::OPTION_PRIVACY_PAGE_ID, 0 );
 		$legal_terms_page_id   = (int) get_option( RadioUdaan_App_Legal_Pages::OPTION_TERMS_PAGE_ID, 0 );
 		$legal_about_page_id   = (int) get_option( RadioUdaan_App_Legal_Pages::OPTION_ABOUT_PAGE_ID, 0 );
@@ -279,6 +283,10 @@ class RadioUdaan_Admin_Pages {
 					'terms_url'     => $terms_url,
 					'about_url'     => $about_url,
 					'contact_url'   => $contact_url,
+					'app_store_url' => $app_store_url,
+					'play_store_url' => $play_store_url,
+					'app_store_ov'  => $app_store_ov,
+					'play_store_ov' => $play_store_ov,
 					'support_helpline' => $support_helpline,
 					'support_email'    => $support_email,
 					'donate_badge'              => $donate_badge,

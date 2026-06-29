@@ -36,23 +36,23 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: BrandTokens.screenPadding),
           child: Semantics(
-            label:
-                '${_copy.librarySearchVideos}, ${_copy.librarySearchHint}',
+            label: _copy.librarySearchVideos,
             textField: true,
-            child: TextField(
+            child: ExcludeSemantics(
+              child: TextField(
               controller: widget.controller,
               onTapOutside: (_) => dismissKeyboard(context),
               style: GoogleFonts.atkinsonHyperlegible(
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
-                color: UdaanColors.onBackground,
+                color: context.udaan.onBackground,
               ),
               decoration: InputDecoration(
                 hintText: _copy.librarySearchHint,
                 hintStyle: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
-                  color: UdaanColors.onSurfaceMuted,
+                  color: context.udaan.onSurfaceMuted,
                 ),
                 suffixIcon: query.isNotEmpty
                     ? Semantics(
@@ -66,39 +66,40 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
                                   .read(librarySearchQueryProvider.notifier)
                                   .state = '';
                             },
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.clear,
-                              color: UdaanColors.primaryGlow,
+                              color: context.udaan.primaryGlow,
                             ),
                           ),
                         ),
                       )
-                    : const ExcludeSemantics(
+                    : ExcludeSemantics(
                         child: Icon(
                           Icons.search,
-                          color: UdaanColors.primaryGlow,
+                          color: context.udaan.primaryGlow,
                         ),
                       ),
                 filled: true,
-                fillColor: UdaanColors.surfaceContainer,
+                fillColor: context.udaan.surfaceContainer,
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: UdaanColors.outlineVariant),
+                  borderSide: BorderSide(color: context.udaan.outlineVariant),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: UdaanColors.outlineVariant),
+                  borderSide: BorderSide(color: context.udaan.outlineVariant),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(
-                    color: UdaanColors.primary,
+                  borderSide: BorderSide(
+                    color: context.udaan.primary,
                     width: 2,
                   ),
                 ),
               ),
+            ),
             ),
           ),
         ),

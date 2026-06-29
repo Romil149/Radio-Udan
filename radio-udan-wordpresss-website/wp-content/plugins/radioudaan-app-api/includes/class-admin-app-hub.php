@@ -190,6 +190,8 @@ class RadioUdaan_Admin_App_Hub {
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Settings::OPTION_TERMS_URL );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Settings::OPTION_ABOUT_URL );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Settings::OPTION_CONTACT_URL );
+		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Settings::OPTION_APP_STORE_URL );
+		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Settings::OPTION_PLAY_STORE_URL );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Legal_Pages::OPTION_PRIVACY_PAGE_ID );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Legal_Pages::OPTION_TERMS_PAGE_ID );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Legal_Pages::OPTION_ABOUT_PAGE_ID );
@@ -210,12 +212,9 @@ class RadioUdaan_Admin_App_Hub {
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Branding::OPTION_APP_NAME );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Branding::OPTION_TAGLINE );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Branding::OPTION_LOGO_ATTACHMENT_ID );
-		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Branding::OPTION_COLOR_PRIMARY );
-		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Branding::OPTION_COLOR_ON_PRIMARY );
-		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Branding::OPTION_COLOR_SECONDARY );
-		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Branding::OPTION_COLOR_SURFACE );
-		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Branding::OPTION_COLOR_SURFACE_DARK );
-		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Branding::OPTION_COLOR_ERROR );
+		foreach ( RadioUdaan_App_Branding::color_option_map() as $option ) {
+			register_setting( 'radioudaan_app_settings', $option );
+		}
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Branding::OPTION_COPY_VERIFY_INTRO );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Branding::OPTION_COPY_SUBMIT_REGISTRATION );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Branding::OPTION_COPY_REGISTRATION_SUCCESS_PREFIX );
@@ -351,6 +350,8 @@ class RadioUdaan_Admin_App_Hub {
 			'terms_url'          => RadioUdaan_App_Settings::OPTION_TERMS_URL,
 			'about_url'          => RadioUdaan_App_Settings::OPTION_ABOUT_URL,
 			'contact_url'        => RadioUdaan_App_Settings::OPTION_CONTACT_URL,
+			'app_store_url'      => RadioUdaan_App_Settings::OPTION_APP_STORE_URL,
+			'play_store_url'     => RadioUdaan_App_Settings::OPTION_PLAY_STORE_URL,
 		);
 		foreach ( $url_fields as $post_key => $option_key ) {
 			if ( isset( $_POST[ $post_key ] ) ) {
@@ -480,14 +481,10 @@ class RadioUdaan_Admin_App_Hub {
 			update_option( RadioUdaan_App_Branding::OPTION_LOGO_ATTACHMENT_ID, max( 0, (int) $_POST['branding_logo_id'] ) );
 		}
 
-		$color_map = array(
-			'branding_color_primary'      => array( RadioUdaan_App_Branding::OPTION_COLOR_PRIMARY, 'primary' ),
-			'branding_color_on_primary'   => array( RadioUdaan_App_Branding::OPTION_COLOR_ON_PRIMARY, 'on_primary' ),
-			'branding_color_secondary'    => array( RadioUdaan_App_Branding::OPTION_COLOR_SECONDARY, 'secondary' ),
-			'branding_color_surface'      => array( RadioUdaan_App_Branding::OPTION_COLOR_SURFACE, 'surface' ),
-			'branding_color_surface_dark' => array( RadioUdaan_App_Branding::OPTION_COLOR_SURFACE_DARK, 'surface_dark' ),
-			'branding_color_error'        => array( RadioUdaan_App_Branding::OPTION_COLOR_ERROR, 'error' ),
-		);
+		$color_map = array();
+		foreach ( RadioUdaan_App_Branding::color_option_map() as $key => $option ) {
+			$color_map[ 'branding_color_' . $key ] = array( $option, $key );
+		}
 		$color_defaults = RadioUdaan_App_Branding::default_colors();
 		foreach ( $color_map as $post_key => $meta ) {
 			if ( isset( $_POST[ $post_key ] ) ) {

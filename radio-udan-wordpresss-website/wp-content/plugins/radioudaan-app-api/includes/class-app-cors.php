@@ -82,6 +82,15 @@ class RadioUdaan_App_Cors {
 
 		$allowed = apply_filters( 'radioudaan_app_api_cors_origins', $allowed );
 
-		return in_array( $origin, $allowed, true );
+		if ( in_array( $origin, $allowed, true ) ) {
+			return true;
+		}
+
+		// Flutter web dev servers use random ports — allow localhost over HTTP only.
+		if ( preg_match( '#^http://(localhost|127\.0\.0\.1)(:\d+)?$#', $origin ) ) {
+			return true;
+		}
+
+		return false;
 	}
 }

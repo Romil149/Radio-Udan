@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/accessibility_scope.dart';
 import '../../core/theme/brand_tokens.dart';
@@ -16,11 +16,7 @@ class ContactPhoneScreen extends ConsumerWidget {
   const ContactPhoneScreen({super.key});
 
   void _announce(BuildContext context, String message) {
-    SemanticsService.sendAnnouncement(
-      View.of(context),
-      message,
-      Directionality.of(context),
-    );
+    announce(context, message);
   }
 
   @override
@@ -55,12 +51,14 @@ class ContactPhoneScreen extends ConsumerWidget {
                   children: [
                     Semantics(
                       header: true,
-                      child: Text(
-                        copy.contactNumberSubtitle,
-                        style: udaanGoogleFont(
-                          context,
-                          fontSize: 16,
-                          color: palette.onSurfaceVariant,
+                      child: ExcludeSemantics(
+                        child: Text(
+                          copy.contactNumberSubtitle,
+                          style: udaanGoogleFont(
+                            context,
+                            fontSize: 16,
+                            color: palette.onSurfaceVariant,
+                          ),
                         ),
                       ),
                     ),
@@ -106,10 +104,7 @@ class ContactPhoneScreen extends ConsumerWidget {
                       onPressed: () async {
                         await Clipboard.setData(ClipboardData(text: phone));
                         if (!context.mounted) return;
-                        _announce(context, copy.copiedToClipboard);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(copy.copiedToClipboard)),
-                        );
+                        announceAndSnack(context, copy.copiedToClipboard);
                       },
                     ),
                   ],

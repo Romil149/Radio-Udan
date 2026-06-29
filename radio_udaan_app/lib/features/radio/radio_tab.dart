@@ -6,12 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
+import '../../core/config/app_store_share.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/accessibility_scope.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
 import '../../core/theme/udaan_google_fonts.dart';
-import '../../core/widgets/live_badge.dart';
 import '../../core/models/radio_schedule.dart';
 import '../../core/widgets/main_tab_app_bar.dart';
 import 'live_now_playing.dart';
@@ -59,25 +60,40 @@ class _RadioTabState extends ConsumerState<RadioTab> {
     });
   }
 
-  Future<void> _shareLive(String text) async {
+  Future<void> _shareApp() async {
+    final remoteConfig = ref.read(remoteConfigProvider);
+    final live = ref.read(liveRadioProvider);
+    final message = buildAppShareMessage(
+      message: live.shareText.trim().isNotEmpty
+          ? live.shareText
+          : _copy.radioShareTextFallback,
+      appStoreUrl: remoteConfig?.appStoreUrl,
+      playStoreUrl: remoteConfig?.playStoreUrl,
+    );
+
+    if (message.trim().isEmpty ||
+        storeListingUrl(
+              appStoreUrl: remoteConfig?.appStoreUrl,
+              playStoreUrl: remoteConfig?.playStoreUrl,
+            ) ==
+            null) {
+      if (!mounted) return;
+      announceAndSnack(context, _copy.shareUnavailable);
+      return;
+    }
+
     try {
       final result =
-          await SharePlus.instance.share(ShareParams(text: text.trim()));
+          await SharePlus.instance.share(ShareParams(text: message.trim()));
       if (!mounted) return;
       if (result.status == ShareResultStatus.unavailable) {
-        await Clipboard.setData(ClipboardData(text: text));
+        await Clipboard.setData(ClipboardData(text: message));
         if (!mounted) return;
-        _announce(_copy.shareCopied);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_copy.shareCopied)),
-        );
+        announceAndSnack(context, _copy.shareCopied);
       }
     } catch (_) {
       if (!mounted) return;
-      _announce(_copy.shareFailed);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_copy.shareFailed)),
-      );
+      announceAndSnack(context, _copy.shareFailed);
     }
   }
 
@@ -89,7 +105,6 @@ class _RadioTabState extends ConsumerState<RadioTab> {
     final notifier = ref.read(radioPlayerProvider.notifier);
     final scheduleAsync = ref.watch(radioScheduleProvider);
     final nowPlaying = ref.watch(liveNowPlayingProvider);
-    final remoteConfig = ref.watch(remoteConfigProvider);
 
     // Live tab: Play → (loading) → Stop → Play only.
     final isLoading = player.status == RadioPlayerStatus.loading;
@@ -100,29 +115,12 @@ class _RadioTabState extends ConsumerState<RadioTab> {
     final heroHosts = nowPlaying.hostsLine;
     final heroImageUrl = nowPlaying.imageUrl;
 
-    final shareText = [
-      live.shareText.trim(),
-      (remoteConfig?.siteUrl ?? '').trim(),
-    ].where((e) => e.isNotEmpty).join('\n\n');
-
     ref.listen<RadioPlayerState>(radioPlayerProvider, (previous, next) {
       if (previous?.status == next.status &&
           previous?.errorMessage == next.errorMessage) {
         return;
       }
-      switch (next.status) {
-        case RadioPlayerStatus.loading:
-          _announce(_copy.radioConnecting);
-        case RadioPlayerStatus.playing:
-          _announce(_copy.radioPlaying);
-        case RadioPlayerStatus.idle:
-          if (previous?.status == RadioPlayerStatus.playing ||
-              previous?.status == RadioPlayerStatus.loading) {
-            _announce(_copy.radioStopped);
-          }
-        case RadioPlayerStatus.error:
-          break;
-      }
+      // Play/stop state is conveyed by _PlayButton semantics labels — no extra announce.
     });
 
     return Scaffold(
@@ -132,9 +130,6 @@ class _RadioTabState extends ConsumerState<RadioTab> {
         child: ListView(
           padding: const EdgeInsets.all(BrandTokens.screenPadding),
           children: [
-            const SizedBox(height: 4),
-            const Center(child: LiveBadge()),
-            const SizedBox(height: 16),
             _HeroCard(
               copy: _copy,
               title: heroTitle,
@@ -160,8 +155,8 @@ class _RadioTabState extends ConsumerState<RadioTab> {
                 child: ExcludeSemantics(
                   child: Text(
                     player.errorMessage!,
-                    style: const TextStyle(
-                      color: UdaanColors.error,
+                    style: TextStyle(
+                      color: context.udaan.error,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -192,7 +187,7 @@ class _RadioTabState extends ConsumerState<RadioTab> {
             ),
             const SizedBox(height: 16),
             _ActionRow(
-              onShare: live.showShare ? () => _shareLive(shareText) : null,
+              onShare: live.showShare ? _shareApp : null,
               shareLabel: live.shareLabel,
               favoriteShowId: (nowPlaying.showId.isNotEmpty
                       ? nowPlaying.showId
@@ -205,12 +200,14 @@ class _RadioTabState extends ConsumerState<RadioTab> {
               const SizedBox(height: 12),
               Semantics(
                 label: _copy.radioIntro,
-                child: Text(
-                  _copy.radioIntro,
-                  style: GoogleFonts.atkinsonHyperlegible(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: UdaanColors.onSurfaceVariant,
+                child: ExcludeSemantics(
+                  child: Text(
+                    _copy.radioIntro,
+                    style: GoogleFonts.atkinsonHyperlegible(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: context.udaan.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),
@@ -262,7 +259,9 @@ class _HeroCard extends StatelessWidget {
               width: double.infinity,
               child: heroImageUrl.isNotEmpty
                   ? Semantics(
-                      label: title,
+                      label: hosts.trim().isNotEmpty
+                          ? '$title. ${hosts.trim()}'
+                          : title,
                       image: true,
                       child: CachedNetworkImage(
                         key: ValueKey(heroImageUrl),
@@ -292,14 +291,16 @@ class _HeroCard extends StatelessWidget {
           ),
           if (hosts.trim().isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(
-              hosts,
-              textAlign: TextAlign.center,
-              style: udaanGoogleFont(
-                context,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: palette.onSurfaceVariant,
+            ExcludeSemantics(
+              child: Text(
+                hosts,
+                textAlign: TextAlign.center,
+                style: udaanGoogleFont(
+                  context,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: palette.onSurfaceVariant,
+                ),
               ),
             ),
           ],
@@ -335,8 +336,8 @@ class _PlayButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ring = isPlaying && !loading
-        ? UdaanColors.primary
-        : UdaanColors.outlineVariant;
+        ? context.udaan.primary
+        : context.udaan.outlineVariant;
 
     return Semantics(
       button: true,
@@ -361,16 +362,16 @@ class _PlayButton extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(color: ring, width: 5),
-                color: Colors.black,
+                color: context.udaan.surfaceDark,
               ),
               child: Center(
                 child: loading
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 28,
                         height: 28,
                         child: CircularProgressIndicator(
                           strokeWidth: 3,
-                          color: UdaanColors.primaryGlow,
+                          color: context.udaan.primaryGlow,
                         ),
                       )
                     : Icon(
@@ -394,21 +395,21 @@ class _HeroPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        border: Border.all(color: UdaanColors.outlineVariant),
+        border: Border.all(color: context.udaan.outlineVariant),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            UdaanColors.surfaceContainerHigh,
-            UdaanColors.surfaceContainerHigh.withValues(alpha: 0.65),
+            context.udaan.surfaceContainerHigh,
+            context.udaan.surfaceContainerHigh.withValues(alpha: 0.65),
           ],
         ),
       ),
-      child: const Center(
+      child: Center(
         child: Icon(
           Icons.mic_none_outlined,
           size: 96,
-          color: UdaanColors.primaryGlow,
+          color: context.udaan.primaryGlow,
         ),
       ),
     );
@@ -431,14 +432,14 @@ class _VolumeCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: UdaanColors.surfaceContainer,
+        color: context.udaan.surfaceContainer,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: UdaanColors.outlineVariant),
+        border: Border.all(color: context.udaan.outlineVariant),
       ),
       child: Row(
         children: [
-          const ExcludeSemantics(
-            child: Icon(Icons.volume_down_outlined, color: UdaanColors.primaryGlow),
+          ExcludeSemantics(
+            child: Icon(Icons.volume_down_outlined, color: context.udaan.primaryGlow),
           ),
           Expanded(
             child: Semantics(
@@ -447,12 +448,12 @@ class _VolumeCard extends StatelessWidget {
               child: Slider(
                 value: value.clamp(0, 1),
                 onChanged: onChanged,
-                activeColor: UdaanColors.primary,
+                activeColor: context.udaan.primary,
               ),
             ),
           ),
-          const ExcludeSemantics(
-            child: Icon(Icons.volume_up_outlined, color: UdaanColors.primaryGlow),
+          ExcludeSemantics(
+            child: Icon(Icons.volume_up_outlined, color: context.udaan.primaryGlow),
           ),
         ],
       ),
@@ -486,9 +487,9 @@ class _UpcomingSegmentsCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: UdaanColors.surfaceContainer,
+        color: context.udaan.surfaceContainer,
         borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-        border: Border.all(color: UdaanColors.outlineVariant),
+        border: Border.all(color: context.udaan.outlineVariant),
       ),
       child: Semantics(
         button: true,
@@ -503,7 +504,7 @@ class _UpcomingSegmentsCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
             child: Row(
               children: [
-                const Icon(Icons.schedule, color: UdaanColors.primaryGlow),
+                Icon(Icons.schedule, color: context.udaan.primaryGlow),
                 const SizedBox(width: 10),
                 Expanded(
                   child: ExcludeSemantics(
@@ -515,7 +516,7 @@ class _UpcomingSegmentsCard extends StatelessWidget {
                           style: GoogleFonts.atkinsonHyperlegible(
                             fontSize: 13,
                             fontWeight: FontWeight.w900,
-                            color: UdaanColors.primaryGlow,
+                            color: context.udaan.primaryGlow,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -524,7 +525,7 @@ class _UpcomingSegmentsCard extends StatelessWidget {
                           style: GoogleFonts.atkinsonHyperlegible(
                             fontSize: 16,
                             fontWeight: FontWeight.w900,
-                            color: UdaanColors.onBackground,
+                            color: context.udaan.onBackground,
                           ),
                         ),
                         if (subtitle.isNotEmpty) ...[
@@ -534,7 +535,7 @@ class _UpcomingSegmentsCard extends StatelessWidget {
                             style: GoogleFonts.atkinsonHyperlegible(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
-                              color: UdaanColors.onSurfaceVariant,
+                              color: context.udaan.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -544,14 +545,14 @@ class _UpcomingSegmentsCard extends StatelessWidget {
                           style: GoogleFonts.atkinsonHyperlegible(
                             fontSize: 13,
                             fontWeight: FontWeight.w800,
-                            color: UdaanColors.primary,
+                            color: context.udaan.primary,
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
-                const Icon(Icons.chevron_right, color: UdaanColors.primaryGlow),
+                Icon(Icons.chevron_right, color: context.udaan.primaryGlow),
               ],
             ),
           ),
@@ -658,16 +659,16 @@ class _LiveActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
     final borderColor =
-        isActive ? UdaanColors.primary : UdaanColors.outlineVariant;
+        isActive ? context.udaan.primary : context.udaan.outlineVariant;
     final background = isActive
-        ? UdaanColors.primary.withValues(alpha: 0.14)
-        : UdaanColors.surfaceContainer;
+        ? context.udaan.primary.withValues(alpha: 0.14)
+        : context.udaan.surfaceContainer;
     final iconColor = enabled
-        ? (isActive ? UdaanColors.primary : UdaanColors.primaryGlow)
-        : UdaanColors.onSurfaceVariant.withValues(alpha: 0.45);
+        ? (isActive ? context.udaan.primary : context.udaan.primaryGlow)
+        : context.udaan.onSurfaceVariant.withValues(alpha: 0.45);
     final labelColor = enabled
-        ? UdaanColors.onBackground
-        : UdaanColors.onSurfaceVariant.withValues(alpha: 0.45);
+        ? context.udaan.onBackground
+        : context.udaan.onSurfaceVariant.withValues(alpha: 0.45);
 
     return Semantics(
       button: true,
@@ -688,24 +689,26 @@ class _LiveActionButton extends StatelessWidget {
                 width: isActive ? 2 : 1.5,
               ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 22, color: iconColor),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.atkinsonHyperlegible(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: labelColor,
+            child: ExcludeSemantics(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 22, color: iconColor),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.atkinsonHyperlegible(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: labelColor,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

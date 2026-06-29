@@ -88,6 +88,8 @@ class RadioUdaan_App_Config {
 			'terms_url'          => RadioUdaan_App_Settings::get_terms_url(),
 			'about_url'          => RadioUdaan_App_Settings::get_about_url(),
 			'contact_url'        => RadioUdaan_App_Settings::get_contact_url(),
+			'app_store_url'      => RadioUdaan_App_Settings::get_app_store_url(),
+			'play_store_url'     => RadioUdaan_App_Settings::get_play_store_url(),
 			'legal_pages'        => RadioUdaan_App_Legal_Pages::get_config_payload(),
 			'support'            => array(
 				'helpline_phone' => RadioUdaan_App_Settings::get_support_helpline_phone(),

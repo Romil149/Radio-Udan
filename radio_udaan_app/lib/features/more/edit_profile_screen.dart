@@ -97,12 +97,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     if (name.length < 2) {
       setState(() => _error = _copy.nameRequired);
-      _announce(_copy.nameRequired);
       return;
     }
     if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(email)) {
       setState(() => _error = _copy.emailInvalid);
-      _announce(_copy.emailInvalid);
       return;
     }
 
@@ -134,7 +132,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       Navigator.of(context).pop();
     } catch (e) {
       setState(() => _error = parseApiError(e).message);
-      _announce(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -169,9 +166,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           builder: (_) => const SettingsScreen(),
                         ),
                       ),
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.settings_outlined,
-                        color: UdaanColors.onBackground,
+                        color: context.udaan.onBackground,
                       ),
                     ),
                   ),
@@ -194,25 +191,25 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           children: [
                             CircleAvatar(
                               radius: 56,
-                              backgroundColor: UdaanColors.surfaceContainer,
+                              backgroundColor: context.udaan.surfaceContainer,
                               backgroundImage: _localAvatarPath != null
                                   ? FileImage(File(_localAvatarPath!))
                                   : (avatarUrl != null && avatarUrl.isNotEmpty
                                       ? CachedNetworkImageProvider(avatarUrl)
                                       : null),
                               child: avatarUrl == null && _localAvatarPath == null
-                                  ? const Icon(Icons.person, size: 48)
+                                  ? Icon(Icons.person, size: 48)
                                   : null,
                             ),
                             Container(
                               padding: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                color: UdaanColors.primary,
+                              decoration: BoxDecoration(
+                                color: context.udaan.primary,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.camera_alt,
-                                color: UdaanColors.onPrimary,
+                                color: context.udaan.onPrimary,
                                 size: 20,
                               ),
                             ),
@@ -228,7 +225,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         _copy.tapToUpdatePhoto,
                         style: GoogleFonts.atkinsonHyperlegible(
                           fontSize: 14,
-                          color: UdaanColors.primaryGlow,
+                          color: context.udaan.primaryGlow,
                         ),
                       ),
                     ),
@@ -248,9 +245,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       _phoneController.text,
                     ),
                     hint: _copy.profileMobileLockedHint,
-                    suffixIcon: const Icon(
+                    suffixIcon: Icon(
                       Icons.lock_outline,
-                      color: UdaanColors.onSurfaceVariant,
+                      color: context.udaan.onSurfaceVariant,
                     ),
                   ),
                   _labeledField(
@@ -263,17 +260,17 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: UdaanColors.surfaceContainer,
+                      color: context.udaan.surfaceContainer,
                       borderRadius: BorderRadius.circular(12),
-                      border: const Border(
-                        left: BorderSide(color: UdaanColors.primaryGlow, width: 3),
+                      border: Border(
+                        left: BorderSide(color: context.udaan.primaryGlow, width: 3),
                       ),
                     ),
                     child: Text(
                       _copy.profileInfoNote,
                       style: GoogleFonts.atkinsonHyperlegible(
                         fontSize: 15,
-                        color: UdaanColors.onSurfaceVariant,
+                        color: context.udaan.onSurfaceVariant,
                         height: 1.4,
                       ),
                     ),
@@ -294,7 +291,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           style: GoogleFonts.atkinsonHyperlegible(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color: UdaanColors.primaryGlow,
+                            color: context.udaan.primaryGlow,
                           ),
                         ),
                       ),
@@ -308,7 +305,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       child: ExcludeSemantics(
                         child: Text(                        _error!,
                         style: GoogleFonts.atkinsonHyperlegible(
-                          color: UdaanColors.error,
+                          color: context.udaan.error,
                         ),
                         ),
                       ),
@@ -369,7 +366,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 hint,
                 style: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 14,
-                  color: UdaanColors.onSurfaceVariant,
+                  color: context.udaan.onSurfaceVariant,
                 ),
               ),
             ),

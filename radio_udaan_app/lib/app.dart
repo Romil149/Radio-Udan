@@ -19,7 +19,7 @@ class RadioUdaanApp extends ConsumerWidget {
     final branding = ref.watch(appBrandingProvider);
     final settings = ref.watch(appSettingsProvider);
     final palette = settings.highContrast
-        ? UdaanPalette.highContrast()
+        ? UdaanPalette.highContrastFrom(branding.colors)
         : branding.colors.udaanPalette;
     final theme = UdaanTheme.fromPalette(
       palette: palette,

@@ -123,18 +123,18 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
       hintText: hint,
       hintStyle: GoogleFonts.atkinsonHyperlegible(
         fontSize: 18,
-        color: UdaanColors.hint,
+        color: context.udaan.hint,
       ),
       filled: true,
-      fillColor: UdaanColors.surfaceContainer,
+      fillColor: context.udaan.surfaceContainer,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: UdaanColors.primaryGlow),
+        borderSide: BorderSide(color: context.udaan.primaryGlow),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: UdaanColors.primary, width: 2),
+        borderSide: BorderSide(color: context.udaan.primary, width: 2),
       ),
     );
   }
@@ -165,7 +165,7 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
             style: GoogleFonts.atkinsonHyperlegible(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: UdaanColors.onBackground,
+              color: context.udaan.onBackground,
             ),
           ),
         ),
@@ -176,7 +176,7 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
             style: GoogleFonts.atkinsonHyperlegible(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: UdaanColors.onSurfaceVariant,
+              color: context.udaan.onSurfaceVariant,
             ),
           ),
         ),
@@ -190,7 +190,7 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
               child: SizedBox(
                 width: 132,
                 child: Material(
-                  color: UdaanColors.surfaceContainer,
+                  color: context.udaan.surfaceContainer,
                   borderRadius: BorderRadius.circular(12),
                   child: InkWell(
                     onTap: _openCountryPicker,
@@ -200,14 +200,14 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: UdaanColors.primaryGlow),
+                        border: Border.all(color: context.udaan.primaryGlow),
                       ),
                       child: ExcludeSemantics(
                         child: Row(
                           children: [
                             Text(
                               country.flagEmoji,
-                              style: const TextStyle(fontSize: 22),
+                              style: TextStyle(fontSize: 22),
                             ),
                             const SizedBox(width: 4),
                             Expanded(
@@ -216,14 +216,14 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
                                 style: GoogleFonts.atkinsonHyperlegible(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w700,
-                                  color: UdaanColors.onBackground,
+                                  color: context.udaan.onBackground,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            const Icon(
+                            Icon(
                               Icons.arrow_drop_down,
-                              color: UdaanColors.primaryGlow,
+                              color: context.udaan.primaryGlow,
                             ),
                           ],
                         ),
@@ -251,7 +251,7 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
                   onTapOutside: (_) => dismissKeyboard(context),
                   style: GoogleFonts.atkinsonHyperlegible(
                     fontSize: 18,
-                    color: UdaanColors.onBackground,
+                    color: context.udaan.onBackground,
                   ),
                   decoration: _fieldDecoration(hint: hint),
                 ),

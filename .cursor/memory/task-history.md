@@ -1,5 +1,12 @@
 # Task History
 
+### 2026-06-13 — Blind-user navigation a11y (phased plan)
+**Requested by**: User (implement VoiceOver/TalkBack navigation plan)
+**What was done**: Phases 0–5: shared `udaan_semantics.dart` toolkit; tab announcements + screen header landmarks; radio hero merge + schedule modal; flattened event/library cards; registration event context banner + page announcements; YouTube native-only controls + Open in YouTube; modal sheets (schedule, country picker); HTML heading landmarks; deep link announce; SnackBar→`announceAndSnack` sweep. Device QA script: `scripts/a11y-device-qa.md`.
+**Files changed**: `lib/core/accessibility/udaan_semantics.dart`, `main_shell_screen.dart`, `brand_app_bar.dart`, `radio_tab.dart`, `radio_schedule_sheet.dart`, `event_card.dart`, `event_context_banner.dart`, `event_registration_screen.dart`, `library_video_card.dart`, `library_player_screen.dart`, `accessible_country_picker_sheet.dart`, `accessible_html_content.dart`, `external_link.dart`, `event_deep_link.dart`, about contact/donate screens
+**Status**: ✅ `dart analyze lib` exit 0; **device QA pending** (see `scripts/a11y-device-qa.md`)
+**Notes**: YouTube `showControls: false` — sighted users use native Play/Pause row below embed. Deploy staging APK/IPA before Elena/Jordan sign-off.
+
 ### 2026-06-27 — Blind-user a11y: VoiceOver keyboard + double-speech fixes
 **Requested by**: User (fix audit gaps; TestFlight path)
 **What was done**: Global keyboard dismiss; ExcludeSemantics across auth/registration/library/radio/more; accessible country picker; native library video controls; AccessibleHtmlContent; liveRegion labels; build 2.0.0+20. Branch `cursor/a11y-voiceover-keyboard-fixes-1ab5`, PR #4.

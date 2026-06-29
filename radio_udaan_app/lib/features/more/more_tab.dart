@@ -80,12 +80,7 @@ class MoreTab extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: MainTabAppBar(
-        title: copy.tabMore,
-        onProfileTap: isSignedIn
-            ? () => _push(context, const EditProfileScreen())
-            : null,
-      ),
+      appBar: MainTabAppBar(title: copy.tabMore),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(BrandTokens.screenPadding),
@@ -99,7 +94,7 @@ class MoreTab extends ConsumerWidget {
                 title: copy.userProfile,
                 subtitle: copy.userProfileSubtitle,
                 icon: Icons.person,
-                iconBackground: UdaanColors.primary,
+                iconBackground: context.udaan.primary,
                 onTap: () => _push(context, const EditProfileScreen()),
               ),
               MoreMenuTile(
@@ -108,15 +103,15 @@ class MoreTab extends ConsumerWidget {
                     ? copy.unreadNotificationsBadge(unreadCount)
                     : copy.notificationsSubtitle,
                 icon: Icons.notifications_outlined,
-                iconBackground: UdaanColors.secondary,
+                iconBackground: context.udaan.secondary,
                 trailing: unreadCount > 0
                     ? ExcludeSemantics(
                         child: Badge(
                           label: Text(
                             unreadCount > 9 ? '9+' : '$unreadCount',
                           ),
-                          backgroundColor: UdaanColors.primary,
-                          child: const Icon(Icons.chevron_right),
+                          backgroundColor: context.udaan.primary,
+                          child: Icon(Icons.chevron_right),
                         ),
                       )
                     : null,
@@ -133,8 +128,8 @@ class MoreTab extends ConsumerWidget {
                 title: copy.settingsTitle,
                 subtitle: copy.settingsSubtitle,
                 icon: Icons.tune,
-                iconBackground: UdaanColors.surfaceContainerHigh,
-                iconColor: UdaanColors.primaryGlow,
+                iconBackground: context.udaan.surfaceContainerHigh,
+                iconColor: context.udaan.primaryGlow,
                 onTap: () => _push(context, const SettingsScreen()),
               ),
             ],
@@ -146,7 +141,7 @@ class MoreTab extends ConsumerWidget {
                     ? '${user.email}. ${copy.emailNotVerified}'
                     : copy.emailNotVerified,
                 icon: Icons.mark_email_unread_outlined,
-                iconBackground: UdaanColors.primary,
+                iconBackground: context.udaan.primary,
                 onTap: () => context.push(
                   '/verify-email',
                   extra: VerifyEmailRouteArgs(
@@ -161,12 +156,14 @@ class MoreTab extends ConsumerWidget {
               Semantics(
                 header: true,
                 label: copy.legalSection,
-                child: Text(
-                  copy.legalSection,
-                  style: GoogleFonts.atkinsonHyperlegible(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: UdaanColors.onSurfaceVariant,
+                child: ExcludeSemantics(
+                  child: Text(
+                    copy.legalSection,
+                    style: GoogleFonts.atkinsonHyperlegible(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: context.udaan.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),
@@ -181,9 +178,9 @@ class MoreTab extends ConsumerWidget {
                   ? null
                   : '${copy.deleteAccount}. ${copy.deleteAccountSubtitle}. ${copy.notSignedIn}',
               icon: Icons.delete_forever_outlined,
-              iconBackground: UdaanColors.error.withValues(alpha: 0.2),
-              iconColor: UdaanColors.error,
-              titleColor: UdaanColors.error,
+              iconBackground: context.udaan.error.withValues(alpha: 0.2),
+              iconColor: context.udaan.error,
+              titleColor: context.udaan.error,
               onTap: isSignedIn
                   ? () => _confirmDeleteAccount(context, ref, copy)
                   : null,
@@ -195,11 +192,11 @@ class MoreTab extends ConsumerWidget {
                   ? null
                   : '${copy.logout}. ${copy.logoutSubtitle}. ${copy.notSignedIn}',
               icon: Icons.logout,
-              iconBackground: UdaanColors.error.withValues(alpha: 0.15),
-              iconColor: UdaanColors.error,
-              titleColor: UdaanColors.primaryGlow,
-              borderColor: UdaanColors.primaryGlow,
-              trailing: const Icon(Icons.logout, color: UdaanColors.primaryGlow),
+              iconBackground: context.udaan.error.withValues(alpha: 0.15),
+              iconColor: context.udaan.error,
+              titleColor: context.udaan.primaryGlow,
+              borderColor: context.udaan.primaryGlow,
+              trailing: Icon(Icons.logout, color: context.udaan.primaryGlow),
               onTap: isSignedIn ? () => _logout(context, ref, copy) : null,
             ),
             const SizedBox(height: 24),
@@ -210,7 +207,7 @@ class MoreTab extends ConsumerWidget {
                     copy.appVersionLabel(AppConstants.appVersion),
                     style: GoogleFonts.atkinsonHyperlegible(
                       fontSize: 14,
-                      color: UdaanColors.onSurfaceVariant,
+                      color: context.udaan.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -218,7 +215,7 @@ class MoreTab extends ConsumerWidget {
                     copy.madeWithAccessibility,
                     style: GoogleFonts.atkinsonHyperlegible(
                       fontSize: 13,
-                      color: UdaanColors.onSurfaceVariant,
+                      color: context.udaan.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -255,8 +252,8 @@ class MoreTab extends ConsumerWidget {
           MoreMenuTile(
             title: link.title,
             icon: link.icon,
-            iconBackground: UdaanColors.surfaceContainerHigh,
-            iconColor: UdaanColors.primaryGlow,
+            iconBackground: context.udaan.surfaceContainerHigh,
+            iconColor: context.udaan.primaryGlow,
             onTap: () => _openLegalContent(
               context,
               ref,

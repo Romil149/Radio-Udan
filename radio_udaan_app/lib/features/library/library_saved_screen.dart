@@ -111,10 +111,10 @@ class _SavedRadioTile extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.only(bottom: 10),
         child: Material(
-          color: UdaanColors.surfaceContainer,
+          color: context.udaan.surfaceContainer,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-            side: const BorderSide(color: UdaanColors.outlineVariant),
+            side: BorderSide(color: context.udaan.outlineVariant),
           ),
           child: ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -127,20 +127,20 @@ class _SavedRadioTile extends ConsumerWidget {
                     width: 56,
                     height: 56,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => const Icon(
+                    errorBuilder: (_, _, _) => Icon(
                       Icons.radio,
-                      color: UdaanColors.primaryGlow,
+                      color: context.udaan.primaryGlow,
                       size: 32,
                     ),
                   ),
                 )
-              : const Icon(Icons.radio, color: UdaanColors.primaryGlow, size: 32),
+              : Icon(Icons.radio, color: context.udaan.primaryGlow, size: 32),
           title: Text(
             title,
             style: GoogleFonts.atkinsonHyperlegible(
               fontWeight: FontWeight.w800,
               fontSize: 17,
-              color: UdaanColors.onBackground,
+              color: context.udaan.onBackground,
             ),
           ),
           subtitle: hosts.isNotEmpty
@@ -148,7 +148,7 @@ class _SavedRadioTile extends ConsumerWidget {
                   hosts,
                   style: GoogleFonts.atkinsonHyperlegible(
                     fontSize: 14,
-                    color: UdaanColors.onSurfaceVariant,
+                    color: context.udaan.onSurfaceVariant,
                   ),
                 )
               : null,
@@ -158,32 +158,34 @@ class _SavedRadioTile extends ConsumerWidget {
               showTitle: title,
               isFavorite: isFavorite,
             ),
-            child: IconButton(
-              constraints: const BoxConstraints(
-                minWidth: BrandTokens.minTapTarget,
-                minHeight: BrandTokens.minTapTarget,
-              ),
-              onPressed: () async {
-                await ref.read(appFavoritesProvider.notifier).toggleRadioShow(
-                      showId: item.itemId,
-                      title: title,
-                      meta: item.meta,
-                    );
-                if (!context.mounted) return;
-                SemanticsService.sendAnnouncement(
-                  View.of(context),
-                  copy.radioFavoriteAnnouncement(
-                    showTitle: title,
-                    added: !isFavorite,
-                  ),
-                  Directionality.of(context),
-                );
-              },
-              icon: Icon(
-                isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: isFavorite
-                    ? UdaanColors.primary
-                    : UdaanColors.primaryGlow,
+            child: ExcludeSemantics(
+              child: IconButton(
+                constraints: const BoxConstraints(
+                  minWidth: BrandTokens.minTapTarget,
+                  minHeight: BrandTokens.minTapTarget,
+                ),
+                onPressed: () async {
+                  await ref.read(appFavoritesProvider.notifier).toggleRadioShow(
+                        showId: item.itemId,
+                        title: title,
+                        meta: item.meta,
+                      );
+                  if (!context.mounted) return;
+                  SemanticsService.sendAnnouncement(
+                    View.of(context),
+                    copy.radioFavoriteAnnouncement(
+                      showTitle: title,
+                      added: !isFavorite,
+                    ),
+                    Directionality.of(context),
+                  );
+                },
+                icon: Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: isFavorite
+                      ? context.udaan.primary
+                      : context.udaan.primaryGlow,
+                ),
               ),
             ),
           ),

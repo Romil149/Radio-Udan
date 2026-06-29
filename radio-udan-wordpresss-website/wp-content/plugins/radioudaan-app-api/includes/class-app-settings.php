@@ -31,6 +31,8 @@ class RadioUdaan_App_Settings {
 	const OPTION_TERMS_URL                  = 'radioudaan_terms_url';
 	const OPTION_ABOUT_URL                  = 'radioudaan_about_url';
 	const OPTION_CONTACT_URL                = 'radioudaan_contact_url';
+	const OPTION_APP_STORE_URL              = 'radioudaan_app_store_url';
+	const OPTION_PLAY_STORE_URL             = 'radioudaan_play_store_url';
 	const OPTION_REQUIRE_UNIQUE_EMAIL       = 'radioudaan_require_unique_email';
 	const OPTION_REQUIRE_EMAIL_VERIFICATION = 'radioudaan_require_email_verification';
 	const OPTION_PASSWORD_MIN_LENGTH        = 'radioudaan_password_min_length';
@@ -259,6 +261,24 @@ class RadioUdaan_App_Settings {
 	 */
 	public static function get_contact_url() {
 		return self::get_legal_url( self::OPTION_CONTACT_URL, home_url( '/contact/' ) );
+	}
+
+	/**
+	 * App Store listing URL for iOS share sheet (empty until configured in admin).
+	 *
+	 * @return string
+	 */
+	public static function get_app_store_url() {
+		return esc_url_raw( trim( (string) get_option( self::OPTION_APP_STORE_URL, '' ) ) );
+	}
+
+	/**
+	 * Google Play listing URL for Android share sheet (empty until configured in admin).
+	 *
+	 * @return string
+	 */
+	public static function get_play_store_url() {
+		return esc_url_raw( trim( (string) get_option( self::OPTION_PLAY_STORE_URL, '' ) ) );
 	}
 
 	/**

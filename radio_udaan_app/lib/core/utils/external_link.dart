@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../accessibility/udaan_semantics.dart';
 import '../config/app_branding.dart';
 import '../config/app_copy_accessors.dart';
 
@@ -14,24 +15,18 @@ Future<void> openExternalUrl(
   final uri = Uri.tryParse(url.trim());
   if (uri == null || !uri.hasScheme) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(strings.linkUnavailable)),
-    );
+    announceAndSnack(context, strings.linkUnavailable);
     return;
   }
 
   try {
     final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!launched && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(strings.linkOpenFailed)),
-      );
+      announceAndSnack(context, strings.linkOpenFailed);
     }
   } catch (_) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(strings.linkOpenFailed)),
-      );
+      announceAndSnack(context, strings.linkOpenFailed);
     }
   }
 }

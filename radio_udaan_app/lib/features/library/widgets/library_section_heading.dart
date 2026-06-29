@@ -31,7 +31,7 @@ class LibrarySectionHeading extends StatelessWidget {
             style: GoogleFonts.atkinsonHyperlegible(
               fontSize: 20,
               fontWeight: FontWeight.w900,
-              color: UdaanColors.primaryGlow,
+              color: context.udaan.primaryGlow,
             ),
           ),
         ),

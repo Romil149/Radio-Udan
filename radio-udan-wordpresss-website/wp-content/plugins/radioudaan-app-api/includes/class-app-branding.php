@@ -15,12 +15,24 @@ class RadioUdaan_App_Branding {
 	const OPTION_APP_NAME           = 'radioudaan_branding_app_name';
 	const OPTION_TAGLINE            = 'radioudaan_branding_tagline';
 	const OPTION_LOGO_ATTACHMENT_ID = 'radioudaan_branding_logo_id';
-	const OPTION_COLOR_PRIMARY      = 'radioudaan_branding_color_primary';
-	const OPTION_COLOR_ON_PRIMARY   = 'radioudaan_branding_color_on_primary';
-	const OPTION_COLOR_SECONDARY    = 'radioudaan_branding_color_secondary';
-	const OPTION_COLOR_SURFACE      = 'radioudaan_branding_color_surface';
-	const OPTION_COLOR_SURFACE_DARK = 'radioudaan_branding_color_surface_dark';
-	const OPTION_COLOR_ERROR        = 'radioudaan_branding_color_error';
+
+	const OPTION_COLOR_PRIMARY              = 'radioudaan_branding_color_primary';
+	const OPTION_COLOR_ON_PRIMARY           = 'radioudaan_branding_color_on_primary';
+	const OPTION_COLOR_SECONDARY            = 'radioudaan_branding_color_secondary';
+	const OPTION_COLOR_SURFACE              = 'radioudaan_branding_color_surface';
+	const OPTION_COLOR_SURFACE_DARK         = 'radioudaan_branding_color_surface_dark';
+	const OPTION_COLOR_ERROR                = 'radioudaan_branding_color_error';
+	const OPTION_COLOR_BACKGROUND           = 'radioudaan_branding_color_background';
+	const OPTION_COLOR_ON_BACKGROUND        = 'radioudaan_branding_color_on_background';
+	const OPTION_COLOR_ON_SURFACE_VARIANT   = 'radioudaan_branding_color_on_surface_variant';
+	const OPTION_COLOR_PRIMARY_GLOW         = 'radioudaan_branding_color_primary_glow';
+	const OPTION_COLOR_OUTLINE_VARIANT      = 'radioudaan_branding_color_outline_variant';
+	const OPTION_COLOR_SURFACE_CONTAINER_HIGH = 'radioudaan_branding_color_surface_container_high';
+	const OPTION_COLOR_SURFACE_CONTAINER    = 'radioudaan_branding_color_surface_container';
+	const OPTION_COLOR_HINT                 = 'radioudaan_branding_color_hint';
+	const OPTION_COLOR_ON_SURFACE_MUTED     = 'radioudaan_branding_color_on_surface_muted';
+	const OPTION_COLOR_ON_ERROR             = 'radioudaan_branding_color_on_error';
+	const OPTION_COLOR_SCRIM                = 'radioudaan_branding_color_scrim';
 
 	const OPTION_COPY_BOOTSTRAP_LOADING = 'radioudaan_copy_bootstrap_loading';
 	const OPTION_COPY_SIGN_IN_INTRO     = 'radioudaan_copy_sign_in_intro';
@@ -43,18 +55,83 @@ class RadioUdaan_App_Branding {
 	const OPTION_COPY_OVERRIDES                    = 'radioudaan_copy_overrides';
 
 	/**
-	 * Website-aligned defaults (radio-udaan.com theme).
+	 * Catalog key → WP option name (all colors editable in admin).
+	 *
+	 * @return array<string,string>
+	 */
+	public static function color_option_map() {
+		return array(
+			'primary'                => self::OPTION_COLOR_PRIMARY,
+			'on_primary'             => self::OPTION_COLOR_ON_PRIMARY,
+			'secondary'              => self::OPTION_COLOR_SECONDARY,
+			'surface'                => self::OPTION_COLOR_SURFACE,
+			'surface_dark'           => self::OPTION_COLOR_SURFACE_DARK,
+			'error'                  => self::OPTION_COLOR_ERROR,
+			'background'             => self::OPTION_COLOR_BACKGROUND,
+			'on_background'          => self::OPTION_COLOR_ON_BACKGROUND,
+			'on_surface_variant'     => self::OPTION_COLOR_ON_SURFACE_VARIANT,
+			'primary_glow'           => self::OPTION_COLOR_PRIMARY_GLOW,
+			'outline_variant'        => self::OPTION_COLOR_OUTLINE_VARIANT,
+			'surface_container_high' => self::OPTION_COLOR_SURFACE_CONTAINER_HIGH,
+			'surface_container'      => self::OPTION_COLOR_SURFACE_CONTAINER,
+			'hint'                   => self::OPTION_COLOR_HINT,
+			'on_surface_muted'       => self::OPTION_COLOR_ON_SURFACE_MUTED,
+			'on_error'               => self::OPTION_COLOR_ON_ERROR,
+			'scrim'                  => self::OPTION_COLOR_SCRIM,
+		);
+	}
+
+	/**
+	 * Admin labels for color pickers.
+	 *
+	 * @return array<string,string>
+	 */
+	public static function color_labels() {
+		return array(
+			'primary'                => __( 'Primary', 'radioudaan-app-api' ),
+			'on_primary'             => __( 'On primary', 'radioudaan-app-api' ),
+			'secondary'              => __( 'Secondary', 'radioudaan-app-api' ),
+			'surface'                => __( 'Light surface', 'radioudaan-app-api' ),
+			'surface_dark'           => __( 'Dark surface', 'radioudaan-app-api' ),
+			'error'                  => __( 'Error', 'radioudaan-app-api' ),
+			'background'             => __( 'App background', 'radioudaan-app-api' ),
+			'on_background'          => __( 'On background', 'radioudaan-app-api' ),
+			'on_surface_variant'     => __( 'Accent text', 'radioudaan-app-api' ),
+			'primary_glow'           => __( 'Primary glow', 'radioudaan-app-api' ),
+			'outline_variant'        => __( 'Borders', 'radioudaan-app-api' ),
+			'surface_container_high' => __( 'Elevated surface', 'radioudaan-app-api' ),
+			'surface_container'      => __( 'Card surface', 'radioudaan-app-api' ),
+			'hint'                   => __( 'Hint text', 'radioudaan-app-api' ),
+			'on_surface_muted'       => __( 'Muted text', 'radioudaan-app-api' ),
+			'on_error'               => __( 'On error', 'radioudaan-app-api' ),
+			'scrim'                  => __( 'Overlay scrim', 'radioudaan-app-api' ),
+		);
+	}
+
+	/**
+	 * Website-aligned defaults (radio-udaan.com theme + Stitch Udaan Core).
 	 *
 	 * @return array<string,string>
 	 */
 	public static function default_colors() {
 		return array(
-			'primary'       => '#ff6b00',
-			'on_primary'    => '#ffffff',
-			'secondary'     => '#1d9e75',
-			'surface'       => '#ffffff',
-			'surface_dark'  => '#1a1a1a',
-			'error'         => '#dc2626',
+			'primary'                => '#ff6b00',
+			'on_primary'             => '#ffffff',
+			'secondary'              => '#1d9e75',
+			'surface'                => '#ffffff',
+			'surface_dark'           => '#1a1a1a',
+			'error'                  => '#dc2626',
+			'background'             => '#131313',
+			'on_background'          => '#e5e2e1',
+			'on_surface_variant'     => '#e3bfb1',
+			'primary_glow'           => '#ffb598',
+			'outline_variant'        => '#5b4137',
+			'surface_container_high' => '#2a2a2a',
+			'surface_container'      => '#20201f',
+			'hint'                   => '#aa8a7d',
+			'on_surface_muted'       => '#939494',
+			'on_error'               => '#ffffff',
+			'scrim'                  => '#cc000000',
 		);
 	}
 
@@ -68,13 +145,13 @@ class RadioUdaan_App_Branding {
 	}
 
 	/**
-	 * @param string $hex Candidate color.
+	 * @param string $hex Candidate color (#rgb, #rrggbb, or #aarrggbb for scrim).
 	 * @param string $fallback Valid hex if candidate invalid.
 	 * @return string
 	 */
 	public static function sanitize_hex( $hex, $fallback ) {
 		$hex = strtolower( trim( (string) $hex ) );
-		if ( preg_match( '/^#([0-9a-f]{3}|[0-9a-f]{6})$/', $hex ) ) {
+		if ( preg_match( '/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/', $hex ) ) {
 			if ( 4 === strlen( $hex ) ) {
 				$r = $hex[1];
 				$g = $hex[2];
@@ -144,14 +221,14 @@ class RadioUdaan_App_Branding {
 	 */
 	public static function get_colors() {
 		$defaults = self::default_colors();
-		return array(
-			'primary'      => self::sanitize_hex( get_option( self::OPTION_COLOR_PRIMARY, '' ), $defaults['primary'] ),
-			'on_primary'   => self::sanitize_hex( get_option( self::OPTION_COLOR_ON_PRIMARY, '' ), $defaults['on_primary'] ),
-			'secondary'    => self::sanitize_hex( get_option( self::OPTION_COLOR_SECONDARY, '' ), $defaults['secondary'] ),
-			'surface'      => self::sanitize_hex( get_option( self::OPTION_COLOR_SURFACE, '' ), $defaults['surface'] ),
-			'surface_dark' => self::sanitize_hex( get_option( self::OPTION_COLOR_SURFACE_DARK, '' ), $defaults['surface_dark'] ),
-			'error'        => self::sanitize_hex( get_option( self::OPTION_COLOR_ERROR, '' ), $defaults['error'] ),
-		);
+		$colors   = array();
+		foreach ( self::color_option_map() as $key => $option ) {
+			$colors[ $key ] = self::sanitize_hex(
+				get_option( $option, '' ),
+				$defaults[ $key ] ?? '#000000'
+			);
+		}
+		return $colors;
 	}
 
 	/**

@@ -21,6 +21,8 @@ class RemoteConfig {
     this.termsUrl,
     this.aboutUrl,
     this.contactUrl,
+    this.appStoreUrl,
+    this.playStoreUrl,
     this.legalPages = const LegalPagesConfig(),
     this.support = const SupportConfig(),
     this.infoHub = const InfoHubConfig(),
@@ -53,6 +55,8 @@ class RemoteConfig {
       termsUrl: _parseOptionalUrl(json['terms_url']),
       aboutUrl: _parseOptionalUrl(json['about_url']),
       contactUrl: _parseOptionalUrl(json['contact_url']),
+      appStoreUrl: _parseOptionalUrl(json['app_store_url']),
+      playStoreUrl: _parseOptionalUrl(json['play_store_url']),
       legalPages: LegalPagesConfig.fromJson(
         json['legal_pages'] as Map<String, dynamic>?,
       ),
@@ -89,6 +93,8 @@ class RemoteConfig {
   final String? termsUrl;
   final String? aboutUrl;
   final String? contactUrl;
+  final String? appStoreUrl;
+  final String? playStoreUrl;
   final LegalPagesConfig legalPages;
   final SupportConfig support;
   final InfoHubConfig infoHub;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
 import '../providers/app_providers.dart';
 import '../theme/accessibility_scope.dart';
 import '../theme/brand_tokens.dart';
@@ -59,8 +60,8 @@ class BrandAppBar extends ConsumerWidget implements PreferredSizeWidget {
       centerTitle: centerTitle,
       leading: resolvedLeading,
       automaticallyImplyLeading: false,
-      title: Text(
-        title,
+      title: UdaanScreenHeader(
+        title: title,
         style: udaanTextStyle(
           context,
           fontSize: 20,

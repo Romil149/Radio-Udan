@@ -53,8 +53,8 @@ class EventsTab extends ConsumerWidget {
             return Semantics(
               label: copy.tabEvents,
               child: RefreshIndicator(
-                color: UdaanColors.primary,
-                backgroundColor: UdaanColors.surfaceContainer,
+                color: context.udaan.primary,
+                backgroundColor: context.udaan.surfaceContainer,
                 onRefresh: () async {
                   ref.invalidate(eventsProvider);
                   await ref.read(eventsProvider.future);
@@ -75,25 +75,29 @@ class EventsTab extends ConsumerWidget {
                           Semantics(
                             header: true,
                             label: copy.eventsPageTitle,
-                            child: Text(
-                              copy.eventsPageTitle,
-                              style: GoogleFonts.atkinsonHyperlegible(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w900,
-                                color: UdaanColors.primaryGlow,
+                            child: ExcludeSemantics(
+                              child: Text(
+                                copy.eventsPageTitle,
+                                style: GoogleFonts.atkinsonHyperlegible(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w900,
+                                  color: context.udaan.primaryGlow,
+                                ),
                               ),
                             ),
                           ),
                           const SizedBox(height: 8),
                           Semantics(
                             label: copy.eventsPageIntro,
-                            child: Text(
-                              copy.eventsPageIntro,
-                              style: GoogleFonts.atkinsonHyperlegible(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: UdaanColors.onSurfaceVariant,
-                                height: 1.45,
+                            child: ExcludeSemantics(
+                              child: Text(
+                                copy.eventsPageIntro,
+                                style: GoogleFonts.atkinsonHyperlegible(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: context.udaan.onSurfaceVariant,
+                                  height: 1.45,
+                                ),
                               ),
                             ),
                           ),
@@ -139,7 +143,7 @@ class EventsTab extends ConsumerWidget {
             child: Semantics(
               label: copy.eventsLoading,
               liveRegion: true,
-              child: const CircularProgressIndicator(color: UdaanColors.primary),
+              child: CircularProgressIndicator(color: context.udaan.primary),
             ),
           ),
           error: (error, _) => EmptyState(

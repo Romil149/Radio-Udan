@@ -108,8 +108,8 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                   child: ExcludeSemantics(
                     child: Text(                    _error!,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: UdaanColors.error,
+                    style: TextStyle(
+                      color: context.udaan.error,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),

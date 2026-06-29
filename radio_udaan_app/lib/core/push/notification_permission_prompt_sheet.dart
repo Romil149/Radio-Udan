@@ -25,10 +25,10 @@ class NotificationPermissionPromptSheet extends ConsumerWidget {
     return Semantics(
       scopesRoute: true,
       namesRoute: true,
-      label: copy.notificationPermissionTitle,
+      explicitChildNodes: true,
       child: Container(
-        decoration: const BoxDecoration(
-          color: UdaanColors.surfaceContainer,
+        decoration: BoxDecoration(
+          color: context.udaan.surfaceContainer,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         padding: EdgeInsets.fromLTRB(
@@ -43,12 +43,15 @@ class NotificationPermissionPromptSheet extends ConsumerWidget {
           children: [
             Semantics(
               header: true,
-              child: Text(
-                copy.notificationPermissionTitle,
-                style: GoogleFonts.atkinsonHyperlegible(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: UdaanColors.primaryGlow,
+              label: copy.notificationPermissionTitle,
+              child: ExcludeSemantics(
+                child: Text(
+                  copy.notificationPermissionTitle,
+                  style: GoogleFonts.atkinsonHyperlegible(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: context.udaan.primaryGlow,
+                  ),
                 ),
               ),
             ),
@@ -58,7 +61,7 @@ class NotificationPermissionPromptSheet extends ConsumerWidget {
               style: GoogleFonts.atkinsonHyperlegible(
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
-                color: UdaanColors.onBackground,
+                color: context.udaan.onBackground,
                 height: 1.45,
               ),
             ),
@@ -66,30 +69,34 @@ class NotificationPermissionPromptSheet extends ConsumerWidget {
             Semantics(
               button: true,
               label: copy.notificationPermissionContinue,
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(
-                    BrandTokens.a11yMinTapTarget,
+              child: ExcludeSemantics(
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(
+                      BrandTokens.a11yMinTapTarget,
+                    ),
+                    backgroundColor: context.udaan.primary,
+                    foregroundColor: context.udaan.onPrimary,
                   ),
-                  backgroundColor: UdaanColors.primary,
-                  foregroundColor: UdaanColors.onPrimary,
+                  onPressed: () => onContinue(),
+                  child: Text(copy.notificationPermissionContinue),
                 ),
-                onPressed: () => onContinue(),
-                child: Text(copy.notificationPermissionContinue),
               ),
             ),
             const SizedBox(height: 10),
             Semantics(
               button: true,
               label: copy.notificationPermissionNotNow,
-              child: TextButton(
-                style: TextButton.styleFrom(
-                  minimumSize: const Size.fromHeight(
-                    BrandTokens.a11yMinTapTarget,
+              child: ExcludeSemantics(
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size.fromHeight(
+                      BrandTokens.a11yMinTapTarget,
+                    ),
                   ),
+                  onPressed: () => onNotNow(),
+                  child: Text(copy.notificationPermissionNotNow),
                 ),
-                onPressed: () => onNotNow(),
-                child: Text(copy.notificationPermissionNotNow),
               ),
             ),
           ],

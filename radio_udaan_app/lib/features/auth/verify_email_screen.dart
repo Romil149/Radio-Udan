@@ -190,10 +190,10 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                   }
                 },
               ),
-              const Divider(
+              Divider(
                 height: 24,
                 thickness: 1,
-                color: UdaanColors.outlineVariant,
+                color: context.udaan.outlineVariant,
               ),
               const SizedBox(height: 8),
               Center(child: UdaanOtpHeroIcon(
@@ -203,13 +203,15 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               Semantics(
                 header: true,
                 label: _copy.verifyEmailTitle,
-                child: Text(
-                  _copy.verifyEmailTitle,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.atkinsonHyperlegible(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: UdaanColors.onBackground,
+                child: ExcludeSemantics(
+                  child: Text(
+                    _copy.verifyEmailTitle,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.atkinsonHyperlegible(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: context.udaan.onBackground,
+                    ),
                   ),
                 ),
               ),
@@ -220,7 +222,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                 style: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
-                  color: UdaanColors.primaryGlow,
+                  color: context.udaan.primaryGlow,
                   height: 1.35,
                 ),
               ),
@@ -232,7 +234,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                   style: GoogleFonts.atkinsonHyperlegible(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: UdaanColors.onBackground.withValues(alpha: 0.9),
+                    color: context.udaan.onBackground.withValues(alpha: 0.9),
                   ),
                 ),
               ],
@@ -256,7 +258,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                 style: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: UdaanColors.onBackground,
+                  color: context.udaan.onBackground,
                 ),
               ),
               const SizedBox(height: 8),
@@ -287,8 +289,8 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                   child: ExcludeSemantics(
                     child: Text(                    _error!,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: UdaanColors.error,
+                    style: TextStyle(
+                      color: context.udaan.error,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/config/info_hub_config.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/accessibility_scope.dart';
@@ -16,22 +16,11 @@ import '../auth/widgets/udaan_auth_widgets.dart';
 class DonateScreen extends ConsumerWidget {
   const DonateScreen({super.key});
 
-  void _announce(BuildContext context, String message) {
-    SemanticsService.sendAnnouncement(
-      View.of(context),
-      message,
-      Directionality.of(context),
-    );
-  }
-
   Future<void> _copyValue(BuildContext context, AppCopy copy, String value) async {
     if (value.trim().isEmpty) return;
     await Clipboard.setData(ClipboardData(text: value.trim()));
     if (!context.mounted) return;
-    _announce(context, copy.copiedToClipboard);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(copy.copiedToClipboard)),
-    );
+    announceAndSnack(context, copy.copiedToClipboard);
   }
 
   @override
@@ -73,14 +62,16 @@ class DonateScreen extends ConsumerWidget {
             if (donate.headline.trim().isNotEmpty)
               Semantics(
                 header: true,
-                child: Text(
-                  donate.headline,
-                  style: udaanGoogleFont(
-                    context,
-                    fontSize: 30,
-                    fontWeight: FontWeight.w800,
-                    height: 1.2,
-                    color: palette.onBackground,
+                child: ExcludeSemantics(
+                  child: Text(
+                    donate.headline,
+                    style: udaanGoogleFont(
+                      context,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                      height: 1.2,
+                      color: palette.onBackground,
+                    ),
                   ),
                 ),
               ),
@@ -188,7 +179,7 @@ class _ScanCard extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.udaan.surface,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: CachedNetworkImage(
@@ -204,7 +195,7 @@ class _ScanCard extends StatelessWidget {
                   ),
                   errorWidget: (_, _, _) => Text(
                     copy.linkUnavailable,
-                    style: udaanGoogleFont(context, color: Colors.black87),
+                    style: udaanGoogleFont(context, color: context.udaan.onBackground),
                   ),
                 ),
               ),
@@ -320,13 +311,15 @@ class _InfoCard extends StatelessWidget {
         children: [
           Semantics(
             header: true,
-            child: Text(
-              title,
-              style: udaanGoogleFont(
-                context,
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: palette.onBackground,
+            child: ExcludeSemantics(
+              child: Text(
+                title,
+                style: udaanGoogleFont(
+                  context,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: palette.onBackground,
+                ),
               ),
             ),
           ),
@@ -396,13 +389,15 @@ class _BankFieldRow extends StatelessWidget {
               Semantics(
                 button: true,
                 label: '$copyLabel $label',
-                child: IconButton(
-                  constraints: const BoxConstraints(
-                    minWidth: BrandTokens.a11yMinTapTarget,
-                    minHeight: BrandTokens.a11yMinTapTarget,
+                child: ExcludeSemantics(
+                  child: IconButton(
+                    constraints: const BoxConstraints(
+                      minWidth: BrandTokens.a11yMinTapTarget,
+                      minHeight: BrandTokens.a11yMinTapTarget,
+                    ),
+                    onPressed: onCopy,
+                    icon: Icon(Icons.copy),
                   ),
-                  onPressed: onCopy,
-                  icon: const Icon(Icons.copy),
                 ),
               ),
             ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/app_user_settings.dart';
+import '../config/app_branding.dart';
 import 'udaan_colors.dart';
 
 /// Provides accessibility settings + resolved [UdaanPalette] to the widget tree.
@@ -24,7 +25,8 @@ class AccessibilityScope extends InheritedWidget {
   }
 
   static UdaanPalette paletteOf(BuildContext context) {
-    return maybeOf(context)?.palette ?? UdaanPalette.stitch();
+    return maybeOf(context)?.palette ??
+        UdaanPalette.fromBrand(BrandColors.defaults);
   }
 
   @override

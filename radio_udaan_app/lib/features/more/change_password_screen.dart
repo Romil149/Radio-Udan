@@ -123,7 +123,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                         obscure
                             ? Icons.visibility_outlined
                             : Icons.visibility_off_outlined,
-                        color: UdaanColors.primaryGlow,
+                        color: context.udaan.primaryGlow,
                       ),
                     ),
                   ),
@@ -149,7 +149,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
               child: Icon(
                 met ? Icons.check_circle : Icons.circle_outlined,
                 color:
-                    met ? UdaanColors.secondary : UdaanColors.onSurfaceVariant,
+                    met ? context.udaan.secondary : context.udaan.onSurfaceVariant,
                 size: 20,
               ),
             ),
@@ -160,7 +160,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                   text,
                   style: GoogleFonts.atkinsonHyperlegible(
                     fontSize: 15,
-                    color: UdaanColors.onBackground,
+                    color: context.udaan.onBackground,
                   ),
                 ),
               ),
@@ -197,12 +197,14 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 children: [
                   Semantics(
                     header: true,
-                    child: Text(
-                      _copy.changePasswordTitle,
-                      style: GoogleFonts.atkinsonHyperlegible(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        color: UdaanColors.onBackground,
+                    child: ExcludeSemantics(
+                      child: Text(
+                        _copy.changePasswordTitle,
+                        style: GoogleFonts.atkinsonHyperlegible(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: context.udaan.onBackground,
+                        ),
                       ),
                     ),
                   ),
@@ -211,7 +213,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     _copy.changePasswordIntro,
                     style: GoogleFonts.atkinsonHyperlegible(
                       fontSize: 16,
-                      color: UdaanColors.onSurfaceVariant,
+                      color: context.udaan.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -234,7 +236,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: UdaanColors.surfaceContainer,
+                      color: context.udaan.surfaceContainer,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
@@ -263,7 +265,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                       child: ExcludeSemantics(
                         child: Text(                        _error!,
                         style: GoogleFonts.atkinsonHyperlegible(
-                          color: UdaanColors.error,
+                          color: context.udaan.error,
                         ),
                         ),
                       ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -10,9 +9,8 @@ import '../../core/theme/udaan_colors.dart';
 import '../../core/utils/keyboard_dismiss.dart';
 import '../auth/widgets/udaan_auth_widgets.dart';
 import '../events/widgets/registration_form_styles.dart';
-import 'widgets/contact_support_actions_card.dart';
 
-/// Contact form + direct support actions (email / helpline).
+/// Contact form for support messages.
 class HelpContactScreen extends ConsumerStatefulWidget {
   const HelpContactScreen({super.key});
 
@@ -58,7 +56,6 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
 
     if (name.isEmpty || email.isEmpty || subject.isEmpty || message.isEmpty) {
       setState(() => _error = _copy.registrationFieldRequired);
-      _announce(_copy.registrationFieldRequired);
       return;
     }
 
@@ -83,39 +80,13 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
     } catch (e) {
       final message = parseApiError(e).message;
       setState(() => _error = message);
-      _announce(message);
     } finally {
       if (mounted) setState(() => _sending = false);
     }
   }
 
-  void _announce(String message) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      SemanticsService.sendAnnouncement(
-        View.of(context),
-        message,
-        Directionality.of(context),
-      );
-    });
-  }
-
-  void _launchFailed() {
-    if (!mounted) return;
-    _announce(_copy.linkOpenFailed);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(_copy.linkOpenFailed)),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final copy = ref.watch(appCopyProvider);
-    final config = ref.watch(remoteConfigProvider);
-    final support = config?.support;
-    final supportEmail = support?.email ?? '';
-    final helpline = support?.helplinePhone ?? '';
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
@@ -126,7 +97,7 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
                 horizontal: BrandTokens.screenPadding,
               ),
               child: UdaanAuthTopBar(
-                copy: copy,
+                copy: ref.watch(appCopyProvider),
                 title: _copy.contactTitle,
                 onBack: () => Navigator.of(context).pop(),
               ),
@@ -137,12 +108,14 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
                 children: [
                   Semantics(
                     header: true,
-                    child: Text(
-                      _copy.contactFormTitle,
-                      style: GoogleFonts.atkinsonHyperlegible(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        color: UdaanColors.primaryGlow,
+                    child: ExcludeSemantics(
+                      child: Text(
+                        _copy.contactFormTitle,
+                        style: GoogleFonts.atkinsonHyperlegible(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: context.udaan.primaryGlow,
+                        ),
                       ),
                     ),
                   ),
@@ -152,7 +125,7 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
                     style: GoogleFonts.atkinsonHyperlegible(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      color: UdaanColors.onSurfaceVariant,
+                      color: context.udaan.onSurfaceVariant,
                       height: 1.45,
                     ),
                   ),
@@ -180,7 +153,7 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
                         child: ExcludeSemantics(
                           child: Text(
                             _error!,
-                            style: const TextStyle(color: UdaanColors.error),
+                            style: TextStyle(color: context.udaan.error),
                           ),
                         ),
                       ),
@@ -194,7 +167,7 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
                         child: ExcludeSemantics(
                           child: Text(
                             _success!,
-                            style: const TextStyle(color: UdaanColors.secondary),
+                            style: TextStyle(color: context.udaan.secondary),
                           ),
                         ),
                       ),
@@ -204,13 +177,6 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
                     icon: Icons.send_outlined,
                     loading: _sending,
                     onPressed: _sending ? null : _send,
-                  ),
-                  const SizedBox(height: 24),
-                  ContactSupportActionsCard(
-                    copy: copy,
-                    supportEmail: supportEmail,
-                    helplinePhone: helpline,
-                    onLaunchFailed: _launchFailed,
                   ),
                 ],
               ),
