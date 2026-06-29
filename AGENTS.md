@@ -36,6 +36,37 @@ Staging site: https://nexusfleck.com/radioudaan/
 
 ## Cursor Cloud specific instructions
 
+### VM toolchain (one-time snapshot)
+
+| Tool | Version / path | Notes |
+|------|----------------|-------|
+| Flutter | **3.44.1** stable at `$HOME/flutter` | `export PATH="$HOME/flutter/bin:$PATH"` (also in `~/.bashrc`) |
+| Dart | 3.12.1 (bundled with Flutter) | Matches `pubspec.yaml` `sdk: ^3.12.1` |
+| PHP CLI | 8.3+ (`php-cli` apt) | Plugin lint only — no local WordPress in repo |
+| Python 3 + curl | system | Used by `scripts/staging-api-smoke.sh` |
+
+There is **no Docker** and **no local WordPress** in this repo. Cloud agents use the **hosted staging API** for E2E.
+
+### Run the Flutter app (Chrome — preferred on Cloud VM)
+
+Use **tmux** for long-running `flutter run` (do not background a one-shot shell):
+
+```bash
+export PATH="$HOME/flutter/bin:$PATH"
+cd radio_udaan_app
+flutter run -d chrome --web-port=8765 \
+  --dart-define=API_BASE_URL=https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1
+```
+
+Open **http://localhost:8765**. First compile can take ~2 minutes.
+
+### PHP plugin lint (all files)
+
+```bash
+PLUGIN="radio-udan-wordpresss-website/wp-content/plugins/radioudaan-app-api"
+find "$PLUGIN" -name '*.php' -print0 | while IFS= read -r -d '' f; do php -l "$f" >/dev/null; done
+```
+
 ### Before every PR
 
 ```bash
