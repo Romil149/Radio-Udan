@@ -68,14 +68,20 @@ Do **not** rely on local `flutter build apk`. Use GitHub Actions:
 - Trigger: push to `main` or manual **Run workflow**
 - Artifact: `app-release.apk` with staging API baked in
 
-### iOS IPA (GitHub build, manual TestFlight upload)
+### iOS IPA → TestFlight (GitHub Actions)
 
 After one-time GitHub signing secrets (`bash scripts/ios-github-secrets-setup.sh`):
 
 - Workflow: **Build iOS IPA** (`.github/workflows/build-ios-testflight.yml`)
-- Download `.ipa` from Actions **Artifacts**
-- Upload with **Transporter** on Mac → App Store Connect → **TestFlight**
+- Auto-upload when `APP_STORE_CONNECT_*` secrets are set; else download `.ipa` from **Artifacts** → Transporter
 - Bundle ID: `org.reactjs.native.example.Radio`
+
+**Before every push to `main` that changes `radio_udaan_app/**` for TestFlight**, bump in the **same commit**:
+
+1. `radio_udaan_app/pubspec.yaml` — increment the number after `+` (build string)
+2. `.cursor/memory/release-state.md` — TestFlight row + commit hash
+
+If CI fails with **90189 Redundant Binary Upload**, increment build again and push (build already exists on App Store Connect).
 
 ### Typical user requests → your actions
 

@@ -16,7 +16,8 @@ All code should look like it was written and maintained by the same engineering 
 
 ## Flutter (`radio_udaan_app/`)
 - Product copy → `lib/core/constants/app_strings.dart`.
-- Client metadata (version, platform) → `lib/core/constants/app_constants.dart` (keep version aligned with `pubspec.yaml`).
+- Client metadata (version, platform) → `lib/core/constants/app_constants.dart` (keep **marketing version** aligned with `pubspec.yaml`; build number lives only in `pubspec.yaml` `version: X.Y.Z+BUILD`).
+- **TestFlight / store builds**: increment `pubspec.yaml` build (`+NNN`) and update `.cursor/memory/release-state.md` in the **same commit** as app changes — never rely on a follow-up bump after CI 90189.
 - REST errors → `parseApiError()` in `lib/core/network/dio_exception_mapper.dart`; UI shows `ApiError.message`.
 - Debug-only UI (API base URL, dev hints) → wrap in `kDebugMode`.
 - Accessibility: `Semantics` on controls; `liveRegion: true` for errors and success messages.
