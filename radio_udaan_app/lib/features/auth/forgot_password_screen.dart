@@ -182,12 +182,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 ),
               ),
               const SizedBox(height: 28),
-              Semantics(
-                label: _copy.forgotPasswordChannelSemantics,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _ForgotChannelChip(
+              Row(
+                children: [
+                  Expanded(
+                    child: _ForgotChannelChip(
                         label: _copy.forgotPasswordChannelEmail,
                         selected: isEmail,
                         onTap: () => _setChannel(_ForgotChannel.email),
@@ -203,7 +201,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     ),
                   ],
                 ),
-              ),
               const SizedBox(height: 20),
               if (isEmail) ...[
                 UdaanLabeledField(

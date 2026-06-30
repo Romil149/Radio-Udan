@@ -68,68 +68,70 @@ class _UdaanOtpPinRowState extends State<UdaanOtpPinRow> {
             SizedBox(
               height: 56,
               width: 1,
-              child: TextField(
-                controller: widget.controller,
-                focusNode: _focusNode,
-                enabled: widget.enabled,
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.done,
-                autofillHints: const [AutofillHints.oneTimeCode],
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(widget.length),
-                ],
-                style: TextStyle(color: Colors.transparent, fontSize: 1),
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  counterText: '',
-                  isCollapsed: true,
-                  contentPadding: EdgeInsets.zero,
+              child: ExcludeSemantics(
+                child: TextField(
+                  controller: widget.controller,
+                  focusNode: _focusNode,
+                  enabled: widget.enabled,
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
+                  autofillHints: const [AutofillHints.oneTimeCode],
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(widget.length),
+                  ],
+                  style: TextStyle(color: Colors.transparent, fontSize: 1),
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    counterText: '',
+                    isCollapsed: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  onChanged: (_) => setState(() {}),
+                  onTapOutside: (_) => dismissKeyboard(context),
+                  onSubmitted: (_) => dismissKeyboard(context),
                 ),
-                onChanged: (_) => setState(() {}),
-                onTapOutside: (_) => dismissKeyboard(context),
-                onSubmitted: (_) => dismissKeyboard(context),
               ),
             ),
             ExcludeSemantics(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(widget.length, (index) {
-                final digit = cells[index];
-                final filled = digit.isNotEmpty;
-                final active = code.length == index && _focusNode.hasFocus;
-                return Padding(
-                  padding: EdgeInsets.only(
-                    right: index < widget.length - 1 ? 8 : 0,
-                  ),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 120),
-                    width: 44,
-                    height: 56,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: context.udaan.surfaceContainer,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: active
-                            ? context.udaan.primary
-                            : filled
-                                ? context.udaan.primaryGlow
-                                : context.udaan.outlineVariant,
-                        width: active ? 2 : 1,
+                  final digit = cells[index];
+                  final filled = digit.isNotEmpty;
+                  final active = code.length == index && _focusNode.hasFocus;
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      right: index < widget.length - 1 ? 8 : 0,
+                    ),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 120),
+                      width: 44,
+                      height: 56,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: context.udaan.surfaceContainer,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: active
+                              ? context.udaan.primary
+                              : filled
+                                  ? context.udaan.primaryGlow
+                                  : context.udaan.outlineVariant,
+                          width: active ? 2 : 1,
+                        ),
+                      ),
+                      child: Text(
+                        digit,
+                        style: GoogleFonts.atkinsonHyperlegible(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: context.udaan.onBackground,
+                        ),
                       ),
                     ),
-                    child: Text(
-                      digit,
-                      style: GoogleFonts.atkinsonHyperlegible(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        color: context.udaan.onBackground,
-                      ),
-                    ),
-                  ),
-                );
-              }),
+                  );
+                }),
               ),
             ),
           ],

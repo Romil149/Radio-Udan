@@ -99,7 +99,6 @@ class _RadioTabState extends ConsumerState<RadioTab> {
 
   @override
   Widget build(BuildContext context) {
-    final branding = ref.watch(appBrandingProvider);
     final live = ref.watch(liveRadioProvider);
     final player = ref.watch(radioPlayerProvider);
     final notifier = ref.read(radioPlayerProvider.notifier);
@@ -125,7 +124,7 @@ class _RadioTabState extends ConsumerState<RadioTab> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: MainTabAppBar(title: branding.appName),
+      appBar: MainTabAppBar(title: _copy.tabRadio),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(BrandTokens.screenPadding),
@@ -504,7 +503,9 @@ class _UpcomingSegmentsCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
             child: Row(
               children: [
-                Icon(Icons.schedule, color: context.udaan.primaryGlow),
+                ExcludeSemantics(
+                  child: Icon(Icons.schedule, color: context.udaan.primaryGlow),
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: ExcludeSemantics(
@@ -552,7 +553,9 @@ class _UpcomingSegmentsCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Icon(Icons.chevron_right, color: context.udaan.primaryGlow),
+                ExcludeSemantics(
+                  child: Icon(Icons.chevron_right, color: context.udaan.primaryGlow),
+                ),
               ],
             ),
           ),

@@ -250,7 +250,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Semantics(
-          label: '${copy.libraryPlayVideo}, $title',
+          label: copy.libraryPlayVideo,
           hint: copy.libraryPlayerNativeHint,
           child: ExcludeSemantics(
             child: ClipRRect(
@@ -467,20 +467,6 @@ class _PlayerMetadata extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 16),
-        Semantics(
-          header: true,
-          label: video.title,
-          child: ExcludeSemantics(
-            child: Text(
-              video.title,
-              style: GoogleFonts.atkinsonHyperlegible(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                color: context.udaan.onBackground,
-              ),
-            ),
-          ),
-        ),
         if (duration.isNotEmpty || uploaded.isNotEmpty) ...[
           const SizedBox(height: 10),
           Wrap(

@@ -62,7 +62,6 @@ class _EventRegistrationScreenState
   bool _submitting = false;
   bool _draftLoaded = false;
   bool _accountDefaultsApplied = false;
-  bool _formIntroAnnounced = false;
   int _currentPageIndex = 0;
   Timer? _draftSaveDebounce;
 
@@ -161,28 +160,15 @@ class _EventRegistrationScreenState
     announce(context, message);
   }
 
-  void _maybeAnnounceFormIntro(FormSchema schema) {
-    if (_formIntroAnnounced) return;
-    _formIntroAnnounced = true;
-    final eventTitle = schema.event.title.isNotEmpty
-        ? schema.event.title
-        : widget.title;
-    final total = schema.pages.isEmpty ? 1 : schema.pages.length;
-    _announce(
-      '${_copy.eventRegistrationTitle}, $eventTitle. '
-      '${_copy.registrationPageLabel(1, total)}',
-    );
-  }
-
   void _announcePageChange(FormSchema schema) {
     if (schema.pages.isEmpty) return;
     final page = schema.pages[_currentPageIndex.clamp(0, schema.pages.length - 1)];
+    if (page.title.isNotEmpty) return;
     final pageLabel = _copy.registrationPageLabel(
       _currentPageIndex + 1,
       schema.pages.length,
     );
-    final label = page.title.isNotEmpty ? '$pageLabel. ${page.title}' : pageLabel;
-    _announce(label);
+    _announce(pageLabel);
   }
 
   bool _submitBlocked(FormSchema schema) =>
@@ -950,8 +936,6 @@ class _EventRegistrationScreenState
   }
 
   Widget _buildForm(BuildContext context, FormSchema schema) {
-    _maybeAnnounceFormIntro(schema);
-
     if (!_accountDefaultsApplied) {
       _accountDefaultsApplied = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -965,9 +949,6 @@ class _EventRegistrationScreenState
     for (final f in pageFields) {
       bySection.putIfAbsent(f.sectionId, () => []).add(f);
     }
-    final eventTitle = schema.event.title.isNotEmpty
-        ? schema.event.title
-        : widget.title;
     final submitBlocked = _submitBlocked(schema);
     final onLastPage = schema.pages.isEmpty ||
         _currentPageIndex >= schema.pages.length - 1;
@@ -1049,36 +1030,14 @@ class _EventRegistrationScreenState
           const SizedBox(height: 16),
         ],
         EventContextBanner(copy: _copy, event: schema.event),
-        Semantics(
-          header: true,
-          label: _copy.eventRegistrationTitle,
-          child: ExcludeSemantics(
-            child: Text(
-              _copy.eventRegistrationTitle,
-              style: udaanTextStyle(
-                context,
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-                color: palette.onBackground,
-                height: 1.15,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Semantics(
-          label: eventTitle,
-          child: ExcludeSemantics(
-            child: Text(
-              eventTitle,
-              style: udaanTextStyle(
-                context,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: palette.primaryGlow,
-                height: 1.35,
-              ),
-            ),
+        UdaanScreenHeader(
+          title: _copy.eventRegistrationTitle,
+          style: udaanTextStyle(
+            context,
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
+            color: palette.onBackground,
+            height: 1.15,
           ),
         ),
         if (schema.pages.isNotEmpty) ...[
@@ -1618,19 +1577,9 @@ class _EventRegistrationScreenState
         return _fieldShell(
           context,
           field,
-          Semantics(
-              label: _fieldSemanticsLabel(field),
-              hint: field.required ? _copy.registrationFieldRequired : null,
-              value: uploading
-                  ? _copy.registrationUploadProgressLabel(
-                      uploadLabel,
-                      percent,
-                    )
-                  : (uploadValue ?? _copy.registrationNoFileSelected),
-              container: true,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
                   if (uploadNames.isNotEmpty) ...[
                     for (final name in uploadNames)
                       Padding(
@@ -1709,13 +1658,7 @@ class _EventRegistrationScreenState
                   ],
                   if (uploading) ...[
                     const SizedBox(height: 8),
-                    Semantics(
-                      label: _copy.registrationUploadProgressLabel(
-                        uploadLabel,
-                        percent,
-                      ),
-                      value: '$percent%',
-                      liveRegion: true,
+                    ExcludeSemantics(
                       child: LinearProgressIndicator(
                         value: progress != null && progress > 0
                             ? progress.clamp(0.0, 1.0)
@@ -1758,7 +1701,6 @@ class _EventRegistrationScreenState
                   ],
                 ],
               ),
-          ),
         );
       case 'number':
         return _textField(

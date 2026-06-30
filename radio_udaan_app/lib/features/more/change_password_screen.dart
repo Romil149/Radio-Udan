@@ -95,16 +95,19 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            label,
-            style: registrationFieldLabelStyle(context, required: true),
+          ExcludeSemantics(
+            child: Text(
+              label,
+              style: registrationFieldLabelStyle(context, required: true),
+            ),
           ),
           const SizedBox(height: 8),
           Semantics(
             label: label,
             textField: true,
             obscured: obscure,
-            child: TextField(
+            child: ExcludeSemantics(
+              child: TextField(
               controller: controller,
               obscureText: obscure,
               onChanged: (_) => setState(() {}),
@@ -129,6 +132,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                   ),
                 ),
               ),
+            ),
             ),
           ),
         ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/accessibility/udaan_semantics.dart';
 import '../../../core/theme/brand_tokens.dart';
 import '../../../core/theme/udaan_colors.dart';
 
@@ -22,18 +23,12 @@ class LibrarySectionHeading extends StatelessWidget {
         BrandTokens.screenPadding,
         12,
       ),
-      child: Semantics(
-        header: true,
-        label: title,
-        child: ExcludeSemantics(
-          child: Text(
-            title,
-            style: GoogleFonts.atkinsonHyperlegible(
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-              color: context.udaan.primaryGlow,
-            ),
-          ),
+      child: UdaanScreenHeader(
+        title: title,
+        style: GoogleFonts.atkinsonHyperlegible(
+          fontSize: 20,
+          fontWeight: FontWeight.w900,
+          color: context.udaan.primaryGlow,
         ),
       ),
     );

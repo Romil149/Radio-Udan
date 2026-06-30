@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/accessibility/udaan_semantics.dart';
 import '../../../core/config/app_branding.dart';
 import '../../../core/theme/accessibility_scope.dart';
 import '../../../core/theme/brand_tokens.dart';
@@ -38,8 +39,7 @@ class EventContextBanner extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Semantics(
-        container: true,
+      child: UdaanLabeledRegion(
         label: semanticsLabel,
         child: Container(
           width: double.infinity,
@@ -49,10 +49,9 @@ class EventContextBanner extends StatelessWidget {
             borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
             border: Border.all(color: palette.outlineVariant),
           ),
-          child: ExcludeSemantics(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
                 if (typeLabel.isNotEmpty)
                   Text(
                     typeLabel,
@@ -88,8 +87,7 @@ class EventContextBanner extends StatelessWidget {
                     ),
                   ),
                 ],
-              ],
-            ),
+            ],
           ),
         ),
       ),

@@ -454,9 +454,11 @@ class _SavedEntryTile extends ConsumerWidget {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.bookmark,
-                    color: context.udaan.primaryGlow,
+                  ExcludeSemantics(
+                    child: Icon(
+                      Icons.bookmark,
+                      color: context.udaan.primaryGlow,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -505,9 +507,11 @@ class _SavedEntryTile extends ConsumerWidget {
                         ),
                       ),
                     ),
-                  Icon(
-                    Icons.chevron_right,
-                    color: context.udaan.onSurfaceVariant,
+                  ExcludeSemantics(
+                    child: Icon(
+                      Icons.chevron_right,
+                      color: context.udaan.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),

@@ -36,7 +36,7 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: BrandTokens.screenPadding),
           child: Semantics(
-            label: _copy.librarySearchVideos,
+            label: _copy.librarySearchHint,
             textField: true,
             child: ExcludeSemantics(
               child: TextField(

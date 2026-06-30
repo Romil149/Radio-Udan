@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/api/api_error.dart';
 import '../../core/config/legal_pages_config.dart';
 import '../../core/config/remote_config.dart';
@@ -153,18 +154,12 @@ class MoreTab extends ConsumerWidget {
             ],
             if (config != null) ...[
               const SizedBox(height: 8),
-              Semantics(
-                header: true,
-                label: copy.legalSection,
-                child: ExcludeSemantics(
-                  child: Text(
-                    copy.legalSection,
-                    style: GoogleFonts.atkinsonHyperlegible(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: context.udaan.onSurfaceVariant,
-                    ),
-                  ),
+              UdaanScreenHeader(
+                title: copy.legalSection,
+                style: GoogleFonts.atkinsonHyperlegible(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: context.udaan.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 8),

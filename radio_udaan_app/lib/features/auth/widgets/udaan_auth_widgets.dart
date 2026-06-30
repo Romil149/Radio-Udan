@@ -146,15 +146,15 @@ class UdaanForgotPasswordHelpCard extends StatelessWidget {
     return Semantics(
       container: true,
       label: copy.forgotPasswordHelpBody,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: palette.surfaceContainer.withValues(alpha: 0.8),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: palette.outlineVariant),
-        ),
-        child: ExcludeSemantics(
+      child: ExcludeSemantics(
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: palette.surfaceContainer.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: palette.outlineVariant),
+          ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -244,11 +244,13 @@ class UdaanAuthLogoHeader extends StatelessWidget {
   const UdaanAuthLogoHeader({
     required this.branding,
     this.subtitle,
+    this.showAppNameHeader = true,
     super.key,
   });
 
   final AppBranding branding;
   final String? subtitle;
+  final bool showAppNameHeader;
 
   static const double _logoHeight = 120;
 
@@ -258,24 +260,27 @@ class UdaanAuthLogoHeader extends StatelessWidget {
     return Column(
       children: [
         OfflineBrandLogo(branding: branding, height: _logoHeight),
-        const SizedBox(height: 20),
-        Semantics(
-          header: true,
-          label: branding.appName,
-          child: ExcludeSemantics(
-            child: Text(
-              branding.appName,
-              textAlign: TextAlign.center,
-              style: udaanTextStyle(
-                context,
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-                color: palette.primaryGlow,
-                height: 1.15,
+        if (showAppNameHeader) ...[
+          const SizedBox(height: 20),
+          Semantics(
+            header: true,
+            label: branding.appName,
+            child: ExcludeSemantics(
+              child: Text(
+                branding.appName,
+                textAlign: TextAlign.center,
+                style: udaanTextStyle(
+                  context,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: palette.primaryGlow,
+                  height: 1.15,
+                ),
               ),
             ),
           ),
-        ),
+        ] else
+          const SizedBox(height: 20),
         if (subtitle != null && subtitle!.isNotEmpty) ...[
           const SizedBox(height: 10),
           Text(
@@ -361,8 +366,9 @@ class UdaanLabeledField extends StatelessWidget {
           textField: true,
           label: _fieldSemanticsLabel,
           readOnly: readOnly,
-          child: TextField(
-            controller: controller,
+          child: ExcludeSemantics(
+            child: TextField(
+              controller: controller,
             readOnly: readOnly,
             keyboardType: keyboardType,
             textInputAction: textInputAction,
@@ -423,6 +429,7 @@ class UdaanLabeledField extends StatelessWidget {
                 borderSide: BorderSide(color: palette.error, width: 2),
               ),
             ),
+          ),
           ),
         ),
       ],
@@ -644,15 +651,15 @@ class UdaanAccessibilityAssistCard extends StatelessWidget {
     return Semantics(
       container: true,
       label: '${copy.registerA11yTitle}. ${copy.registerA11yBody}',
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: palette.surfaceContainer.withValues(alpha: 0.8),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: palette.outlineVariant),
-        ),
-        child: ExcludeSemantics(
+      child: ExcludeSemantics(
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: palette.surfaceContainer.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: palette.outlineVariant),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

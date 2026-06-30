@@ -20,7 +20,7 @@ class DonateScreen extends ConsumerWidget {
     if (value.trim().isEmpty) return;
     await Clipboard.setData(ClipboardData(text: value.trim()));
     if (!context.mounted) return;
-    announceAndSnack(context, copy.copiedToClipboard);
+    announce(context, copy.copiedToClipboard);
   }
 
   @override
@@ -174,7 +174,7 @@ class _ScanCard extends StatelessWidget {
         children: [
           if (qrUrl.isNotEmpty)
             Semantics(
-              label: '${copy.donateScanTitle}. ${copy.donateScanCaption}',
+              label: copy.donateScanTitle,
               image: true,
               child: Container(
                 padding: const EdgeInsets.all(16),

@@ -24,6 +24,32 @@ void announceAndSnack(BuildContext context, String message) {
   );
 }
 
+/// One spoken node; descendants are not separate focus stops.
+class UdaanLabeledRegion extends StatelessWidget {
+  const UdaanLabeledRegion({
+    required this.label,
+    required this.child,
+    this.header = false,
+    this.liveRegion = false,
+    super.key,
+  });
+
+  final String label;
+  final Widget child;
+  final bool header;
+  final bool liveRegion;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      header: header,
+      label: label,
+      liveRegion: liveRegion,
+      child: ExcludeSemantics(child: child),
+    );
+  }
+}
+
 /// Screen title landmark for rotor / TalkBack headings.
 class UdaanScreenHeader extends StatelessWidget {
   const UdaanScreenHeader({
@@ -74,7 +100,6 @@ class UdaanModalSheet extends StatelessWidget {
       scopesRoute: true,
       namesRoute: true,
       explicitChildNodes: true,
-      label: title,
       child: Container(
         decoration: decoration,
         padding: padding,

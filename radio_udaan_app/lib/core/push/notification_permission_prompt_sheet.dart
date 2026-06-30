@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../providers/app_providers.dart';
+import '../accessibility/udaan_semantics.dart';
 import '../theme/brand_tokens.dart';
 import '../theme/udaan_colors.dart';
 
@@ -41,28 +42,25 @@ class NotificationPermissionPromptSheet extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Semantics(
-              header: true,
-              label: copy.notificationPermissionTitle,
-              child: ExcludeSemantics(
-                child: Text(
-                  copy.notificationPermissionTitle,
-                  style: GoogleFonts.atkinsonHyperlegible(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: context.udaan.primaryGlow,
-                  ),
-                ),
+            UdaanScreenHeader(
+              title: copy.notificationPermissionTitle,
+              style: GoogleFonts.atkinsonHyperlegible(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: context.udaan.primaryGlow,
               ),
             ),
             const SizedBox(height: 12),
-            Text(
-              copy.notificationPermissionBody,
-              style: GoogleFonts.atkinsonHyperlegible(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color: context.udaan.onBackground,
-                height: 1.45,
+            UdaanLabeledRegion(
+              label: copy.notificationPermissionBody,
+              child: Text(
+                copy.notificationPermissionBody,
+                style: GoogleFonts.atkinsonHyperlegible(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: context.udaan.onBackground,
+                  height: 1.45,
+                ),
               ),
             ),
             const SizedBox(height: 24),

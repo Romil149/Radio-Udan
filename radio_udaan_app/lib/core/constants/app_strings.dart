@@ -248,7 +248,7 @@ abstract final class AppStrings {
   static const String tabMore = 'More';
 
   // Radio
-  static const String radioIntro = 'Listen to Radio Udaan live.';
+  static const String radioIntro = ' ';
   static const String radioShowTitle = 'Udaan Morning Show';
   static const String radioShowSubtitle = 'with RJ Karan & RJ Meera';
   static const String radioWithHostsPrefix = 'with ';

@@ -115,7 +115,7 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
             children: [
               UdaanAuthTopBar(
                 copy: copy,
-                title: branding.appName,
+                title: _copy.signInWithEmail,
                 onBack: () {
                   if (context.canPop()) {
                     context.pop();
@@ -128,6 +128,7 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
               UdaanAuthLogoHeader(
                 branding: branding,
                 subtitle: _copy.loginEmailIntro,
+                showAppNameHeader: false,
               ),
               const SizedBox(height: 32),
               UdaanLabeledField(

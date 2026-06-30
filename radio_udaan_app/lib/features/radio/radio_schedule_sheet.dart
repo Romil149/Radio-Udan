@@ -29,8 +29,6 @@ final radioScheduleProvider = FutureProvider<RadioScheduleResponse>((ref) async 
 });
 
 Future<void> showRadioScheduleSheet(BuildContext context) async {
-  final copy = ProviderScope.containerOf(context).read(appCopyProvider);
-  announce(context, copy.radioScheduleTitle);
   await showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -39,18 +37,21 @@ Future<void> showRadioScheduleSheet(BuildContext context) async {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (context) => UdaanModalSheet(
-      title: copy.radioScheduleTitle,
-      child: DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.72,
-        minChildSize: 0.45,
-        maxChildSize: 0.92,
-        builder: (context, scrollController) => RadioScheduleSheet(
-          scrollController: scrollController,
+    builder: (context) {
+      final copy = ProviderScope.containerOf(context).read(appCopyProvider);
+      return UdaanModalSheet(
+        title: copy.radioScheduleTitle,
+        child: DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.72,
+          minChildSize: 0.45,
+          maxChildSize: 0.92,
+          builder: (context, scrollController) => RadioScheduleSheet(
+            scrollController: scrollController,
+          ),
         ),
-      ),
-    ),
+      );
+    },
   );
 }
 
@@ -69,18 +70,12 @@ class RadioScheduleSheet extends ConsumerWidget {
       child: Column(
         children: [
           const SizedBox(height: 4),
-          Semantics(
-            header: true,
-            label: copy.radioScheduleTitle,
-            child: ExcludeSemantics(
-              child: Text(
-                copy.radioScheduleTitle,
-                style: GoogleFonts.atkinsonHyperlegible(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  color: context.udaan.onBackground,
-                ),
-              ),
+          UdaanScreenHeader(
+            title: copy.radioScheduleTitle,
+            style: GoogleFonts.atkinsonHyperlegible(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: context.udaan.onBackground,
             ),
           ),
           const SizedBox(height: 14),
@@ -237,93 +232,92 @@ class _ScheduleSegmentCard extends ConsumerWidget {
       onAir: isOnAir,
     );
 
-    return Semantics(
-      label: segmentLabel,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        constraints:
-            const BoxConstraints(minHeight: BrandTokens.minTapTarget + 16),
-        decoration: BoxDecoration(
-          color: context.udaan.surfaceContainer,
-          borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-          border: Border.all(
-            color: isOnAir ? context.udaan.primary : context.udaan.outlineVariant,
-            width: isOnAir ? 2 : 1,
-          ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      constraints:
+          const BoxConstraints(minHeight: BrandTokens.minTapTarget + 16),
+      decoration: BoxDecoration(
+        color: context.udaan.surfaceContainer,
+        borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+        border: Border.all(
+          color: isOnAir ? context.udaan.primary : context.udaan.outlineVariant,
+          width: isOnAir ? 2 : 1,
         ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              ExcludeSemantics(
-                child: _SegmentThumbnail(imageUrl: segment.imageUrl, title: title),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ExcludeSemantics(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (isOnAir) ...[
-                        _ChipLabel(
-                          text: copy.radioScheduleOnAir,
-                          color: context.udaan.primary,
-                          textColor: context.udaan.onPrimary,
-                        ),
-                        const SizedBox(height: 6),
-                      ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ExcludeSemantics(
+              child: _SegmentThumbnail(imageUrl: segment.imageUrl, title: title),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: UdaanLabeledRegion(
+                label: segmentLabel,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (isOnAir) ...[
+                      _ChipLabel(
+                        text: copy.radioScheduleOnAir,
+                        color: context.udaan.primary,
+                        textColor: context.udaan.onPrimary,
+                      ),
+                      const SizedBox(height: 6),
+                    ],
+                    Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.atkinsonHyperlegible(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        color: context.udaan.onBackground,
+                        height: 1.2,
+                      ),
+                    ),
+                    if (time.isNotEmpty || segment.hasCategory) ...[
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          if (time.isNotEmpty)
+                            _ChipLabel(
+                              text: time,
+                              color: context.udaan.surfaceContainerHigh,
+                              textColor: context.udaan.primaryGlow,
+                              icon: Icons.schedule_outlined,
+                            ),
+                          if (segment.hasCategory)
+                            _ChipLabel(
+                              text: segment.category,
+                              color: context.udaan.surfaceContainerHigh,
+                              textColor: context.udaan.onSurfaceVariant,
+                            ),
+                        ],
+                      ),
+                    ],
+                    if (hostsLine.isNotEmpty) ...[
+                      const SizedBox(height: 6),
                       Text(
-                        title,
-                        maxLines: 2,
+                        hostsLine,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.atkinsonHyperlegible(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w900,
-                          color: context.udaan.onBackground,
-                          height: 1.2,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: context.udaan.onSurfaceVariant,
                         ),
                       ),
-                      if (time.isNotEmpty || segment.hasCategory) ...[
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
-                          children: [
-                            if (time.isNotEmpty)
-                              _ChipLabel(
-                                text: time,
-                                color: context.udaan.surfaceContainerHigh,
-                                textColor: context.udaan.primaryGlow,
-                                icon: Icons.schedule_outlined,
-                              ),
-                            if (segment.hasCategory)
-                              _ChipLabel(
-                                text: segment.category,
-                                color: context.udaan.surfaceContainerHigh,
-                                textColor: context.udaan.onSurfaceVariant,
-                              ),
-                          ],
-                        ),
-                      ],
-                      if (hostsLine.isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        Text(
-                          hostsLine,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.atkinsonHyperlegible(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: context.udaan.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
                     ],
-                  ),
+                  ],
                 ),
               ),
-              Semantics(
+            ),
+            Semantics(
                 button: true,
                 label: copy.radioFavoriteButtonLabel(
                   showTitle: title,
@@ -375,7 +369,6 @@ class _ScheduleSegmentCard extends ConsumerWidget {
             ],
           ),
         ),
-      ),
     );
   }
 }

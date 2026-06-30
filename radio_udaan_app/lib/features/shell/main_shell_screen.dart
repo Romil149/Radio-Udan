@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/providers/app_settings_provider.dart';
 import '../../core/push/notification_permission_flow.dart';
@@ -73,12 +72,7 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
       body: IndexedStack(
         index: index,
         children: [
-          for (var i = 0; i < tabs.length; i++)
-            Semantics(
-              container: true,
-              label: tabs[i].label,
-              child: tabBodies[i],
-            ),
+          for (var i = 0; i < tabs.length; i++) tabBodies[i],
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -89,12 +83,6 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
           selectedIndex: index,
           onDestinationSelected: (i) {
             dismissKeyboard(context);
-            if (i != index) {
-              final label = i == MainShellScreen.moreTabIndex && unreadCount > 0
-                  ? '${tabs[i].label} (${unreadCount > 9 ? '9+' : unreadCount})'
-                  : tabs[i].label;
-              announce(context, label);
-            }
             ref.read(mainShellTabIndexProvider.notifier).state = i;
           },
           destinations: [

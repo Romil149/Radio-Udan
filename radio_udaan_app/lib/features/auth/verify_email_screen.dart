@@ -168,7 +168,6 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   @override
   Widget build(BuildContext context) {
     final copy = ref.watch(appCopyProvider);
-    final branding = ref.watch(appBrandingProvider);
     final email = _emailController.text.trim();
 
     return Scaffold(
@@ -181,7 +180,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
             children: [
               UdaanAuthTopBar(
                 copy: copy,
-                title: branding.appName,
+                title: _copy.verifyEmailTitle,
                 onBack: () {
                   if (context.canPop()) {
                     context.pop();
@@ -228,13 +227,15 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               ),
               if (email.isNotEmpty) ...[
                 const SizedBox(height: 8),
-                Text(
-                  _copy.verifyEmailSentTo(email),
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.atkinsonHyperlegible(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: context.udaan.onBackground.withValues(alpha: 0.9),
+                ExcludeSemantics(
+                  child: Text(
+                    _copy.verifyEmailSentTo(email),
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.atkinsonHyperlegible(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: context.udaan.onBackground.withValues(alpha: 0.9),
+                    ),
                   ),
                 ),
               ],
@@ -253,12 +254,14 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                     : null,
               ),
               const SizedBox(height: 24),
-              Text(
-                _copy.verificationCodeLabel,
-                style: GoogleFonts.atkinsonHyperlegible(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: context.udaan.onBackground,
+              ExcludeSemantics(
+                child: Text(
+                  _copy.verificationCodeLabel,
+                  style: GoogleFonts.atkinsonHyperlegible(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: context.udaan.onBackground,
+                  ),
                 ),
               ),
               const SizedBox(height: 8),

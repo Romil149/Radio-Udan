@@ -243,7 +243,6 @@ class _SplashLoadingDotsState extends State<_SplashLoadingDots>
     if (widget.reduceMotion) {
       return Semantics(
         label: loadingLabel,
-        liveRegion: true,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -258,7 +257,6 @@ class _SplashLoadingDotsState extends State<_SplashLoadingDots>
     final controller = _controller!;
     return Semantics(
       label: loadingLabel,
-      liveRegion: true,
       child: AnimatedBuilder(
         animation: controller,
         builder: (context, child) {

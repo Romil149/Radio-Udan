@@ -24,7 +24,6 @@ Future<Country?> showAccessibleCountryPicker({
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
     builder: (sheetContext) {
-      announce(sheetContext, copy.phoneCountryPickerTitle);
       return UdaanModalSheet(
         title: copy.phoneCountryPickerTitle,
         child: _AccessibleCountryPickerSheet(
@@ -121,18 +120,12 @@ class _AccessibleCountryPickerSheetState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Semantics(
-                header: true,
-                label: widget.copy.phoneCountryPickerTitle,
-                child: ExcludeSemantics(
-                  child: UdaanScreenHeader(
-                    title: widget.copy.phoneCountryPickerTitle,
-                    style: GoogleFonts.atkinsonHyperlegible(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: context.udaan.onBackground,
-                    ),
-                  ),
+              UdaanScreenHeader(
+                title: widget.copy.phoneCountryPickerTitle,
+                style: GoogleFonts.atkinsonHyperlegible(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: context.udaan.onBackground,
                 ),
               ),
               const SizedBox(height: 12),

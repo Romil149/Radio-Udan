@@ -1,5 +1,12 @@
 # Task History
 
+### 2026-06-13 — Page-by-page double-speech audit + fixes
+**Requested by**: User (@alex — team check each page)
+**What was done**: Static audit across all screens (`scripts/a11y-double-speech-audit.md`). Fixed all FAIL items: tab switch announce removed; library search hint vs heading; auth screens deduped app name; OTP pin row + UdaanLabeledField TextField excluded; splash single liveRegion; forgot-password channel chips; verify-email labels; settings slider; change-password fields; donate QR + copy announce; event registration announces + upload progress; library player/saved tiles.
+**Files changed**: 20+ files under `radio_udaan_app/lib/`; `scripts/a11y-double-speech-audit.md`
+**Status**: ✅ `dart analyze lib` exit 0; **device QA still pending** (`A11Y-QA`)
+**Notes**: REVIEW rows (favorites announce, spinners, legal h1, country picker favorites) need TalkBack/VoiceOver spot-check on device.
+
 ### 2026-06-13 — Blind-user navigation a11y (phased plan)
 **Requested by**: User (implement VoiceOver/TalkBack navigation plan)
 **What was done**: Phases 0–5: shared `udaan_semantics.dart` toolkit; tab announcements + screen header landmarks; radio hero merge + schedule modal; flattened event/library cards; registration event context banner + page announcements; YouTube native-only controls + Open in YouTube; modal sheets (schedule, country picker); HTML heading landmarks; deep link announce; SnackBar→`announceAndSnack` sweep. Device QA script: `scripts/a11y-device-qa.md`.

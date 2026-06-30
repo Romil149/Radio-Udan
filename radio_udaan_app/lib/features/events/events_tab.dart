@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/models/event_summary.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
@@ -50,92 +51,84 @@ class EventsTab extends ConsumerWidget {
                 icon: Icons.event_busy_outlined,
               );
             }
-            return Semantics(
-              label: copy.tabEvents,
-              child: RefreshIndicator(
-                color: context.udaan.primary,
-                backgroundColor: context.udaan.surfaceContainer,
-                onRefresh: () async {
-                  ref.invalidate(eventsProvider);
-                  await ref.read(eventsProvider.future);
-                },
-                child: ListView(
-                  padding: const EdgeInsets.only(bottom: 24),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        BrandTokens.screenPadding,
-                        8,
-                        BrandTokens.screenPadding,
-                        16,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Semantics(
-                            header: true,
-                            label: copy.eventsPageTitle,
-                            child: ExcludeSemantics(
-                              child: Text(
-                                copy.eventsPageTitle,
-                                style: GoogleFonts.atkinsonHyperlegible(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w900,
-                                  color: context.udaan.primaryGlow,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Semantics(
-                            label: copy.eventsPageIntro,
-                            child: ExcludeSemantics(
-                              child: Text(
-                                copy.eventsPageIntro,
-                                style: GoogleFonts.atkinsonHyperlegible(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: context.udaan.onSurfaceVariant,
-                                  height: 1.45,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+            return RefreshIndicator(
+              color: context.udaan.primary,
+              backgroundColor: context.udaan.surfaceContainer,
+              onRefresh: () async {
+                ref.invalidate(eventsProvider);
+                await ref.read(eventsProvider.future);
+              },
+              child: ListView(
+                padding: const EdgeInsets.only(bottom: 24),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      BrandTokens.screenPadding,
+                      8,
+                      BrandTokens.screenPadding,
+                      16,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: BrandTokens.screenPadding,
-                      ),
-                      child: Column(
-                        children: [
-                          for (final event in items) ...[
-                            EventCard(
-                              copy: copy,
-                              event: event,
-                              bannerUrl: _bannerUrl(ref, event),
-                              onRegister: event.isRegistrationOpen
-                                  ? () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute<void>(
-                                          builder: (_) =>
-                                              EventRegistrationScreen(
-                                            eventId: event.eventId,
-                                            title: event.title,
-                                          ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        UdaanLabeledRegion(
+                          header: true,
+                          label: copy.eventsPageTitle,
+                          child: Text(
+                            copy.eventsPageTitle,
+                            style: GoogleFonts.atkinsonHyperlegible(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w900,
+                              color: context.udaan.primaryGlow,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        UdaanLabeledRegion(
+                          label: copy.eventsPageIntro,
+                          child: Text(
+                            copy.eventsPageIntro,
+                            style: GoogleFonts.atkinsonHyperlegible(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: context.udaan.onSurfaceVariant,
+                              height: 1.45,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: BrandTokens.screenPadding,
+                    ),
+                    child: Column(
+                      children: [
+                        for (final event in items) ...[
+                          EventCard(
+                            copy: copy,
+                            event: event,
+                            bannerUrl: _bannerUrl(ref, event),
+                            onRegister: event.isRegistrationOpen
+                                ? () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) => EventRegistrationScreen(
+                                          eventId: event.eventId,
+                                          title: event.title,
                                         ),
-                                      );
-                                    }
-                                  : null,
-                            ),
-                            const SizedBox(height: 16),
-                          ],
+                                      ),
+                                    );
+                                  }
+                                : null,
+                          ),
+                          const SizedBox(height: 16),
                         ],
-                      ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             );
           },

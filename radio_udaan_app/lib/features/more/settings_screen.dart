@@ -282,22 +282,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           Row(
                             children: [
                               Expanded(
-                                child: Text(
-                                  _copy.textSize,
-                                  style: udaanTextStyle(
-                                    context,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w700,
+                                child: ExcludeSemantics(
+                                  child: Text(
+                                    _copy.textSize,
+                                    style: udaanTextStyle(
+                                      context,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                 ),
                               ),
-                              Text(
-                                '${_draft.textScale.toStringAsFixed(1)}x',
-                                style: udaanTextStyle(
-                                  context,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: palette.primaryGlow,
+                              ExcludeSemantics(
+                                child: Text(
+                                  '${_draft.textScale.toStringAsFixed(1)}x',
+                                  style: udaanTextStyle(
+                                    context,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: palette.primaryGlow,
+                                  ),
                                 ),
                               ),
                             ],
@@ -306,25 +310,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             label: _copy.textSize,
                             hint: _copy.textSizeSliderHint,
                             value: '${_draft.textScale.toStringAsFixed(1)}x',
-                            child: Slider(
-                              min: 1.0,
-                              max: 1.4,
-                              divisions: 4,
-                              value: _draft.textScale.clamp(1.0, 1.4),
-                              activeColor: palette.primary,
-                              onChanged: (v) {
-                                _updateAccessibility(
-                                  _draft.copyWith(textScale: v),
-                                  debouncePersist: true,
-                                );
-                                _textScaleAnnounceTimer?.cancel();
-                                _textScaleAnnounceTimer = Timer(
-                                  const Duration(milliseconds: 400),
-                                  () => _announce(
-                                    '${_copy.textSize} ${v.toStringAsFixed(1)}x',
-                                  ),
-                                );
-                              },
+                            child: ExcludeSemantics(
+                              child: Slider(
+                                min: 1.0,
+                                max: 1.4,
+                                divisions: 4,
+                                value: _draft.textScale.clamp(1.0, 1.4),
+                                activeColor: palette.primary,
+                                onChanged: (v) {
+                                  _updateAccessibility(
+                                    _draft.copyWith(textScale: v),
+                                    debouncePersist: true,
+                                  );
+                                  _textScaleAnnounceTimer?.cancel();
+                                  _textScaleAnnounceTimer = Timer(
+                                    const Duration(milliseconds: 400),
+                                    () => _announce(
+                                      '${_copy.textSize} ${v.toStringAsFixed(1)}x',
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
                           ),
                           Row(

@@ -76,7 +76,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
             children: [
               UdaanAuthTopBar(
                 copy: copy,
-                title: branding.appName,
+                title: _copy.signInWithMobile,
                 onBack: () {
                   if (context.canPop()) {
                     context.pop();
@@ -89,6 +89,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
               UdaanAuthLogoHeader(
                 branding: branding,
                 subtitle: _copy.signInIntro,
+                showAppNameHeader: false,
               ),
               const SizedBox(height: 32),
               UdaanPhoneField(
