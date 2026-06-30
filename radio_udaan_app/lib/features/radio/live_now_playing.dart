@@ -7,6 +7,7 @@ import '../../core/models/radio_schedule.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/utils/wp_media_url.dart';
 import 'radio_schedule_sheet.dart';
+import 'radio_stream_metadata.dart';
 
 /// Hero + lock-screen copy resolved from the program schedule (radio-shows CPT).
 class LiveNowPlaying {
@@ -15,6 +16,7 @@ class LiveNowPlaying {
     required this.hostsLine,
     required this.imageUrl,
     required this.showId,
+    required this.isOnAir,
     required this.isFromSchedule,
     this.segment,
   });
@@ -23,6 +25,7 @@ class LiveNowPlaying {
   final String hostsLine;
   final String imageUrl;
   final String showId;
+  final bool isOnAir;
   final bool isFromSchedule;
   final RadioScheduleSegment? segment;
 
@@ -51,16 +54,10 @@ String formatRadioHostsLine(String hosts, AppCopy copy) {
 LiveNowPlaying resolveLiveNowPlaying({
   required RadioScheduleResponse? schedule,
   required LiveRadioConfig configFallback,
-  required bool scheduleLoaded,
 }) {
   final onAir = schedule?.onAir;
   if (onAir != null && onAir.title.trim().isNotEmpty) {
-    return _fromSegment(onAir, configFallback, isFromSchedule: true);
-  }
-
-  final next = schedule?.next;
-  if (scheduleLoaded && next != null && next.title.trim().isNotEmpty) {
-    return _fromSegment(next, configFallback, isFromSchedule: true);
+    return _fromSegment(onAir, configFallback, isOnAir: true);
   }
 
   return LiveNowPlaying(
@@ -68,15 +65,38 @@ LiveNowPlaying resolveLiveNowPlaying({
     hostsLine: configFallback.showSubtitle,
     imageUrl: configFallback.heroImageUrl,
     showId: '',
+    isOnAir: false,
     isFromSchedule: false,
     segment: null,
+  );
+}
+
+LiveNowPlaying applyStreamMetadata({
+  required LiveNowPlaying base,
+  required String? icyTitle,
+}) {
+  final parsed = parseRadioStreamTitle(icyTitle);
+  if (parsed == null) return base;
+
+  final hosts = parsed.artist != null
+      ? formatRadioHostsLine(parsed.artist!, AppCopy.fallback)
+      : base.hostsLine;
+
+  return LiveNowPlaying(
+    title: parsed.title,
+    hostsLine: hosts,
+    imageUrl: base.imageUrl,
+    showId: base.showId,
+    isOnAir: base.isOnAir,
+    isFromSchedule: base.isFromSchedule,
+    segment: base.segment,
   );
 }
 
 LiveNowPlaying _fromSegment(
   RadioScheduleSegment segment,
   LiveRadioConfig configFallback, {
-  required bool isFromSchedule,
+  required bool isOnAir,
 }) {
   final image = segment.imageUrl.trim().isNotEmpty
       ? segment.imageUrl
@@ -86,7 +106,8 @@ LiveNowPlaying _fromSegment(
     hostsLine: formatRadioHostsLine(segment.hosts, AppCopy.fallback),
     imageUrl: image,
     showId: segment.id,
-    isFromSchedule: isFromSchedule,
+    isOnAir: isOnAir,
+    isFromSchedule: true,
     segment: segment,
   );
 }
@@ -96,11 +117,15 @@ final liveNowPlayingProvider = Provider<LiveNowPlaying>((ref) {
   final scheduleAsync = ref.watch(radioScheduleProvider);
   final apiBase = ref.watch(apiBaseUrlProvider);
   final siteUrl = ref.watch(remoteConfigProvider)?.siteUrl;
+  final icyTitle = ref.watch(radioStreamIcyTitleProvider);
 
-  final playing = resolveLiveNowPlaying(
+  var playing = resolveLiveNowPlaying(
     schedule: scheduleAsync.valueOrNull,
     configFallback: config,
-    scheduleLoaded: scheduleAsync.hasValue,
+  );
+  playing = applyStreamMetadata(
+    base: playing,
+    icyTitle: icyTitle,
   );
 
   final imageUrl = resolveWpMediaUrl(
@@ -116,6 +141,7 @@ final liveNowPlayingProvider = Provider<LiveNowPlaying>((ref) {
     hostsLine: playing.hostsLine,
     imageUrl: imageUrl,
     showId: playing.showId,
+    isOnAir: playing.isOnAir,
     isFromSchedule: playing.isFromSchedule,
     segment: playing.segment,
   );

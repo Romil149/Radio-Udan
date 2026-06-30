@@ -7,8 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
-import 'package:url_launcher/url_launcher.dart';
-
 import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/models/youtube_video.dart';
 import '../../core/providers/app_providers.dart';
@@ -60,20 +58,6 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
 
   void _announce(String message) {
     announce(context, message);
-  }
-
-  Future<void> _openInYoutube(String url) async {
-    final uri = Uri.tryParse(url.trim());
-    if (uri == null) {
-      if (!mounted) return;
-      announceAndSnack(context, _copy.linkUnavailable);
-      return;
-    }
-    final launched =
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched && mounted) {
-      announceAndSnack(context, _copy.linkOpenFailed);
-    }
   }
 
   @override
@@ -243,7 +227,6 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
   Widget _buildVideoRegion({
     required AppCopy copy,
     required String title,
-    required String watchUrl,
     required Widget child,
   }) {
     return Column(
@@ -270,7 +253,6 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
           isPlaying: _isPlaying,
           onPlay: () => unawaited(_startPlayback()),
           onPause: () => unawaited(_pausePlayback()),
-          onOpenYoutube: () => unawaited(_openInYoutube(watchUrl)),
         ),
       ],
     );
@@ -353,7 +335,6 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
               _buildVideoRegion(
                 copy: copy,
                 title: video.title,
-                watchUrl: video.watchUrl,
                 child: _TapToPlayPoster(
                   copy: copy,
                   title: video.title,
@@ -383,7 +364,6 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
                 _buildVideoRegion(
                   copy: copy,
                   title: video.title,
-                  watchUrl: video.watchUrl,
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
@@ -539,7 +519,6 @@ class _LibraryNativeControls extends StatelessWidget {
     required this.isPlaying,
     required this.onPlay,
     required this.onPause,
-    required this.onOpenYoutube,
   });
 
   final AppCopy copy;
@@ -548,66 +527,45 @@ class _LibraryNativeControls extends StatelessWidget {
   final bool isPlaying;
   final VoidCallback onPlay;
   final VoidCallback onPause;
-  final VoidCallback onOpenYoutube;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Row(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Semantics(
-                button: true,
-                enabled: enabled && !loading && !isPlaying,
-                label: copy.libraryPlayVideo,
-                child: ExcludeSemantics(
-                  child: FilledButton.icon(
-                    onPressed:
-                        enabled && !loading && !isPlaying ? onPlay : null,
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(56),
-                    ),
-                    icon: Icon(Icons.play_arrow_rounded),
-                    label: Text(copy.libraryPlayVideo),
-                  ),
+        Expanded(
+          child: Semantics(
+            button: true,
+            enabled: enabled && !loading && !isPlaying,
+            label: copy.libraryPlayVideo,
+            child: ExcludeSemantics(
+              child: FilledButton.icon(
+                onPressed:
+                    enabled && !loading && !isPlaying ? onPlay : null,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(56),
                 ),
+                icon: Icon(Icons.play_arrow_rounded),
+                label: Text(copy.libraryPlayVideo),
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Semantics(
-                button: true,
-                enabled: enabled && !loading && isPlaying,
-                label: copy.libraryPauseVideo,
-                child: ExcludeSemantics(
-                  child: OutlinedButton.icon(
-                    onPressed:
-                        enabled && !loading && isPlaying ? onPause : null,
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(56),
-                    ),
-                    icon: Icon(Icons.pause_rounded),
-                    label: Text(copy.libraryPauseVideo),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
-        const SizedBox(height: 12),
-        Semantics(
-          button: true,
-          label: copy.libraryOpenInYoutube,
-          child: ExcludeSemantics(
-            child: OutlinedButton.icon(
-              onPressed: onOpenYoutube,
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size.fromHeight(56),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Semantics(
+            button: true,
+            enabled: enabled && !loading && isPlaying,
+            label: copy.libraryPauseVideo,
+            child: ExcludeSemantics(
+              child: OutlinedButton.icon(
+                onPressed:
+                    enabled && !loading && isPlaying ? onPause : null,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(56),
+                ),
+                icon: Icon(Icons.pause_rounded),
+                label: Text(copy.libraryPauseVideo),
               ),
-              icon: Icon(Icons.open_in_new),
-              label: Text(copy.libraryOpenInYoutube),
             ),
           ),
         ),

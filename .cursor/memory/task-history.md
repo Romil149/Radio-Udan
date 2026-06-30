@@ -1,5 +1,12 @@
 # Task History
 
+### 2026-06-13 — Library playlists: auto top-5 by newest video
+**Requested by**: User (@alex — remove manual featured picker; 5 latest playlists by newest video)
+**What was done**: WP `get_featured_playlists()` ranks playlists by newest video `published_at`; excludes empty + uploads playlist. Removed admin picker UI/AJAX/option. Flutter unchanged.
+**Files changed**: `class-app-youtube-library.php`, admin settings/hub/pages/assets, `admin-settings.js`
+**Status**: ✅ `php -l` pass; deploy plugin to staging
+**Notes**: Cache key `ru_yt_feat_latest_5`, TTL 1h.
+
 ### 2026-06-13 — Page-by-page double-speech audit + fixes
 **Requested by**: User (@alex — team check each page)
 **What was done**: Static audit across all screens (`scripts/a11y-double-speech-audit.md`). Fixed all FAIL items: tab switch announce removed; library search hint vs heading; auth screens deduped app name; OTP pin row + UdaanLabeledField TextField excluded; splash single liveRegion; forgot-password channel chips; verify-email labels; settings slider; change-password fields; donate QR + copy announce; event registration announces + upload progress; library player/saved tiles.

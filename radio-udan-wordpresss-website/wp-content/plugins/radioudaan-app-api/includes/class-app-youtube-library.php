@@ -14,7 +14,8 @@ class RadioUdaan_App_Youtube_Library {
 
 	const OPTION_API_KEY             = 'radioudaan_youtube_api_key';
 	const OPTION_CHANNEL             = 'radioudaan_youtube_channel';
-	const OPTION_FEATURED_PLAYLISTS  = 'radioudaan_youtube_featured_playlists';
+
+	const FEATURED_PLAYLIST_LIMIT    = 5;
 
 	const DEFAULT_CHANNEL_ID         = 'UCuVsMztJhpj4go-Oexje4KA';
 	const DEFAULT_CHANNEL_HANDLE     = '@radioudaan';
@@ -26,10 +27,9 @@ class RadioUdaan_App_Youtube_Library {
 	const API_BASE                   = 'https://www.googleapis.com/youtube/v3/';
 
 	/**
-	 * Admin AJAX for playlist picker.
+	 * No admin hooks — featured playlists are computed from the channel automatically.
 	 */
 	public static function init_admin() {
-		add_action( 'wp_ajax_radioudaan_youtube_load_playlists', array( __CLASS__, 'ajax_load_playlists' ) );
 	}
 
 	/**
@@ -50,26 +50,11 @@ class RadioUdaan_App_Youtube_Library {
 	}
 
 	/**
+	 * @deprecated Manual featured selection removed; kept for legacy option reads only.
 	 * @return string[]
 	 */
 	public static function get_featured_playlist_ids() {
-		$raw = get_option( self::OPTION_FEATURED_PLAYLISTS, '[]' );
-		if ( is_array( $raw ) ) {
-			$ids = $raw;
-		} else {
-			$decoded = json_decode( (string) $raw, true );
-			$ids     = is_array( $decoded ) ? $decoded : array();
-		}
-
-		$clean = array();
-		foreach ( $ids as $id ) {
-			$id = sanitize_text_field( (string) $id );
-			if ( $id !== '' ) {
-				$clean[] = $id;
-			}
-		}
-
-		return array_values( array_unique( $clean ) );
+		return array();
 	}
 
 	/**
@@ -199,25 +184,127 @@ class RadioUdaan_App_Youtube_Library {
 	}
 
 	/**
-	 * Admin: load channel playlists for featured picker.
+	 * Top playlists for the Library home tab (newest video per playlist).
+	 *
+	 * @return array<int,array<string,mixed>>|WP_Error
 	 */
-	public static function ajax_load_playlists() {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'radioudaan-app-api' ) ), 403 );
+	public static function get_featured_playlists() {
+		$limit     = self::FEATURED_PLAYLIST_LIMIT;
+		$cache_key = 'ru_yt_feat_latest_' . (int) $limit;
+		$cached    = get_transient( $cache_key );
+		if ( is_array( $cached ) ) {
+			return $cached;
 		}
 
-		check_ajax_referer( 'radioudaan_youtube_admin', 'nonce' );
-
-		$playlists = self::get_all_playlists( true );
-		if ( is_wp_error( $playlists ) ) {
-			wp_send_json_error( array( 'message' => $playlists->get_error_message() ), 400 );
+		$all = self::get_all_playlists();
+		if ( is_wp_error( $all ) ) {
+			return $all;
 		}
 
-		wp_send_json_success(
+		$channel_id = self::resolve_channel_id();
+		if ( is_wp_error( $channel_id ) ) {
+			return $channel_id;
+		}
+
+		$uploads_id = self::get_uploads_playlist_id( $channel_id );
+		if ( is_wp_error( $uploads_id ) ) {
+			$uploads_id = '';
+		}
+
+		$candidates          = array();
+		$playlist_first_video = array();
+		$video_ids           = array();
+
+		foreach ( $all as $playlist ) {
+			if ( $uploads_id !== '' && $playlist['id'] === $uploads_id ) {
+				continue;
+			}
+			if ( (int) $playlist['video_count'] <= 0 ) {
+				continue;
+			}
+
+			$video_id = self::get_playlist_first_video_id( $playlist['id'] );
+			if ( $video_id === '' ) {
+				continue;
+			}
+
+			$candidates[] = $playlist;
+			$playlist_first_video[ $playlist['id'] ] = $video_id;
+			$video_ids[] = $video_id;
+		}
+
+		$published_by_video = array();
+		$videos             = self::fetch_videos_by_ids( array_values( array_unique( $video_ids ) ) );
+		if ( is_wp_error( $videos ) ) {
+			return $videos;
+		}
+		foreach ( $videos as $video ) {
+			if ( ! empty( $video['published_at'] ) ) {
+				$published_by_video[ $video['id'] ] = $video['published_at'];
+			}
+		}
+
+		$scored = array();
+		foreach ( $candidates as $playlist ) {
+			$video_id = $playlist_first_video[ $playlist['id'] ] ?? '';
+			if ( $video_id === '' || empty( $published_by_video[ $video_id ] ) ) {
+				continue;
+			}
+			$playlist['_sort_published'] = $published_by_video[ $video_id ];
+			$scored[]                    = $playlist;
+		}
+
+		usort(
+			$scored,
+			static function ( $a, $b ) {
+				return strcmp( (string) $b['_sort_published'], (string) $a['_sort_published'] );
+			}
+		);
+
+		$result = array();
+		foreach ( array_slice( $scored, 0, $limit ) as $playlist ) {
+			unset( $playlist['_sort_published'] );
+			$result[] = $playlist;
+		}
+
+		set_transient( $cache_key, $result, self::CACHE_PLAYLISTS_TTL );
+		return $result;
+	}
+
+	/**
+	 * First video in playlist order (channel playlists are maintained newest-first).
+	 *
+	 * @param string $playlist_id Playlist ID.
+	 * @return string Video ID or empty.
+	 */
+	private static function get_playlist_first_video_id( $playlist_id ) {
+		$playlist_id = sanitize_text_field( (string) $playlist_id );
+		if ( $playlist_id === '' ) {
+			return '';
+		}
+
+		$cache_key = 'ru_yt_pl_first_' . md5( $playlist_id );
+		$cached    = get_transient( $cache_key );
+		if ( is_string( $cached ) ) {
+			return $cached;
+		}
+
+		$data = self::api_get(
+			'playlistItems',
 			array(
-				'items' => $playlists,
+				'part'       => 'contentDetails',
+				'playlistId' => $playlist_id,
+				'maxResults' => 1,
 			)
 		);
+		if ( is_wp_error( $data ) || empty( $data['items'][0]['contentDetails']['videoId'] ) ) {
+			set_transient( $cache_key, '', self::CACHE_RECENT_TTL );
+			return '';
+		}
+
+		$video_id = sanitize_text_field( (string) $data['items'][0]['contentDetails']['videoId'] );
+		set_transient( $cache_key, $video_id, self::CACHE_PLAYLISTS_TTL );
+		return $video_id;
 	}
 
 	/**
@@ -310,72 +397,6 @@ class RadioUdaan_App_Youtube_Library {
 
 		if ( ! $skip_cache ) {
 			set_transient( $cache_key, $items, self::CACHE_PLAYLISTS_TTL );
-		}
-
-		return $items;
-	}
-
-	/**
-	 * @return array<int,array<string,mixed>>|WP_Error
-	 */
-	public static function get_featured_playlists() {
-		$featured_ids = self::get_featured_playlist_ids();
-		if ( empty( $featured_ids ) ) {
-			return array();
-		}
-
-		$all = self::get_all_playlists();
-		if ( is_wp_error( $all ) ) {
-			return $all;
-		}
-
-		$by_id = array();
-		foreach ( $all as $playlist ) {
-			$by_id[ $playlist['id'] ] = $playlist;
-		}
-
-		$featured = array();
-		foreach ( $featured_ids as $id ) {
-			if ( isset( $by_id[ $id ] ) ) {
-				$featured[] = $by_id[ $id ];
-			}
-		}
-
-		return $featured;
-	}
-
-	/**
-	 * Featured playlist rows for the admin picker (titles + thumbnails when cached).
-	 *
-	 * @return array<int,array<string,mixed>>
-	 */
-	public static function get_featured_playlist_admin_items() {
-		$featured_ids = self::get_featured_playlist_ids();
-		if ( empty( $featured_ids ) ) {
-			return array();
-		}
-
-		$by_id = array();
-		$all   = self::get_all_playlists();
-		if ( ! is_wp_error( $all ) ) {
-			foreach ( $all as $playlist ) {
-				$by_id[ $playlist['id'] ] = $playlist;
-			}
-		}
-
-		$items = array();
-		foreach ( $featured_ids as $id ) {
-			if ( isset( $by_id[ $id ] ) ) {
-				$items[] = $by_id[ $id ];
-				continue;
-			}
-
-			$items[] = array(
-				'id'            => $id,
-				'title'         => $id,
-				'thumbnail_url' => '',
-				'video_count'   => 0,
-			);
 		}
 
 		return $items;

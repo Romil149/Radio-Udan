@@ -223,7 +223,6 @@ class RadioUdaan_Admin_App_Hub {
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Branding::OPTION_COPY_UNSUPPORTED_FIELDS_NOTICE );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Youtube_Library::OPTION_API_KEY );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Youtube_Library::OPTION_CHANNEL );
-		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Youtube_Library::OPTION_FEATURED_PLAYLISTS );
 	}
 
 	/**
@@ -536,32 +535,22 @@ class RadioUdaan_Admin_App_Hub {
 		update_option( RadioUdaan_App_Live_Radio::OPTION_SHOW_SHARE, ! empty( $_POST['live_show_share'] ) ? 1 : 0 );
 		update_option( RadioUdaan_App_Live_Radio::OPTION_SHOW_VOLUME, ! empty( $_POST['live_show_volume'] ) ? 1 : 0 );
 
+		$youtube_changed = false;
 		if ( isset( $_POST['youtube_api_key'] ) ) {
 			update_option(
 				RadioUdaan_App_Youtube_Library::OPTION_API_KEY,
 				sanitize_text_field( wp_unslash( $_POST['youtube_api_key'] ) )
 			);
+			$youtube_changed = true;
 		}
 		if ( isset( $_POST['youtube_channel'] ) ) {
 			update_option(
 				RadioUdaan_App_Youtube_Library::OPTION_CHANNEL,
 				sanitize_text_field( wp_unslash( $_POST['youtube_channel'] ) )
 			);
+			$youtube_changed = true;
 		}
-		if ( isset( $_POST['youtube_featured_playlists'] ) && is_array( $_POST['youtube_featured_playlists'] ) ) {
-			$featured_playlists = array();
-			foreach ( $_POST['youtube_featured_playlists'] as $playlist_id ) {
-				$playlist_id = sanitize_text_field( wp_unslash( $playlist_id ) );
-				if ( $playlist_id !== '' ) {
-					$featured_playlists[] = $playlist_id;
-				}
-			}
-			// Preserve admin drag-and-drop order (dedupe while keeping first occurrence).
-			$featured_playlists = array_values( array_unique( $featured_playlists ) );
-			update_option(
-				RadioUdaan_App_Youtube_Library::OPTION_FEATURED_PLAYLISTS,
-				wp_json_encode( $featured_playlists )
-			);
+		if ( $youtube_changed ) {
 			RadioUdaan_App_Youtube_Library::invalidate_cache();
 		}
 

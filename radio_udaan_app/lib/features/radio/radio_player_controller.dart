@@ -4,6 +4,7 @@ import 'package:just_audio/just_audio.dart';
 import '../../core/providers/app_providers.dart';
 import 'live_now_playing.dart';
 import 'radio_audio_service.dart';
+import 'radio_stream_metadata.dart';
 
 /// Live stream UI: idle → loading → playing → idle (Play / Stop only).
 enum RadioPlayerStatus { idle, loading, playing, error }
@@ -55,6 +56,16 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
     });
 
     final player = radioAudioHandler.player;
+    player.icyMetadataStream.listen((metadata) {
+      final title = metadata?.info?.title?.trim() ?? '';
+      _ref.read(radioStreamIcyTitleProvider.notifier).state =
+          title.isEmpty ? null : title;
+      if (state.status == RadioPlayerStatus.playing ||
+          state.status == RadioPlayerStatus.loading) {
+        _syncNowPlayingMetadata(_ref.read(liveNowPlayingProvider));
+      }
+    });
+
     player.playerStateStream.listen((playerState) {
       // Live MP3 streams often stay in `buffering` while audio is playing.
       if (playerState.playing) {
@@ -159,6 +170,7 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
 
   Future<void> stop() async {
     _startInProgress = false;
+    _ref.read(radioStreamIcyTitleProvider.notifier).state = null;
     if (!isRadioAudioServiceReady) {
       state = const RadioPlayerState(status: RadioPlayerStatus.idle);
       return;
@@ -172,14 +184,18 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
 
     final copy = _ref.read(appCopyProvider);
     final branding = _ref.read(appBrandingProvider);
-    final artist = nowPlaying.hostsLine.isNotEmpty
-        ? nowPlaying.hostsLine
-        : copy.radioLiveLabel;
+    final icy = parseRadioStreamTitle(_ref.read(radioStreamIcyTitleProvider));
+    final title = icy?.title ?? nowPlaying.title;
+    final artist = icy?.artist != null
+        ? formatRadioHostsLine(icy!.artist!, copy)
+        : (nowPlaying.hostsLine.isNotEmpty
+            ? nowPlaying.hostsLine
+            : copy.radioLiveLabel);
     final artUri = nowPlaying.imageUrl.isNotEmpty
         ? Uri.tryParse(nowPlaying.imageUrl)
         : (branding.hasLogo ? Uri.tryParse(branding.logoUrl) : null);
     radioAudioHandler.updateNowPlayingMetadata(
-      title: nowPlaying.title,
+      title: title,
       artist: artist,
       artUri: artUri,
     );

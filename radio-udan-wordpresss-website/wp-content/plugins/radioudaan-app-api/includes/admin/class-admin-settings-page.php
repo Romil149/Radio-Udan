@@ -310,44 +310,16 @@ class RadioUdaan_Admin_Settings_Page {
 				</div>
 			</div>
 			<div class="ru-settings-panel__card">
-				<h3><?php esc_html_e( 'Featured playlists', 'radioudaan-app-api' ); ?></h3>
-				<p class="description"><?php esc_html_e( 'Shown in the app via GET /library/youtube/playlists/featured. Load playlists after saving API key and channel.', 'radioudaan-app-api' ); ?></p>
-				<div class="ru-youtube-playlist-toolbar">
-					<button type="button" class="button button-secondary" id="ru-youtube-load-playlists">
-						<?php esc_html_e( 'Load playlists from channel', 'radioudaan-app-api' ); ?>
-					</button>
-					<span id="ru-youtube-load-status" class="ru-youtube-playlist-toolbar__status" aria-live="polite"></span>
-				</div>
-				<div class="ru-youtube-playlist-tools" id="ru-youtube-playlist-tools" hidden>
-					<input type="search" id="ru-youtube-playlist-search" class="regular-text"
-						placeholder="<?php esc_attr_e( 'Search playlists…', 'radioudaan-app-api' ); ?>"
-						aria-label="<?php esc_attr_e( 'Search playlists', 'radioudaan-app-api' ); ?>" />
-					<span id="ru-youtube-playlist-selected" class="description" aria-live="polite"></span>
-				</div>
-				<p id="ru-youtube-playlist-drag-hint" class="description ru-youtube-playlist-drag-hint" hidden>
-					<?php esc_html_e( 'Drag selected playlists to set the order shown in the app.', 'radioudaan-app-api' ); ?>
-				</p>
-				<div id="ru-youtube-playlist-picker" class="ru-youtube-playlist-picker">
+				<h3><?php esc_html_e( 'Library playlists', 'radioudaan-app-api' ); ?></h3>
+				<p class="description">
 					<?php
-					$featured_items = isset( $c['youtube_featured_playlist_items'] ) && is_array( $c['youtube_featured_playlist_items'] )
-						? $c['youtube_featured_playlist_items']
-						: array();
-					if ( ! empty( $featured_items ) ) :
-						?>
-						<p class="description ru-youtube-playlist-picker__hint">
-							<?php esc_html_e( 'Saved featured playlists. Load from channel to add more or refresh thumbnails.', 'radioudaan-app-api' ); ?>
-						</p>
-						<?php
-						foreach ( $featured_items as $playlist ) :
-							self::render_youtube_playlist_item( $playlist, true );
-						endforeach;
-					else :
-						?>
-						<p class="description ru-youtube-playlist-picker__empty">
-							<?php esc_html_e( 'No featured playlists selected yet. Load playlists from your channel to choose which appear in the app.', 'radioudaan-app-api' ); ?>
-						</p>
-					<?php endif; ?>
-				</div>
+					printf(
+						/* translators: %d: number of playlists shown on the Library home tab */
+						esc_html__( 'The app shows the %d playlists whose newest video was published most recently (empty playlists and the channel uploads playlist are excluded). Served via GET /library/youtube/playlists/featured. “View all” lists every channel playlist.', 'radioudaan-app-api' ),
+						(int) RadioUdaan_App_Youtube_Library::FEATURED_PLAYLIST_LIMIT
+					);
+					?>
+				</p>
 			</div>
 		</section>
 
@@ -805,72 +777,6 @@ class RadioUdaan_Admin_Settings_Page {
 			<p class="ru-form-sticky-footer__hint"><?php esc_html_e( 'Changes apply to the mobile app after save (config cache refreshes within 5 minutes).', 'radioudaan-app-api' ); ?></p>
 			<?php submit_button( __( 'Save all settings', 'radioudaan-app-api' ), 'primary', 'submit', false, array( 'class' => 'ru-btn-large' ) ); ?>
 		</div>
-		<?php
-	}
-
-	/**
-	 * One featured-playlist row for the YouTube admin picker.
-	 *
-	 * @param array<string,mixed> $playlist Playlist payload.
-	 * @param bool                $checked  Whether checkbox is checked.
-	 */
-	public static function render_youtube_playlist_item( array $playlist, $checked = false ) {
-		$id    = isset( $playlist['id'] ) ? sanitize_text_field( (string) $playlist['id'] ) : '';
-		$title = isset( $playlist['title'] ) ? sanitize_text_field( (string) $playlist['title'] ) : '';
-		$thumb = isset( $playlist['thumbnail_url'] ) ? esc_url( (string) $playlist['thumbnail_url'] ) : '';
-		$count = isset( $playlist['video_count'] ) ? (int) $playlist['video_count'] : 0;
-
-		if ( $id === '' ) {
-			return;
-		}
-
-		if ( $title === '' ) {
-			$title = $id;
-		}
-
-		$is_stub = ( $title === $id && $thumb === '' );
-		$classes = 'ru-youtube-playlist-item';
-		if ( $checked ) {
-			$classes .= ' is-selected';
-		}
-		if ( $is_stub ) {
-			$classes .= ' is-stub';
-		}
-		?>
-		<label class="<?php echo esc_attr( $classes ); ?>" data-title="<?php echo esc_attr( strtolower( $title ) ); ?>">
-			<input type="checkbox" name="youtube_featured_playlists[]" value="<?php echo esc_attr( $id ); ?>"
-				<?php checked( $checked ); ?> />
-			<span class="ru-youtube-playlist-item__drag dashicons dashicons-menu"
-				role="button" tabindex="0"
-				aria-label="<?php esc_attr_e( 'Drag to reorder', 'radioudaan-app-api' ); ?>"
-				title="<?php esc_attr_e( 'Drag to reorder', 'radioudaan-app-api' ); ?>"></span>
-			<span class="ru-youtube-playlist-item__thumb" aria-hidden="true">
-				<?php if ( $thumb !== '' ) : ?>
-					<img src="<?php echo esc_url( $thumb ); ?>" alt="" loading="lazy" decoding="async" />
-				<?php else : ?>
-					<span class="ru-youtube-playlist-item__thumb-placeholder dashicons dashicons-playlist-video"></span>
-				<?php endif; ?>
-			</span>
-			<span class="ru-youtube-playlist-item__body">
-				<strong class="ru-youtube-playlist-item__title"><?php echo esc_html( $title ); ?></strong>
-				<?php if ( $count > 0 ) : ?>
-					<span class="ru-youtube-playlist-item__meta">
-						<?php
-						printf(
-							/* translators: %d: number of videos */
-							esc_html( _n( '%d video', '%d videos', $count, 'radioudaan-app-api' ) ),
-							(int) $count
-						);
-						?>
-					</span>
-				<?php elseif ( $is_stub ) : ?>
-					<span class="ru-youtube-playlist-item__meta ru-youtube-playlist-item__meta--warn">
-						<?php esc_html_e( 'Reload playlists to refresh title and thumbnail', 'radioudaan-app-api' ); ?>
-					</span>
-				<?php endif; ?>
-				<code class="ru-youtube-playlist-item__id"><?php echo esc_html( $id ); ?></code>
-			</span>
-		</label>
 		<?php
 	}
 }

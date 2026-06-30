@@ -85,33 +85,13 @@ class RadioUdaan_Admin_Assets {
 				RADIOUDAAN_APP_API_VERSION
 			);
 			wp_enqueue_media();
-			wp_enqueue_script( 'jquery-ui-sortable' );
 			$settings_js_path = RADIOUDAAN_APP_API_PATH . 'assets/js/admin-settings.js';
 			wp_enqueue_script(
 				'radioudaan-app-settings',
 				RADIOUDAAN_APP_API_URL . 'assets/js/admin-settings.js',
-				array( 'jquery', 'jquery-ui-sortable', 'media-editor', 'media-views' ),
+				array( 'jquery', 'media-editor', 'media-views' ),
 				is_readable( $settings_js_path ) ? (string) filemtime( $settings_js_path ) : RADIOUDAAN_APP_API_VERSION,
 				true
-			);
-			wp_localize_script(
-				'radioudaan-app-settings',
-				'radioudaanYoutubeAdmin',
-				array(
-					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-					'nonce'   => wp_create_nonce( 'radioudaan_youtube_admin' ),
-					'i18n'    => array(
-						'loading'    => __( 'Loading playlists…', 'radioudaan-app-api' ),
-						'loaded'     => __( '%d playlists loaded.', 'radioudaan-app-api' ),
-						'empty'      => __( 'No playlists found for this channel.', 'radioudaan-app-api' ),
-						'error'      => __( 'Could not load playlists. Check API key and channel.', 'radioudaan-app-api' ),
-						'selected'   => __( '%d selected', 'radioudaan-app-api' ),
-						'videoCount' => __( '%d videos', 'radioudaan-app-api' ),
-						'stubNote'   => __( 'Reload playlists to refresh title and thumbnail', 'radioudaan-app-api' ),
-						'dragHandle' => __( 'Drag to reorder', 'radioudaan-app-api' ),
-						'dragHint'     => __( 'Drag selected playlists to set the order shown in the app.', 'radioudaan-app-api' ),
-					),
-				)
 			);
 		}
 	}

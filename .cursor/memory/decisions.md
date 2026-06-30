@@ -1,6 +1,12 @@
 # Architecture Decisions Log
 <!-- When a design choice is made, document it here so we don't re-debate it. -->
 
+### 2026-06-13 — Library featured playlists: auto top-5 (no admin picker)
+**Context**: Admin manually picked featured playlists; user wanted latest activity surfaced automatically.
+**Decision**: `GET /library/youtube/playlists/featured` returns **5 playlists** ranked by **newest video `published_at`** inside each playlist (first playlist item = newest). Exclude empty playlists and channel uploads playlist. No WP admin selection UI.
+**Reasoning**: Reduces admin work; playlists with recent uploads surface naturally. App “View all” unchanged.
+**Consequences**: More YouTube API calls on cache miss (one `playlistItems` per candidate + batch `videos`). Cached 1 hour; invalidated when API key/channel changes.
+
 ### 2026-06-05 — FCM HTTP v1 (service account) for server push
 **Context**: Legacy FCM server key API is deprecated/shut down; plugin had credentials fields but no sender.
 **Options Considered**: Legacy `fcm/send` + server key; FCM HTTP v1 + service account JSON; third-party push gateway.

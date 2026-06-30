@@ -28,6 +28,11 @@
 - **Migration**: Radio Udaan App → Advanced tools → **Migrate RJ profiles to users**; then delete `rj-profiles` in CPT UI + save Permalinks.
 - **RJ admin**: login → `profile.php`; Media Library allowed; minimal admin menu in theme `functions.php`.
 
+## YouTube Library playlists
+- **Featured (home tab)**: `GET /library/youtube/playlists/featured` — auto **top 5** playlists by newest video inside each playlist (not admin-picked). Excludes empty + uploads playlist.
+- **View all**: `GET /library/youtube/playlists` — full channel list unchanged.
+- **WP admin**: Settings → YouTube — API key + channel only; no featured picker.
+
 ## Patterns to Follow
 - **Primary audience**: blind and low-vision users — see `.cursor/rules/accessibility-blind-users.mdc` (56px targets, persistent labels, Semantics + liveRegion, no icon-only controls).
 - **100% WP-driven copy (non-negotiable)**: All user-visible strings come from `GET /config` → `copy` map + `branding`. Flutter `appCopyProvider` / `AppCopy` accessors in UI; `AppStrings` + `app_copy_defaults.dart` are offline fallbacks only. WP admin: Settings → App copy (full `RadioUdaan_App_Copy_Catalog`).

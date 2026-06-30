@@ -1,6 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -47,17 +46,6 @@ class _RadioTabState extends ConsumerState<RadioTab> {
       ref.read(radioPlayerProvider.notifier).attachPlayerIfReady();
       setState(() => _volume = radioAudioHandler.player.volume);
     }
-  }
-
-  void _announce(String message) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      SemanticsService.sendAnnouncement(
-        View.of(context),
-        message,
-        Directionality.of(context),
-      );
-    });
   }
 
   Future<void> _shareApp() async {
@@ -188,29 +176,10 @@ class _RadioTabState extends ConsumerState<RadioTab> {
             _ActionRow(
               onShare: live.showShare ? _shareApp : null,
               shareLabel: live.shareLabel,
-              favoriteShowId: (nowPlaying.showId.isNotEmpty
-                      ? nowPlaying.showId
-                      : next?.id ?? '')
-                  .trim(),
-              favoriteShowTitle: heroTitle,
-              onFavoriteToggled: _announce,
+              favoriteShowId: nowPlaying.isOnAir ? nowPlaying.showId : '',
+              favoriteShowTitle:
+                  nowPlaying.isOnAir ? heroTitle : '',
             ),
-            if (_copy.radioIntro.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Semantics(
-                label: _copy.radioIntro,
-                child: ExcludeSemantics(
-                  child: Text(
-                    _copy.radioIntro,
-                    style: GoogleFonts.atkinsonHyperlegible(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: context.udaan.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ],
         ),
       ),
@@ -256,20 +225,22 @@ class _HeroCard extends StatelessWidget {
             child: SizedBox(
               height: 260,
               width: double.infinity,
-              child: heroImageUrl.isNotEmpty
+              child:               heroImageUrl.isNotEmpty
                   ? Semantics(
                       label: hosts.trim().isNotEmpty
                           ? '$title. ${hosts.trim()}'
                           : title,
                       image: true,
-                      child: CachedNetworkImage(
-                        key: ValueKey(heroImageUrl),
-                        imageUrl: heroImageUrl,
-                        fit: BoxFit.cover,
-                        fadeInDuration: const Duration(milliseconds: 300),
-                        memCacheHeight: 520,
-                        placeholder: (_, _) => const _HeroPlaceholder(),
-                        errorWidget: (_, _, _) => const _HeroPlaceholder(),
+                      child: ExcludeSemantics(
+                        child: CachedNetworkImage(
+                          key: ValueKey(heroImageUrl),
+                          imageUrl: heroImageUrl,
+                          fit: BoxFit.cover,
+                          fadeInDuration: const Duration(milliseconds: 300),
+                          memCacheHeight: 520,
+                          placeholder: (_, _) => const _HeroPlaceholder(),
+                          errorWidget: (_, _, _) => const _HeroPlaceholder(),
+                        ),
                       ),
                     )
                   : const _HeroPlaceholder(),
@@ -338,46 +309,49 @@ class _PlayButton extends StatelessWidget {
         ? context.udaan.primary
         : context.udaan.outlineVariant;
 
+    final label = isPlaying ? copy.radioStop : copy.radioPlay;
+
     return Semantics(
       button: true,
-      enabled: !loading,
-      label: loading
-          ? copy.radioConnecting
-          : isPlaying
-              ? copy.radioStop
-              : copy.radioPlay,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          minWidth: BrandTokens.minTapTarget,
-          minHeight: BrandTokens.minTapTarget,
-        ),
-        child: InkResponse(
-          onTap: onPressed,
-          radius: 56,
-          child: ExcludeSemantics(
-            child: Container(
-              width: 96,
-              height: 96,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: ring, width: 5),
-                color: context.udaan.surfaceDark,
-              ),
-              child: Center(
-                child: loading
-                    ? SizedBox(
-                        width: 28,
-                        height: 28,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 3,
-                          color: context.udaan.primaryGlow,
-                        ),
-                      )
-                    : Icon(
-                        isPlaying ? Icons.stop : Icons.play_arrow,
-                        size: 52,
-                        color: primary,
-                      ),
+      enabled: !loading && onPressed != null,
+      label: label,
+      child: ExcludeSemantics(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            minWidth: BrandTokens.minTapTarget,
+            minHeight: BrandTokens.minTapTarget,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: loading ? null : onPressed,
+              customBorder: const CircleBorder(),
+              child: SizedBox(
+                width: 96,
+                height: 96,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: ring, width: 5),
+                    color: context.udaan.surfaceDark,
+                  ),
+                  child: Center(
+                    child: loading
+                        ? SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 3,
+                              color: context.udaan.primaryGlow,
+                            ),
+                          )
+                        : Icon(
+                            isPlaying ? Icons.stop : Icons.play_arrow,
+                            size: 52,
+                            color: primary,
+                          ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -392,23 +366,25 @@ class _HeroPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: context.udaan.outlineVariant),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            context.udaan.surfaceContainerHigh,
-            context.udaan.surfaceContainerHigh.withValues(alpha: 0.65),
-          ],
+    return ExcludeSemantics(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border.all(color: context.udaan.outlineVariant),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              context.udaan.surfaceContainerHigh,
+              context.udaan.surfaceContainerHigh.withValues(alpha: 0.65),
+            ],
+          ),
         ),
-      ),
-      child: Center(
-        child: Icon(
-          Icons.mic_none_outlined,
-          size: 96,
-          color: context.udaan.primaryGlow,
+        child: Center(
+          child: Icon(
+            Icons.mic_none_outlined,
+            size: 96,
+            color: context.udaan.primaryGlow,
+          ),
         ),
       ),
     );
@@ -444,10 +420,12 @@ class _VolumeCard extends StatelessWidget {
             child: Semantics(
               label: copy.radioVolume,
               value: '${(value * 100).round()} percent',
-              child: Slider(
-                value: value.clamp(0, 1),
-                onChanged: onChanged,
-                activeColor: context.udaan.primary,
+              child: ExcludeSemantics(
+                child: Slider(
+                  value: value.clamp(0, 1),
+                  onChanged: onChanged,
+                  activeColor: context.udaan.primary,
+                ),
               ),
             ),
           ),
@@ -496,19 +474,17 @@ class _UpcomingSegmentsCard extends StatelessWidget {
           segmentTitle: title,
           subtitle: subtitle,
         ),
-        child: InkWell(
-          onTap: onOpenSchedule,
-          borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-            child: Row(
-              children: [
-                ExcludeSemantics(
-                  child: Icon(Icons.schedule, color: context.udaan.primaryGlow),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ExcludeSemantics(
+        child: ExcludeSemantics(
+          child: InkWell(
+            onTap: onOpenSchedule,
+            borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: Row(
+                children: [
+                  Icon(Icons.schedule, color: context.udaan.primaryGlow),
+                  const SizedBox(width: 10),
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -552,11 +528,9 @@ class _UpcomingSegmentsCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                ),
-                ExcludeSemantics(
-                  child: Icon(Icons.chevron_right, color: context.udaan.primaryGlow),
-                ),
-              ],
+                  Icon(Icons.chevron_right, color: context.udaan.primaryGlow),
+                ],
+              ),
             ),
           ),
         ),
@@ -571,14 +545,12 @@ class _ActionRow extends ConsumerWidget {
     required this.shareLabel,
     required this.favoriteShowId,
     required this.favoriteShowTitle,
-    required this.onFavoriteToggled,
   });
 
   final VoidCallback? onShare;
   final String shareLabel;
   final String favoriteShowId;
   final String favoriteShowTitle;
-  final ValueChanged<String> onFavoriteToggled;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -613,15 +585,6 @@ class _ActionRow extends ConsumerWidget {
                               ? favoriteShowTitle.trim()
                               : copy.unknown,
                         );
-                    final showTitle = favoriteShowTitle.trim().isNotEmpty
-                        ? favoriteShowTitle.trim()
-                        : copy.unknown;
-                    onFavoriteToggled(
-                      copy.radioFavoriteAnnouncement(
-                        showTitle: showTitle,
-                        added: !isFavorite,
-                      ),
-                    );
                   }
                 : null,
             isActive: isFavorite,
@@ -677,22 +640,22 @@ class _LiveActionButton extends StatelessWidget {
       button: true,
       enabled: enabled,
       label: semanticsLabel,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(_height / 2),
-          child: Ink(
-            height: _height,
-            decoration: BoxDecoration(
-              color: background,
-              borderRadius: BorderRadius.circular(_height / 2),
-              border: Border.all(
-                color: borderColor,
-                width: isActive ? 2 : 1.5,
+      child: ExcludeSemantics(
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(_height / 2),
+            child: Ink(
+              height: _height,
+              decoration: BoxDecoration(
+                color: background,
+                borderRadius: BorderRadius.circular(_height / 2),
+                border: Border.all(
+                  color: borderColor,
+                  width: isActive ? 2 : 1.5,
+                ),
               ),
-            ),
-            child: ExcludeSemantics(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

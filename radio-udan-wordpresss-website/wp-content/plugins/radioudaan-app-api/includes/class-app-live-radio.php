@@ -164,7 +164,7 @@ class RadioUdaan_App_Live_Radio {
 		);
 
 		$schedule = RadioUdaan_App_Radio_Schedule::build_schedule( 2 );
-		$current  = ! empty( $schedule['on_air'] ) ? $schedule['on_air'] : ( $schedule['next'] ?? null );
+		$current  = ! empty( $schedule['on_air'] ) ? $schedule['on_air'] : null;
 		if ( is_array( $current ) ) {
 			if ( ! empty( $current['title'] ) ) {
 				$config['show_title'] = (string) $current['title'];

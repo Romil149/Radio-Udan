@@ -236,10 +236,8 @@ class RadioUdaan_Admin_Pages {
 		$live_hero_id    = RadioUdaan_App_Live_Radio::get_hero_attachment_id();
 		$live_hero_url   = RadioUdaan_App_Live_Radio::get_hero_image_url();
 
-		$youtube_api_key            = RadioUdaan_App_Youtube_Library::get_api_key();
-		$youtube_channel            = RadioUdaan_App_Youtube_Library::get_channel_input();
-		$youtube_featured_playlists      = RadioUdaan_App_Youtube_Library::get_featured_playlist_ids();
-		$youtube_featured_playlist_items = RadioUdaan_App_Youtube_Library::get_featured_playlist_admin_items();
+		$youtube_api_key = RadioUdaan_App_Youtube_Library::get_api_key();
+		$youtube_channel = RadioUdaan_App_Youtube_Library::get_channel_input();
 
 		RadioUdaan_Admin_Layout::render_open( 'settings', __( 'Settings', 'radioudaan-app-api' ) );
 		?>
@@ -343,8 +341,6 @@ class RadioUdaan_Admin_Pages {
 					'live_show_volume'           => RadioUdaan_App_Live_Radio::show_volume_slider(),
 					'youtube_api_key'            => $youtube_api_key,
 					'youtube_channel'            => $youtube_channel,
-					'youtube_featured_playlists'      => $youtube_featured_playlists,
-					'youtube_featured_playlist_items' => $youtube_featured_playlist_items,
 				)
 			);
 			?>
@@ -380,7 +376,7 @@ class RadioUdaan_Admin_Pages {
 			array( 'POST', '/events/{id}/registrations', __( 'Submit registration', 'radioudaan-app-api' ), true ),
 			array( 'GET', '/library/youtube/recent', __( 'Recent @radioudaan uploads', 'radioudaan-app-api' ), false ),
 			array( 'GET', '/library/youtube/playlists', __( 'All channel playlists', 'radioudaan-app-api' ), false ),
-			array( 'GET', '/library/youtube/playlists/featured', __( 'Admin-picked featured playlists', 'radioudaan-app-api' ), false ),
+			array( 'GET', '/library/youtube/playlists/featured', __( 'Top 5 playlists by newest video (auto)', 'radioudaan-app-api' ), false ),
 			array( 'GET', '/library/youtube/playlists/{id}/videos', __( 'Videos in a playlist', 'radioudaan-app-api' ), false ),
 			array( 'GET', '/library/youtube/search?q=', __( 'Channel-scoped video search', 'radioudaan-app-api' ), false ),
 		);
