@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -26,6 +27,8 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 class PushNotificationService {
   PushNotificationService(this._api);
 
+  static const Duration _startupTimeout = Duration(seconds: 8);
+
   final RadioUdaanApi _api;
   final _localNotifications = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
@@ -43,6 +46,20 @@ class PushNotificationService {
     } catch (e) {
       debugPrint('Firebase init skipped: $e');
       return false;
+    }
+  }
+
+  /// Runs after home/login is visible — never block cold start on FCM/APNs.
+  Future<void> startupAfterBootstrap({required bool loggedIn}) async {
+    try {
+      await initialize().timeout(_startupTimeout);
+      if (loggedIn) {
+        await registerIfPermitted().timeout(_startupTimeout);
+      }
+    } on TimeoutException {
+      debugPrint('Push startup timed out');
+    } catch (e) {
+      debugPrint('Push startup failed: $e');
     }
   }
 
@@ -84,9 +101,15 @@ class PushNotificationService {
 
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
     FirebaseMessaging.onMessageOpenedApp.listen(_onRemoteMessageOpened);
-    final initial = await FirebaseMessaging.instance.getInitialMessage();
-    if (initial != null) {
-      _scheduleOpenNotificationsInbox();
+    try {
+      final initial = await FirebaseMessaging.instance
+          .getInitialMessage()
+          .timeout(_startupTimeout, onTimeout: () => null);
+      if (initial != null) {
+        _scheduleOpenNotificationsInbox();
+      }
+    } on TimeoutException {
+      debugPrint('getInitialMessage timed out');
     }
 
     _initialized = true;
@@ -132,7 +155,9 @@ class PushNotificationService {
         await _waitForApnsToken(messaging);
       }
 
-      final token = await messaging.getToken();
+      final token = await messaging
+          .getToken()
+          .timeout(_startupTimeout, onTimeout: () => null);
       if (token == null || token.length < 20) return;
 
       final platform = Platform.isIOS ? 'ios' : 'android';

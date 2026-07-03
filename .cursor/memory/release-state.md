@@ -3,8 +3,8 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | 028d9ec → **2.0.0+26** | pushed | 2026-07-03 | Radio a11y, library UX, push, auto playlists |
-| TestFlight iOS | **2.0.0+26** | CI pending | 2026-07-03 | Bump for today's fixes (was +25 without bump) |
+| GitHub `main` | **2.0.0+27** (splash hang fix) | pending push | 2026-07-03 | Defer FCM off bootstrap; build 26 could hang on READY TO LAUNCH |
+| TestFlight iOS | **2.0.0+27** | CI pending | 2026-07-03 | Replace build 26 if users stuck on splash |
 | Staging WP plugin | pending | **no** | — | Deploy plugin: live_radio no schedule merge, copy catalog |
 | Staging API smoke | 14/14 | — | 2026-06-27 | Re-run after plugin deploy |
 

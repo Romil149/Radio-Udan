@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/bootstrap/app_bootstrap.dart';
 import '../../core/providers/app_providers.dart';
+import '../../core/push/push_notification_service.dart';
 import 'widgets/splash_body.dart';
 
 /// Cold start: load config, restore session, then route to home or login.
@@ -46,6 +49,12 @@ class _BootstrapScreenState extends ConsumerState<BootstrapScreen> {
       } else {
         context.go('/login');
       }
+      // Push must not block splash — iOS FCM getToken() can hang indefinitely.
+      unawaited(
+        ref.read(pushNotificationServiceProvider).startupAfterBootstrap(
+              loggedIn: result.isLoggedIn,
+            ),
+      );
     });
   }
 

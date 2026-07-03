@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/api_client.dart';
@@ -6,7 +8,6 @@ import '../config/app_env.dart';
 import '../config/remote_config.dart';
 import '../models/auth_session.dart';
 import '../providers/app_providers.dart';
-import '../push/push_notification_service.dart';
 import '../providers/app_settings_provider.dart';
 import '../storage/config_cache_storage.dart';
 import '../storage/settings_storage.dart';
@@ -139,11 +140,6 @@ class AppBootstrap {
     }
 
     final loggedIn = _ref.read(authTokenProvider) != null;
-    final push = _ref.read(pushNotificationServiceProvider);
-    await push.initialize();
-    if (loggedIn) {
-      await push.registerIfPermitted();
-    }
 
     return BootstrapResult(
       configLoaded: config != null,
