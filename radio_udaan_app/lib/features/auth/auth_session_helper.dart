@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/auth_session.dart';
@@ -25,9 +27,11 @@ Future<void> persistAuthSession(WidgetRef ref, AuthSession session) async {
     await ref.read(appFavoritesProvider.notifier).mergeWithServerAfterLogin();
   }
 
-  final push = ref.read(pushNotificationServiceProvider);
-  await push.initialize();
-  await push.registerIfPermitted();
+  unawaited(
+    ref.read(pushNotificationServiceProvider).startupAfterBootstrap(
+          loggedIn: session.token.isNotEmpty,
+        ),
+  );
 }
 
 Future<void> clearAuthSession(WidgetRef ref) async {

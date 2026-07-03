@@ -7,6 +7,6 @@ void main() {
     await tester.pumpWidget(
       const ProviderScope(child: RadioUdaanApp()),
     );
-    expect(find.text('Loading Radio Udaan'), findsOneWidget);
+    expect(find.text('READY TO LAUNCH'), findsOneWidget);
   });
 }

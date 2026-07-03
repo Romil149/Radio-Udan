@@ -146,34 +146,50 @@ class PushNotificationService {
     await registerDeviceToken();
   }
 
-  Future<void> registerDeviceToken() async {
+  Future<void> registerDeviceToken({int attempts = 3}) async {
     if (kIsWeb || !_initialized) return;
-    try {
-      final messaging = FirebaseMessaging.instance;
 
-      if (Platform.isIOS) {
-        await _waitForApnsToken(messaging);
+    final messaging = FirebaseMessaging.instance;
+    final platform = Platform.isIOS ? 'ios' : 'android';
+
+    for (var attempt = 0; attempt < attempts; attempt++) {
+      try {
+        if (Platform.isIOS) {
+          await _waitForApnsToken(
+            messaging,
+            maxAttempts: attempt == 0 ? 10 : 5,
+          );
+        }
+
+        final token = await messaging.getToken().timeout(
+          const Duration(seconds: 15),
+          onTimeout: () => null,
+        );
+        if (token == null || token.length < 20) {
+          if (attempt < attempts - 1) {
+            await Future<void>.delayed(const Duration(seconds: 2));
+          }
+          continue;
+        }
+
+        await _api.registerPushDevice(fcmToken: token, platform: platform);
+
+        if (!_tokenRefreshListening) {
+          _tokenRefreshListening = true;
+          messaging.onTokenRefresh.listen((next) async {
+            if (next.length < 20) return;
+            try {
+              await _api.registerPushDevice(fcmToken: next, platform: platform);
+            } catch (_) {}
+          });
+        }
+        return;
+      } catch (e) {
+        debugPrint('Push registration attempt ${attempt + 1} failed: $e');
+        if (attempt < attempts - 1) {
+          await Future<void>.delayed(const Duration(seconds: 2));
+        }
       }
-
-      final token = await messaging
-          .getToken()
-          .timeout(_startupTimeout, onTimeout: () => null);
-      if (token == null || token.length < 20) return;
-
-      final platform = Platform.isIOS ? 'ios' : 'android';
-      await _api.registerPushDevice(fcmToken: token, platform: platform);
-
-      if (!_tokenRefreshListening) {
-        _tokenRefreshListening = true;
-        messaging.onTokenRefresh.listen((next) async {
-          if (next.length < 20) return;
-          try {
-            await _api.registerPushDevice(fcmToken: next, platform: platform);
-          } catch (_) {}
-        });
-      }
-    } catch (e) {
-      debugPrint('Push registration failed: $e');
     }
   }
 
@@ -181,8 +197,11 @@ class PushNotificationService {
     await registerDeviceToken();
   }
 
-  Future<void> _waitForApnsToken(FirebaseMessaging messaging) async {
-    for (var attempt = 0; attempt < 5; attempt++) {
+  Future<void> _waitForApnsToken(
+    FirebaseMessaging messaging, {
+    int maxAttempts = 5,
+  }) async {
+    for (var attempt = 0; attempt < maxAttempts; attempt++) {
       final apns = await messaging.getAPNSToken();
       if (apns != null && apns.isNotEmpty) return;
       await Future<void>.delayed(const Duration(milliseconds: 600));

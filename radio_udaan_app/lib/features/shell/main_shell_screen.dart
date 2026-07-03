@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers/app_providers.dart';
 import '../../core/providers/app_settings_provider.dart';
+import '../../core/push/push_notification_service.dart';
 import '../../core/theme/accessibility_scope.dart';
 import '../../core/utils/keyboard_dismiss.dart';
 import '../more/notifications_providers.dart';
@@ -23,7 +26,38 @@ class MainShellScreen extends ConsumerStatefulWidget {
   ConsumerState<MainShellScreen> createState() => _MainShellScreenState();
 }
 
-class _MainShellScreenState extends ConsumerState<MainShellScreen> {
+class _MainShellScreenState extends ConsumerState<MainShellScreen>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshPushRegistration());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshPushRegistration();
+    }
+  }
+
+  void _refreshPushRegistration() {
+    final token = ref.read(authTokenProvider);
+    if (token == null || token.isEmpty) return;
+    unawaited(
+      ref.read(pushNotificationServiceProvider).startupAfterBootstrap(
+            loggedIn: true,
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final copy = ref.watch(appCopyProvider);
