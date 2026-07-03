@@ -215,6 +215,7 @@ extension AppCopyStrings on AppCopy {
   String get radioIntro => text('radio_intro');
   String get radioPause => text('radio_pause');
   String get radioPlay => text('radio_play');
+  String get radioPlayOnAir => text('radio_play_on_air');
   String get radioPlaybackError => text('radio_playback_error');
   String get radioPlaying => text('radio_playing');
   String get radioScheduleEmpty => text('radio_schedule_empty');
@@ -456,6 +457,26 @@ extension AppCopyStrings on AppCopy {
     final parts = <String>[if (onAir) radioScheduleOnAir, title, if (time.isNotEmpty) time, if (hosts.isNotEmpty) hosts];
     return parts.join(', ');
   }
+
+  /// Single VoiceOver label for the live hero play/stop control.
+  String radioPlayButtonSemantics({
+    required bool loading,
+    required bool isPlaying,
+    required bool isOnAir,
+    required String showTitle,
+    required String hostsLine,
+  }) {
+    if (loading) return radioConnecting;
+    if (isPlaying) return radioStop;
+    if (isOnAir && showTitle.trim().isNotEmpty) {
+      final show = hostsLine.trim().isNotEmpty
+          ? '${showTitle.trim()} ${hostsLine.trim()}'
+          : showTitle.trim();
+      return radioPlayOnAir.replaceAll('{show}', show);
+    }
+    return radioPlay;
+  }
+
   String registrationUnsupportedFieldsSemantics({required String notice, required String fieldNames}) =>
       '$notice Unsupported fields: $fieldNames';
   String registrationMultiSelectSemanticsValue(List<String> selected) =>

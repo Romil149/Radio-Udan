@@ -56,6 +56,35 @@ class RadioAudioHandler extends BaseAudioHandler {
     await _initSession();
   }
 
+  /// Silent buffer at volume 0 so ICY `StreamTitle` arrives before the user taps Play.
+  Future<void> prepareStreamMetadataProbe({
+    required Uri streamUri,
+    required String title,
+    required String artist,
+  }) async {
+    await _ensureSession();
+    final item = MediaItem(
+      id: streamUri.toString(),
+      title: title,
+      artist: artist,
+      album: artist,
+      extras: const {'live': true},
+    );
+    mediaItem.add(item);
+
+    if (!canResumeLiveStream(streamUri)) {
+      _loadedStreamUri = streamUri;
+      await _player.setVolume(0);
+      await _player.setAudioSource(AudioSource.uri(streamUri, tag: item));
+    } else if (_player.volume > 0) {
+      await _player.setVolume(0);
+    }
+
+    if (!_player.playing) {
+      await _player.play();
+    }
+  }
+
   /// Loads the live stream URL and starts playback (WP `stream_url` only).
   Future<void> playLiveStream({
     required Uri streamUri,

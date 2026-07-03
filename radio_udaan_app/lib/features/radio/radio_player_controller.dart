@@ -34,12 +34,50 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
   final Ref _ref;
   bool _startInProgress = false;
   bool _playerBound = false;
+  bool _metadataProbeInProgress = false;
 
   /// Binds just_audio streams after [ensureRadioAudioService] succeeds.
   void attachPlayerIfReady() {
     if (_playerBound || !isRadioAudioServiceReady) return;
     _playerBound = true;
     _bindPlayerStateStream();
+  }
+
+  /// Buffer the live stream at volume 0 so ICY title is available before Play.
+  Future<void> probeStreamMetadata() async {
+    if (_ref.read(radioAudiblePlaybackProvider) ||
+        _metadataProbeInProgress ||
+        state.status == RadioPlayerStatus.playing ||
+        state.status == RadioPlayerStatus.loading) {
+      return;
+    }
+
+    final copy = _ref.read(appCopyProvider);
+    final ready = await ensureRadioAudioService();
+    if (!ready) return;
+    attachPlayerIfReady();
+
+    final url = _ref.read(remoteConfigProvider)?.streamUrl ?? '';
+    if (url.isEmpty) return;
+
+    final config = _ref.read(liveRadioProvider);
+    final streamUri = Uri.parse(url);
+    final handler = radioAudioHandler;
+
+    _metadataProbeInProgress = true;
+    try {
+      await handler.prepareStreamMetadataProbe(
+        streamUri: streamUri,
+        title: config.showTitle,
+        artist: config.showSubtitle.isNotEmpty
+            ? config.showSubtitle
+            : copy.radioLiveLabel,
+      );
+    } catch (_) {
+      // Hero falls back to WP admin title when metadata probe fails.
+    } finally {
+      _metadataProbeInProgress = false;
+    }
   }
 
   void _bindPlayerStateStream() {
@@ -49,8 +87,7 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
           previous?.imageUrl == next.imageUrl) {
         return;
       }
-      if (state.status == RadioPlayerStatus.playing ||
-          state.status == RadioPlayerStatus.loading) {
+      if (_ref.read(radioAudiblePlaybackProvider)) {
         _syncNowPlayingMetadata(next);
       }
     });
@@ -60,14 +97,16 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
       final title = metadata?.info?.title?.trim() ?? '';
       _ref.read(radioStreamIcyTitleProvider.notifier).state =
           title.isEmpty ? null : title;
-      if (state.status == RadioPlayerStatus.playing ||
-          state.status == RadioPlayerStatus.loading) {
+      if (_ref.read(radioAudiblePlaybackProvider)) {
         _syncNowPlayingMetadata(_ref.read(liveNowPlayingProvider));
       }
     });
 
     player.playerStateStream.listen((playerState) {
-      // Live MP3 streams often stay in `buffering` while audio is playing.
+      if (!_ref.read(radioAudiblePlaybackProvider)) {
+        return;
+      }
+
       if (playerState.playing) {
         state = RadioPlayerState(
           status: RadioPlayerStatus.playing,
@@ -91,7 +130,6 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
           errorMessage: state.errorMessage,
         );
       } else if (playerState.processingState == ProcessingState.ready) {
-        // Between setAudioSource() and play(), just_audio emits ready + !playing.
         if (_startInProgress || state.status == RadioPlayerStatus.loading) {
           return;
         }
@@ -105,7 +143,7 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
     });
   }
 
-  Future<void> play() async {
+  Future<void> play({double volume = 1.0}) async {
     final copy = _ref.read(appCopyProvider);
     final ready = await ensureRadioAudioService();
     if (!ready) {
@@ -133,6 +171,7 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
     final handler = radioAudioHandler;
     final resumeOnly = handler.canResumeLiveStream(streamUri);
 
+    _ref.read(radioAudiblePlaybackProvider.notifier).state = true;
     _startInProgress = true;
     state = const RadioPlayerState(status: RadioPlayerStatus.loading);
     try {
@@ -142,6 +181,7 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
       final artUri = nowPlaying.imageUrl.isNotEmpty
           ? Uri.tryParse(nowPlaying.imageUrl)
           : (branding.hasLogo ? Uri.tryParse(branding.logoUrl) : null);
+      await handler.player.setVolume(volume.clamp(0.0, 1.0));
       if (resumeOnly) {
         handler.updateNowPlayingMetadata(
           title: nowPlaying.title,
@@ -159,6 +199,7 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
       }
       state = const RadioPlayerState(status: RadioPlayerStatus.playing);
     } catch (e) {
+      _ref.read(radioAudiblePlaybackProvider.notifier).state = false;
       state = RadioPlayerState(
         status: RadioPlayerStatus.error,
         errorMessage: copy.radioPlaybackError,
@@ -170,6 +211,7 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
 
   Future<void> stop() async {
     _startInProgress = false;
+    _ref.read(radioAudiblePlaybackProvider.notifier).state = false;
     _ref.read(radioStreamIcyTitleProvider.notifier).state = null;
     if (!isRadioAudioServiceReady) {
       state = const RadioPlayerState(status: RadioPlayerStatus.idle);
@@ -177,6 +219,7 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
     }
     await radioAudioHandler.stop();
     state = const RadioPlayerState(status: RadioPlayerStatus.idle);
+    await probeStreamMetadata();
   }
 
   void _syncNowPlayingMetadata(LiveNowPlaying nowPlaying) {

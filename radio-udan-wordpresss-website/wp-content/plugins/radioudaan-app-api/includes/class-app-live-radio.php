@@ -148,7 +148,7 @@ class RadioUdaan_App_Live_Radio {
 	 * @return array<string,mixed>
 	 */
 	public static function get_public_config() {
-		$config = array(
+		return array(
 			'show_title'       => self::get_show_title(),
 			'show_subtitle'    => self::get_show_subtitle(),
 			'hero_image_url'   => self::get_hero_image_url(),
@@ -162,22 +162,5 @@ class RadioUdaan_App_Live_Radio {
 			'menu_action'      => 'more',
 			'profile_action'   => 'more',
 		);
-
-		$schedule = RadioUdaan_App_Radio_Schedule::build_schedule( 2 );
-		$current  = ! empty( $schedule['on_air'] ) ? $schedule['on_air'] : null;
-		if ( is_array( $current ) ) {
-			if ( ! empty( $current['title'] ) ) {
-				$config['show_title'] = (string) $current['title'];
-			}
-			$hosts_line = RadioUdaan_App_Radio_Schedule::format_hosts_subtitle( $current );
-			if ( $hosts_line !== '' ) {
-				$config['show_subtitle'] = $hosts_line;
-			}
-			if ( ! empty( $current['thumbnail_url'] ) ) {
-				$config['hero_image_url'] = (string) $current['thumbnail_url'];
-			}
-		}
-
-		return $config;
 	}
 }

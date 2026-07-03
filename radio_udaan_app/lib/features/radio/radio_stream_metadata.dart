@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Latest `StreamTitle` from the live MP3 (Shoutcast / Icecast ICY metadata).
 final radioStreamIcyTitleProvider = StateProvider<String?>((ref) => null);
 
+/// True when the user started audible playback (not silent metadata probe).
+final radioAudiblePlaybackProvider = StateProvider<bool>((ref) => false);
+
 /// Parsed ICY `StreamTitle` (often `Artist - Track` or show name).
 class RadioStreamTitle {
   const RadioStreamTitle({required this.title, this.artist});

@@ -257,10 +257,11 @@ abstract final class AppStrings {
   static const String shareFailed = 'Could not open share sheet';
   static const String shareUnavailable = 'Sharing is not available on this device';
   static const String shareCopied = 'Share message copied to clipboard';
-  static const String radioPlay = 'Play live radio';
+  static const String radioPlay = 'Play Live Stream';
+  static const String radioPlayOnAir = 'Play Live Stream. On air: {show}';
   static const String radioPause = 'Pause';
-  static const String radioStop = 'Stop';
-  static const String radioConnecting = 'Connecting to stream…';
+  static const String radioStop = 'Stop Live Stream';
+  static const String radioConnecting = 'Connecting…';
   static const String radioPlaying = 'Live radio is playing';
   static const String radioStopped = 'Live radio stopped';
   static const String radioPlaybackError = 'Could not play live radio';

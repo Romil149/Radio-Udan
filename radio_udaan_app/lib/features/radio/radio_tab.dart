@@ -43,8 +43,9 @@ class _RadioTabState extends ConsumerState<RadioTab> {
     final ready = await ensureRadioAudioService();
     if (!mounted) return;
     if (ready) {
-      ref.read(radioPlayerProvider.notifier).attachPlayerIfReady();
-      setState(() => _volume = radioAudioHandler.player.volume);
+      final notifier = ref.read(radioPlayerProvider.notifier);
+      notifier.attachPlayerIfReady();
+      await notifier.probeStreamMetadata();
     }
   }
 
@@ -122,6 +123,7 @@ class _RadioTabState extends ConsumerState<RadioTab> {
               title: heroTitle,
               hosts: heroHosts,
               heroImageUrl: heroImageUrl,
+              isOnAir: nowPlaying.isOnAir,
               loading: isLoading,
               isPlaying: isPlaying,
               onToggle: isLoading
@@ -130,7 +132,7 @@ class _RadioTabState extends ConsumerState<RadioTab> {
                       if (isPlaying) {
                         notifier.stop();
                       } else {
-                        notifier.play();
+                        notifier.play(volume: _volume);
                       }
                     },
             ),
@@ -193,6 +195,7 @@ class _HeroCard extends StatelessWidget {
     required this.title,
     required this.hosts,
     required this.heroImageUrl,
+    required this.isOnAir,
     required this.loading,
     required this.isPlaying,
     required this.onToggle,
@@ -202,6 +205,7 @@ class _HeroCard extends StatelessWidget {
   final String title;
   final String hosts;
   final String heroImageUrl;
+  final bool isOnAir;
   final bool loading;
   final bool isPlaying;
   final VoidCallback? onToggle;
@@ -220,65 +224,62 @@ class _HeroCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: SizedBox(
-              height: 260,
-              width: double.infinity,
-              child:               heroImageUrl.isNotEmpty
-                  ? Semantics(
-                      label: hosts.trim().isNotEmpty
-                          ? '$title. ${hosts.trim()}'
-                          : title,
-                      image: true,
-                      child: ExcludeSemantics(
-                        child: CachedNetworkImage(
-                          key: ValueKey(heroImageUrl),
-                          imageUrl: heroImageUrl,
-                          fit: BoxFit.cover,
-                          fadeInDuration: const Duration(milliseconds: 300),
-                          memCacheHeight: 520,
-                          placeholder: (_, _) => const _HeroPlaceholder(),
-                          errorWidget: (_, _, _) => const _HeroPlaceholder(),
-                        ),
-                      ),
-                    )
-                  : const _HeroPlaceholder(),
-            ),
-          ),
-          const SizedBox(height: 16),
           ExcludeSemantics(
-            child: Text(
-              title,
-              textAlign: TextAlign.center,
-              style: udaanGoogleFont(
-                context,
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                color: palette.onBackground,
-              ),
+            child: Column(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: SizedBox(
+                    height: 260,
+                    width: double.infinity,
+                    child: heroImageUrl.isNotEmpty
+                        ? CachedNetworkImage(
+                            key: ValueKey(heroImageUrl),
+                            imageUrl: heroImageUrl,
+                            fit: BoxFit.cover,
+                            fadeInDuration: const Duration(milliseconds: 300),
+                            memCacheHeight: 520,
+                            placeholder: (_, _) => const _HeroPlaceholder(),
+                            errorWidget: (_, _, _) => const _HeroPlaceholder(),
+                          )
+                        : const _HeroPlaceholder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: udaanGoogleFont(
+                    context,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    color: palette.onBackground,
+                  ),
+                ),
+                if (hosts.trim().isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    hosts,
+                    textAlign: TextAlign.center,
+                    style: udaanGoogleFont(
+                      context,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: palette.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
-          if (hosts.trim().isNotEmpty) ...[
-            const SizedBox(height: 6),
-            ExcludeSemantics(
-              child: Text(
-                hosts,
-                textAlign: TextAlign.center,
-                style: udaanGoogleFont(
-                  context,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: palette.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ],
           const SizedBox(height: 18),
           _PlayButton(
             copy: copy,
             loading: loading,
             isPlaying: isPlaying,
+            isOnAir: isOnAir,
+            showTitle: title,
+            hostsLine: hosts,
             onPressed: onToggle,
             primary: primary,
           ),
@@ -293,6 +294,9 @@ class _PlayButton extends StatelessWidget {
     required this.copy,
     required this.loading,
     required this.isPlaying,
+    required this.isOnAir,
+    required this.showTitle,
+    required this.hostsLine,
     required this.onPressed,
     required this.primary,
   });
@@ -300,6 +304,9 @@ class _PlayButton extends StatelessWidget {
   final AppCopy copy;
   final bool loading;
   final bool isPlaying;
+  final bool isOnAir;
+  final String showTitle;
+  final String hostsLine;
   final VoidCallback? onPressed;
   final Color primary;
 
@@ -309,7 +316,13 @@ class _PlayButton extends StatelessWidget {
         ? context.udaan.primary
         : context.udaan.outlineVariant;
 
-    final label = isPlaying ? copy.radioStop : copy.radioPlay;
+    final label = copy.radioPlayButtonSemantics(
+      loading: loading,
+      isPlaying: isPlaying,
+      isOnAir: isOnAir,
+      showTitle: showTitle,
+      hostsLine: hostsLine,
+    );
 
     return Semantics(
       button: true,
@@ -404,35 +417,43 @@ class _VolumeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: context.udaan.surfaceContainer,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.udaan.outlineVariant),
-      ),
-      child: Row(
-        children: [
-          ExcludeSemantics(
-            child: Icon(Icons.volume_down_outlined, color: context.udaan.primaryGlow),
+    final percent = (value.clamp(0, 1) * 100).round();
+    final semanticValue = '$percent percent';
+
+    return Semantics(
+      slider: true,
+      label: copy.radioVolume,
+      value: semanticValue,
+      increasedValue: '${(percent + 10).clamp(0, 100)} percent',
+      decreasedValue: '${(percent - 10).clamp(0, 100)} percent',
+      onIncrease: percent < 100
+          ? () => onChanged(((percent + 10) / 100).clamp(0.0, 1.0))
+          : null,
+      onDecrease: percent > 0
+          ? () => onChanged(((percent - 10) / 100).clamp(0.0, 1.0))
+          : null,
+      child: ExcludeSemantics(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: context.udaan.surfaceContainer,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: context.udaan.outlineVariant),
           ),
-          Expanded(
-            child: Semantics(
-              label: copy.radioVolume,
-              value: '${(value * 100).round()} percent',
-              child: ExcludeSemantics(
+          child: Row(
+            children: [
+              Icon(Icons.volume_down_outlined, color: context.udaan.primaryGlow),
+              Expanded(
                 child: Slider(
                   value: value.clamp(0, 1),
                   onChanged: onChanged,
                   activeColor: context.udaan.primary,
                 ),
               ),
-            ),
+              Icon(Icons.volume_up_outlined, color: context.udaan.primaryGlow),
+            ],
           ),
-          ExcludeSemantics(
-            child: Icon(Icons.volume_up_outlined, color: context.udaan.primaryGlow),
-          ),
-        ],
+        ),
       ),
     );
   }
