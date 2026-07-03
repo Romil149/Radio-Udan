@@ -46,7 +46,7 @@ class RadioUdaan_App_Config {
 	}
 
 	/**
-	 * On-air show title / RJ / hero from radio-shows schedule (short TTL).
+	 * Live tab defaults from admin settings; overlays schedule only while a show is on-air.
 	 *
 	 * @return array<string,mixed>
 	 */
@@ -56,10 +56,47 @@ class RadioUdaan_App_Config {
 			return $cached;
 		}
 
-		$config = RadioUdaan_App_Live_Radio::get_public_config();
+		$defaults = RadioUdaan_App_Live_Radio::get_public_config();
+		$config   = self::apply_schedule_to_live_radio( $defaults );
 		set_transient( self::LIVE_RADIO_CACHE_KEY, $config, self::LIVE_RADIO_CACHE_TTL );
 
 		return $config;
+	}
+
+	/**
+	 * When a scheduled show is within its slot, merge title / hosts / hero; else admin defaults.
+	 *
+	 * @param array<string,mixed> $defaults Live radio settings from WP admin.
+	 * @return array<string,mixed>
+	 */
+	private static function apply_schedule_to_live_radio( array $defaults ) {
+		$merged = $defaults;
+		$merged['default_show_title']    = (string) ( $defaults['show_title'] ?? '' );
+		$merged['default_show_subtitle'] = (string) ( $defaults['show_subtitle'] ?? '' );
+		$merged['default_hero_image_url'] = (string) ( $defaults['hero_image_url'] ?? '' );
+
+		$schedule = RadioUdaan_App_Radio_Schedule::build_schedule( 2 );
+		$on_air   = isset( $schedule['on_air'] ) && is_array( $schedule['on_air'] )
+			? $schedule['on_air']
+			: null;
+
+		if ( empty( $on_air ) ) {
+			$merged['from_schedule'] = false;
+			return $merged;
+		}
+
+		$hosts = RadioUdaan_App_Radio_Schedule::format_hosts_subtitle( $on_air );
+		$thumb = ! empty( $on_air['thumbnail_url'] ) ? esc_url_raw( (string) $on_air['thumbnail_url'] ) : '';
+
+		$merged['from_schedule']     = true;
+		$merged['scheduled_show_id'] = (string) ( $on_air['id'] ?? '' );
+		$merged['show_title']        = (string) ( $on_air['title'] ?? $defaults['show_title'] );
+		$merged['show_subtitle']     = $hosts !== '' ? $hosts : (string) ( $defaults['show_subtitle'] ?? '' );
+		if ( $thumb !== '' ) {
+			$merged['hero_image_url'] = $thumb;
+		}
+
+		return $merged;
 	}
 
 	/**

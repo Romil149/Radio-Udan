@@ -20,6 +20,7 @@ import 'live_now_playing.dart';
 import 'radio_audio_service.dart';
 import '../favorites/app_favorites_provider.dart';
 import 'radio_player_controller.dart';
+import 'radio_schedule_provider.dart';
 import 'radio_schedule_sheet.dart';
 import 'widgets/radio_volume_control.dart';
 

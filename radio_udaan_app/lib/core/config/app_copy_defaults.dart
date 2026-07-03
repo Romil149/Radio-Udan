@@ -59,7 +59,9 @@ const Map<String, String> appCopyDefaults = {
   'events_page_intro': 'Join our vibrant community in upcoming accessible live streams and workshops.',
   'events_page_title': 'Register For Events',
   'events_register_now': 'Register Now',
+  'events_register_for_semantics': 'Register For {event_title}',
   'events_registration_closed': 'Registration closed',
+  'events_registration_closed_semantics': 'Registration closed for {event_title}',
   'forgot_password_channel_email': 'Email',
   'forgot_password_channel_phone': 'Mobile',
   'forgot_password_email_hint': 'Enter your email',
@@ -230,7 +232,7 @@ const Map<String, String> appCopyDefaults = {
   'radio_view_full_schedule': 'View full schedule',
   'radio_volume': 'Volume',
   'radio_volume_slider_hint':
-      'Adjustable. Swipe up to increase or down to decrease volume in ten percent steps.',
+      'Adjustable slider. Swipe up to increase or down to decrease in ten percent steps. You can also drag the track left or right.',
   'radio_volume_announce': 'Volume, {percent} percent',
   'radio_whatsapp_url_fallback': '#',
   'radio_with_hosts_prefix': 'with ',

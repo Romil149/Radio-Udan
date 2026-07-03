@@ -50,11 +50,11 @@ class _BootstrapScreenState extends ConsumerState<BootstrapScreen> {
         context.go('/login');
       }
       // Push must not block splash — iOS FCM getToken() can hang indefinitely.
-      unawaited(
-        ref.read(pushNotificationServiceProvider).startupAfterBootstrap(
-              loggedIn: result.isLoggedIn,
-            ),
-      );
+      if (result.isLoggedIn) {
+        unawaited(
+          ref.read(pushNotificationServiceProvider).syncForLoggedInUser(),
+        );
+      }
     });
   }
 

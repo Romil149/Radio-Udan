@@ -49,18 +49,51 @@ class PushNotificationService {
     }
   }
 
-  /// Runs after home/login is visible — never block cold start on FCM/APNs.
-  Future<void> startupAfterBootstrap({required bool loggedIn}) async {
+  /// Background sync after login, cold start, or app resume. No in-app button required.
+  Future<void> syncForLoggedInUser() async {
     try {
       await initialize().timeout(_startupTimeout);
-      if (loggedIn) {
-        await registerIfPermitted().timeout(_startupTimeout);
-      }
     } on TimeoutException {
-      debugPrint('Push startup timed out');
+      debugPrint('Push initialize timed out');
     } catch (e) {
-      debugPrint('Push startup failed: $e');
+      debugPrint('Push sync failed: $e');
+      return;
     }
+
+    if (!_initialized) return;
+
+    var registered = await _ensureRegistered();
+    if (!registered) {
+      // iOS APNs/FCM can lag briefly after grant — one silent retry.
+      await Future<void>.delayed(const Duration(seconds: 20));
+      registered = await _ensureRegistered();
+    }
+    if (kDebugMode) {
+      debugPrint(registered ? 'Push device registered' : 'Push device not registered');
+    }
+  }
+
+  /// Runs after home/login is visible — never block cold start on FCM/APNs.
+  Future<void> startupAfterBootstrap({required bool loggedIn}) async {
+    if (!loggedIn) return;
+    await syncForLoggedInUser();
+  }
+
+  Future<bool> _ensureRegistered() async {
+    if (!_initialized) return false;
+
+    try {
+      final messaging = FirebaseMessaging.instance;
+      final settings = await messaging.getNotificationSettings();
+      if (settings.authorizationStatus == AuthorizationStatus.notDetermined) {
+        await requestSystemPermission();
+      }
+    } catch (e) {
+      debugPrint('Push permission check failed: $e');
+    }
+
+    if (!await hasSystemPermission()) return false;
+    return registerDeviceToken(attempts: 5);
   }
 
   Future<void> initialize() async {
@@ -101,6 +134,9 @@ class PushNotificationService {
 
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
     FirebaseMessaging.onMessageOpenedApp.listen(_onRemoteMessageOpened);
+
+    _initialized = true;
+
     try {
       final initial = await FirebaseMessaging.instance
           .getInitialMessage()
@@ -111,8 +147,6 @@ class PushNotificationService {
     } on TimeoutException {
       debugPrint('getInitialMessage timed out');
     }
-
-    _initialized = true;
   }
 
   Future<void> requestSystemPermission() async {
@@ -146,8 +180,9 @@ class PushNotificationService {
     await registerDeviceToken();
   }
 
-  Future<void> registerDeviceToken({int attempts = 3}) async {
-    if (kIsWeb || !_initialized) return;
+  /// Returns true when the FCM token was sent to the App API.
+  Future<bool> registerDeviceToken({int attempts = 3}) async {
+    if (kIsWeb || !_initialized) return false;
 
     final messaging = FirebaseMessaging.instance;
     final platform = Platform.isIOS ? 'ios' : 'android';
@@ -183,7 +218,7 @@ class PushNotificationService {
             } catch (_) {}
           });
         }
-        return;
+        return true;
       } catch (e) {
         debugPrint('Push registration attempt ${attempt + 1} failed: $e');
         if (attempt < attempts - 1) {
@@ -191,10 +226,11 @@ class PushNotificationService {
         }
       }
     }
+    return false;
   }
 
-  Future<void> registerIfSignedIn() async {
-    await registerDeviceToken();
+  Future<bool> registerIfSignedIn() async {
+    return registerDeviceToken();
   }
 
   Future<void> _waitForApnsToken(

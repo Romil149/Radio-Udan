@@ -1,5 +1,12 @@
 # Task History
 
+### 2026-07-03 — Live Radio: schedule gaps + volume slider a11y
+**Requested by**: User (show hero during slot only; WP defaults between shows; volume swipe like slider)
+**What was done**: WP schedule adds `ends_at` + `duration_minutes` (ACF `broadcast_duration_minutes`, default 60). `on_air` only inside slot. Config `live_radio` merges schedule when on-air, exposes `default_*` fields for gaps. Flutter `resolveLiveNowPlaying` uses schedule window + admin defaults; volume control: Semantics slider + vertical drag on track.
+**Files changed**: `class-app-radio-schedule.php`, `class-app-config.php`, `live_now_playing.dart`, `live_radio_config.dart`, `radio_volume_control.dart`, `radio_schedule_provider.dart`, tests
+**Status**: ✅ `php -l`, `dart analyze lib`, tests pass — **deploy plugin to staging** + rebuild app for device QA
+**Notes**: Add ACF number field `broadcast_duration_minutes` on radio-shows if durations differ from 1 hour.
+
 ### 2026-07-03 — Push notifications: diagnose + professional delivery
 **Requested by**: User (push not working; Zomato/Swiggy-quality; both platforms)
 **What was done**: Root cause: **FCM not configured on staging** (admin created inbox only). WP: high-priority Android channel + APNs alert headers; admin shows push_sent/failed/fcm_skipped; `GET /health` adds `fcm_configured` + `push_devices_registered`. Flutter: iOS `aps-environment`, foreground presentation, APNS wait, tap→inbox, Settings re-enable button.

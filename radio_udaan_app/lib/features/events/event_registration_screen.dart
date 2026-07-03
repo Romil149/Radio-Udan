@@ -415,7 +415,10 @@ class _EventRegistrationScreenState
             keyboardType: keyboardType,
             maxLines: maxLines,
             textCapitalization: textCapitalization,
-            onTapOutside: (_) => dismissKeyboard(context),
+            textInputAction:
+                maxLines > 1 ? TextInputAction.newline : TextInputAction.done,
+            onEditingComplete: () => dismissKeyboard(context),
+            onFieldSubmitted: (_) => dismissKeyboard(context),
             onChanged:
                 isAccountLocked ? null : (v) => _onTextFieldChanged(field, v),
           ),
@@ -530,29 +533,29 @@ class _EventRegistrationScreenState
     return _fieldShell(
       context,
       field,
-      Semantics(
-          label: _fieldSemanticsLabel(field),
-          hint: hint,
-          value: display,
-          button: true,
-          child: InkWell(
-            onTap: () => onPick(field),
-            child: InputDecorator(
-              decoration: _fieldDecoration(context, field).copyWith(
-                suffixIcon: Icon(icon),
-              ),
-              child: ExcludeSemantics(
-                child: Text(
-                  display ?? hint,
-                  style: display == null
-                      ? theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.hintColor,
-                        )
-                      : theme.textTheme.bodyLarge,
-                ),
-              ),
+      UdaanAccessibleButton(
+        label: [
+          _fieldSemanticsLabel(field),
+          if (display != null) display,
+          if (display == null) hint,
+        ].join(', '),
+        onPressed: () => onPick(field),
+        child: InkWell(
+          onTap: () => onPick(field),
+          child: InputDecorator(
+            decoration: _fieldDecoration(context, field).copyWith(
+              suffixIcon: Icon(icon),
+            ),
+            child: Text(
+              display ?? hint,
+              style: display == null
+                  ? theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.hintColor,
+                    )
+                  : theme.textTheme.bodyLarge,
             ),
           ),
+        ),
       ),
       errorOnDecoration: true,
     );
@@ -954,8 +957,8 @@ class _EventRegistrationScreenState
         _currentPageIndex >= schema.pages.length - 1;
 
     return ListView(
-      controller: _scrollController,
-      padding: const EdgeInsets.fromLTRB(
+        controller: _scrollController,
+        padding: const EdgeInsets.fromLTRB(
         BrandTokens.screenPadding,
         8,
         BrandTokens.screenPadding,
@@ -1121,56 +1124,57 @@ class _EventRegistrationScreenState
             },
           ),
         ],
-        FocusTraversalGroup(
-          child: Column(
-            children: [
-              for (final section in schema.sections) ...[
-                if (bySection[section.id]?.isNotEmpty == true) ...[
-                  if (section.title.trim().isNotEmpty &&
-                      section.title.toLowerCase() != 'default') ...[
-                    const SizedBox(height: 8),
-                    Semantics(
-                      header: true,
-                      label: section.title,
-                      child: ExcludeSemantics(
-                        child: Text(
-                          section.title,
-                          style: udaanTextStyle(
-                            context,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: palette.onBackground,
+        Semantics(
+          explicitChildNodes: true,
+          child: FocusTraversalGroup(
+            child: Column(
+              children: [
+                for (final section in schema.sections) ...[
+                  if (bySection[section.id]?.isNotEmpty == true) ...[
+                    if (section.title.trim().isNotEmpty &&
+                        section.title.toLowerCase() != 'default') ...[
+                      const SizedBox(height: 8),
+                      Semantics(
+                        header: true,
+                        label: section.title,
+                        child: ExcludeSemantics(
+                          child: Text(
+                            section.title,
+                            style: udaanTextStyle(
+                              context,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: palette.onBackground,
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
+                    for (final field in bySection[section.id]!)
+                      _fieldWidget(context, field, schema),
                   ],
-                  for (final field in bySection[section.id]!)
-                    _fieldWidget(context, field, schema),
                 ],
               ],
-            ],
+            ),
           ),
         ),
         const SizedBox(height: 20),
         if (schema.pages.isNotEmpty && _currentPageIndex > 0) ...[
-          Semantics(
-            button: true,
+          UdaanAccessibleButton(
             label: '${_copy.registrationPreviousPage} page',
-            child: ExcludeSemantics(
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 56),
-                  side: BorderSide(color: palette.primaryGlow),
-                ),
-                onPressed: () => _goToPreviousPage(schema),
-                child: Text(
-                  _copy.registrationPreviousPage,
-                  style: udaanTextStyle(
-                    context,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
+            onPressed: () => _goToPreviousPage(schema),
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 56),
+                side: BorderSide(color: palette.primaryGlow),
+              ),
+              onPressed: () => _goToPreviousPage(schema),
+              child: Text(
+                _copy.registrationPreviousPage,
+                style: udaanTextStyle(
+                  context,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
@@ -1178,37 +1182,34 @@ class _EventRegistrationScreenState
           const SizedBox(height: 12),
         ],
         if (schema.pages.isNotEmpty && !onLastPage) ...[
-          Semantics(
-            button: true,
+          UdaanAccessibleButton(
             label: '${_copy.registrationNextPage} page',
-            child: ExcludeSemantics(
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: palette.primary,
-                  foregroundColor: palette.onPrimary,
-                  minimumSize: const Size(double.infinity, 56),
-                ),
-                onPressed: () => _goToNextPage(schema),
-                child: Text(
-                  _copy.registrationNextPage,
-                  style: udaanTextStyle(
-                    context,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
+            onPressed: () => _goToNextPage(schema),
+            child: FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: palette.primary,
+                foregroundColor: palette.onPrimary,
+                minimumSize: const Size(double.infinity, 56),
+              ),
+              onPressed: () => _goToNextPage(schema),
+              child: Text(
+                _copy.registrationNextPage,
+                style: udaanTextStyle(
+                  context,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
           ),
         ] else ...[
-          Semantics(
-            button: true,
+          UdaanAccessibleButton(
             label: _submitting
                 ? _copy.submittingRegistrationPleaseWait
                 : _copy.submitRegistration,
             enabled: !_submitting && !submitBlocked,
-            child: ExcludeSemantics(
-              child: FilledButton(
+            onPressed: _submitting || submitBlocked ? null : () => _submit(schema),
+            child: FilledButton(
                 style: FilledButton.styleFrom(
                   backgroundColor: palette.primary,
                   foregroundColor: palette.onPrimary,
@@ -1248,7 +1249,6 @@ class _EventRegistrationScreenState
                           Icon(Icons.arrow_forward, size: 22),
                         ],
                       ),
-              ),
             ),
           ),
         ],
@@ -1256,7 +1256,6 @@ class _EventRegistrationScreenState
     );
   }
 
-  /// Single-select options as tappable rows — wraps long labels (no dropdown overflow).
   Widget _sliderField(BuildContext context, FormFieldSchema field) {
     final palette = context.udaan;
     final min = field.min ?? 0;
@@ -1272,41 +1271,38 @@ class _EventRegistrationScreenState
     return _fieldShell(
       context,
       field,
-      Semantics(
-        label: _fieldSemanticsLabel(field),
-        value: display,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ExcludeSemantics(
-              child: Text(
-                display,
-                style: udaanTextStyle(
-                  context,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: palette.primaryGlow,
-                ),
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ExcludeSemantics(
+            child: Text(
+              display,
+              style: udaanTextStyle(
+                context,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: palette.primaryGlow,
               ),
             ),
-            const SizedBox(height: 8),
-            Slider(
-              value: current,
-              min: min,
-              max: max,
-              divisions: step > 0 ? ((max - min) / step).round().clamp(1, 200) : null,
-              label: display,
-              onChanged: _submitting
-                  ? null
-                  : (value) => _setFieldValue(
-                        field.key,
-                        value == value.roundToDouble()
-                            ? value.round().toString()
-                            : value.toStringAsFixed(1),
-                      ),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          Slider(
+            value: current,
+            min: min,
+            max: max,
+            divisions:
+                step > 0 ? ((max - min) / step).round().clamp(1, 200) : null,
+            label: '${_fieldSemanticsLabel(field)}, $display',
+            onChanged: _submitting
+                ? null
+                : (value) => _setFieldValue(
+                      field.key,
+                      value == value.roundToDouble()
+                          ? value.round().toString()
+                          : value.toStringAsFixed(1),
+                    ),
+          ),
+        ],
       ),
     );
   }
@@ -1317,23 +1313,19 @@ class _EventRegistrationScreenState
     return _fieldShell(
       context,
       field,
-      Semantics(
-        label: _fieldSemanticsLabel(field),
-        value: selected,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final opt in options)
-              registrationChoiceTile(
-                context: context,
-                label: opt.label,
-                selected: selected == opt.value || selected == opt.label,
-                isRadio: true,
-                groupLabel: _fieldSemanticsLabel(field),
-                onTap: () => _setFieldValue(field.key, opt.value),
-              ),
-          ],
-        ),
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final opt in options)
+            registrationChoiceTile(
+              context: context,
+              label: opt.label,
+              selected: selected == opt.value || selected == opt.label,
+              isRadio: true,
+              groupLabel: _fieldSemanticsLabel(field),
+              onTap: () => _setFieldValue(field.key, opt.value),
+            ),
+        ],
       ),
     );
   }
@@ -1390,7 +1382,9 @@ class _EventRegistrationScreenState
                       ? TextInputType.streetAddress
                       : TextInputType.name,
                   textCapitalization: TextCapitalization.words,
-                  onTapOutside: (_) => dismissKeyboard(context),
+                  textInputAction: TextInputAction.done,
+                  onEditingComplete: () => dismissKeyboard(context),
+                  onFieldSubmitted: (_) => dismissKeyboard(context),
                   onChanged: (v) => _setSubfieldValue(field, sub, v),
                 ),
               ),
@@ -1512,7 +1506,9 @@ class _EventRegistrationScreenState
                 ),
                 const SizedBox(height: 8),
               ],
-              AccessibleHtmlContent(html: html),
+              ExcludeSemantics(
+                child: AccessibleHtmlContent(html: html),
+              ),
             ],
           ),
         );
@@ -1532,34 +1528,30 @@ class _EventRegistrationScreenState
           return _fieldShell(
             context,
             field,
-            Semantics(
-              label: _fieldSemanticsLabel(field),
-              value: _copy.registrationMultiSelectSemanticsValue(selected),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final opt in multiOptions)
-                    registrationChoiceTile(
-                      context: context,
-                      label: opt.label,
-                      selected: selected.contains(opt.value) ||
-                          selected.contains(opt.label),
-                      isRadio: false,
-                      groupLabel: _fieldSemanticsLabel(field),
-                      onTap: () {
-                        final next = List<String>.from(selected);
-                        if (next.contains(opt.value)) {
-                          next.remove(opt.value);
-                        } else if (next.contains(opt.label)) {
-                          next.remove(opt.label);
-                        } else {
-                          next.add(opt.value);
-                        }
-                        _setFieldValue(field.key, next);
-                      },
-                    ),
-                ],
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final opt in multiOptions)
+                  registrationChoiceTile(
+                    context: context,
+                    label: opt.label,
+                    selected: selected.contains(opt.value) ||
+                        selected.contains(opt.label),
+                    isRadio: false,
+                    groupLabel: _fieldSemanticsLabel(field),
+                    onTap: () {
+                      final next = List<String>.from(selected);
+                      if (next.contains(opt.value)) {
+                        next.remove(opt.value);
+                      } else if (next.contains(opt.label)) {
+                        next.remove(opt.label);
+                      } else {
+                        next.add(opt.value);
+                      }
+                      _setFieldValue(field.key, next);
+                    },
+                  ),
+              ],
             ),
           );
         }
@@ -1574,6 +1566,22 @@ class _EventRegistrationScreenState
         final uploadLabel = registrationFieldDisplayLabel(field.label);
         final atMax = field.isMultiFileUpload &&
             _uploadIds(field).length >= field.maxFiles;
+        final pickEnabled = !uploading && !_submitting && !atMax;
+        final uploadSemanticsLabel = uploading
+            ? _copy.registrationUploadProgressLabel(
+                uploadLabel,
+                percent,
+              )
+            : uploadValue != null
+                ? _copy.registrationChangeFileSemantics(
+                    uploadLabel,
+                    uploadValue,
+                    required: field.required,
+                  )
+                : _copy.registrationChooseFileSemantics(
+                    uploadLabel,
+                    required: field.required,
+                  );
         return _fieldShell(
           context,
           field,
@@ -1596,27 +1604,12 @@ class _EventRegistrationScreenState
                         ),
                       ),
                   ],
-                  Semantics(
-                    button: true,
-                    label: uploading
-                        ? _copy.registrationUploadProgressLabel(
-                            uploadLabel,
-                            percent,
-                          )
-                        : uploadValue != null
-                            ? _copy.registrationChangeFileSemantics(
-                                uploadLabel,
-                                uploadValue,
-                                required: field.required,
-                              )
-                            : _copy.registrationChooseFileSemantics(
-                                uploadLabel,
-                                required: field.required,
-                              ),
-                    value: uploadValue,
-                    enabled: !uploading && !_submitting && !atMax,
-                    child: ExcludeSemantics(
-                      child: FilledButton(
+                  UdaanAccessibleButton(
+                    label: uploadSemanticsLabel,
+                    enabled: pickEnabled,
+                    onPressed:
+                        pickEnabled ? () => _pickFile(field, schema) : null,
+                    child: FilledButton(
                         style: FilledButton.styleFrom(
                           backgroundColor: palette.surfaceContainerHigh,
                           foregroundColor: palette.onBackground,
@@ -1625,9 +1618,9 @@ class _EventRegistrationScreenState
                             BrandTokens.minTapTarget,
                           ),
                         ),
-                        onPressed: uploading || _submitting || atMax
-                            ? null
-                            : () => _pickFile(field, schema),
+                        onPressed: pickEnabled
+                            ? () => _pickFile(field, schema)
+                            : null,
                         child: Text(
                           atMax
                               ? 'Maximum ${field.maxFiles} files selected'
@@ -1643,16 +1636,17 @@ class _EventRegistrationScreenState
                           ),
                         ),
                       ),
-                    ),
                   ),
                   if (field.isMultiFileUpload && field.maxFiles > 1) ...[
                     const SizedBox(height: 6),
-                    Text(
-                      '${_uploadIds(field).length} of ${field.maxFiles} files',
-                      style: udaanTextStyle(
-                        context,
-                        fontSize: 14,
-                        color: palette.onSurfaceVariant,
+                    ExcludeSemantics(
+                      child: Text(
+                        '${_uploadIds(field).length} of ${field.maxFiles} files',
+                        style: udaanTextStyle(
+                          context,
+                          fontSize: 14,
+                          color: palette.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ],
@@ -1683,19 +1677,19 @@ class _EventRegistrationScreenState
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Semantics(
-                      button: true,
+                    UdaanAccessibleButton(
                       label: _copy.registrationUploadRetryLabel(
                         field.label,
                       ),
                       enabled: !uploading && !_submitting,
-                      child: ExcludeSemantics(
-                        child: TextButton(
-                          onPressed: uploading || _submitting
-                              ? null
-                              : () => _retryUpload(field, schema),
-                          child: Text(_copy.retry),
-                        ),
+                      onPressed: uploading || _submitting
+                          ? null
+                          : () => _retryUpload(field, schema),
+                      child: TextButton(
+                        onPressed: uploading || _submitting
+                            ? null
+                            : () => _retryUpload(field, schema),
+                        child: Text(_copy.retry),
                       ),
                     ),
                   ],

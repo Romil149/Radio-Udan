@@ -12,6 +12,8 @@ defined( 'ABSPATH' ) || exit;
  */
 class RadioUdaan_App_Radio_Schedule {
 
+	const DEFAULT_DURATION_MINUTES = 60;
+
 	/**
 	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response
@@ -87,17 +89,21 @@ class RadioUdaan_App_Radio_Schedule {
 			}
 		);
 
-		$now_iso = $now->format( 'c' );
-		$on_air  = null;
-		$next    = null;
+		$now_ts = $now->getTimestamp();
+		$on_air = null;
+		$next   = null;
 
-		// Latest segment that already started; holds until the next slot begins.
+		// On-air only within [starts_at, ends_at); gaps between shows leave on_air null.
 		foreach ( $occurrences as $occurrence ) {
-			if ( $occurrence['starts_at'] > $now_iso ) {
-				$next = $occurrence;
-				break;
+			$start_ts = strtotime( $occurrence['starts_at'] );
+			$end_ts   = strtotime( $occurrence['ends_at'] );
+
+			if ( $now_ts >= $start_ts && $now_ts < $end_ts ) {
+				$on_air = $occurrence;
 			}
-			$on_air = $occurrence;
+			if ( $occurrence['starts_at'] > $now->format( 'c' ) && null === $next ) {
+				$next = $occurrence;
+			}
 		}
 
 		$days = array();
@@ -190,6 +196,7 @@ class RadioUdaan_App_Radio_Schedule {
 			'repeat_broadcast_time'  => self::acf_string( 'repeat_broadcast_time', $post->ID ),
 			'primary_days'           => self::acf_days( 'broadcasting_day', $post->ID ),
 			'repeat_days'            => self::acf_days( 'repeat_broadcasting_day', $post->ID ),
+			'duration_minutes'       => self::acf_duration_minutes( $post->ID ),
 		);
 	}
 
@@ -200,7 +207,10 @@ class RadioUdaan_App_Radio_Schedule {
 	 * @return array<string,mixed>
 	 */
 	private static function build_occurrence( array $show, DateTimeImmutable $starts_at, $is_repeat ) {
-		$time_display = $is_repeat ? $show['repeat_broadcast_time'] : $show['broadcast_time'];
+		$time_display      = $is_repeat ? $show['repeat_broadcast_time'] : $show['broadcast_time'];
+		$duration_minutes  = isset( $show['duration_minutes'] ) ? (int) $show['duration_minutes'] : self::DEFAULT_DURATION_MINUTES;
+		$duration_minutes  = max( 1, min( 480, $duration_minutes ) );
+		$ends_at           = $starts_at->modify( '+' . $duration_minutes . ' minutes' );
 
 		return array(
 			'id'               => $show['id'],
@@ -211,8 +221,29 @@ class RadioUdaan_App_Radio_Schedule {
 			'program_host'     => $show['program_host'],
 			'broadcast_time'   => $time_display,
 			'starts_at'        => $starts_at->format( 'c' ),
+			'ends_at'          => $ends_at->format( 'c' ),
+			'duration_minutes' => $duration_minutes,
 			'is_repeat'        => $is_repeat,
 		);
+	}
+
+	/**
+	 * Broadcast length in minutes (ACF `broadcast_duration_minutes`, default 60).
+	 *
+	 * @param int $post_id radio-shows post ID.
+	 * @return int
+	 */
+	private static function acf_duration_minutes( $post_id ) {
+		if ( ! function_exists( 'get_field' ) ) {
+			return self::DEFAULT_DURATION_MINUTES;
+		}
+
+		$val = get_field( 'broadcast_duration_minutes', $post_id );
+		if ( is_numeric( $val ) && (int) $val > 0 ) {
+			return (int) $val;
+		}
+
+		return self::DEFAULT_DURATION_MINUTES;
 	}
 
 	/**

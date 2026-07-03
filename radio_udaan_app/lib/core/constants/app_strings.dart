@@ -224,6 +224,10 @@ abstract final class AppStrings {
       'Join our vibrant community in upcoming accessible live streams and workshops.';
   static const String eventsRegisterNow = 'Register Now';
   static const String eventsRegistrationClosed = 'Registration closed';
+  static String eventRegisterForSemantics(String title) =>
+      'Register For $title';
+  static String eventRegistrationClosedSemantics(String title) =>
+      'Registration closed for $title';
   static String eventCardSemantics({
     required String title,
     String? schedule,

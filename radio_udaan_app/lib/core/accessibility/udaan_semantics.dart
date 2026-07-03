@@ -108,3 +108,31 @@ class UdaanModalSheet extends StatelessWidget {
     );
   }
 }
+
+/// Button with [Semantics.onTap] so VoiceOver/TalkBack can activate wrapped controls.
+class UdaanAccessibleButton extends StatelessWidget {
+  const UdaanAccessibleButton({
+    required this.label,
+    required this.child,
+    this.onPressed,
+    this.enabled = true,
+    super.key,
+  });
+
+  final String label;
+  final Widget child;
+  final VoidCallback? onPressed;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final canPress = enabled && onPressed != null;
+    return Semantics(
+      button: true,
+      label: label,
+      enabled: canPress,
+      onTap: canPress ? onPressed : null,
+      child: ExcludeSemantics(child: child),
+    );
+  }
+}

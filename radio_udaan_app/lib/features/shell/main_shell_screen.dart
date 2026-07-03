@@ -52,9 +52,7 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen>
     final token = ref.read(authTokenProvider);
     if (token == null || token.isEmpty) return;
     unawaited(
-      ref.read(pushNotificationServiceProvider).startupAfterBootstrap(
-            loggedIn: true,
-          ),
+      ref.read(pushNotificationServiceProvider).syncForLoggedInUser(),
     );
   }
 

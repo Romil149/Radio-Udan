@@ -6,6 +6,11 @@ class LiveRadioConfig {
     required this.showTitle,
     required this.showSubtitle,
     required this.heroImageUrl,
+    required this.defaultShowTitle,
+    required this.defaultShowSubtitle,
+    required this.defaultHeroImageUrl,
+    required this.fromSchedule,
+    required this.scheduledShowId,
     required this.whatsappUrl,
     required this.whatsappLabel,
     required this.shareLabel,
@@ -28,10 +33,19 @@ class LiveRadioConfig {
     }
 
     final f = LiveRadioConfig.fallback;
+    final showTitle = pick('show_title', f.showTitle);
+    final showSubtitle = pick('show_subtitle', f.showSubtitle);
+    final heroImageUrl = pick('hero_image_url', '');
+
     return LiveRadioConfig(
-      showTitle: pick('show_title', f.showTitle),
-      showSubtitle: pick('show_subtitle', f.showSubtitle),
-      heroImageUrl: pick('hero_image_url', ''),
+      showTitle: showTitle,
+      showSubtitle: showSubtitle,
+      heroImageUrl: heroImageUrl,
+      defaultShowTitle: pick('default_show_title', showTitle),
+      defaultShowSubtitle: pick('default_show_subtitle', showSubtitle),
+      defaultHeroImageUrl: pick('default_hero_image_url', heroImageUrl),
+      fromSchedule: json['from_schedule'] == true,
+      scheduledShowId: pick('scheduled_show_id', ''),
       whatsappUrl: pick('whatsapp_url', f.whatsappUrl),
       whatsappLabel: pick('whatsapp_label', f.whatsappLabel),
       shareLabel: pick('share_label', f.shareLabel),
@@ -48,6 +62,11 @@ class LiveRadioConfig {
     showTitle: appCopyDefaults['radio_show_title']!,
     showSubtitle: appCopyDefaults['radio_show_subtitle']!,
     heroImageUrl: '',
+    defaultShowTitle: appCopyDefaults['radio_show_title']!,
+    defaultShowSubtitle: appCopyDefaults['radio_show_subtitle']!,
+    defaultHeroImageUrl: '',
+    fromSchedule: false,
+    scheduledShowId: '',
     whatsappUrl: appCopyDefaults['radio_whatsapp_url_fallback']!,
     whatsappLabel: appCopyDefaults['join_whats_app_channel']!,
     shareLabel: appCopyDefaults['share']!,
@@ -62,6 +81,11 @@ class LiveRadioConfig {
   final String showTitle;
   final String showSubtitle;
   final String heroImageUrl;
+  final String defaultShowTitle;
+  final String defaultShowSubtitle;
+  final String defaultHeroImageUrl;
+  final bool fromSchedule;
+  final String scheduledShowId;
   final String whatsappUrl;
   final String whatsappLabel;
   final String shareLabel;
@@ -73,5 +97,27 @@ class LiveRadioConfig {
   final String profileAction;
 
   bool get hasHeroImage => heroImageUrl.isNotEmpty;
+  bool get hasDefaultHeroImage => defaultHeroImageUrl.isNotEmpty;
   bool get hasWhatsappUrl => whatsappUrl.isNotEmpty;
+
+  /// Admin Live radio defaults (between scheduled shows).
+  LiveRadioConfig get adminDefaults => LiveRadioConfig(
+        showTitle: defaultShowTitle,
+        showSubtitle: defaultShowSubtitle,
+        heroImageUrl: defaultHeroImageUrl,
+        defaultShowTitle: defaultShowTitle,
+        defaultShowSubtitle: defaultShowSubtitle,
+        defaultHeroImageUrl: defaultHeroImageUrl,
+        fromSchedule: false,
+        scheduledShowId: '',
+        whatsappUrl: whatsappUrl,
+        whatsappLabel: whatsappLabel,
+        shareLabel: shareLabel,
+        shareText: shareText,
+        showWhatsapp: showWhatsapp,
+        showShare: showShare,
+        showVolume: showVolume,
+        menuAction: menuAction,
+        profileAction: profileAction,
+      );
 }

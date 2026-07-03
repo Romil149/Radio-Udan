@@ -25,13 +25,10 @@ Future<void> persistAuthSession(WidgetRef ref, AuthSession session) async {
 
   if (session.token.isNotEmpty) {
     await ref.read(appFavoritesProvider.notifier).mergeWithServerAfterLogin();
+    unawaited(
+      ref.read(pushNotificationServiceProvider).syncForLoggedInUser(),
+    );
   }
-
-  unawaited(
-    ref.read(pushNotificationServiceProvider).startupAfterBootstrap(
-          loggedIn: session.token.isNotEmpty,
-        ),
-  );
 }
 
 Future<void> clearAuthSession(WidgetRef ref) async {

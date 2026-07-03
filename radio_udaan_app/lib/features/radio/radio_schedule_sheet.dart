@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
@@ -13,20 +11,10 @@ import '../../core/providers/app_providers.dart';
 import '../../core/utils/wp_media_url.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
-import 'live_now_playing.dart';
 import '../favorites/app_favorites_provider.dart';
+import 'live_now_playing.dart';
+import 'radio_schedule_provider.dart';
 import 'schedule_time_display.dart';
-
-/// Refreshes on a timer so hero title / RJ update when the slot changes.
-final radioScheduleProvider = FutureProvider<RadioScheduleResponse>((ref) async {
-  final timer = Timer.periodic(const Duration(minutes: 1), (_) {
-    ref.invalidateSelf();
-  });
-  ref.onDispose(timer.cancel);
-
-  final api = ref.read(radioudaanApiProvider);
-  return api.fetchRadioSchedule(days: 2);
-});
 
 Future<void> showRadioScheduleSheet(BuildContext context) async {
   await showModalBottomSheet<void>(

@@ -111,6 +111,15 @@ class RadioScheduleSegment {
   bool get hasHosts => hosts.isNotEmpty;
   bool get hasCategory => category.isNotEmpty;
 
+  /// True when [now] falls inside this segment's broadcast window.
+  bool isOnAirNow([DateTime? now]) {
+    final start = startsAt;
+    if (start == null) return false;
+    final end = endsAt ?? start.add(const Duration(hours: 1));
+    final instant = now ?? DateTime.now();
+    return !instant.isBefore(start) && instant.isBefore(end);
+  }
+
   String timeRangeLabel({DateFormat? timeFormat}) {
     if (broadcastTime.isNotEmpty) return broadcastTime;
     final fmt = timeFormat ?? DateFormat('h:mm a');

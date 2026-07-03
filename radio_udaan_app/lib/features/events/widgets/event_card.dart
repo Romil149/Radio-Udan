@@ -13,6 +13,7 @@ import '../event_formatters.dart';
 const double _eventMinTapTarget = 56;
 
 /// Stitch-style event card: banner, type badge, schedule, summary, register CTA.
+/// Screen readers focus one control: "Register For {title}" → opens registration.
 class EventCard extends StatelessWidget {
   const EventCard({
     required this.copy,
@@ -57,110 +58,116 @@ class EventCard extends StatelessWidget {
     final summary = event.summary?.trim() ?? '';
 
     final registrationOpen = event.isRegistrationOpen;
+    final semanticsLabel = registrationOpen
+        ? copy.eventRegisterForSemantics(event.title)
+        : copy.eventRegistrationClosedSemantics(event.title);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.udaan.surfaceContainer,
-        borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-        border: Border.all(color: context.udaan.outlineVariant),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _EventBanner(
-              title: event.title,
-              bannerUrl: bannerUrl,
-              badgeLabel: event.hasBadge ? event.badgeLabel : null,
-              badgeBackground: _badgeBackground(context),
-              badgeForeground: _badgeForeground(context),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+    return Semantics(
+      button: registrationOpen,
+      enabled: registrationOpen,
+      label: semanticsLabel,
+      onTap: registrationOpen ? onRegister : null,
+      child: ExcludeSemantics(
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: registrationOpen ? onRegister : null,
+            borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+            child: Container(
+              decoration: BoxDecoration(
+                color: context.udaan.surfaceContainer,
+                borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+                border: Border.all(color: context.udaan.outlineVariant),
+              ),
+              clipBehavior: Clip.antiAlias,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (schedule.isNotEmpty) ...[
-                    ExcludeSemantics(
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.calendar_today_outlined,
-                            size: 16,
-                            color: context.udaan.primaryGlow,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              schedule,
-                              style: GoogleFonts.atkinsonHyperlegible(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.4,
+                  _EventBanner(
+                    title: event.title,
+                    bannerUrl: bannerUrl,
+                    badgeLabel: event.hasBadge ? event.badgeLabel : null,
+                    badgeBackground: _badgeBackground(context),
+                    badgeForeground: _badgeForeground(context),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (schedule.isNotEmpty) ...[
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today_outlined,
+                                size: 16,
                                 color: context.udaan.primaryGlow,
                               ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  schedule,
+                                  style: GoogleFonts.atkinsonHyperlegible(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.4,
+                                    color: context.udaan.primaryGlow,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                        ],
+                        Text(
+                          event.title,
+                          style: GoogleFonts.atkinsonHyperlegible(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            color: context.udaan.onBackground,
+                          ),
+                        ),
+                        if (summary.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            summary,
+                            maxLines: 4,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.atkinsonHyperlegible(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: context.udaan.onSurfaceVariant,
+                              height: 1.4,
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                  ],
-                  ExcludeSemantics(
-                    child: Text(
-                      event.title,
-                      style: GoogleFonts.atkinsonHyperlegible(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: context.udaan.onBackground,
-                      ),
-                    ),
-                  ),
-                  if (summary.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    ExcludeSemantics(
-                      child: Text(
-                        summary,
-                        maxLines: 4,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.atkinsonHyperlegible(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          color: context.udaan.onSurfaceVariant,
-                          height: 1.4,
+                        const SizedBox(height: 16),
+                        _RegisterButton(
+                          copy: copy,
+                          registrationOpen: registrationOpen,
+                          onRegister: onRegister,
                         ),
-                      ),
+                      ],
                     ),
-                  ],
-                  const SizedBox(height: 16),
-                  _RegisterButton(
-                    copy: copy,
-                    eventTitle: event.title,
-                    schedule: schedule,
-                    registrationOpen: registrationOpen,
-                    onRegister: onRegister,
                   ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
-      );
+      ),
+    );
   }
 }
 
 class _RegisterButton extends StatelessWidget {
   const _RegisterButton({
     required this.copy,
-    required this.eventTitle,
-    required this.schedule,
     required this.registrationOpen,
     required this.onRegister,
   });
 
   final AppCopy copy;
-  final String eventTitle;
-  final String schedule;
   final bool registrationOpen;
   final VoidCallback? onRegister;
 
@@ -169,40 +176,30 @@ class _RegisterButton extends StatelessWidget {
     final label = registrationOpen
         ? copy.eventsRegisterNow
         : copy.eventsRegistrationClosed;
-    final semanticsLabel = registrationOpen
-        ? '${copy.eventsRegisterNow}, $eventTitle${schedule.isNotEmpty ? ', $schedule' : ''}'
-        : '${copy.eventsRegistrationClosed}, $eventTitle';
 
-    return Semantics(
-      button: true,
-      enabled: registrationOpen,
-      label: semanticsLabel,
-      child: SizedBox(
-        width: double.infinity,
-        child: ExcludeSemantics(
-          child: FilledButton(
-            onPressed: registrationOpen ? onRegister : null,
-            style: FilledButton.styleFrom(
-              minimumSize: const Size(double.infinity, _eventMinTapTarget),
-              backgroundColor: registrationOpen
-                  ? context.udaan.primary
-                  : context.udaan.surfaceContainerHigh,
-              foregroundColor: registrationOpen
-                  ? context.udaan.onPrimary
-                  : context.udaan.onSurfaceMuted,
-              disabledBackgroundColor: context.udaan.surfaceContainerHigh,
-              disabledForegroundColor: context.udaan.onSurfaceMuted,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-            child: Text(
-              label,
-              style: GoogleFonts.atkinsonHyperlegible(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton(
+        onPressed: registrationOpen ? onRegister : null,
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(double.infinity, _eventMinTapTarget),
+          backgroundColor: registrationOpen
+              ? context.udaan.primary
+              : context.udaan.surfaceContainerHigh,
+          foregroundColor: registrationOpen
+              ? context.udaan.onPrimary
+              : context.udaan.onSurfaceMuted,
+          disabledBackgroundColor: context.udaan.surfaceContainerHigh,
+          disabledForegroundColor: context.udaan.onSurfaceMuted,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.atkinsonHyperlegible(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
           ),
         ),
       ),
@@ -233,16 +230,12 @@ class _EventBanner extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           if (bannerUrl.isNotEmpty)
-            Semantics(
-              label: '$title banner',
-              image: true,
-              child: CachedNetworkImage(
-                imageUrl: bannerUrl,
-                fit: BoxFit.cover,
-                memCacheHeight: 360,
-                placeholder: (_, _) => const _BannerPlaceholder(),
-                errorWidget: (_, _, _) => const _BannerPlaceholder(),
-              ),
+            CachedNetworkImage(
+              imageUrl: bannerUrl,
+              fit: BoxFit.cover,
+              memCacheHeight: 360,
+              placeholder: (_, _) => const _BannerPlaceholder(),
+              errorWidget: (_, _, _) => const _BannerPlaceholder(),
             )
           else
             const _BannerPlaceholder(),
@@ -250,25 +243,20 @@ class _EventBanner extends StatelessWidget {
             Positioned(
               left: 12,
               top: 12,
-              child: Semantics(
-                label: badgeLabel,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: badgeBackground,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: ExcludeSemantics(
-                    child: Text(
-                      badgeLabel!,
-                      style: GoogleFonts.atkinsonHyperlegible(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.6,
-                        color: badgeForeground,
-                      ),
-                    ),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: badgeBackground,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  badgeLabel!,
+                  style: GoogleFonts.atkinsonHyperlegible(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.6,
+                    color: badgeForeground,
                   ),
                 ),
               ),

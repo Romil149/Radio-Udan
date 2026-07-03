@@ -436,6 +436,12 @@ extension AppCopyStrings on AppCopy {
       text('phone_country_code_semantics')
           .replaceAll('{country_name}', countryName)
           .replaceAll('{dial_code}', dialCode);
+  String eventRegisterForSemantics(String title) =>
+      text('events_register_for_semantics')
+          .replaceAll('{event_title}', title);
+  String eventRegistrationClosedSemantics(String title) =>
+      text('events_registration_closed_semantics')
+          .replaceAll('{event_title}', title);
   String eventCardSemantics({required String title, String? schedule, String? badge, bool registrationOpen = true}) {
     return [
       title,
