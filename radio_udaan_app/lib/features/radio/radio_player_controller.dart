@@ -1,7 +1,10 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../core/providers/app_providers.dart';
+import 'android_media_notification_permission.dart';
 import 'live_now_playing.dart';
 import 'radio_audio_service.dart';
 import 'radio_stream_metadata.dart';
@@ -35,6 +38,7 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
   bool _startInProgress = false;
   bool _playerBound = false;
   bool _metadataProbeInProgress = false;
+  int _playbackSession = 0;
 
   /// Binds just_audio streams after [ensureRadioAudioService] succeeds.
   void attachPlayerIfReady() {
@@ -104,6 +108,16 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
 
     player.playerStateStream.listen((playerState) {
       if (!_ref.read(radioAudiblePlaybackProvider)) {
+        // Keep UI on Play when user stopped but the silent metadata probe buffers.
+        if ((state.status == RadioPlayerStatus.playing ||
+                state.status == RadioPlayerStatus.loading) &&
+            !_startInProgress &&
+            !_metadataProbeInProgress) {
+          state = RadioPlayerState(
+            status: RadioPlayerStatus.idle,
+            errorMessage: state.errorMessage,
+          );
+        }
         return;
       }
 
@@ -145,7 +159,10 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
 
   Future<void> play({double volume = 1.0}) async {
     final copy = _ref.read(appCopyProvider);
+    final session = ++_playbackSession;
+    await requestAndroidMediaNotificationPermissionIfNeeded();
     final ready = await ensureRadioAudioService();
+    if (session != _playbackSession) return;
     if (!ready) {
       state = RadioPlayerState(
         status: RadioPlayerStatus.error,
@@ -197,8 +214,10 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
           artUri: artUri,
         );
       }
+      if (session != _playbackSession) return;
       state = const RadioPlayerState(status: RadioPlayerStatus.playing);
     } catch (e) {
+      if (session != _playbackSession) return;
       _ref.read(radioAudiblePlaybackProvider.notifier).state = false;
       state = RadioPlayerState(
         status: RadioPlayerStatus.error,
@@ -210,16 +229,45 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
   }
 
   Future<void> stop() async {
+    final session = ++_playbackSession;
     _startInProgress = false;
     _ref.read(radioAudiblePlaybackProvider.notifier).state = false;
     _ref.read(radioStreamIcyTitleProvider.notifier).state = null;
-    if (!isRadioAudioServiceReady) {
-      state = const RadioPlayerState(status: RadioPlayerStatus.idle);
+    // Optimistic UI — do not wait on audio engine / metadata probe.
+    state = const RadioPlayerState(status: RadioPlayerStatus.idle);
+
+    if (!isRadioAudioServiceReady) return;
+
+    try {
+      await radioAudioHandler.stop();
+    } catch (_) {
+      // UI already idle; best-effort engine stop.
+    }
+
+    if (session != _playbackSession) return;
+
+    // Refresh ICY title for hero without blocking the stop → play transition.
+    unawaited(probeStreamMetadata());
+  }
+
+  /// Saves user volume; only changes audio output during intentional live play.
+  /// Metadata probe buffers the stream at volume 0 — must not unmute when idle.
+  Future<void> applyVolumePreference(double volume) async {
+    final clamped = volume.clamp(0.0, 1.0);
+    if (!_ref.read(radioAudiblePlaybackProvider)) {
+      if (!isRadioAudioServiceReady) return;
+      try {
+        final player = radioAudioHandler.player;
+        if (player.playing && player.volume > 0) {
+          await player.setVolume(0);
+        }
+      } catch (_) {}
       return;
     }
-    await radioAudioHandler.stop();
-    state = const RadioPlayerState(status: RadioPlayerStatus.idle);
-    await probeStreamMetadata();
+    if (!isRadioAudioServiceReady) return;
+    try {
+      await radioAudioHandler.player.setVolume(clamped);
+    } catch (_) {}
   }
 
   void _syncNowPlayingMetadata(LiveNowPlaying nowPlaying) {

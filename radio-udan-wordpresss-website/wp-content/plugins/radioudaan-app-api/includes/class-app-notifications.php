@@ -411,6 +411,8 @@ class RadioUdaan_App_Notifications {
 			'created'     => 0,
 			'push_sent'   => 0,
 			'push_failed' => 0,
+			'push_pruned' => 0,
+			'fcm_skipped' => ! RadioUdaan_App_Fcm_Sender::is_configured(),
 		);
 
 		foreach ( array_unique( array_map( 'intval', $user_ids ) ) as $user_id ) {
@@ -418,12 +420,20 @@ class RadioUdaan_App_Notifications {
 				continue;
 			}
 
-			$notification_id = self::create( $user_id, $title, $body, $type, $data );
-			if ( ! $notification_id ) {
+			$created = self::create( $user_id, $title, $body, $type, $data );
+			if ( empty( $created['id'] ) ) {
 				continue;
 			}
 
 			++$result['created'];
+
+			$push = isset( $created['push'] ) && is_array( $created['push'] ) ? $created['push'] : array();
+			$result['push_sent']   += isset( $push['sent'] ) ? (int) $push['sent'] : 0;
+			$result['push_failed'] += isset( $push['failed'] ) ? (int) $push['failed'] : 0;
+			$result['push_pruned'] += isset( $push['pruned'] ) ? (int) $push['pruned'] : 0;
+			if ( ! empty( $push['skipped'] ) ) {
+				$result['fcm_skipped'] = true;
+			}
 		}
 
 		return $result;
@@ -437,7 +447,7 @@ class RadioUdaan_App_Notifications {
 	 * @param string               $body    Body.
 	 * @param string               $type    Type slug.
 	 * @param array<string,mixed>  $data    Optional payload.
-	 * @return int|false Notification id.
+	 * @return array{id:int|false,push:array{sent:int,failed:int,pruned:int,skipped:bool}}
 	 */
 	public static function create( $user_id, $title, $body, $type = 'general', array $data = array() ) {
 		self::maybe_create_tables();
@@ -462,8 +472,15 @@ class RadioUdaan_App_Notifications {
 
 		$notification_id = $ok ? (int) $wpdb->insert_id : false;
 
+		$push_result = array(
+			'sent'    => 0,
+			'failed'  => 0,
+			'pruned'  => 0,
+			'skipped' => false,
+		);
+
 		if ( $notification_id && self::should_deliver_push_for_type( $type, (int) $user_id ) ) {
-			self::deliver_push(
+			$push_result = self::deliver_push(
 				(int) $user_id,
 				$notification_id,
 				$title,
@@ -471,9 +488,14 @@ class RadioUdaan_App_Notifications {
 				$type,
 				$data
 			);
+		} elseif ( $notification_id && ! RadioUdaan_App_Fcm_Sender::is_configured() ) {
+			$push_result['skipped'] = true;
 		}
 
-		return $notification_id;
+		return array(
+			'id'   => $notification_id,
+			'push' => $push_result,
+		);
 	}
 
 	/**
@@ -553,6 +575,7 @@ class RadioUdaan_App_Notifications {
 	 * @param string               $body            Body.
 	 * @param string               $type            Type slug.
 	 * @param array<string,mixed>  $data            Payload.
+	 * @return array{sent:int,failed:int,pruned:int,skipped:bool}
 	 */
 	private static function deliver_push( $user_id, $notification_id, $title, $body, $type, array $data = array() ) {
 		$payload = array_merge(
@@ -583,6 +606,8 @@ class RadioUdaan_App_Notifications {
 				)
 			);
 		}
+
+		return $result;
 	}
 
 	/**

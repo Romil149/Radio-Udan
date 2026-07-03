@@ -25,6 +25,9 @@ class RadioUdaan_Admin_Notifications {
 		$users_devices = RadioUdaan_App_Notifications::list_users_with_devices();
 		$sent          = isset( $_GET['sent'] ) ? sanitize_text_field( wp_unslash( $_GET['sent'] ) ) : '';
 		$created       = isset( $_GET['created'] ) ? (int) $_GET['created'] : 0;
+		$push_sent     = isset( $_GET['push_sent'] ) ? (int) $_GET['push_sent'] : 0;
+		$push_failed   = isset( $_GET['push_failed'] ) ? (int) $_GET['push_failed'] : 0;
+		$fcm_skipped   = isset( $_GET['fcm_skipped'] ) ? (int) $_GET['fcm_skipped'] : 0;
 
 		RadioUdaan_Admin_Layout::render_open( 'notifications', __( 'Send notification', 'radioudaan-app-api' ) );
 		RadioUdaan_Admin_Layout::render_page_intro(
@@ -38,12 +41,56 @@ class RadioUdaan_Admin_Notifications {
 					<?php
 					echo esc_html(
 						sprintf(
-							/* translators: %d: number of inbox rows created */
-							__( 'Created %d notification(s). Check registered devices for push delivery.', 'radioudaan-app-api' ),
-							$created
+							/* translators: 1: inbox rows created, 2: push deliveries succeeded */
+							__( 'Created %1$d notification(s). Push delivered to %2$d device(s).', 'radioudaan-app-api' ),
+							$created,
+							$push_sent
 						)
 					);
 					?>
+				</p>
+			</div>
+			<?php
+			if ( $fcm_skipped ) {
+				?>
+				<div class="ru-admin__notice notice notice-error is-dismissible" role="alert">
+					<p class="ru-notice-text">
+						<?php esc_html_e( 'Push was not sent — FCM is not configured. Paste the Firebase service account JSON under Settings → Notifications, then send again.', 'radioudaan-app-api' ); ?>
+					</p>
+				</div>
+				<?php
+			} elseif ( $push_sent < 1 && $push_failed < 1 && $device_count > 0 ) {
+				?>
+				<div class="ru-admin__notice notice notice-warning is-dismissible" role="alert">
+					<p class="ru-notice-text">
+						<?php esc_html_e( 'In-app inbox updated but no push reached a device. Check user notification toggles, invalid tokens, or Firebase APNs setup for iOS.', 'radioudaan-app-api' ); ?>
+					</p>
+				</div>
+				<?php
+			} elseif ( $push_failed > 0 ) {
+				?>
+				<div class="ru-admin__notice notice notice-warning is-dismissible" role="alert">
+					<p class="ru-notice-text">
+						<?php
+						echo esc_html(
+							sprintf(
+								/* translators: %d: failed push count */
+								__( '%d push delivery attempt(s) failed. Stale tokens are removed automatically.', 'radioudaan-app-api' ),
+								$push_failed
+							)
+						);
+						?>
+					</p>
+				</div>
+				<?php
+			}
+		}
+
+		if ( ! $fcm_ready ) {
+			?>
+			<div class="ru-admin__notice notice notice-error" role="alert">
+				<p class="ru-notice-text">
+					<?php esc_html_e( 'FCM is not configured — notifications will save to the in-app inbox only until you add the Firebase service account JSON in Settings → Notifications.', 'radioudaan-app-api' ); ?>
 				</p>
 			</div>
 			<?php
@@ -195,18 +242,24 @@ class RadioUdaan_Admin_Notifications {
 		RadioUdaan_App_Logger::log(
 			'admin_notification_sent',
 			array(
-				'type'    => $type,
-				'target'  => $target,
-				'created' => (int) $result['created'],
-				'users'   => count( $user_ids ),
+				'type'        => $type,
+				'target'      => $target,
+				'created'     => (int) $result['created'],
+				'push_sent'   => (int) $result['push_sent'],
+				'push_failed' => (int) $result['push_failed'],
+				'fcm_skipped' => ! empty( $result['fcm_skipped'] ),
+				'users'       => count( $user_ids ),
 			)
 		);
 
 		$redirect = add_query_arg(
 			array(
-				'page'    => RadioUdaan_Admin_App_Hub::NOTIFICATIONS_SLUG,
-				'sent'    => '1',
-				'created' => (int) $result['created'],
+				'page'        => RadioUdaan_Admin_App_Hub::NOTIFICATIONS_SLUG,
+				'sent'        => '1',
+				'created'     => (int) $result['created'],
+				'push_sent'   => (int) $result['push_sent'],
+				'push_failed' => (int) $result['push_failed'],
+				'fcm_skipped' => ! empty( $result['fcm_skipped'] ) ? 1 : 0,
 			),
 			admin_url( 'admin.php' )
 		);

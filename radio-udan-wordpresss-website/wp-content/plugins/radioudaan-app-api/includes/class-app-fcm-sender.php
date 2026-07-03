@@ -15,6 +15,7 @@ class RadioUdaan_App_Fcm_Sender {
 	const OAUTH_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 	const FCM_SCOPE       = 'https://www.googleapis.com/auth/firebase.messaging';
 	const TOKEN_TRANSIENT = 'radioudaan_fcm_oauth_token';
+	const ANDROID_CHANNEL = 'radioudaan_alerts';
 
 	/**
 	 * Clear cached OAuth access token (e.g. after credential rotation).
@@ -55,13 +56,14 @@ class RadioUdaan_App_Fcm_Sender {
 	}
 
 	/**
-	 * @param string               $token   Device FCM token.
-	 * @param string               $title   Notification title.
-	 * @param string               $body    Notification body.
-	 * @param array<string,string> $data    String payload for the app.
+	 * @param string               $token    Device FCM token.
+	 * @param string               $title    Notification title.
+	 * @param string               $body     Notification body.
+	 * @param array<string,string> $data     String payload for the app.
+	 * @param string               $platform android|ios (optional; tunes delivery).
 	 * @return true|WP_Error
 	 */
-	public static function send_to_token( $token, $title, $body, array $data = array() ) {
+	public static function send_to_token( $token, $title, $body, array $data = array(), $platform = '' ) {
 		$account = self::get_service_account();
 		if ( ! $account ) {
 			return new WP_Error( 'fcm_not_configured', __( 'FCM is not configured.', 'radioudaan-app-api' ) );
@@ -89,6 +91,8 @@ class RadioUdaan_App_Fcm_Sender {
 		if ( ! empty( $string_data ) ) {
 			$message['data'] = $string_data;
 		}
+
+		$message = self::apply_platform_delivery_options( $message, $title, $body, $platform );
 
 		$url = sprintf(
 			'https://fcm.googleapis.com/v1/projects/%s/messages:send',
@@ -166,9 +170,11 @@ class RadioUdaan_App_Fcm_Sender {
 			'sent'    => 0,
 			'failed'  => 0,
 			'pruned'  => 0,
+			'skipped' => false,
 		);
 
 		if ( ! self::is_configured() ) {
+			$result['skipped'] = true;
 			return $result;
 		}
 
@@ -190,7 +196,8 @@ class RadioUdaan_App_Fcm_Sender {
 				continue;
 			}
 
-			$send = self::send_to_token( $token, $title, $body, $payload );
+			$device_platform = isset( $row['platform'] ) ? (string) $row['platform'] : '';
+			$send             = self::send_to_token( $token, $title, $body, $payload, $device_platform );
 			if ( true === $send ) {
 				++$result['sent'];
 				continue;
@@ -382,6 +389,55 @@ class RadioUdaan_App_Fcm_Sender {
 		}
 
 		return $unsigned . '.' . self::base64url_encode( $signature );
+	}
+
+	/**
+	 * Android high-priority channel + iOS APNs alert headers (Swiggy/Zomato-style delivery).
+	 *
+	 * @param array<string,mixed> $message  FCM message body.
+	 * @param string              $title    Alert title.
+	 * @param string              $body     Alert body.
+	 * @param string              $platform android|ios|''.
+	 * @return array<string,mixed>
+	 */
+	private static function apply_platform_delivery_options( array $message, $title, $body, $platform = '' ) {
+		$platform = sanitize_key( (string) $platform );
+
+		$android = array(
+			'priority'     => 'HIGH',
+			'notification' => array(
+				'channel_id'            => self::ANDROID_CHANNEL,
+				'notification_priority' => 'PRIORITY_HIGH',
+				'default_sound'         => true,
+				'visibility'            => 'PUBLIC',
+			),
+		);
+
+		$apns = array(
+			'headers' => array(
+				'apns-priority' => '10',
+				'apns-push-type' => 'alert',
+			),
+			'payload' => array(
+				'aps' => array(
+					'alert' => array(
+						'title' => (string) $title,
+						'body'  => (string) $body,
+					),
+					'sound' => 'default',
+				),
+			),
+		);
+
+		if ( '' === $platform || RadioUdaan_App_Notifications::PLATFORM_ANDROID === $platform ) {
+			$message['android'] = $android;
+		}
+
+		if ( '' === $platform || RadioUdaan_App_Notifications::PLATFORM_IOS === $platform ) {
+			$message['apns'] = $apns;
+		}
+
+		return $message;
 	}
 
 	/**

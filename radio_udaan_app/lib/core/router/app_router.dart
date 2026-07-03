@@ -17,7 +17,7 @@ import '../models/otp_purpose.dart';
 import '../providers/app_providers.dart';
 import 'event_deep_link.dart';
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 /// Notifies [GoRouter] to re-run redirects without recreating the router.
 final _routerRefreshProvider = Provider<RouterRefreshNotifier>((ref) {
@@ -33,7 +33,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final refresh = ref.watch(_routerRefreshProvider);
 
   return GoRouter(
-    navigatorKey: _rootNavigatorKey,
+    navigatorKey: rootNavigatorKey,
     refreshListenable: refresh,
     initialLocation: '/bootstrap',
     redirect: (context, state) {

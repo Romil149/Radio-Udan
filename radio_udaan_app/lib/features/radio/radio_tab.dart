@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,6 +21,7 @@ import 'radio_audio_service.dart';
 import '../favorites/app_favorites_provider.dart';
 import 'radio_player_controller.dart';
 import 'radio_schedule_sheet.dart';
+import 'widgets/radio_volume_control.dart';
 
 /// Live stream home (Stitch Live screen; content from GET /config → live_radio).
 class RadioTab extends ConsumerStatefulWidget {
@@ -108,7 +111,7 @@ class _RadioTabState extends ConsumerState<RadioTab> {
           previous?.errorMessage == next.errorMessage) {
         return;
       }
-      // Play/stop state is conveyed by _PlayButton semantics labels — no extra announce.
+      // Play/stop state is conveyed by the hero card semantics label.
     });
 
     return Scaffold(
@@ -123,7 +126,6 @@ class _RadioTabState extends ConsumerState<RadioTab> {
               title: heroTitle,
               hosts: heroHosts,
               heroImageUrl: heroImageUrl,
-              isOnAir: nowPlaying.isOnAir,
               loading: isLoading,
               isPlaying: isPlaying,
               onToggle: isLoading
@@ -155,16 +157,14 @@ class _RadioTabState extends ConsumerState<RadioTab> {
             ],
             if (live.showVolume) ...[
               const SizedBox(height: 18),
-              _VolumeCard(
+              RadioVolumeControl(
                 copy: _copy,
                 value: _volume,
-                onChanged: (v) async {
+                onChanged: (v) {
                   setState(() => _volume = v);
-                  try {
-                    await radioAudioHandler.player.setVolume(v);
-                  } catch (_) {
-                    // Best-effort volume control.
-                  }
+                  unawaited(
+                    ref.read(radioPlayerProvider.notifier).applyVolumePreference(v),
+                  );
                 },
               ),
             ],
@@ -195,7 +195,6 @@ class _HeroCard extends StatelessWidget {
     required this.title,
     required this.hosts,
     required this.heroImageUrl,
-    required this.isOnAir,
     required this.loading,
     required this.isPlaying,
     required this.onToggle,
@@ -205,7 +204,6 @@ class _HeroCard extends StatelessWidget {
   final String title;
   final String hosts;
   final String heroImageUrl;
-  final bool isOnAir;
   final bool loading;
   final bool isPlaying;
   final VoidCallback? onToggle;
@@ -215,99 +213,103 @@ class _HeroCard extends StatelessWidget {
     final primary = Theme.of(context).colorScheme.primary;
     final palette = context.udaan;
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
-      decoration: BoxDecoration(
-        color: palette.surfaceContainer,
-        borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-        border: Border.all(color: palette.outlineVariant),
-      ),
-      child: Column(
-        children: [
-          ExcludeSemantics(
-            child: Column(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: SizedBox(
-                    height: 260,
-                    width: double.infinity,
-                    child: heroImageUrl.isNotEmpty
-                        ? CachedNetworkImage(
-                            key: ValueKey(heroImageUrl),
-                            imageUrl: heroImageUrl,
-                            fit: BoxFit.cover,
-                            fadeInDuration: const Duration(milliseconds: 300),
-                            memCacheHeight: 520,
-                            placeholder: (_, _) => const _HeroPlaceholder(),
-                            errorWidget: (_, _, _) => const _HeroPlaceholder(),
-                          )
-                        : const _HeroPlaceholder(),
+    final semanticsLabel = copy.radioPlayButtonSemantics(
+      loading: loading,
+      isPlaying: isPlaying,
+      showTitle: title,
+      hostsLine: hosts,
+    );
+
+    return Semantics(
+      button: true,
+      enabled: !loading && onToggle != null,
+      label: semanticsLabel,
+      onTap: loading ? null : onToggle,
+      child: ExcludeSemantics(
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: loading ? null : onToggle,
+            borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
+              decoration: BoxDecoration(
+                color: palette.surfaceContainer,
+                borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+                border: Border.all(color: palette.outlineVariant),
+              ),
+              child: Column(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: SizedBox(
+                      height: 260,
+                      width: double.infinity,
+                      child: heroImageUrl.isNotEmpty
+                          ? CachedNetworkImage(
+                              key: ValueKey(heroImageUrl),
+                              imageUrl: heroImageUrl,
+                              fit: BoxFit.cover,
+                              fadeInDuration:
+                                  const Duration(milliseconds: 300),
+                              memCacheHeight: 520,
+                              placeholder: (_, _) =>
+                                  const _HeroPlaceholder(),
+                              errorWidget: (_, _, _) =>
+                                  const _HeroPlaceholder(),
+                            )
+                          : const _HeroPlaceholder(),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: udaanGoogleFont(
-                    context,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    color: palette.onBackground,
-                  ),
-                ),
-                if (hosts.trim().isNotEmpty) ...[
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 16),
                   Text(
-                    hosts,
+                    title,
                     textAlign: TextAlign.center,
                     style: udaanGoogleFont(
                       context,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: palette.onSurfaceVariant,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: palette.onBackground,
                     ),
                   ),
+                  if (hosts.trim().isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      hosts,
+                      textAlign: TextAlign.center,
+                      style: udaanGoogleFont(
+                        context,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: palette.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 18),
+                  _PlayButtonVisual(
+                    loading: loading,
+                    isPlaying: isPlaying,
+                    primary: primary,
+                  ),
                 ],
-              ],
+              ),
             ),
           ),
-          const SizedBox(height: 18),
-          _PlayButton(
-            copy: copy,
-            loading: loading,
-            isPlaying: isPlaying,
-            isOnAir: isOnAir,
-            showTitle: title,
-            hostsLine: hosts,
-            onPressed: onToggle,
-            primary: primary,
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _PlayButton extends StatelessWidget {
-  const _PlayButton({
-    required this.copy,
+class _PlayButtonVisual extends StatelessWidget {
+  const _PlayButtonVisual({
     required this.loading,
     required this.isPlaying,
-    required this.isOnAir,
-    required this.showTitle,
-    required this.hostsLine,
-    required this.onPressed,
     required this.primary,
   });
 
-  final AppCopy copy;
   final bool loading;
   final bool isPlaying;
-  final bool isOnAir;
-  final String showTitle;
-  final String hostsLine;
-  final VoidCallback? onPressed;
   final Color primary;
 
   @override
@@ -316,58 +318,30 @@ class _PlayButton extends StatelessWidget {
         ? context.udaan.primary
         : context.udaan.outlineVariant;
 
-    final label = copy.radioPlayButtonSemantics(
-      loading: loading,
-      isPlaying: isPlaying,
-      isOnAir: isOnAir,
-      showTitle: showTitle,
-      hostsLine: hostsLine,
-    );
-
-    return Semantics(
-      button: true,
-      enabled: !loading && onPressed != null,
-      label: label,
-      child: ExcludeSemantics(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            minWidth: BrandTokens.minTapTarget,
-            minHeight: BrandTokens.minTapTarget,
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: loading ? null : onPressed,
-              customBorder: const CircleBorder(),
-              child: SizedBox(
-                width: 96,
-                height: 96,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: ring, width: 5),
-                    color: context.udaan.surfaceDark,
+    return SizedBox(
+      width: 96,
+      height: 96,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: ring, width: 5),
+          color: context.udaan.surfaceDark,
+        ),
+        child: Center(
+          child: loading
+              ? SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: context.udaan.primaryGlow,
                   ),
-                  child: Center(
-                    child: loading
-                        ? SizedBox(
-                            width: 28,
-                            height: 28,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 3,
-                              color: context.udaan.primaryGlow,
-                            ),
-                          )
-                        : Icon(
-                            isPlaying ? Icons.stop : Icons.play_arrow,
-                            size: 52,
-                            color: primary,
-                          ),
-                  ),
+                )
+              : Icon(
+                  isPlaying ? Icons.stop : Icons.play_arrow,
+                  size: 52,
+                  color: primary,
                 ),
-              ),
-            ),
-          ),
         ),
       ),
     );
@@ -397,61 +371,6 @@ class _HeroPlaceholder extends StatelessWidget {
             Icons.mic_none_outlined,
             size: 96,
             color: context.udaan.primaryGlow,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _VolumeCard extends StatelessWidget {
-  const _VolumeCard({
-    required this.copy,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final AppCopy copy;
-  final double value;
-  final ValueChanged<double> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final percent = (value.clamp(0, 1) * 100).round();
-    final semanticValue = '$percent percent';
-
-    return Semantics(
-      slider: true,
-      label: copy.radioVolume,
-      value: semanticValue,
-      increasedValue: '${(percent + 10).clamp(0, 100)} percent',
-      decreasedValue: '${(percent - 10).clamp(0, 100)} percent',
-      onIncrease: percent < 100
-          ? () => onChanged(((percent + 10) / 100).clamp(0.0, 1.0))
-          : null,
-      onDecrease: percent > 0
-          ? () => onChanged(((percent - 10) / 100).clamp(0.0, 1.0))
-          : null,
-      child: ExcludeSemantics(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: context.udaan.surfaceContainer,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: context.udaan.outlineVariant),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.volume_down_outlined, color: context.udaan.primaryGlow),
-              Expanded(
-                child: Slider(
-                  value: value.clamp(0, 1),
-                  onChanged: onChanged,
-                  activeColor: context.udaan.primary,
-                ),
-              ),
-              Icon(Icons.volume_up_outlined, color: context.udaan.primaryGlow),
-            ],
           ),
         ),
       ),

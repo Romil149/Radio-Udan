@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers/app_providers.dart';
 import '../../core/providers/app_settings_provider.dart';
-import '../../core/push/notification_permission_flow.dart';
 import '../../core/theme/accessibility_scope.dart';
 import '../../core/utils/keyboard_dismiss.dart';
 import '../more/notifications_providers.dart';
@@ -25,15 +24,6 @@ class MainShellScreen extends ConsumerStatefulWidget {
 }
 
 class _MainShellScreenState extends ConsumerState<MainShellScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      NotificationPermissionFlow.maybeShow(context, ref);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final copy = ref.watch(appCopyProvider);

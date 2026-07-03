@@ -141,8 +141,8 @@ class AppBootstrap {
     final loggedIn = _ref.read(authTokenProvider) != null;
     final push = _ref.read(pushNotificationServiceProvider);
     await push.initialize();
-    if (loggedIn && settings.notificationPermissionPromptSeen) {
-      await push.registerDeviceToken();
+    if (loggedIn) {
+      await push.registerIfPermitted();
     }
 
     return BootstrapResult(

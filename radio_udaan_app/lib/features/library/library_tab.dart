@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -9,6 +10,7 @@ import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
+import '../../core/utils/keyboard_dismiss.dart';
 import '../favorites/app_favorites_provider.dart';
 import 'library_image_url.dart';
 import '../../core/widgets/empty_state.dart';
@@ -25,7 +27,7 @@ import 'widgets/library_video_card.dart' show LibraryVideoCard;
 const double _libraryMinTapTarget = 56;
 const Duration _searchDebounce = Duration(milliseconds: 400);
 
-/// YouTube library home: search, featured playlists, and recent uploads.
+/// YouTube library home: search, latest playlists, and recent uploads.
 class LibraryTab extends ConsumerStatefulWidget {
   const LibraryTab({super.key});
 
@@ -37,6 +39,8 @@ class _LibraryTabState extends ConsumerState<LibraryTab> {
   AppCopy get _copy => ref.read(appCopyProvider);
 
   final _searchController = TextEditingController();
+  final _searchFocusNode = FocusNode();
+  final _searchSectionKey = GlobalKey();
   Timer? _searchDebounceTimer;
 
   @override
@@ -51,7 +55,32 @@ class _LibraryTabState extends ConsumerState<LibraryTab> {
     _searchController
       ..removeListener(_onSearchChanged)
       ..dispose();
+    _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  void _dismissSearchKeyboardIfOutside(PointerDownEvent event) {
+    if (!_searchFocusNode.hasFocus) return;
+
+    final box =
+        _searchSectionKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null) {
+      dismissKeyboard(context);
+      return;
+    }
+
+    final local = box.globalToLocal(event.position);
+    final hit = BoxHitTestResult();
+    if (!box.hitTest(hit, position: local)) {
+      _searchFocusNode.unfocus();
+    }
+  }
+
+  bool _dismissSearchKeyboardOnScroll(ScrollNotification notification) {
+    if (notification is ScrollStartNotification && _searchFocusNode.hasFocus) {
+      _searchFocusNode.unfocus();
+    }
+    return false;
   }
 
   void _onSearchChanged() {
@@ -93,15 +122,24 @@ class _LibraryTabState extends ConsumerState<LibraryTab> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: MainTabAppBar(title: _copy.tabLibrary),
-      body: SafeArea(
-        child: RefreshIndicator(
-          color: context.udaan.primary,
-          backgroundColor: context.udaan.surfaceContainer,
-          onRefresh: _refreshAll,
-          child: ListView(
-              padding: const EdgeInsets.only(bottom: 24),
-              children: [
-                LibrarySearchField(controller: _searchController),
+      body: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: _dismissSearchKeyboardIfOutside,
+        child: SafeArea(
+          child: RefreshIndicator(
+            color: context.udaan.primary,
+            backgroundColor: context.udaan.surfaceContainer,
+            onRefresh: _refreshAll,
+            child: NotificationListener<ScrollNotification>(
+              onNotification: _dismissSearchKeyboardOnScroll,
+              child: ListView(
+                padding: const EdgeInsets.only(bottom: 24),
+                children: [
+                  LibrarySearchField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    sectionKey: _searchSectionKey,
+                  ),
                 if (!isSearching) ...[
                   _SavedEntryTile(copy: _copy),
                   const SizedBox(height: 8),
@@ -189,8 +227,10 @@ class _LibraryTabState extends ConsumerState<LibraryTab> {
                 ],
               ],
             ),
+          ),
         ),
       ),
+    ),
     );
   }
 }

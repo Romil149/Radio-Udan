@@ -55,6 +55,7 @@ Alternative (not preferred): APNs certificates — auth keys do not expire yearl
 | Firebase init | `radio_udaan_app/ios/Runner/AppDelegate.swift` | `FirebaseApp.configure()` in `didFinishLaunchingWithOptions` |
 | Background mode | `radio_udaan_app/ios/Runner/Info.plist` | `UIBackgroundModes` includes `remote-notification` |
 | Client | `radio_udaan_app/lib/core/push/push_notification_service.dart` | Requests permission, registers FCM token with WP API |
+| iOS entitlements | `radio_udaan_app/ios/Runner/Runner.entitlements` | `aps-environment` = `production` (TestFlight/App Store); use `development` only for local debug profiles if needed |
 
 After changing `GoogleService-Info.plist`, run `flutterfire configure` only if regenerating from Firebase — otherwise hand-edit bundle/project IDs to match.
 

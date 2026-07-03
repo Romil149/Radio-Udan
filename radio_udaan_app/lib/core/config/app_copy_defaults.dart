@@ -229,6 +229,9 @@ const Map<String, String> appCopyDefaults = {
   'radio_upcoming_segments': 'Upcoming segments',
   'radio_view_full_schedule': 'View full schedule',
   'radio_volume': 'Volume',
+  'radio_volume_slider_hint':
+      'Adjustable. Swipe up to increase or down to decrease volume in ten percent steps.',
+  'radio_volume_announce': 'Volume, {percent} percent',
   'radio_whatsapp_url_fallback': '#',
   'radio_with_hosts_prefix': 'with ',
   'reduce_motion': 'Reduce Motion',

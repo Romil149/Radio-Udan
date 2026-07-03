@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../theme/brand_tokens.dart';
+import 'app_bar_brand_logo.dart';
 import 'brand_app_bar.dart';
 
-/// Top bar for main shell tabs: centered page title only (More is a bottom tab).
+/// Top bar for main shell tabs: logo (left) + centered page title.
 class MainTabAppBar extends ConsumerWidget implements PreferredSizeWidget {
   const MainTabAppBar({
     super.key,
@@ -21,6 +23,13 @@ class MainTabAppBar extends ConsumerWidget implements PreferredSizeWidget {
       title: title,
       centerTitle: true,
       automaticallyImplyLeading: false,
+      leading: const SizedBox(
+        width: BrandTokens.a11yMinTapTarget + 20,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: AppBarBrandLogo(),
+        ),
+      ),
     );
   }
 }

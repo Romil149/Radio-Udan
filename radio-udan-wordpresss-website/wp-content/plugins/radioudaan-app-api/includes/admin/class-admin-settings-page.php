@@ -277,6 +277,16 @@ class RadioUdaan_Admin_Settings_Page {
 				<h3><?php esc_html_e( 'YouTube Data API', 'radioudaan-app-api' ); ?></h3>
 				<p class="description">
 					<?php esc_html_e( 'Powers the app Library tab from the @radioudaan channel. API key stays on the server only.', 'radioudaan-app-api' ); ?>
+					<?php
+					printf(
+						' %s',
+						sprintf(
+							/* translators: %d: number of playlists on the Library home tab */
+							esc_html__( 'The Library tab shows the %d playlists with the newest videos automatically (no manual selection).', 'radioudaan-app-api' ),
+							(int) RadioUdaan_App_Youtube_Library::FEATURED_PLAYLIST_LIMIT
+						)
+					);
+					?>
 				</p>
 				<div class="ru-admin__field">
 					<label for="youtube_api_key"><?php esc_html_e( 'Google API key', 'radioudaan-app-api' ); ?></label>
@@ -308,18 +318,6 @@ class RadioUdaan_Admin_Settings_Page {
 						?>
 					</p>
 				</div>
-			</div>
-			<div class="ru-settings-panel__card">
-				<h3><?php esc_html_e( 'Library playlists', 'radioudaan-app-api' ); ?></h3>
-				<p class="description">
-					<?php
-					printf(
-						/* translators: %d: number of playlists shown on the Library home tab */
-						esc_html__( 'The app shows the %d playlists whose newest video was published most recently (empty playlists and the channel uploads playlist are excluded). Served via GET /library/youtube/playlists/featured. “View all” lists every channel playlist.', 'radioudaan-app-api' ),
-						(int) RadioUdaan_App_Youtube_Library::FEATURED_PLAYLIST_LIMIT
-					);
-					?>
-				</p>
 			</div>
 		</section>
 

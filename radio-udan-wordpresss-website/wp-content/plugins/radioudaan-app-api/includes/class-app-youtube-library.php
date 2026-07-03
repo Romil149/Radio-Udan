@@ -14,6 +14,8 @@ class RadioUdaan_App_Youtube_Library {
 
 	const OPTION_API_KEY             = 'radioudaan_youtube_api_key';
 	const OPTION_CHANNEL             = 'radioudaan_youtube_channel';
+	/** @deprecated Manual featured selection removed in 2.x. */
+	const OPTION_LEGACY_FEATURED     = 'radioudaan_youtube_featured_playlists';
 
 	const FEATURED_PLAYLIST_LIMIT    = 5;
 
@@ -30,6 +32,7 @@ class RadioUdaan_App_Youtube_Library {
 	 * No admin hooks — featured playlists are computed from the channel automatically.
 	 */
 	public static function init_admin() {
+		delete_option( self::OPTION_LEGACY_FEATURED );
 	}
 
 	/**
@@ -50,7 +53,6 @@ class RadioUdaan_App_Youtube_Library {
 	}
 
 	/**
-	 * @deprecated Manual featured selection removed; kept for legacy option reads only.
 	 * @return string[]
 	 */
 	public static function get_featured_playlist_ids() {
@@ -62,6 +64,8 @@ class RadioUdaan_App_Youtube_Library {
 	 */
 	public static function invalidate_cache() {
 		global $wpdb;
+
+		delete_option( self::OPTION_LEGACY_FEATURED );
 
 		$wpdb->query(
 			$wpdb->prepare(

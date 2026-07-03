@@ -69,16 +69,25 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
     super.dispose();
   }
 
+  void _onPlaybackStarted() {
+    _cancelPlaybackTimeout();
+    if (!mounted) return;
+    if (!_startingPlayback && _isPlaying) return;
+    setState(() {
+      _startingPlayback = false;
+      _isPlaying = true;
+    });
+    _announce('${_copy.libraryPlayVideo}. ${widget.video.title}');
+  }
+
   void _clearStartingPlayback() {
     _cancelPlaybackTimeout();
     if (!_startingPlayback || !mounted) return;
     setState(() => _startingPlayback = false);
   }
 
-  bool _isActivePlaybackState(PlayerState state) {
-    return state == PlayerState.playing ||
-        state == PlayerState.buffering ||
-        state == PlayerState.paused;
+  bool _isAudiblePlaybackState(PlayerState state) {
+    return state == PlayerState.playing || state == PlayerState.buffering;
   }
 
   Future<void> _pollUntilPlaybackStarts(YoutubePlayerController controller) async {
@@ -88,13 +97,17 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
     while (mounted && _startingPlayback && DateTime.now().isBefore(deadline)) {
       try {
         final state = await controller.playerState;
-        if (_isActivePlaybackState(state)) {
+        if (_isAudiblePlaybackState(state)) {
+          _onPlaybackStarted();
+          return;
+        }
+        if (state == PlayerState.paused) {
           _clearStartingPlayback();
           return;
         }
         final elapsed = await controller.currentTime;
         if (elapsed > 0.25) {
-          _clearStartingPlayback();
+          _onPlaybackStarted();
           return;
         }
       } catch (_) {
@@ -139,12 +152,13 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
       }
 
       final state = value.playerState;
-      if (_isActivePlaybackState(state)) {
+      if (_isAudiblePlaybackState(state)) {
+        _onPlaybackStarted();
+      } else if (state == PlayerState.paused) {
         _clearStartingPlayback();
       }
 
-      final playing = state == PlayerState.playing ||
-          state == PlayerState.buffering;
+      final playing = _isAudiblePlaybackState(state);
       if (playing != _isPlaying && mounted) {
         setState(() => _isPlaying = playing);
       }
@@ -155,7 +169,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
 
     _videoStateSubscription = controller.videoStateStream.listen((state) {
       if (state.position.inMilliseconds > 250) {
-        _clearStartingPlayback();
+        _onPlaybackStarted();
       }
     });
   }
@@ -164,6 +178,9 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
     try {
       await controller.loadVideoById(videoId: videoId);
       await controller.playVideo();
+      if (mounted) {
+        _onPlaybackStarted();
+      }
       unawaited(_pollUntilPlaybackStarts(controller));
     } catch (_) {
       _handlePlayerFailure();
@@ -198,13 +215,8 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
       } else {
         await controller.playVideo();
         if (mounted) {
-          setState(() {
-            _startingPlayback = false;
-            _isPlaying = true;
-          });
-          _announce('${_copy.libraryPlayVideo}. ${widget.video.title}');
+          _onPlaybackStarted();
         }
-        _cancelPlaybackTimeout();
       }
     } catch (_) {
       _handlePlayerFailure();

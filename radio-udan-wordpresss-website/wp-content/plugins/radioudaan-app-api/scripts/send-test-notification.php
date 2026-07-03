@@ -24,7 +24,7 @@ if ( $user_id < 1 ) {
 	exit;
 }
 
-$id = RadioUdaan_App_Notifications::create(
+$created = RadioUdaan_App_Notifications::create(
 	$user_id,
 	'Radio Udaan test',
 	'This is a test push from the WordPress server.',
@@ -36,7 +36,8 @@ $id = RadioUdaan_App_Notifications::create(
 
 echo wp_json_encode(
 	array(
-		'notification_id' => $id,
+		'notification_id' => isset( $created['id'] ) ? $created['id'] : false,
+		'push'            => isset( $created['push'] ) ? $created['push'] : array(),
 		'user_id'         => $user_id,
 		'fcm_configured'  => RadioUdaan_App_Fcm_Sender::is_configured(),
 	),

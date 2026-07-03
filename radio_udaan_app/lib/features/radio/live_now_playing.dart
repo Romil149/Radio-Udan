@@ -56,9 +56,19 @@ LiveNowPlaying resolveLiveNowPlaying({
       ? parsed!.title.trim()
       : configFallback.showTitle;
 
-  final hostsLine = audiblePlayback && parsed?.artist != null
-      ? formatRadioHostsLine(parsed!.artist!, copy)
+  final streamHosts = parsed?.artist != null &&
+          parsed!.artist!.trim().isNotEmpty
+      ? formatRadioHostsLine(parsed.artist!, copy)
       : '';
+
+  final configHosts = configFallback.showSubtitle.trim().isNotEmpty
+      ? formatRadioHostsLine(configFallback.showSubtitle, copy)
+      : '';
+
+  // Playing: prefer live stream artist; idle: show WP hosts/subtitle when set.
+  final hostsLine = audiblePlayback && streamHosts.isNotEmpty
+      ? streamHosts
+      : configHosts;
 
   return LiveNowPlaying(
     title: title,

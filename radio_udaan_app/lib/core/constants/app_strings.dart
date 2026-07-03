@@ -565,6 +565,8 @@ abstract final class AppStrings {
   static const String notificationsEmpty = 'No notifications yet.';
   static const String notificationsUnreadEmpty = 'No unread notifications.';
   static const String notificationsLoading = 'Loading notifications';
+  static const String notificationsBlockedOpenSettings =
+      'Notifications blocked. Opening system settings.';
   static const String notificationRead = 'Read';
   static const String notificationUnread = 'Unread';
 

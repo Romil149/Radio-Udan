@@ -1,6 +1,12 @@
 # Task History
 
-### 2026-06-13 — Library playlists: auto top-5 by newest video
+### 2026-07-03 — Push notifications: diagnose + professional delivery
+**Requested by**: User (push not working; Zomato/Swiggy-quality; both platforms)
+**What was done**: Root cause: **FCM not configured on staging** (admin created inbox only). WP: high-priority Android channel + APNs alert headers; admin shows push_sent/failed/fcm_skipped; `GET /health` adds `fcm_configured` + `push_devices_registered`. Flutter: iOS `aps-environment`, foreground presentation, APNS wait, tap→inbox, Settings re-enable button.
+**Files changed**: `class-app-fcm-sender.php`, `class-app-notifications.php`, `class-admin-notifications.php`, `class-radioudaan-app-api.php`, `push_notification_service.dart`, `Runner.entitlements`, `settings_screen.dart`, `app_router.dart`
+**Status**: ⚠️ Code ready — **operator must paste Firebase service account JSON on staging** + upload APNs key in Firebase for iOS; deploy plugin; rebuild app (build 26+)
+**Notes**: User confirmed admin send symptom + FCM not configured. Chrome/web skips push by design.
+
 **Requested by**: User (@alex — remove manual featured picker; 5 latest playlists by newest video)
 **What was done**: WP `get_featured_playlists()` ranks playlists by newest video `published_at`; excludes empty + uploads playlist. Removed admin picker UI/AJAX/option. Flutter unchanged.
 **Files changed**: `class-app-youtube-library.php`, admin settings/hub/pages/assets, `admin-settings.js`

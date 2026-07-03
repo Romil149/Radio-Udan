@@ -232,6 +232,9 @@ extension AppCopyStrings on AppCopy {
   String get radioUpcomingSegments => text('radio_upcoming_segments');
   String get radioViewFullSchedule => text('radio_view_full_schedule');
   String get radioVolume => text('radio_volume');
+  String get radioVolumeSliderHint => text('radio_volume_slider_hint');
+  String radioVolumeAnnounce(int percent) =>
+      text('radio_volume_announce').replaceAll('{percent}', '$percent');
   String get radioWhatsappUrlFallback => text('radio_whatsapp_url_fallback');
   String get radioWithHostsPrefix => text('radio_with_hosts_prefix');
   String get reduceMotion => text('reduce_motion');
@@ -462,19 +465,17 @@ extension AppCopyStrings on AppCopy {
   String radioPlayButtonSemantics({
     required bool loading,
     required bool isPlaying,
-    required bool isOnAir,
     required String showTitle,
     required String hostsLine,
   }) {
     if (loading) return radioConnecting;
-    if (isPlaying) return radioStop;
-    if (isOnAir && showTitle.trim().isNotEmpty) {
-      final show = hostsLine.trim().isNotEmpty
-          ? '${showTitle.trim()} ${hostsLine.trim()}'
-          : showTitle.trim();
-      return radioPlayOnAir.replaceAll('{show}', show);
-    }
-    return radioPlay;
+    final action = isPlaying ? radioStop : radioPlay;
+    final parts = <String>[action];
+    final title = showTitle.trim();
+    final hosts = hostsLine.trim();
+    if (title.isNotEmpty) parts.add(title);
+    if (hosts.isNotEmpty) parts.add(hosts);
+    return parts.join('. ');
   }
 
   String registrationUnsupportedFieldsSemantics({required String notice, required String fieldNames}) =>

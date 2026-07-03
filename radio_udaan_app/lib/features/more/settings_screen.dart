@@ -3,10 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 
+import '../../core/constants/app_strings.dart';
 import '../../core/models/app_user_settings.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/providers/app_settings_provider.dart';
+import '../../core/push/push_notification_service.dart';
 import '../../core/theme/accessibility_scope.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_text_styles.dart';
@@ -115,6 +118,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         Directionality.of(context),
       );
     });
+  }
+
+  Future<void> _enablePhoneAlerts() async {
+    final push = ref.read(pushNotificationServiceProvider);
+    await push.initialize();
+    await push.requestSystemPermission();
+    if (await push.hasSystemPermission()) {
+      await push.registerDeviceToken();
+      _announce(_copy.notificationPermissionContinue);
+      return;
+    }
+    _announce(AppStrings.notificationsBlockedOpenSettings);
+    await openAppSettings();
   }
 
   Future<void> _save() async {
@@ -382,6 +398,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           _updateAccessibility(_draft.copyWith(reduceMotion: v)),
                     ),
                     _sectionTitle(context, _copy.notificationsSection),
+                    Semantics(
+                      button: true,
+                      label: _copy.notificationPermissionContinue,
+                      child: ExcludeSemantics(
+                        child: OutlinedButton.icon(
+                          onPressed: _enablePhoneAlerts,
+                          icon: const Icon(Icons.notifications_active_outlined),
+                          label: Text(_copy.notificationPermissionContinue),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(
+                              BrandTokens.a11yMinTapTarget,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     _toggleCard(
                       context: context,
                       title: _copy.notifyLiveBroadcasts,

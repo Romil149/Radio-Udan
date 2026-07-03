@@ -13,10 +13,14 @@ import '../../../core/providers/app_providers.dart';
 class LibrarySearchField extends ConsumerStatefulWidget {
   const LibrarySearchField({
     required this.controller,
+    this.focusNode,
+    this.sectionKey,
     super.key,
   });
 
   final TextEditingController controller;
+  final FocusNode? focusNode;
+  final GlobalKey? sectionKey;
 
   @override
   ConsumerState<LibrarySearchField> createState() => _LibrarySearchFieldState();
@@ -30,6 +34,7 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
     final query = ref.watch(librarySearchQueryProvider);
 
     return Column(
+      key: widget.sectionKey,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         LibrarySectionHeading(title: _copy.librarySearchVideos),
@@ -41,6 +46,9 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
             child: ExcludeSemantics(
               child: TextField(
               controller: widget.controller,
+              focusNode: widget.focusNode,
+              textInputAction: TextInputAction.search,
+              onSubmitted: (_) => dismissKeyboard(context),
               onTapOutside: (_) => dismissKeyboard(context),
               style: GoogleFonts.atkinsonHyperlegible(
                 fontSize: 18,

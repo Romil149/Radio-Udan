@@ -16,7 +16,7 @@
 | BUG-004 | 🟢 Low | `go_router` | Direct URL `#/events` fails (`no routes for location: /events`); tabs are shell-only (`/`). | Agent 12 | Open (by design) |
 | BUG-017 | 🔴 Critical | `assets/images/radio_udaan_logo.png` | Logo asset declared in pubspec but missing from repo — `Image.asset` on splash/auth crashes cold start (iOS + Android) | User report | Fixed (asset added + OfflineBrandLogo fallback) |
 | BUG-001 | 🟡 Medium | `.cursor/agents/README.md` | README referenced non-existent `agent-03-wp-app-api.md` (fixed) | Developer | Closed |
-| A11Y-QA | 🟡 Medium | Device QA | Page-by-page double-speech audit done (static); all FAIL items fixed in code — **device VoiceOver/TalkBack pass still pending** | Plan impl | Open — run `scripts/a11y-device-qa.md` + spot checks in `scripts/a11y-double-speech-audit.md` |
+| BUG-019 | 🔴 Critical | Staging WP + `Runner.entitlements` + admin notifications | Push “sent” from WP admin but phones get nothing — FCM service account not on staging; iOS missing `aps-environment`; admin only reported inbox created | User report | Fixed in repo (FCM payload, admin push stats, iOS entitlements, Flutter client) — **staging FCM JSON + plugin deploy still required** |
 
 ## Fixed Bugs
 

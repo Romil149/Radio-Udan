@@ -376,7 +376,7 @@ class RadioUdaan_Admin_Pages {
 			array( 'POST', '/events/{id}/registrations', __( 'Submit registration', 'radioudaan-app-api' ), true ),
 			array( 'GET', '/library/youtube/recent', __( 'Recent @radioudaan uploads', 'radioudaan-app-api' ), false ),
 			array( 'GET', '/library/youtube/playlists', __( 'All channel playlists', 'radioudaan-app-api' ), false ),
-			array( 'GET', '/library/youtube/playlists/featured', __( 'Top 5 playlists by newest video (auto)', 'radioudaan-app-api' ), false ),
+			array( 'GET', '/library/youtube/playlists/featured', __( '5 latest playlists (auto)', 'radioudaan-app-api' ), false ),
 			array( 'GET', '/library/youtube/playlists/{id}/videos', __( 'Videos in a playlist', 'radioudaan-app-api' ), false ),
 			array( 'GET', '/library/youtube/search?q=', __( 'Channel-scoped video search', 'radioudaan-app-api' ), false ),
 		);
