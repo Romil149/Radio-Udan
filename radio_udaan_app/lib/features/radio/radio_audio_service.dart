@@ -64,6 +64,17 @@ Future<bool> initRadioAudioService() async {
 /// Retries audio init when cold-start init failed (common on some Android builds).
 Future<bool> ensureRadioAudioService() => initRadioAudioService();
 
+/// Stops silent/idle radio engine work and clears lock-screen metadata.
+Future<void> suspendInactiveRadioPlayback() async {
+  final handler = _handler;
+  if (handler == null) return;
+  try {
+    await handler.stop();
+  } catch (e, st) {
+    debugPrint('suspendInactiveRadioPlayback failed: $e\n$st');
+  }
+}
+
 RadioAudioHandler get radioAudioHandler {
   final handler = _handler;
   if (handler == null) {

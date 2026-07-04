@@ -17,7 +17,6 @@ import '../../core/theme/udaan_google_fonts.dart';
 import '../../core/models/radio_schedule.dart';
 import '../../core/widgets/main_tab_app_bar.dart';
 import 'live_now_playing.dart';
-import 'radio_audio_service.dart';
 import '../favorites/app_favorites_provider.dart';
 import 'radio_player_controller.dart';
 import 'radio_schedule_provider.dart';
@@ -36,22 +35,6 @@ class _RadioTabState extends ConsumerState<RadioTab> {
   AppCopy get _copy => ref.read(appCopyProvider);
 
   double _volume = 1.0;
-
-  @override
-  void initState() {
-    super.initState();
-    _initAudio();
-  }
-
-  Future<void> _initAudio() async {
-    final ready = await ensureRadioAudioService();
-    if (!mounted) return;
-    if (ready) {
-      final notifier = ref.read(radioPlayerProvider.notifier);
-      notifier.attachPlayerIfReady();
-      await notifier.probeStreamMetadata();
-    }
-  }
 
   Future<void> _shareApp() async {
     final remoteConfig = ref.read(remoteConfigProvider);

@@ -13,6 +13,8 @@ import '../about/about_tab.dart';
 import '../events/events_tab.dart';
 import '../library/library_tab.dart';
 import '../more/more_tab.dart';
+import '../radio/radio_audio_service.dart';
+import '../radio/radio_stream_metadata.dart';
 import '../radio/radio_tab.dart';
 
 /// Primary navigation: five top-level product areas.
@@ -45,7 +47,18 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _refreshPushRegistration();
+      return;
     }
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      _suspendInactiveRadio();
+    }
+  }
+
+  void _suspendInactiveRadio() {
+    if (ref.read(radioAudiblePlaybackProvider)) return;
+    unawaited(suspendInactiveRadioPlayback());
   }
 
   void _refreshPushRegistration() {

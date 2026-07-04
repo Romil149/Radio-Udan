@@ -1,5 +1,3 @@
-import 'dart:async' show unawaited;
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -37,7 +35,6 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
   final Ref _ref;
   bool _startInProgress = false;
   bool _playerBound = false;
-  bool _metadataProbeInProgress = false;
   int _playbackSession = 0;
 
   /// Binds just_audio streams after [ensureRadioAudioService] succeeds.
@@ -45,43 +42,6 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
     if (_playerBound || !isRadioAudioServiceReady) return;
     _playerBound = true;
     _bindPlayerStateStream();
-  }
-
-  /// Buffer the live stream at volume 0 so ICY title is available before Play.
-  Future<void> probeStreamMetadata() async {
-    if (_ref.read(radioAudiblePlaybackProvider) ||
-        _metadataProbeInProgress ||
-        state.status == RadioPlayerStatus.playing ||
-        state.status == RadioPlayerStatus.loading) {
-      return;
-    }
-
-    final copy = _ref.read(appCopyProvider);
-    final ready = await ensureRadioAudioService();
-    if (!ready) return;
-    attachPlayerIfReady();
-
-    final url = _ref.read(remoteConfigProvider)?.streamUrl ?? '';
-    if (url.isEmpty) return;
-
-    final config = _ref.read(liveRadioProvider);
-    final streamUri = Uri.parse(url);
-    final handler = radioAudioHandler;
-
-    _metadataProbeInProgress = true;
-    try {
-      await handler.prepareStreamMetadataProbe(
-        streamUri: streamUri,
-        title: config.showTitle,
-        artist: config.showSubtitle.isNotEmpty
-            ? config.showSubtitle
-            : copy.radioLiveLabel,
-      );
-    } catch (_) {
-      // Hero falls back to WP admin title when metadata probe fails.
-    } finally {
-      _metadataProbeInProgress = false;
-    }
   }
 
   void _bindPlayerStateStream() {
@@ -108,11 +68,9 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
 
     player.playerStateStream.listen((playerState) {
       if (!_ref.read(radioAudiblePlaybackProvider)) {
-        // Keep UI on Play when user stopped but the silent metadata probe buffers.
         if ((state.status == RadioPlayerStatus.playing ||
                 state.status == RadioPlayerStatus.loading) &&
-            !_startInProgress &&
-            !_metadataProbeInProgress) {
+            !_startInProgress) {
           state = RadioPlayerState(
             status: RadioPlayerStatus.idle,
             errorMessage: state.errorMessage,
@@ -229,7 +187,7 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
   }
 
   Future<void> stop() async {
-    final session = ++_playbackSession;
+    _playbackSession++;
     _startInProgress = false;
     _ref.read(radioAudiblePlaybackProvider.notifier).state = false;
     _ref.read(radioStreamIcyTitleProvider.notifier).state = null;
@@ -243,27 +201,12 @@ class RadioPlayerNotifier extends StateNotifier<RadioPlayerState> {
     } catch (_) {
       // UI already idle; best-effort engine stop.
     }
-
-    if (session != _playbackSession) return;
-
-    // Refresh ICY title for hero without blocking the stop → play transition.
-    unawaited(probeStreamMetadata());
   }
 
   /// Saves user volume; only changes audio output during intentional live play.
-  /// Metadata probe buffers the stream at volume 0 — must not unmute when idle.
   Future<void> applyVolumePreference(double volume) async {
     final clamped = volume.clamp(0.0, 1.0);
-    if (!_ref.read(radioAudiblePlaybackProvider)) {
-      if (!isRadioAudioServiceReady) return;
-      try {
-        final player = radioAudioHandler.player;
-        if (player.playing && player.volume > 0) {
-          await player.setVolume(0);
-        }
-      } catch (_) {}
-      return;
-    }
+    if (!_ref.read(radioAudiblePlaybackProvider)) return;
     if (!isRadioAudioServiceReady) return;
     try {
       await radioAudioHandler.player.setVolume(clamped);
