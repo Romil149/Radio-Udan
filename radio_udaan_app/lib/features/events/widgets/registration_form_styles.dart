@@ -112,18 +112,18 @@ Widget registrationChoiceTile({
     inMutuallyExclusiveGroup: isRadio,
     label: semanticsLabel,
     onTap: onTap,
-    child: Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            minHeight: BrandTokens.a11yMinTapTarget,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: ExcludeSemantics(
+    child: ExcludeSemantics(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: BrandTokens.a11yMinTapTarget,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
                 children: [
                   Icon(

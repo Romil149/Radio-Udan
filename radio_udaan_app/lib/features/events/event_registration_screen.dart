@@ -1408,31 +1408,31 @@ class _EventRegistrationScreenState
         checked: checked,
         label: field.required ? '$consentLabel, required' : consentLabel,
         onTap: () => _setFieldValue(field.key, !checked),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => _setFieldValue(field.key, !checked),
-                borderRadius: BorderRadius.circular(8),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    minHeight: BrandTokens.a11yMinTapTarget,
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        checked
-                            ? Icons.check_box
-                            : Icons.check_box_outline_blank,
-                        color: palette.primaryGlow,
-                        size: 26,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ExcludeSemantics(
+        child: ExcludeSemantics(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _setFieldValue(field.key, !checked),
+                  borderRadius: BorderRadius.circular(8),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minHeight: BrandTokens.a11yMinTapTarget,
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          checked
+                              ? Icons.check_box
+                              : Icons.check_box_outline_blank,
+                          color: palette.primaryGlow,
+                          size: 26,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
                           child: Text(
                             registrationFieldLabelText(field),
                             style: registrationFieldLabelStyle(
@@ -1444,17 +1444,15 @@ class _EventRegistrationScreenState
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            if (field.consentHtml != null &&
-                field.consentHtml!.trim().isNotEmpty) ...[
-              const SizedBox(height: 8),
-              ExcludeSemantics(
-                child: AccessibleHtmlContent(
+              if (field.consentHtml != null &&
+                  field.consentHtml!.trim().isNotEmpty) ...[
+                const SizedBox(height: 8),
+                AccessibleHtmlContent(
                   html: field.consentHtml!,
                   textStyle: udaanTextStyle(
                     context,
@@ -1463,9 +1461,9 @@ class _EventRegistrationScreenState
                     height: 1.4,
                   ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

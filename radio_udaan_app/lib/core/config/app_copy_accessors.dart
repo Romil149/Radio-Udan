@@ -175,6 +175,13 @@ extension AppCopyStrings on AppCopy {
   String get notificationsFilterUnread => text('notifications_filter_unread');
   String get notificationsLoading => text('notifications_loading');
   String get notificationsSection => text('notifications_section');
+  String get pushRegisterDevice => text('push_register_device');
+  String get pushRegisterDeviceHint => text('push_register_device_hint');
+  String get pushRegisterSuccess => text('push_register_success');
+  String get pushRegisterPermissionDenied => text('push_register_permission_denied');
+  String get pushRegisterTokenFailed => text('push_register_token_failed');
+  String get pushRegisterApiFailed => text('push_register_api_failed');
+  String get pushRegisterUnavailable => text('push_register_unavailable');
   String get notificationsSubtitle => text('notifications_subtitle');
   String get notificationsTitle => text('notifications_title');
   String get notificationsUnreadEmpty => text('notifications_unread_empty');

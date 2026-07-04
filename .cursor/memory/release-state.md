@@ -3,8 +3,8 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+28** (push retry + splash-safe login) | pending push | 2026-07-03 | Build 26 must not be used; FCM token registers after login/resume |
-| TestFlight iOS | **2.0.0+28** | CI pending | 2026-07-03 | Replace build 26/27; verify `push_devices_registered` > 0 after login |
+| GitHub `main` | **2.0.0+31** (iOS battery fix + push/library polish) | pushed | 2026-07-04 | Stop silent radio probe; YouTube player fix; build 31 |
+| TestFlight iOS | **2.0.0+31** | CI pending | 2026-07-04 | Upload after CI; replaces build 30 |
 | Staging WP plugin | pending | **no** | — | Deploy plugin: live_radio no schedule merge, copy catalog |
 | Staging API smoke | 14/14 | — | 2026-06-27 | Re-run after plugin deploy |
 

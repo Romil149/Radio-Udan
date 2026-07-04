@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
 class RadioUdaan_App_Notifications {
 
 	const DB_VERSION_OPTION = 'radioudaan_notifications_db_version';
-	const DB_VERSION        = '1.0';
+	const DB_VERSION        = '1.1';
 
 	const PLATFORM_ANDROID = 'android';
 	const PLATFORM_IOS     = 'ios';
@@ -57,7 +57,7 @@ class RadioUdaan_App_Notifications {
 		$sql1    = "CREATE TABLE {$devices} (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			user_id bigint(20) unsigned NOT NULL,
-			fcm_token varchar(255) NOT NULL DEFAULT '',
+			fcm_token varchar(512) NOT NULL DEFAULT '',
 			platform varchar(16) NOT NULL DEFAULT '',
 			created_at datetime NOT NULL,
 			updated_at datetime NOT NULL,

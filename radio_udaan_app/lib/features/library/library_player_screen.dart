@@ -69,7 +69,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
     super.dispose();
   }
 
-  void _onPlaybackStarted() {
+  void _onPlaybackStarted({bool announce = true}) {
     _cancelPlaybackTimeout();
     if (!mounted) return;
     if (!_startingPlayback && _isPlaying) return;
@@ -77,7 +77,9 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
       _startingPlayback = false;
       _isPlaying = true;
     });
-    _announce('${_copy.libraryPlayVideo}. ${widget.video.title}');
+    if (announce) {
+      _announce('${_copy.libraryPlayVideo}. ${widget.video.title}');
+    }
   }
 
   void _clearStartingPlayback() {
@@ -106,7 +108,12 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
           return;
         }
         final elapsed = await controller.currentTime;
-        if (elapsed > 0.25) {
+        if (elapsed > 0.1) {
+          _onPlaybackStarted();
+          return;
+        }
+        final loaded = await controller.videoLoadedFraction;
+        if (loaded > 0.05 && elapsed > 0) {
           _onPlaybackStarted();
           return;
         }
@@ -168,20 +175,18 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
     });
 
     _videoStateSubscription = controller.videoStateStream.listen((state) {
-      if (state.position.inMilliseconds > 250) {
+      if (state.position.inMilliseconds > 100) {
         _onPlaybackStarted();
       }
     });
   }
 
   Future<void> _loadAndPlay(YoutubePlayerController controller, String videoId) async {
+    unawaited(_pollUntilPlaybackStarts(controller));
     try {
       await controller.loadVideoById(videoId: videoId);
-      await controller.playVideo();
-      if (mounted) {
-        _onPlaybackStarted();
-      }
-      unawaited(_pollUntilPlaybackStarts(controller));
+      // loadVideoById auto-plays; do not await playVideo — it can hang after playback starts.
+      unawaited(controller.playVideo());
     } catch (_) {
       _handlePlayerFailure();
     }
@@ -213,10 +218,8 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
           unawaited(_loadAndPlay(created, videoId));
         });
       } else {
-        await controller.playVideo();
-        if (mounted) {
-          _onPlaybackStarted();
-        }
+        unawaited(_pollUntilPlaybackStarts(controller));
+        unawaited(controller.playVideo());
       }
     } catch (_) {
       _handlePlayerFailure();

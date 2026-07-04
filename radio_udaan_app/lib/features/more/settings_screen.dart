@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/models/app_user_settings.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/providers/app_settings_provider.dart';
+import '../../core/push/push_notification_service.dart';
 import '../../core/theme/accessibility_scope.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_text_styles.dart';
@@ -24,6 +26,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   late AppUserSettings _draft;
   bool _saving = false;
+  bool _pushRegistering = false;
   Timer? _textScaleAnnounceTimer;
   Timer? _persistTimer;
   Timer? _notifSyncTimer;
@@ -40,6 +43,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _persistTimer?.cancel();
     _notifSyncTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _registerPushOnThisDevice() async {
+    if (_pushRegistering) return;
+    setState(() => _pushRegistering = true);
+    try {
+      final push = ref.read(pushNotificationServiceProvider);
+      final result = await push.syncForLoggedInUserDetailed();
+      if (!mounted) return;
+      final message = switch (result) {
+        PushRegistrationResult.success => _copy.pushRegisterSuccess,
+        PushRegistrationResult.permissionDenied =>
+          _copy.pushRegisterPermissionDenied,
+        PushRegistrationResult.tokenUnavailable =>
+          _copy.pushRegisterTokenFailed,
+        PushRegistrationResult.apiFailed => _copy.pushRegisterApiFailed,
+        PushRegistrationResult.unavailable => _copy.pushRegisterUnavailable,
+      };
+      announceAndSnack(context, message);
+    } finally {
+      if (mounted) setState(() => _pushRegistering = false);
+    }
   }
 
   Future<void> _syncNotificationsToServer(AppUserSettings draft) async {
@@ -382,6 +407,47 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           _updateAccessibility(_draft.copyWith(reduceMotion: v)),
                     ),
                     _sectionTitle(context, _copy.notificationsSection),
+                    Semantics(
+                      button: true,
+                      label: _copy.pushRegisterDevice,
+                      hint: _copy.pushRegisterDeviceHint,
+                      child: ExcludeSemantics(
+                        child: OutlinedButton.icon(
+                          onPressed:
+                              _pushRegistering ? null : _registerPushOnThisDevice,
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 56),
+                          ),
+                          icon: _pushRegistering
+                              ? SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: context.udaan.primary,
+                                  ),
+                                )
+                              : Icon(Icons.notifications_active_outlined),
+                          label: Text(_copy.pushRegisterDevice),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Semantics(
+                      label: _copy.pushRegisterDeviceHint,
+                      child: ExcludeSemantics(
+                        child: Text(
+                          _copy.pushRegisterDeviceHint,
+                          style: udaanTextStyle(
+                            context,
+                            fontSize: 14,
+                            color: context.udaan.onSurfaceMuted,
+                            height: 1.35,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     _toggleCard(
                       context: context,
                       title: _copy.notifyLiveBroadcasts,

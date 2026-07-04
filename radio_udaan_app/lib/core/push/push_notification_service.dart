@@ -23,11 +23,21 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 }
 
+/// Outcome of a push registration attempt (Settings + debug).
+enum PushRegistrationResult {
+  success,
+  permissionDenied,
+  tokenUnavailable,
+  apiFailed,
+  unavailable,
+}
+
 /// Registers FCM token and shows foreground notifications.
 class PushNotificationService {
   PushNotificationService(this._api);
 
   static const Duration _startupTimeout = Duration(seconds: 8);
+  static const Duration _iosStartupTimeout = Duration(seconds: 30);
 
   final RadioUdaanApi _api;
   final _localNotifications = FlutterLocalNotificationsPlugin();
@@ -51,26 +61,43 @@ class PushNotificationService {
 
   /// Background sync after login, cold start, or app resume. No in-app button required.
   Future<void> syncForLoggedInUser() async {
+    await syncForLoggedInUserDetailed();
+  }
+
+  /// Same as [syncForLoggedInUser] but returns a result for Settings / QA.
+  Future<PushRegistrationResult> syncForLoggedInUserDetailed() async {
+    final initTimeout =
+        Platform.isIOS ? _iosStartupTimeout : _startupTimeout;
     try {
-      await initialize().timeout(_startupTimeout);
+      await initialize().timeout(initTimeout);
     } on TimeoutException {
-      debugPrint('Push initialize timed out');
+      debugPrint('Push initialize timed out; continuing if core init finished');
     } catch (e) {
       debugPrint('Push sync failed: $e');
-      return;
+      return PushRegistrationResult.unavailable;
     }
 
-    if (!_initialized) return;
-
-    var registered = await _ensureRegistered();
-    if (!registered) {
-      // iOS APNs/FCM can lag briefly after grant — one silent retry.
-      await Future<void>.delayed(const Duration(seconds: 20));
-      registered = await _ensureRegistered();
+    if (!_initialized) {
+      if (!await ensureFirebase()) {
+        return PushRegistrationResult.unavailable;
+      }
     }
+
+    var result = await _ensureRegisteredDetailed();
+    if (result == PushRegistrationResult.success) {
+      return result;
+    }
+
+    // iOS APNs/FCM can lag after grant — retry once after a short wait.
+    if (Platform.isIOS && result == PushRegistrationResult.tokenUnavailable) {
+      await Future<void>.delayed(const Duration(seconds: 15));
+      result = await _ensureRegisteredDetailed();
+    }
+
     if (kDebugMode) {
-      debugPrint(registered ? 'Push device registered' : 'Push device not registered');
+      debugPrint('Push registration result: $result');
     }
+    return result;
   }
 
   /// Runs after home/login is visible — never block cold start on FCM/APNs.
@@ -79,11 +106,14 @@ class PushNotificationService {
     await syncForLoggedInUser();
   }
 
-  Future<bool> _ensureRegistered() async {
-    if (!_initialized) return false;
+  Future<PushRegistrationResult> _ensureRegisteredDetailed() async {
+    if (!_initialized && !await ensureFirebase()) {
+      return PushRegistrationResult.unavailable;
+    }
 
     try {
       final messaging = FirebaseMessaging.instance;
+      await messaging.setAutoInitEnabled(true);
       final settings = await messaging.getNotificationSettings();
       if (settings.authorizationStatus == AuthorizationStatus.notDetermined) {
         await requestSystemPermission();
@@ -92,8 +122,10 @@ class PushNotificationService {
       debugPrint('Push permission check failed: $e');
     }
 
-    if (!await hasSystemPermission()) return false;
-    return registerDeviceToken(attempts: 5);
+    if (!await hasSystemPermission()) {
+      return PushRegistrationResult.permissionDenied;
+    }
+    return registerDeviceTokenDetailed(attempts: Platform.isIOS ? 6 : 4);
   }
 
   Future<void> initialize() async {
@@ -137,6 +169,11 @@ class PushNotificationService {
 
     _initialized = true;
 
+    // Do not block token registration on cold-start deep link lookup.
+    unawaited(_loadInitialMessageWhenReady());
+  }
+
+  Future<void> _loadInitialMessageWhenReady() async {
     try {
       final initial = await FirebaseMessaging.instance
           .getInitialMessage()
@@ -146,6 +183,8 @@ class PushNotificationService {
       }
     } on TimeoutException {
       debugPrint('getInitialMessage timed out');
+    } catch (e) {
+      debugPrint('getInitialMessage failed: $e');
     }
   }
 
@@ -182,7 +221,17 @@ class PushNotificationService {
 
   /// Returns true when the FCM token was sent to the App API.
   Future<bool> registerDeviceToken({int attempts = 3}) async {
-    if (kIsWeb || !_initialized) return false;
+    final result = await registerDeviceTokenDetailed(attempts: attempts);
+    return result == PushRegistrationResult.success;
+  }
+
+  Future<PushRegistrationResult> registerDeviceTokenDetailed({
+    int attempts = 3,
+  }) async {
+    if (kIsWeb) return PushRegistrationResult.unavailable;
+    if (!_initialized && !await ensureFirebase()) {
+      return PushRegistrationResult.unavailable;
+    }
 
     final messaging = FirebaseMessaging.instance;
     final platform = Platform.isIOS ? 'ios' : 'android';
@@ -192,17 +241,17 @@ class PushNotificationService {
         if (Platform.isIOS) {
           await _waitForApnsToken(
             messaging,
-            maxAttempts: attempt == 0 ? 10 : 5,
+            maxAttempts: attempt == 0 ? 40 : 20,
           );
         }
 
         final token = await messaging.getToken().timeout(
-          const Duration(seconds: 15),
+          Duration(seconds: Platform.isIOS ? 25 : 15),
           onTimeout: () => null,
         );
         if (token == null || token.length < 20) {
           if (attempt < attempts - 1) {
-            await Future<void>.delayed(const Duration(seconds: 2));
+            await Future<void>.delayed(Duration(seconds: Platform.isIOS ? 3 : 2));
           }
           continue;
         }
@@ -218,15 +267,17 @@ class PushNotificationService {
             } catch (_) {}
           });
         }
-        return true;
+        return PushRegistrationResult.success;
       } catch (e) {
         debugPrint('Push registration attempt ${attempt + 1} failed: $e');
         if (attempt < attempts - 1) {
-          await Future<void>.delayed(const Duration(seconds: 2));
+          await Future<void>.delayed(Duration(seconds: Platform.isIOS ? 3 : 2));
+        } else {
+          return PushRegistrationResult.apiFailed;
         }
       }
     }
-    return false;
+    return PushRegistrationResult.tokenUnavailable;
   }
 
   Future<bool> registerIfSignedIn() async {
@@ -240,7 +291,7 @@ class PushNotificationService {
     for (var attempt = 0; attempt < maxAttempts; attempt++) {
       final apns = await messaging.getAPNSToken();
       if (apns != null && apns.isNotEmpty) return;
-      await Future<void>.delayed(const Duration(milliseconds: 600));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
     }
   }
 
