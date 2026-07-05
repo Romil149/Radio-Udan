@@ -6,6 +6,7 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/models/otp_purpose.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
@@ -115,11 +116,15 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
       _startResendCountdown();
     } catch (e) {
       if (!mounted) return;
-      final message = parseApiError(e).message;
-      setState(() => _error = message);
+      _setError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _bootstrapping = false);
     }
+  }
+
+  void _setError(String message) {
+    setState(() => _error = message);
+    announceValidationError(context, message);
   }
 
   @override
@@ -218,8 +223,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
       _startResendCountdown();
       _announce(_copy.otpResentSuccess);
     } catch (e) {
-      final message = parseApiError(e).message;
-      setState(() => _error = message);
+      _setError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _resending = false);
     }
@@ -254,8 +258,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
     final otp = _otpController.text.trim();
     final otpLength = OtpVerifyIdentityBody.otpLength;
     if (otp.length < otpLength) {
-      final message = _copy.otpCodeIncomplete;
-      setState(() => _error = message);
+      _setError(_copy.otpCodeIncomplete);
       return;
     }
 
@@ -285,7 +288,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
 
       final session = result.session;
       if (session == null || !session.hasToken) {
-        setState(() => _error = _copy.verificationIncomplete);
+        _setError(_copy.verificationIncomplete);
         return;
       }
 
@@ -305,11 +308,10 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
           );
           return;
         }
-        setState(() => _error = apiError.message);
+        _setError(apiError.message);
         return;
       }
-      final message = apiError.message;
-      setState(() => _error = message);
+      _setError(apiError.message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }

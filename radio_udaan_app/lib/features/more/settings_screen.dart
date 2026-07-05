@@ -410,7 +410,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     Semantics(
                       button: true,
                       label: _copy.pushRegisterDevice,
-                      hint: _copy.pushRegisterDeviceHint,
                       child: ExcludeSemantics(
                         child: OutlinedButton.icon(
                           onPressed:

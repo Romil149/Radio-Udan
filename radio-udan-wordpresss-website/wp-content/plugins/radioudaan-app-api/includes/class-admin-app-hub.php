@@ -508,8 +508,7 @@ class RadioUdaan_Admin_App_Hub {
 		}
 
 		$live_text_fields = array(
-			'live_show_title'    => RadioUdaan_App_Live_Radio::OPTION_SHOW_TITLE,
-			'live_show_subtitle' => RadioUdaan_App_Live_Radio::OPTION_SHOW_SUBTITLE,
+			'azuracast_now_playing_url' => RadioUdaan_App_Azuracast_Now_Playing::OPTION_API_URL,
 			'live_whatsapp_url'  => RadioUdaan_App_Live_Radio::OPTION_WHATSAPP_URL,
 			'live_whatsapp_label' => RadioUdaan_App_Live_Radio::OPTION_WHATSAPP_LABEL,
 			'live_share_label'   => RadioUdaan_App_Live_Radio::OPTION_SHARE_LABEL,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/brand_tokens.dart';
@@ -48,14 +49,36 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
     super.dispose();
   }
 
+  void _setError(String message) {
+    setState(() => _error = message);
+    announceValidationError(context, message);
+  }
+
+  void _setSuccess(String message) {
+    setState(() => _success = message);
+    announce(context, message);
+  }
+
   Future<void> _send() async {
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
     final subject = _subjectController.text.trim();
     final message = _messageController.text.trim();
 
-    if (name.isEmpty || email.isEmpty || subject.isEmpty || message.isEmpty) {
-      setState(() => _error = _copy.registrationFieldRequired);
+    if (name.isEmpty) {
+      _setError('${_copy.nameLabel}, ${_copy.registrationFieldRequired}');
+      return;
+    }
+    if (email.isEmpty) {
+      _setError('${_copy.emailLabel}, ${_copy.registrationFieldRequired}');
+      return;
+    }
+    if (subject.isEmpty) {
+      _setError('${_copy.helpSubject}, ${_copy.registrationFieldRequired}');
+      return;
+    }
+    if (message.isEmpty) {
+      _setError('${_copy.helpMessage}, ${_copy.registrationFieldRequired}');
       return;
     }
 
@@ -72,14 +95,11 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
             subject: subject,
             message: message,
           );
-      setState(() {
-        _success = _copy.messageSent;
-        _subjectController.clear();
-        _messageController.clear();
-      });
+      _setSuccess(_copy.messageSent);
+      _subjectController.clear();
+      _messageController.clear();
     } catch (e) {
-      final message = parseApiError(e).message;
-      setState(() => _error = message);
+      _setError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -206,13 +226,15 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
           Semantics(
             label: '$label, required',
             textField: true,
-            child: TextField(
-              controller: controller,
-              keyboardType: keyboardType,
-              maxLines: maxLines,
-              onTapOutside: (_) => dismissKeyboard(context),
-              style: registrationFieldInputStyle(context),
-              decoration: registrationFieldDecoration(context),
+            child: ExcludeSemantics(
+              child: TextField(
+                controller: controller,
+                keyboardType: keyboardType,
+                maxLines: maxLines,
+                onTapOutside: (_) => dismissKeyboard(context),
+                style: registrationFieldInputStyle(context),
+                decoration: registrationFieldDecoration(context),
+              ),
             ),
           ),
         ],

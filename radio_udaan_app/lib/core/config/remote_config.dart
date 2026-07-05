@@ -10,6 +10,7 @@ class RemoteConfig {
     required this.apiBaseUrl,
     required this.siteUrl,
     required this.streamUrl,
+    required this.nowPlayingApiUrl,
     required this.uploadMaxFileMb,
     required this.otpResendDelaySec,
     required this.inAppLibraryPlayback,
@@ -40,6 +41,7 @@ class RemoteConfig {
       apiBaseUrl: json['api_base_url']?.toString() ?? '',
       siteUrl: json['site_url']?.toString() ?? '',
       streamUrl: json['stream_url']?.toString() ?? '',
+      nowPlayingApiUrl: _parseOptionalUrl(json['now_playing_api_url']),
       uploadMaxFileMb: (upload['max_file_mb'] as num?)?.toInt() ?? 10,
       otpResendDelaySec: (otp['resend_delay_sec'] as num?)?.toInt() ?? 60,
       inAppLibraryPlayback: features['in_app_library_playback'] == true,
@@ -82,6 +84,7 @@ class RemoteConfig {
   final String apiBaseUrl;
   final String siteUrl;
   final String streamUrl;
+  final String? nowPlayingApiUrl;
   final int uploadMaxFileMb;
   final int otpResendDelaySec;
   final bool inAppLibraryPlayback;

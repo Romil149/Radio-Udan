@@ -14,6 +14,11 @@ void announce(BuildContext context, String message) {
   });
 }
 
+/// Speaks validation/API errors without relying on liveRegion focus alone.
+void announceValidationError(BuildContext context, String message) {
+  announce(context, message);
+}
+
 /// Speaks for screen readers and shows a SnackBar for sighted users.
 void announceAndSnack(BuildContext context, String message) {
   if (message.trim().isEmpty) return;
@@ -99,6 +104,7 @@ class UdaanModalSheet extends StatelessWidget {
     return Semantics(
       scopesRoute: true,
       namesRoute: true,
+      label: title.trim().isNotEmpty ? title.trim() : null,
       explicitChildNodes: true,
       child: Container(
         decoration: decoration,

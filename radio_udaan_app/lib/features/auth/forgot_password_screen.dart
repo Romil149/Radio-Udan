@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/models/otp_purpose.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/router/app_router.dart';
+import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
 import 'auth_validators.dart';
 import 'widgets/udaan_auth_widgets.dart';
@@ -49,25 +51,35 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     });
   }
 
+  void _setError(String message) {
+    setState(() {
+      _error = message;
+      _success = null;
+    });
+    announceValidationError(context, message);
+  }
+
+  void _setSuccess(String message) {
+    setState(() {
+      _success = message;
+      _error = null;
+    });
+    announce(context, message);
+  }
+
   Future<void> _submit() async {
     final String identifier;
     if (_channel == _ForgotChannel.email) {
       final email = _emailController.text.trim().toLowerCase();
       if (!isValidEmail(email)) {
-        setState(() {
-          _error = _copy.emailInvalid;
-          _success = null;
-        });
+        _setError(_copy.emailInvalid);
         return;
       }
       identifier = email;
     } else {
       final phone = _phoneInput.e164;
       if (phone == null) {
-        setState(() {
-          _error = _copy.phoneInvalid;
-          _success = null;
-        });
+        _setError(_copy.phoneInvalid);
         return;
       }
       identifier = phone;
@@ -103,10 +115,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         return;
       }
 
-      setState(() => _success = _copy.forgotPasswordSuccess);
+      _setSuccess(_copy.forgotPasswordSuccess);
     } catch (e) {
-      final message = parseApiError(e).message;
-      setState(() => _error = message);
+      _setError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -341,7 +352,9 @@ class _ForgotChannelChip extends StatelessWidget {
             onTap: onTap,
             borderRadius: BorderRadius.circular(12),
             child: Container(
-              constraints: const BoxConstraints(minHeight: 48),
+              constraints: const BoxConstraints(
+                minHeight: BrandTokens.a11yMinTapTarget,
+              ),
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),

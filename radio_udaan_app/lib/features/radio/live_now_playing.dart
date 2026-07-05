@@ -1,14 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/config/app_branding.dart';
+import '../../core/config/app_copy_accessors.dart';
 import '../../core/config/live_radio_config.dart';
+import '../../core/models/azuracast_now_playing.dart';
 import '../../core/models/radio_schedule.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/utils/wp_media_url.dart';
+import 'azuracast_now_playing_provider.dart';
 import 'radio_schedule_provider.dart';
 import 'radio_stream_metadata.dart';
 
-/// Hero + lock-screen copy: schedule when on-air, WP defaults between shows,
-/// stream metadata when playing inside a slot.
+/// Hero + lock-screen copy: AzuraCast (direct API) + ICY when playing.
 class LiveNowPlaying {
   const LiveNowPlaying({
     required this.title,
@@ -17,6 +20,7 @@ class LiveNowPlaying {
     required this.showId,
     required this.isOnAir,
     required this.isFromStream,
+    required this.playlist,
   });
 
   final String title;
@@ -25,11 +29,12 @@ class LiveNowPlaying {
   final String showId;
   final bool isOnAir;
   final bool isFromStream;
+  final String playlist;
 
   bool get hasShowId => showId.isNotEmpty;
 }
 
-/// Prefix RJ line as "with …" when the API returns bare host names.
+/// Prefix RJ / artist line as "with …" when the API returns bare names.
 String formatRadioHostsLine(String hosts, AppCopy copy) {
   final trimmed = hosts.trim();
   if (trimmed.isEmpty) return '';
@@ -49,85 +54,81 @@ String formatRadioHostsLine(String hosts, AppCopy copy) {
 }
 
 LiveNowPlaying resolveLiveNowPlaying({
-  required LiveRadioConfig adminDefaults,
+  required LiveRadioConfig liveRadio,
   required AppCopy copy,
+  required AppBranding branding,
+  required AzuraCastNowPlaying? azuracast,
   required String? icyTitle,
   required bool audiblePlayback,
   RadioScheduleSegment? scheduledOnAir,
   DateTime? now,
 }) {
-  final defaults = adminDefaults;
-  final defaultHosts = defaults.showSubtitle.trim().isNotEmpty
-      ? formatRadioHostsLine(defaults.showSubtitle, copy)
-      : '';
-
   final inScheduledSlot =
       scheduledOnAir != null && scheduledOnAir.isOnAirNow(now);
+  final showId = inScheduledSlot ? scheduledOnAir.id : liveRadio.scheduledShowId;
 
-  if (!inScheduledSlot) {
-    return LiveNowPlaying(
-      title: defaults.showTitle,
-      hostsLine: defaultHosts,
-      imageUrl: defaults.heroImageUrl,
-      showId: '',
-      isOnAir: false,
-      isFromStream: false,
-    );
+  var title = azuracast?.title.trim() ?? '';
+  if (title.isEmpty) {
+    title = '${branding.appName} Live';
   }
 
-  final slot = scheduledOnAir;
-  final scheduleHosts = slot.hasHosts
-      ? formatRadioHostsLine(slot.hosts, copy)
-      : defaultHosts;
-  final scheduleImage =
-      slot.hasImage ? slot.imageUrl : defaults.heroImageUrl;
-
-  if (!audiblePlayback) {
-    return LiveNowPlaying(
-      title: slot.title,
-      hostsLine: scheduleHosts,
-      imageUrl: scheduleImage,
-      showId: slot.id,
-      isOnAir: true,
-      isFromStream: false,
-    );
-  }
-
-  final parsed = parseRadioStreamTitle(icyTitle);
-  final streamHosts = parsed?.artist != null &&
-          parsed!.artist!.trim().isNotEmpty
-      ? formatRadioHostsLine(parsed.artist!, copy)
+  var hostsLine = azuracast != null
+      ? formatRadioHostsLine(azuracast.artist, copy)
       : '';
 
-  final title = parsed?.title.trim().isNotEmpty == true
-      ? parsed!.title.trim()
-      : slot.title;
+  var imageUrl = azuracast?.artUrl.trim() ?? '';
+  if (imageUrl.isEmpty) {
+    imageUrl = liveRadio.heroImageUrl.trim();
+  }
 
-  final hostsLine =
-      streamHosts.isNotEmpty ? streamHosts : scheduleHosts;
+  var playlist = azuracast?.playlist.trim() ?? '';
+  var isFromStream = azuracast != null;
+
+  if (audiblePlayback) {
+    final parsed = parseRadioStreamTitle(icyTitle);
+    if (parsed != null) {
+      if (parsed.title.trim().isNotEmpty) {
+        title = parsed.title.trim();
+      }
+      final streamHosts = parsed.artist != null &&
+              parsed.artist!.trim().isNotEmpty
+          ? formatRadioHostsLine(parsed.artist!, copy)
+          : '';
+      if (streamHosts.isNotEmpty) {
+        hostsLine = streamHosts;
+      }
+      isFromStream = true;
+    }
+  }
 
   return LiveNowPlaying(
     title: title,
     hostsLine: hostsLine,
-    imageUrl: scheduleImage,
-    showId: slot.id,
-    isOnAir: true,
-    isFromStream: parsed != null,
+    imageUrl: imageUrl,
+    showId: showId,
+    isOnAir: (azuracast?.isOnline ?? true) &&
+        (inScheduledSlot || liveRadio.fromSchedule || azuracast != null),
+    isFromStream: isFromStream,
+    playlist: playlist,
   );
 }
 
 final liveNowPlayingProvider = Provider<LiveNowPlaying>((ref) {
-  final config = ref.watch(liveRadioProvider);
+  final liveRadio = ref.watch(liveRadioProvider);
   final copy = ref.watch(appCopyProvider);
+  final branding = ref.watch(appBrandingProvider);
   final apiBase = ref.watch(apiBaseUrlProvider);
   final siteUrl = ref.watch(remoteConfigProvider)?.siteUrl;
+  final azuracast = ref.watch(azuracastNowPlayingProvider);
   final icyTitle = ref.watch(radioStreamIcyTitleProvider);
   final audiblePlayback = ref.watch(radioAudiblePlaybackProvider);
   final scheduledOnAir = ref.watch(radioScheduleProvider).valueOrNull?.onAir;
 
   var playing = resolveLiveNowPlaying(
-    adminDefaults: config.adminDefaults,
+    liveRadio: liveRadio,
     copy: copy,
+    branding: branding,
+    azuracast: azuracast,
     icyTitle: icyTitle,
     audiblePlayback: audiblePlayback,
     scheduledOnAir: scheduledOnAir,
@@ -148,5 +149,20 @@ final liveNowPlayingProvider = Provider<LiveNowPlaying>((ref) {
     showId: playing.showId,
     isOnAir: playing.isOnAir,
     isFromStream: playing.isFromStream,
+    playlist: playing.playlist,
+  );
+});
+
+/// Next track line for the upcoming card (AzuraCast `playing_next`).
+final azuracastUpcomingProvider = Provider<({String title, String subtitle})?>((ref) {
+  final azura = ref.watch(azuracastNowPlayingProvider);
+  if (azura == null || !azura.hasNext) return null;
+
+  final parts = <String>[
+    if (azura.nextPlaylist.trim().isNotEmpty) azura.nextPlaylist.trim(),
+  ];
+  return (
+    title: azura.nextTitle.trim(),
+    subtitle: parts.join(' • '),
   );
 });

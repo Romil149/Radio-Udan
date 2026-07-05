@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/brand_tokens.dart';
@@ -51,9 +52,14 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       _newController.text.isNotEmpty &&
       _newController.text == _confirmController.text;
 
+  void _setError(String message) {
+    setState(() => _error = message);
+    announceValidationError(context, message);
+  }
+
   Future<void> _submit() async {
     if (!_hasMinLength || !_passwordsMatch) {
-      setState(() => _error = _copy.passwordRequirementsNotMet);
+      _setError(_copy.passwordRequirementsNotMet);
       return;
     }
 
@@ -76,8 +82,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       );
       context.go('/login');
     } catch (e) {
-      final message = parseApiError(e).message;
-      setState(() => _error = message);
+      _setError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -90,6 +95,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     required bool obscure,
     required VoidCallback onToggle,
   }) {
+    final semanticsLabel = '$label, required';
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -102,38 +108,54 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          Semantics(
-            label: label,
-            textField: true,
-            obscured: obscure,
-            child: ExcludeSemantics(
-              child: TextField(
-              controller: controller,
-              obscureText: obscure,
-              onChanged: (_) => setState(() {}),
-              style: registrationFieldInputStyle(context),
-              decoration: registrationFieldDecoration(
-                context,
-                suffixIcon: Semantics(
-                  button: true,
-                  label: obscure
-                      ? _copy.showPassword
-                      : _copy.hidePassword,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Semantics(
+                  label: semanticsLabel,
+                  textField: true,
+                  obscured: obscure,
                   child: ExcludeSemantics(
-                    child: IconButton(
-                      onPressed: onToggle,
-                      icon: Icon(
-                        obscure
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                        color: context.udaan.primaryGlow,
+                    child: TextField(
+                      controller: controller,
+                      obscureText: obscure,
+                      onChanged: (_) => setState(() {}),
+                      style: registrationFieldInputStyle(context),
+                      decoration: registrationFieldDecoration(context),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              SizedBox(
+                width: BrandTokens.a11yMinTapTarget,
+                height: BrandTokens.a11yMinTapTarget,
+                child: Center(
+                  child: Semantics(
+                    button: true,
+                    label: obscure
+                        ? _copy.showPassword
+                        : _copy.hidePassword,
+                    child: ExcludeSemantics(
+                      child: IconButton(
+                        onPressed: onToggle,
+                        constraints: const BoxConstraints(
+                          minWidth: BrandTokens.a11yMinTapTarget,
+                          minHeight: BrandTokens.a11yMinTapTarget,
+                        ),
+                        icon: Icon(
+                          obscure
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: context.udaan.primaryGlow,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-            ),
+            ],
           ),
         ],
       ),
@@ -178,7 +200,6 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final copy = ref.watch(appCopyProvider);
-    final branding = ref.watch(appBrandingProvider);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -191,7 +212,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
               ),
               child: UdaanAuthTopBar(
                 copy: copy,
-                title: branding.appName,
+                title: _copy.changePasswordTitle,
                 onBack: () => Navigator.of(context).pop(),
               ),
             ),

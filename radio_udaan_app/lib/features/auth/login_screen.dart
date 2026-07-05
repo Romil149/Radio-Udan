@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/router/app_router.dart';
 import '../../core/router/event_deep_link.dart';
+import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
 import 'auth_otp_flow.dart';
 import 'auth_session_helper.dart';
@@ -37,10 +39,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  void _setError(String message) {
+    setState(() => _error = message);
+    announceValidationError(context, message);
+  }
+
   Future<void> _startOtpLogin() async {
     final phone = _phoneInput.e164;
     if (phone == null) {
-      setState(() => _error = _copy.phoneInvalid);
+      _setError(_copy.phoneInvalid);
       return;
     }
 
@@ -52,7 +59,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final message = await requestLoginOtpAndOpenVerify(context, ref, phone);
     if (!mounted) return;
     if (message != null) {
-      setState(() => _error = message);
+      _setError(message);
     }
     setState(() => _otpLoading = false);
   }
@@ -62,11 +69,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final password = _passwordController.text;
 
     if (phone == null) {
-      setState(() => _error = _copy.phoneInvalid);
+      _setError(_copy.phoneInvalid);
       return;
     }
     if (password.isEmpty) {
-      setState(() => _error = _copy.passwordRequired);
+      _setError(_copy.passwordRequired);
       return;
     }
 
@@ -96,8 +103,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         navigateAfterAuth(context, ref);
       }
     } catch (e) {
-      final message = parseApiError(e).message;
-      setState(() => _error = message);
+      _setError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -109,6 +115,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       label: _obscurePassword ? _copy.showPassword : _copy.hidePassword,
       child: ExcludeSemantics(
         child: IconButton(
+          constraints: const BoxConstraints(
+            minWidth: BrandTokens.a11yMinTapTarget,
+            minHeight: BrandTokens.a11yMinTapTarget,
+          ),
           icon: Icon(
             _obscurePassword
                 ? Icons.visibility_outlined

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/router/event_deep_link.dart';
@@ -108,6 +109,11 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     });
   }
 
+  void _setError(String message) {
+    setState(() => _error = message);
+    announceValidationError(context, message);
+  }
+
   bool get _canResend =>
       !_loading && !_resending && _resendSecondsRemaining <= 0;
 
@@ -130,8 +136,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
         _announce(_copy.verificationCodeResent);
       }
     } catch (e) {
-      final message = parseApiError(e).message;
-      setState(() => _error = message);
+      _setError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _resending = false);
     }
@@ -141,7 +146,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     final code = _codeController.text.trim();
 
     if (code.length != 6) {
-      setState(() => _error = _copy.verificationCodeRequired);
+      _setError(_copy.verificationCodeRequired);
       return;
     }
 
@@ -158,8 +163,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
       if (!mounted) return;
       navigateAfterAuth(context, ref);
     } catch (e) {
-      final message = parseApiError(e).message;
-      setState(() => _error = message);
+      _setError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -227,14 +231,17 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               ),
               if (email.isNotEmpty) ...[
                 const SizedBox(height: 8),
-                ExcludeSemantics(
-                  child: Text(
-                    _copy.verifyEmailSentTo(email),
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.atkinsonHyperlegible(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: context.udaan.onBackground.withValues(alpha: 0.9),
+                Semantics(
+                  label: _copy.verifyEmailSentTo(email),
+                  child: ExcludeSemantics(
+                    child: Text(
+                      _copy.verifyEmailSentTo(email),
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.atkinsonHyperlegible(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: context.udaan.onBackground.withValues(alpha: 0.9),
+                      ),
                     ),
                   ),
                 ),

@@ -218,21 +218,16 @@ class RadioUdaan_Admin_Settings_Page {
 		<section class="ru-settings-panel" data-panel="live_radio" role="tabpanel">
 			<div class="ru-settings-panel__card">
 				<h3><?php esc_html_e( 'Live tab (home after sign-in)', 'radioudaan-app-api' ); ?></h3>
-				<p class="description"><?php esc_html_e( 'Show title, hero image, and buttons on the app Live screen. Sent via GET /config → live_radio.', 'radioudaan-app-api' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Song title and album art come from AzuraCast (see URL below). Set a fallback hero image for tracks without artwork.', 'radioudaan-app-api' ); ?></p>
 				<div class="ru-admin__field">
-					<label for="live_show_title"><?php esc_html_e( 'Show title', 'radioudaan-app-api' ); ?></label>
-					<input type="text" name="live_show_title" id="live_show_title" class="large-text"
-						value="<?php echo esc_attr( $c['live_show_title'] ); ?>"
-						placeholder="<?php echo esc_attr( $c['live_defaults']['show_title'] ); ?>" />
+					<label for="azuracast_now_playing_url"><?php esc_html_e( 'AzuraCast now playing API URL', 'radioudaan-app-api' ); ?></label>
+					<input type="url" name="azuracast_now_playing_url" id="azuracast_now_playing_url" class="large-text"
+						value="<?php echo esc_attr( $c['azuracast_now_playing_url'] ); ?>"
+						placeholder="<?php echo esc_attr( RadioUdaan_App_Azuracast_Now_Playing::DEFAULT_API_URL ); ?>" />
+					<p class="description"><?php esc_html_e( 'The app loads song title, artist, album art, and next track directly from this URL (not via GET /config). Example: https://stream.radioudaan.com/api/nowplaying', 'radioudaan-app-api' ); ?></p>
 				</div>
 				<div class="ru-admin__field">
-					<label for="live_show_subtitle"><?php esc_html_e( 'Hosts / subtitle', 'radioudaan-app-api' ); ?></label>
-					<input type="text" name="live_show_subtitle" id="live_show_subtitle" class="large-text"
-						value="<?php echo esc_attr( $c['live_show_subtitle'] ); ?>"
-						placeholder="<?php echo esc_attr( $c['live_defaults']['show_subtitle'] ); ?>" />
-				</div>
-				<div class="ru-admin__field">
-					<label><?php esc_html_e( 'Hero image', 'radioudaan-app-api' ); ?></label>
+					<label><?php esc_html_e( 'Fallback hero image', 'radioudaan-app-api' ); ?></label>
 					<input type="hidden" name="live_hero_id" id="live_hero_id" value="<?php echo (int) $c['live_hero_id']; ?>" />
 					<div id="ru-live-hero-preview" class="ru-admin__logo-preview">
 						<?php if ( ! empty( $c['live_hero_url'] ) ) : ?>

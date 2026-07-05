@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
+import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
 import '../../core/utils/phone_e164.dart';
 import 'auth_validators.dart';
@@ -77,6 +79,11 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     });
   }
 
+  void _setError(String message) {
+    setState(() => _error = message);
+    announceValidationError(context, message);
+  }
+
   Widget _visibilityToggle({
     required bool obscured,
     required VoidCallback onToggle,
@@ -86,6 +93,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       label: obscured ? _copy.showPassword : _copy.hidePassword,
       child: ExcludeSemantics(
         child: IconButton(
+          constraints: const BoxConstraints(
+            minWidth: BrandTokens.a11yMinTapTarget,
+            minHeight: BrandTokens.a11yMinTapTarget,
+          ),
           icon: Icon(
             obscured
                 ? Icons.visibility_outlined
@@ -106,19 +117,19 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     final minLen = _passwordMinLength;
 
     if (!_smsReset && token.isEmpty) {
-      setState(() => _error = _copy.resetTokenRequired);
+      _setError(_copy.resetTokenRequired);
       return;
     }
     if (!_smsReset && code.length != 6) {
-      setState(() => _error = _copy.resetEmailCodeRequired);
+      _setError(_copy.resetEmailCodeRequired);
       return;
     }
     if (!isValidPassword(password, minLength: minLen)) {
-      setState(() => _error = _copy.passwordTooShort);
+      _setError(_copy.passwordTooShort);
       return;
     }
     if (password != confirm) {
-      setState(() => _error = _copy.passwordMismatch);
+      _setError(_copy.passwordMismatch);
       return;
     }
 
@@ -139,8 +150,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       _announce(_copy.resetPasswordSuccess);
       context.go('/login');
     } catch (e) {
-      final message = parseApiError(e).message;
-      setState(() => _error = message);
+      _setError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }

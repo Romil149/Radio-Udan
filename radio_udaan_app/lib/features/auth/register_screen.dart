@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/models/otp_purpose.dart';
+import '../../core/theme/brand_tokens.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/router/app_router.dart';
@@ -55,6 +57,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       label: obscured ? _copy.showPassword : _copy.hidePassword,
       child: ExcludeSemantics(
         child: IconButton(
+          constraints: const BoxConstraints(
+            minWidth: BrandTokens.a11yMinTapTarget,
+            minHeight: BrandTokens.a11yMinTapTarget,
+          ),
           icon: Icon(
             obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
             color: context.udaan.primaryGlow,
@@ -63,6 +69,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ),
       ),
     );
+  }
+
+  void _setError(String message) {
+    setState(() => _error = message);
+    announceValidationError(context, message);
   }
 
   Future<void> _submit() async {
@@ -74,23 +85,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final minLen = _passwordMinLength;
 
     if (name.isEmpty) {
-      setState(() => _error = _copy.nameRequired);
+      _setError(_copy.nameRequired);
       return;
     }
     if (!isValidEmail(email)) {
-      setState(() => _error = _copy.emailInvalid);
+      _setError(_copy.emailInvalid);
       return;
     }
     if (phone == null) {
-      setState(() => _error = _copy.phoneInvalid);
+      _setError(_copy.phoneInvalid);
       return;
     }
     if (!isValidPassword(password, minLength: minLen)) {
-      setState(() => _error = _copy.passwordTooShort);
+      _setError(_copy.passwordTooShort);
       return;
     }
     if (password != confirm) {
-      setState(() => _error = _copy.passwordMismatch);
+      _setError(_copy.passwordMismatch);
       return;
     }
 
@@ -109,7 +120,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       );
 
       if (!pending.needsPhoneVerification) {
-        setState(() => _error = _copy.registrationIncomplete);
+        _setError(_copy.registrationIncomplete);
         return;
       }
 
@@ -130,8 +141,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ),
       );
     } catch (e) {
-      final message = parseApiError(e).message;
-      setState(() => _error = message);
+      _setError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }

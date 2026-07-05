@@ -5,6 +5,7 @@ import '../../../core/config/app_branding.dart';
 import '../../../core/config/app_copy_accessors.dart';
 import '../../../core/theme/accessibility_scope.dart';
 import '../../../core/theme/brand_tokens.dart';
+import '../../../core/theme/udaan_colors.dart';
 import '../../../core/theme/udaan_text_styles.dart';
 import '../../../core/utils/keyboard_dismiss.dart';
 import '../../../core/widgets/offline_brand_logo.dart';
@@ -362,77 +363,105 @@ class UdaanLabeledField extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Semantics(
-          textField: true,
-          label: _fieldSemanticsLabel,
-          readOnly: readOnly,
-          child: ExcludeSemantics(
-            child: TextField(
-              controller: controller,
+        if (suffixIcon == null)
+          Semantics(
+            textField: true,
+            label: _fieldSemanticsLabel,
             readOnly: readOnly,
-            keyboardType: keyboardType,
-            textInputAction: textInputAction,
-            obscureText: obscureText,
-            autofillHints: autofillHints,
-            inputFormatters: inputFormatters,
-            onSubmitted: (value) {
-              dismissKeyboard(context);
-              onSubmitted?.call(value);
-            },
-            onTapOutside: (_) => dismissKeyboard(context),
-            style: udaanTextStyle(
-              context,
-              fontSize: 18,
-              color: palette.onBackground,
+            obscured: obscureText,
+            child: ExcludeSemantics(
+              child: _buildTextField(context, palette),
             ),
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: udaanTextStyle(
-                context,
-                fontSize: 18,
-                color: palette.hint,
-              ),
-              filled: true,
-              fillColor: palette.surfaceContainer,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 18,
-              ),
-              prefixIcon: prefixIcon != null
-                  ? Icon(prefixIcon, color: palette.primaryGlow, size: 22)
-                  : null,
-              prefixText: prefixText,
-              prefixStyle: udaanTextStyle(
-                context,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: palette.onBackground,
-              ),
-              suffixIcon: suffixIcon,
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: palette.primaryGlow),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: palette.primary,
-                  width: 2,
+          )
+        else
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Semantics(
+                  textField: true,
+                  label: _fieldSemanticsLabel,
+                  readOnly: readOnly,
+                  obscured: obscureText,
+                  child: ExcludeSemantics(
+                    child: _buildTextField(context, palette),
+                  ),
                 ),
               ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: palette.error),
+              const SizedBox(width: 4),
+              SizedBox(
+                width: BrandTokens.a11yMinTapTarget,
+                height: BrandTokens.a11yMinTapTarget,
+                child: Center(child: suffixIcon!),
               ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: palette.error, width: 2),
-              ),
-            ),
+            ],
           ),
+      ],
+    );
+  }
+
+  Widget _buildTextField(BuildContext context, UdaanPalette palette) {
+    return TextField(
+      controller: controller,
+      readOnly: readOnly,
+      keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      obscureText: obscureText,
+      autofillHints: autofillHints,
+      inputFormatters: inputFormatters,
+      onSubmitted: (value) {
+        dismissKeyboard(context);
+        onSubmitted?.call(value);
+      },
+      onTapOutside: (_) => dismissKeyboard(context),
+      style: udaanTextStyle(
+        context,
+        fontSize: 18,
+        color: palette.onBackground,
+      ),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: udaanTextStyle(
+          context,
+          fontSize: 18,
+          color: palette.hint,
+        ),
+        filled: true,
+        fillColor: palette.surfaceContainer,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 18,
+        ),
+        prefixIcon: prefixIcon != null
+            ? Icon(prefixIcon, color: palette.primaryGlow, size: 22)
+            : null,
+        prefixText: prefixText,
+        prefixStyle: udaanTextStyle(
+          context,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: palette.onBackground,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: palette.primaryGlow),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: palette.primary,
+            width: 2,
           ),
         ),
-      ],
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: palette.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: palette.error, width: 2),
+        ),
+      ),
     );
   }
 }

@@ -64,6 +64,7 @@ class _EventRegistrationScreenState
   bool _accountDefaultsApplied = false;
   int _currentPageIndex = 0;
   Timer? _draftSaveDebounce;
+  final Map<String, int> _uploadAnnouncePercent = {};
 
   AppCopy get _copy => ref.read(appCopyProvider);
 
@@ -162,13 +163,17 @@ class _EventRegistrationScreenState
 
   void _announcePageChange(FormSchema schema) {
     if (schema.pages.isEmpty) return;
-    final page = schema.pages[_currentPageIndex.clamp(0, schema.pages.length - 1)];
-    if (page.title.isNotEmpty) return;
+    final page =
+        schema.pages[_currentPageIndex.clamp(0, schema.pages.length - 1)];
     final pageLabel = _copy.registrationPageLabel(
       _currentPageIndex + 1,
       schema.pages.length,
     );
-    _announce(pageLabel);
+    if (page.title.trim().isNotEmpty) {
+      _announce('$pageLabel. ${page.title.trim()}');
+    } else {
+      _announce(pageLabel);
+    }
   }
 
   bool _submitBlocked(FormSchema schema) =>
@@ -635,6 +640,19 @@ class _EventRegistrationScreenState
               if (!mounted || total <= 0) return;
               final progress = sent / total;
               setState(() => _uploadProgress[field.key] = progress);
+              final percent = (progress * 100).round();
+              final milestone =
+                  percent >= 100 ? 100 : (percent ~/ 25) * 25;
+              if (milestone > 0 &&
+                  milestone > (_uploadAnnouncePercent[field.key] ?? -1)) {
+                _uploadAnnouncePercent[field.key] = milestone;
+                _announce(
+                  _copy.registrationUploadProgressLabel(
+                    field.label,
+                    milestone,
+                  ),
+                );
+              }
             },
           );
       if (!mounted) return;
@@ -666,6 +684,7 @@ class _EventRegistrationScreenState
         _uploadProgress.remove(field.key);
         _uploadErrors[field.key] = message;
       });
+      _announce(message);
     }
   }
 
@@ -744,6 +763,7 @@ class _EventRegistrationScreenState
         _validationMessage = message;
       });
       _scrollToField(invalid.key);
+      _announce(message);
       return;
     }
     if (_currentPageIndex < schema.pages.length - 1) {
@@ -773,6 +793,7 @@ class _EventRegistrationScreenState
       final message = _submitBlockedMessage(schema) ?? _copy.registrationIncomplete;
       setState(() => _error = message);
       _scrollToTop();
+      _announce(message);
       return;
     }
 
@@ -790,6 +811,7 @@ class _EventRegistrationScreenState
         setState(() => _currentPageIndex = invalid.pageIndex);
       }
       _scrollToField(invalid.key);
+      _announce(message);
       return;
     }
 
@@ -1504,9 +1526,7 @@ class _EventRegistrationScreenState
                 ),
                 const SizedBox(height: 8),
               ],
-              ExcludeSemantics(
-                child: AccessibleHtmlContent(html: html),
-              ),
+              AccessibleHtmlContent(html: html),
             ],
           ),
         );

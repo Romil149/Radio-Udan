@@ -15,6 +15,7 @@ Future<Country?> showAccessibleCountryPicker({
   required AppCopy copy,
   List<String> favoriteIso = const ['IN'],
 }) {
+  final sheetHeight = MediaQuery.sizeOf(context).height * 0.92;
   return showModalBottomSheet<Country>(
     context: context,
     isScrollControlled: true,
@@ -24,11 +25,19 @@ Future<Country?> showAccessibleCountryPicker({
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
     builder: (sheetContext) {
-      return UdaanModalSheet(
-        title: copy.phoneCountryPickerTitle,
-        child: _AccessibleCountryPickerSheet(
-          copy: copy,
-          favoriteIso: favoriteIso,
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (sheetContext.mounted) {
+          announce(sheetContext, copy.phoneCountryPickerTitle);
+        }
+      });
+      return SizedBox(
+        height: sheetHeight,
+        child: UdaanModalSheet(
+          title: copy.phoneCountryPickerTitle,
+          child: _AccessibleCountryPickerSheet(
+            copy: copy,
+            favoriteIso: favoriteIso,
+          ),
         ),
       );
     },
@@ -104,100 +113,114 @@ class _AccessibleCountryPickerSheetState
     final countries = _filteredCountries;
     final query = _searchController.text.trim();
 
-    return DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.85,
-      minChildSize: 0.45,
-      maxChildSize: 0.95,
-      builder: (context, scrollController) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(
-            BrandTokens.screenPadding,
-            12,
-            BrandTokens.screenPadding,
-            16,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        BrandTokens.screenPadding,
+        12,
+        BrandTokens.screenPadding,
+        16,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
             children: [
-              UdaanScreenHeader(
-                title: widget.copy.phoneCountryPickerTitle,
-                style: GoogleFonts.atkinsonHyperlegible(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: context.udaan.onBackground,
+              Expanded(
+                child: UdaanScreenHeader(
+                  title: widget.copy.phoneCountryPickerTitle,
+                  style: GoogleFonts.atkinsonHyperlegible(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: context.udaan.onBackground,
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
               Semantics(
-                label: widget.copy.phoneCountrySearchHint,
-                textField: true,
+                button: true,
+                label: widget.copy.cancel,
                 child: ExcludeSemantics(
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (_) => setState(() {}),
-                    onTapOutside: (_) => dismissKeyboard(context),
-                    style: GoogleFonts.atkinsonHyperlegible(
-                      fontSize: 16,
-                      color: context.udaan.onBackground,
+                  child: IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    constraints: const BoxConstraints(
+                      minWidth: BrandTokens.a11yMinTapTarget,
+                      minHeight: BrandTokens.a11yMinTapTarget,
                     ),
-                    decoration: InputDecoration(
-                      hintText: widget.copy.phoneCountrySearchHint,
-                    filled: true,
-                    fillColor: context.udaan.background,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          BorderSide(color: context.udaan.outlineVariant),
+                    icon: Icon(
+                      Icons.close,
+                      color: context.udaan.onBackground,
                     ),
                   ),
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Semantics(
+            label: widget.copy.phoneCountrySearchHint,
+            textField: true,
+            child: ExcludeSemantics(
+              child: TextField(
+                controller: _searchController,
+                onChanged: (_) => setState(() {}),
+                onTapOutside: (_) => dismissKeyboard(context),
+                style: GoogleFonts.atkinsonHyperlegible(
+                  fontSize: 16,
+                  color: context.udaan.onBackground,
+                ),
+                decoration: InputDecoration(
+                  hintText: widget.copy.phoneCountrySearchHint,
+                  filled: true,
+                  fillColor: context.udaan.background,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        BorderSide(color: context.udaan.outlineVariant),
+                  ),
+                ),
               ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  children: [
-                    if (query.isEmpty && favorites.isNotEmpty) ...[
-                      Semantics(
-                        header: true,
-                        label: widget.copy.phoneCountryFavorites,
-                        child: ExcludeSemantics(
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Text(
-                              widget.copy.phoneCountryFavorites,
-                              style: GoogleFonts.atkinsonHyperlegible(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w800,
-                                color: context.udaan.primaryGlow,
-                              ),
-                            ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: ListView(
+              children: [
+                if (query.isEmpty && favorites.isNotEmpty) ...[
+                  Semantics(
+                    header: true,
+                    label: widget.copy.phoneCountryFavorites,
+                    child: ExcludeSemantics(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          widget.copy.phoneCountryFavorites,
+                          style: GoogleFonts.atkinsonHyperlegible(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: context.udaan.primaryGlow,
                           ),
                         ),
                       ),
-                      for (final country in favorites)
-                        _CountryTile(
-                          country: country,
-                          semanticsLabel: _countrySemanticsLabel(country),
-                          onTap: () => Navigator.of(context).pop(country),
-                        ),
-                      const SizedBox(height: 12),
-                    ],
-                    for (final country in countries)
-                      _CountryTile(
-                        country: country,
-                        semanticsLabel: _countrySemanticsLabel(country),
-                        onTap: () => Navigator.of(context).pop(country),
-                      ),
-                  ],
-                ),
-              ),
-            ],
+                    ),
+                  ),
+                  for (final country in favorites)
+                    _CountryTile(
+                      country: country,
+                      semanticsLabel: _countrySemanticsLabel(country),
+                      onTap: () => Navigator.of(context).pop(country),
+                    ),
+                  const SizedBox(height: 12),
+                ],
+                for (final country in countries)
+                  _CountryTile(
+                    country: country,
+                    semanticsLabel: _countrySemanticsLabel(country),
+                    onTap: () => Navigator.of(context).pop(country),
+                  ),
+              ],
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
@@ -231,7 +254,7 @@ class _CountryTile extends StatelessWidget {
                   children: [
                     Text(
                       country.flagEmoji,
-                      style: TextStyle(fontSize: 24),
+                      style: const TextStyle(fontSize: 24),
                     ),
                     const SizedBox(width: 12),
                     Expanded(

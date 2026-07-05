@@ -32,6 +32,7 @@ require_once RADIOUDAAN_APP_API_PATH . 'includes/class-registration-guard.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-copy-catalog.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-branding.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-live-radio.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-azuracast-now-playing.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-config.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-upload-cleanup.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-mailer.php';

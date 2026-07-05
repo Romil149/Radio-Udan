@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/router/app_router.dart';
 import '../../core/router/event_deep_link.dart';
+import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
 import 'auth_session_helper.dart';
 import 'auth_validators.dart';
@@ -35,16 +37,21 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
     super.dispose();
   }
 
+  void _setError(String message) {
+    setState(() => _error = message);
+    announceValidationError(context, message);
+  }
+
   Future<void> _submit() async {
     final email = _emailController.text.trim().toLowerCase();
     final password = _passwordController.text;
 
     if (!isValidEmail(email)) {
-      setState(() => _error = _copy.emailInvalid);
+      _setError(_copy.emailInvalid);
       return;
     }
     if (password.isEmpty) {
-      setState(() => _error = _copy.passwordRequired);
+      _setError(_copy.passwordRequired);
       return;
     }
 
@@ -74,9 +81,7 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
         navigateAfterAuth(context, ref);
       }
     } catch (e) {
-      final apiError = parseApiError(e);
-      final message = apiError.message;
-      setState(() => _error = message);
+      _setError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -88,6 +93,10 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
       label: _obscurePassword ? _copy.showPassword : _copy.hidePassword,
       child: ExcludeSemantics(
         child: IconButton(
+          constraints: const BoxConstraints(
+            minWidth: BrandTokens.a11yMinTapTarget,
+            minHeight: BrandTokens.a11yMinTapTarget,
+          ),
           icon: Icon(
             _obscurePassword
                 ? Icons.visibility_outlined

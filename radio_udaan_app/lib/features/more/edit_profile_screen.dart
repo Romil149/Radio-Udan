@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/router/app_router.dart';
@@ -85,10 +86,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       await persistAuthSession(ref, session);
       _announce(_copy.profileUpdated);
     } catch (e) {
-      setState(() => _error = parseApiError(e).message);
+      _setError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  void _setError(String message) {
+    setState(() => _error = message);
+    announceValidationError(context, message);
   }
 
   Future<void> _save() async {
@@ -96,11 +102,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final email = _emailController.text.trim().toLowerCase();
 
     if (name.length < 2) {
-      setState(() => _error = _copy.nameRequired);
+      _setError(_copy.nameRequired);
       return;
     }
     if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(email)) {
-      setState(() => _error = _copy.emailInvalid);
+      _setError(_copy.emailInvalid);
       return;
     }
 
@@ -131,7 +137,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _announce(_copy.profileUpdated);
       Navigator.of(context).pop();
     } catch (e) {
-      setState(() => _error = parseApiError(e).message);
+      _setError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }

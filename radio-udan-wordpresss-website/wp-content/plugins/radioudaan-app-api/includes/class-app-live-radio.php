@@ -149,8 +149,6 @@ class RadioUdaan_App_Live_Radio {
 	 */
 	public static function get_public_config() {
 		return array(
-			'show_title'       => self::get_show_title(),
-			'show_subtitle'    => self::get_show_subtitle(),
 			'hero_image_url'   => self::get_hero_image_url(),
 			'whatsapp_url'     => self::get_whatsapp_url(),
 			'whatsapp_label'   => self::get_whatsapp_label(),

@@ -58,9 +58,13 @@ class EventCard extends StatelessWidget {
     final summary = event.summary?.trim() ?? '';
 
     final registrationOpen = event.isRegistrationOpen;
-    final semanticsLabel = registrationOpen
-        ? copy.eventRegisterForSemantics(event.title)
-        : copy.eventRegistrationClosedSemantics(event.title);
+    final badge = event.eventTypeLabel?.trim() ?? '';
+    final semanticsLabel = copy.eventCardSemantics(
+      title: event.title,
+      schedule: schedule.isNotEmpty ? schedule : null,
+      badge: badge.isNotEmpty ? badge : null,
+      registrationOpen: registrationOpen,
+    );
 
     return Semantics(
       button: registrationOpen,

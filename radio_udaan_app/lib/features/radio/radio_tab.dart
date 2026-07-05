@@ -1,4 +1,4 @@
-import 'dart:async' show unawaited;
+import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +16,7 @@ import '../../core/theme/udaan_colors.dart';
 import '../../core/theme/udaan_google_fonts.dart';
 import '../../core/models/radio_schedule.dart';
 import '../../core/widgets/main_tab_app_bar.dart';
+import 'azuracast_now_playing_provider.dart';
 import 'live_now_playing.dart';
 import '../favorites/app_favorites_provider.dart';
 import 'radio_player_controller.dart';
@@ -35,6 +36,20 @@ class _RadioTabState extends ConsumerState<RadioTab> {
   AppCopy get _copy => ref.read(appCopyProvider);
 
   double _volume = 1.0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(azuracastNowPlayingProvider.notifier).startPolling();
+    });
+  }
+
+  @override
+  void dispose() {
+    ref.read(azuracastNowPlayingProvider.notifier).stopPolling();
+    super.dispose();
+  }
 
   Future<void> _shareApp() async {
     final remoteConfig = ref.read(remoteConfigProvider);
@@ -86,6 +101,7 @@ class _RadioTabState extends ConsumerState<RadioTab> {
     final isPlaying = player.status == RadioPlayerStatus.playing;
 
     final next = scheduleAsync.valueOrNull?.next;
+    final azuraUpcoming = ref.watch(azuracastUpcomingProvider);
     final heroTitle = nowPlaying.title;
     final heroHosts = nowPlaying.hostsLine;
     final heroImageUrl = nowPlaying.imageUrl;
@@ -156,6 +172,8 @@ class _RadioTabState extends ConsumerState<RadioTab> {
             _UpcomingSegmentsCard(
               copy: _copy,
               next: next,
+              azuraNextTitle: azuraUpcoming?.title,
+              azuraNextSubtitle: azuraUpcoming?.subtitle,
               onOpenSchedule: () => showRadioScheduleSheet(context),
             ),
             const SizedBox(height: 16),
@@ -367,22 +385,33 @@ class _UpcomingSegmentsCard extends StatelessWidget {
     required this.copy,
     required this.next,
     required this.onOpenSchedule,
+    this.azuraNextTitle,
+    this.azuraNextSubtitle,
   });
 
   final AppCopy copy;
   final RadioScheduleSegment? next;
   final VoidCallback onOpenSchedule;
+  final String? azuraNextTitle;
+  final String? azuraNextSubtitle;
 
   @override
   Widget build(BuildContext context) {
-    final title = next?.title.trim().isNotEmpty == true
-        ? next!.title
-        : copy.radioUpcomingNone;
+    final azuraTitle = azuraNextTitle?.trim() ?? '';
+    final title = azuraTitle.isNotEmpty
+        ? azuraTitle
+        : (next?.title.trim().isNotEmpty == true
+            ? next!.title
+            : copy.radioUpcomingNone);
 
     final subtitleParts = <String>[
-      if ((next?.timeRangeLabel() ?? '').isNotEmpty) next!.timeRangeLabel(),
-      if (next != null && next!.hosts.trim().isNotEmpty)
-        formatRadioHostsLine(next!.hosts, copy),
+      if ((azuraNextSubtitle ?? '').trim().isNotEmpty)
+        azuraNextSubtitle!.trim()
+      else ...[
+        if ((next?.timeRangeLabel() ?? '').isNotEmpty) next!.timeRangeLabel(),
+        if (next != null && next!.hosts.trim().isNotEmpty)
+          formatRadioHostsLine(next!.hosts, copy),
+      ],
     ];
     final subtitle = subtitleParts.join(' • ');
 

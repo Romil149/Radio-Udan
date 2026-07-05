@@ -1,5 +1,43 @@
 # Task History
 
+### 2026-07-05 — Forms accessibility master audit + top blocker fixes
+**Requested by**: User (urgent — all form fields on all screens)
+**What was done**: Code audit across Auth, Events registration, More, Library → `FORMS-AUDIT-MASTER.md`. Logged A11Y-001–009 in bugs-found. **Fix phase started:** phone field ExcludeSemantics + autofill normalize; password toggle moved outside excluded TextField in `UdaanLabeledField`; validation `announceValidationError` on Login, Register, Phone login.
+**Status**: ⚠️ Partial — country picker focus trap, event registration announce, help contact still open
+**Notes**: Re-test Login/Register on device for FIND-033/034/024.
+
+**Requested by**: User — stop merging now-playing into GET /config; app fetches AzuraCast URL directly
+**What was done**: WP plugin stores `now_playing_api_url` only; removed show title/subtitle from `live_radio` public payload. Flutter: AzuraCast model + provider with smart poll (15–90s, aligned to track `remaining`); Live tab hero from AzuraCast + WP fallback hero; upcoming card prefers `playing_next`; removed 30s full `/config` refresh on Radio tab.
+**Files changed**: plugin admin/config/live-radio/azuracast class; Flutter azuracast provider/model, live_now_playing, radio_tab, remote_config, live_radio_config; tests
+**Status**: ✅ Local complete — staging plugin **not deployed** yet
+**Notes**: App uses default `https://stream.radioudaan.com/api/nowplaying` until staging serves `now_playing_api_url`.
+
+### 2026-07-04 — Screen-by-screen device audit started (Screen 01 Bootstrap)
+**Requested by**: User (Jordan workflow: code audit → device test → document findings only)
+**What was done**: Created `device-audit/AUDIT-PROTOCOL.md` + `SCREEN-01-bootstrap.md` with full code walkthrough, 7 code findings, 13 device checkpoints. Updated Agent 16 for audit-only mode.
+**Status**: ⏳ AWAITING human device results for Screen 01
+
+### 2026-07-04 — Phase A accessibility KB integrity
+**Requested by**: User (Phase A from Alex rating follow-up)
+**What was done**: Created missing KB files (`release-checklist-flutter.md`, `accessibility-scanner.md`, `reference-apps.md`). Added `accessibility-kb/CHANGELOG.md`. Added `scripts/export-a11y-copy-snapshot.sh` + exported staging copy to `expected-copy-snapshot.json` (405 keys, 209 a11y). Updated Agent 16 operating model (human runs screen readers; agent coordinates). Updated README index, simulator, global subagent.
+**Files changed**: `accessibility-kb/**`, `scripts/export-a11y-copy-snapshot.sh`, `agent-16-talkback-voiceover-tester.md`, `~/.cursor/agents/agent-16-*`
+**Status**: ✅ Phase A complete — snapshot from staging curl 2026-07-04
+**Notes**: Re-run snapshot after WP copy deploy: `bash scripts/export-a11y-copy-snapshot.sh`
+
+### 2026-07-04 — Expert Accessibility KB + Agent 16 wiring
+**Requested by**: User (@alex — full Flutter a11y KB structure: APIs, journeys, patterns, matrix, bug DB, simulator)
+**What was done**: Created `.cursor/memory/accessibility-kb/` (12 sections): official index, WCAG, Flutter API ref, behavior matrix, widget encyclopedia (45+), Android TalkBack, Apple VoiceOver, UI patterns, Radio Udaan recipes, testing manual (25 scenarios), blind user journeys, screen reader simulator, bug database (20 issues), audit template, videos, research index, release checklist. Updated Agent 16 mandatory read list + global subagent. Legacy KB → redirect.
+**Files changed**: `accessibility-kb/**`, `agent-16-talkback-voiceover-tester.md`, `talkback-voiceover-knowledge-base.md`, `~/.cursor/agents/agent-16-*`, `scripts/a11y-device-qa.md` (About tab fix)
+**Status**: ✅ KB complete — **device quotes in 07-audits/apps/ still require human capture**
+**Notes**: Widget encyclopedia target 100+; real app audits use template only until device sessions logged.
+
+### 2026-07-04 — TalkBack/VoiceOver knowledge base + Agent 16
+**Requested by**: User (@alex — professional screen-reader testing prompt, online-sourced KB, production agent)
+**What was done**: Created `.cursor/memory/talkback-voiceover-knowledge-base.md` from official Flutter 3.44, Android Developers, and Apple accessibility docs (gestures, setup, ship criteria, WCAG refs, Radio Udaan screen matrix). Created `.cursor/agents/agent-16-talkback-voiceover-tester.md` (Jordan Lee / Agent 16) with no-assumption rules, step evidence template, ship blockers, bug format, session report. Updated agents README.
+**Files changed**: `.cursor/memory/talkback-voiceover-knowledge-base.md`, `.cursor/agents/agent-16-talkback-voiceover-tester.md`, `.cursor/agents/README.md`
+**Status**: ✅ Documentation complete — **device QA still requires human OTP + physical builds**
+**Notes**: Invoke via `@agent-16-talkback-voiceover` or paste agent-16 file; pairs with `scripts/a11y-device-qa.md`. Global Cursor subagent registered at `~/.cursor/agents/agent-16-talkback-voiceover-tester.md`.
+
 ### 2026-07-03 — Live Radio: schedule gaps + volume slider a11y
 **Requested by**: User (show hero during slot only; WP defaults between shows; volume swipe like slider)
 **What was done**: WP schedule adds `ends_at` + `duration_minutes` (ACF `broadcast_duration_minutes`, default 60). `on_air` only inside slot. Config `live_radio` merges schedule when on-air, exposes `default_*` fields for gaps. Flutter `resolveLiveNowPlaying` uses schedule window + admin defaults; volume control: Semantics slider + vertical drag on track.
@@ -306,3 +344,9 @@
 **Status**: ✅ Complete
 **Notes**: Non-negotiables embedded across prompts: in-app registrations only, one Forminator form per event, dynamic schema-driven forms, OTP India.
 
+### 2026-07-05 — AzuraCast now playing on Live tab
+**Requested by**: User
+**What was done**: WP plugin polls `https://stream.radioudaan.com/api/nowplaying/1` every 30s; merges song title, artist, album art into `GET /config` → `live_radio`. Removed admin show title/subtitle fields. Flutter hero uses AzuraCast always (before + during play); ICY still overrides while playing. Radio tab refreshes config every 30s.
+**Files changed**: `class-app-azuracast-now-playing.php`, `class-app-config.php`, `class-app-live-radio.php`, admin settings, `live_radio_config.dart`, `live_now_playing.dart`, `radio_tab.dart`, tests
+**Status**: ✅ Complete locally — **deploy plugin to staging** required for live API
+**Notes**: Fallback hero image in WP admin when stream has no album art. Schedule kept for favorites/upcoming only.

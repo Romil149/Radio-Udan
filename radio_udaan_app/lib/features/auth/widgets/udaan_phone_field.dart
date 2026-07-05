@@ -95,16 +95,27 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
   void initState() {
     super.initState();
     _input.addListener(_onInputChanged);
+    _input.nationalController.addListener(_onNationalTextChanged);
   }
 
   @override
   void dispose() {
     _input.removeListener(_onInputChanged);
+    _input.nationalController.removeListener(_onNationalTextChanged);
     super.dispose();
   }
 
   void _onInputChanged() {
     if (mounted) setState(() {});
+  }
+
+  void _onNationalTextChanged() {
+    final text = _input.nationalController.text;
+    if (text.contains('+') ||
+        text.startsWith('00') ||
+        text.length > _input.maxNationalDigits + 1) {
+      _input.setFromRawInput(text);
+    }
   }
 
   Future<void> _openCountryPicker() async {
@@ -238,22 +249,25 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
               child: Semantics(
                 textField: true,
                 label: nationalSemanticsLabel,
-                child: TextField(
-                  controller: _input.nationalController,
-                  keyboardType: TextInputType.phone,
-                  textInputAction: widget.textInputAction,
-                  autofillHints: const [AutofillHints.telephoneNumber],
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(_input.maxNationalDigits),
-                  ],
-                  onSubmitted: widget.onSubmitted,
-                  onTapOutside: (_) => dismissKeyboard(context),
-                  style: GoogleFonts.atkinsonHyperlegible(
-                    fontSize: 18,
-                    color: context.udaan.onBackground,
+                child: ExcludeSemantics(
+                  child: TextField(
+                    controller: _input.nationalController,
+                    keyboardType: TextInputType.phone,
+                    textInputAction: widget.textInputAction,
+                    autofillHints: const [AutofillHints.telephoneNumber],
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(_input.maxNationalDigits),
+                    ],
+                    onChanged: (_) => _onNationalTextChanged(),
+                    onSubmitted: widget.onSubmitted,
+                    onTapOutside: (_) => dismissKeyboard(context),
+                    style: GoogleFonts.atkinsonHyperlegible(
+                      fontSize: 18,
+                      color: context.udaan.onBackground,
+                    ),
+                    decoration: _fieldDecoration(hint: hint),
                   ),
-                  decoration: _fieldDecoration(hint: hint),
                 ),
               ),
             ),
