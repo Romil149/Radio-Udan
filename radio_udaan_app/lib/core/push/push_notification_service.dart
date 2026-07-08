@@ -15,6 +15,7 @@ import '../api/radioudaan_api.dart';
 import '../providers/app_providers.dart';
 import '../router/app_router.dart';
 import '../router/whats_new_deep_link.dart';
+import 'push_diagnostics.dart';
 
 /// Android notification channel — must match WP FCM `channel_id`.
 const kPushAndroidChannelId = 'radioudaan_alerts';
@@ -47,14 +48,23 @@ class PushNotificationService {
   bool _tokenRefreshListening = false;
   static bool _backgroundHandlerRegistered = false;
 
+  PushDiagnostics get _diag => PushDiagnostics.instance;
+
   /// Firebase + FCM auto-init only — does not wait for local notification setup.
   Future<bool> _ensureMessagingCore() async {
-    if (kIsWeb) return false;
-    if (!await ensureFirebase()) return false;
+    if (kIsWeb) {
+      _diag.warn('Web platform — push notifications disabled');
+      return false;
+    }
+    if (!await ensureFirebase()) {
+      _diag.error('Firebase not initialized — cannot continue');
+      return false;
+    }
     try {
       await FirebaseMessaging.instance.setAutoInitEnabled(true);
+      _diag.ok('Firebase ready (auto-init enabled)');
     } catch (e) {
-      debugPrint('FCM auto-init failed: $e');
+      _diag.warn('FCM auto-init failed: $e');
     }
     return true;
   }
@@ -77,6 +87,7 @@ class PushNotificationService {
   /// Background sync after login, cold start, or app resume. Never blocks UI.
   Future<void> syncForLoggedInUser() async {
     if (kIsWeb) return;
+    _diag.log('Background push sync started');
     if (!await _ensureMessagingCore()) return;
 
     // Listeners / local notifications — best effort, do not block token upload.
@@ -93,6 +104,10 @@ class PushNotificationService {
       result = await _ensureRegisteredDetailed();
     }
 
+    _diag.log('Background push sync finished: ${result.name}',
+        level: result == PushRegistrationResult.success
+            ? PushLogLevel.ok
+            : PushLogLevel.warn);
     if (kDebugMode) {
       debugPrint('Push background registration result: $result');
     }
@@ -101,6 +116,7 @@ class PushNotificationService {
   /// Explicit registration (Settings button) — returns outcome for user feedback.
   Future<PushRegistrationResult> syncForLoggedInUserDetailed() async {
     if (kIsWeb) return PushRegistrationResult.unavailable;
+    _diag.log('Manual registration started (${Platform.operatingSystem})');
 
     final initTimeout =
         Platform.isIOS ? _iosStartupTimeout : _startupTimeout;
@@ -127,6 +143,10 @@ class PushNotificationService {
       result = await _ensureRegisteredDetailed();
     }
 
+    _diag.log('Manual registration finished: ${result.name}',
+        level: result == PushRegistrationResult.success
+            ? PushLogLevel.ok
+            : PushLogLevel.error);
     if (kDebugMode) {
       debugPrint('Push registration result: $result');
     }
@@ -147,21 +167,26 @@ class PushNotificationService {
     try {
       final messaging = FirebaseMessaging.instance;
       final settings = await messaging.getNotificationSettings();
+      _diag.log('Permission status: ${settings.authorizationStatus.name}');
       if (settings.authorizationStatus == AuthorizationStatus.notDetermined) {
+        _diag.log('Permission not decided — showing system prompt');
         await requestSystemPermission();
       } else if (Platform.isAndroid) {
         final androidStatus = await Permission.notification.status;
         if (!androidStatus.isGranted && !androidStatus.isLimited) {
+          _diag.log('Android POST_NOTIFICATIONS not granted — requesting');
           await Permission.notification.request();
         }
       }
     } catch (e) {
-      debugPrint('Push permission check failed: $e');
+      _diag.warn('Permission check failed: $e');
     }
 
     if (!await hasSystemPermission()) {
+      _diag.error('Notifications permission denied — registration blocked');
       return PushRegistrationResult.permissionDenied;
     }
+    _diag.ok('Notifications permission granted');
     return registerDeviceTokenDetailed(attempts: Platform.isIOS ? 6 : 4);
   }
 
@@ -292,11 +317,16 @@ class PushNotificationService {
     final platform = Platform.isIOS ? 'ios' : 'android';
 
     for (var attempt = 0; attempt < attempts; attempt++) {
+      _diag.log('Token attempt ${attempt + 1}/$attempts (platform=$platform)');
       try {
         if (Platform.isIOS) {
-          await _waitForApnsToken(
+          final gotApns = await _waitForApnsToken(
             messaging,
             maxAttempts: attempt == 0 ? 40 : 20,
+          );
+          _diag.log(
+            gotApns ? 'APNs token received from Apple' : 'APNs token NOT ready',
+            level: gotApns ? PushLogLevel.ok : PushLogLevel.warn,
           );
         }
 
@@ -305,13 +335,19 @@ class PushNotificationService {
           onTimeout: () => null,
         );
         if (token == null || token.length < 20) {
+          _diag.warn('Attempt ${attempt + 1}: FCM token unavailable '
+              '(len=${token?.length ?? 0})');
           if (attempt < attempts - 1) {
             await Future<void>.delayed(Duration(seconds: Platform.isIOS ? 3 : 2));
           }
           continue;
         }
+        _diag.ok('FCM token received: '
+            '${token.substring(0, 12)}… (len=${token.length})');
 
+        _diag.log('POST /devices/register …');
         await _api.registerPushDevice(fcmToken: token, platform: platform);
+        _diag.ok('Server accepted device — registration complete');
 
         if (!_tokenRefreshListening) {
           _tokenRefreshListening = true;
@@ -319,12 +355,15 @@ class PushNotificationService {
             if (next.length < 20) return;
             try {
               await _api.registerPushDevice(fcmToken: next, platform: platform);
-            } catch (_) {}
+              _diag.ok('Token refreshed and re-registered');
+            } catch (e) {
+              _diag.warn('Token refresh re-register failed: $e');
+            }
           });
         }
         return PushRegistrationResult.success;
       } catch (e) {
-        debugPrint('Push registration attempt ${attempt + 1} failed: $e');
+        _diag.error('Attempt ${attempt + 1} failed: $e');
         if (attempt < attempts - 1) {
           await Future<void>.delayed(Duration(seconds: Platform.isIOS ? 3 : 2));
         } else {
@@ -332,6 +371,7 @@ class PushNotificationService {
         }
       }
     }
+    _diag.error('All $attempts attempts exhausted — token unavailable');
     return PushRegistrationResult.tokenUnavailable;
   }
 
@@ -339,15 +379,16 @@ class PushNotificationService {
     return registerDeviceToken();
   }
 
-  Future<void> _waitForApnsToken(
+  Future<bool> _waitForApnsToken(
     FirebaseMessaging messaging, {
     int maxAttempts = 5,
   }) async {
     for (var attempt = 0; attempt < maxAttempts; attempt++) {
       final apns = await messaging.getAPNSToken();
-      if (apns != null && apns.isNotEmpty) return;
+      if (apns != null && apns.isNotEmpty) return true;
       await Future<void>.delayed(const Duration(milliseconds: 500));
     }
+    return false;
   }
 
   Future<void> _onForegroundMessage(RemoteMessage message) async {

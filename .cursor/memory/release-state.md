@@ -3,8 +3,8 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+35** (local) | not pushed | 2026-07-08 | Push registration fix: permission check no longer blocked when FCM init times out |
-| TestFlight iOS | **2.0.0+35** | local only | 2026-07-08 | Needs push to `main` + CI after user confirms |
+| GitHub `main` | **2.0.0+36** | pending push | 2026-07-08 | Push diagnostics screen + step-by-step registration logging |
+| TestFlight iOS | **2.0.0+36** | CI pending | 2026-07-08 | Triggered by push to `main` |
 | Staging WP plugin | partial | **yes** | 2026-07-08 | API smoke 19/19; redeploy full zip if `class-admin-donations.php` missing on server |
 | Staging API smoke | 19/19 | — | 2026-07-08 | Includes `/donate/*` routes + `info_hub.donate.razorpay` |
 

@@ -1,5 +1,9 @@
 
-### 2026-07-08 — MSG91 OTP go-live checklist (browser + plugin package)
+### 2026-07-08 — Push diagnostics screen (build 36)
+**Requested by**: User — live logging to debug zero device registrations on release builds.
+**What was done**: `PushDiagnostics` recorder; instrumented `push_notification_service.dart` (permission, APNs, FCM token, API); `PushDiagnosticsScreen` in Settings with Run / Copy log / Clear; bumped **2.0.0+36**.
+**Verification**: `dart analyze lib` = 0 errors.
+**Status**: ✅ Pushed to `main` — CI APK/TestFlight pending; user runs Settings → Push diagnostics → Copy log.
 **Requested by**: User — "do all these" (full OTP/DLT go-live after VILPOWER PE-TM approval).
 **What was done**:
 - **MSG91 (browser)**: Added PE-TM chain entity `1101451530000096415` → TM-D `1302157225275643280` (**Active**); mapped DLT PE ID on sender **RUDAAN**; clicked **Re-verify** on template `Radio_Uddan_OTP` → status **Pending by MSG91**.
