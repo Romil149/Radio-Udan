@@ -49,9 +49,9 @@ class RadioUdaan_Otp_Msg91 {
 
 		$auth_key = self::get_auth_key();
 		$mobile   = preg_replace( '/\D/', '', $phone );
-		$message  = sprintf(
-			/* translators: %s: OTP code */
-			__( 'Your Radio Udaan verification code is %s. Valid for 5 minutes.', 'radioudaan-app-api' ),
+		// Must match VILPOWER/MSG91 DLT template `1107178349700604138` exactly (only OTP digits vary).
+		$message = sprintf(
+			'Your Radio Udaan verification code is %s. Valid for 5 minutes. -Udaan Empowerment Trust',
 			$otp
 		);
 

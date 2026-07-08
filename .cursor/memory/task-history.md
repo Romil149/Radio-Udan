@@ -1,6 +1,13 @@
-# Task History
 
-### 2026-07-08 — Firebase project migration to radio-udaan-72232 (build 34)
+### 2026-07-08 — MSG91 OTP go-live checklist (browser + plugin package)
+**Requested by**: User — "do all these" (full OTP/DLT go-live after VILPOWER PE-TM approval).
+**What was done**:
+- **MSG91 (browser)**: Added PE-TM chain entity `1101451530000096415` → TM-D `1302157225275643280` (**Active**); mapped DLT PE ID on sender **RUDAAN**; clicked **Re-verify** on template `Radio_Uddan_OTP` → status **Pending by MSG91**.
+- **Plugin (local)**: OTP SMS text aligned with DLT suffix in `class-otp-msg91.php`; packaged `dist/radioudaan-app-api-staging.zip`.
+**Verification**: `verify-wp-plugin.sh` 7/7; staging smoke **19/19**; `dart analyze lib` 0 errors.
+**Status**: ✅ OTP live on staging (user confirmed SMS 2026-07-08). Push: FCM configured; device registration + admin send test pending on physical device.
+**Notes**: See `.cursor/memory/otp-production-setup.md` for IDs and deploy steps.
+
 **Requested by**: User — fresh Firebase project for push; align app + staging WP.
 **What was done**: Replaced `google-services.json`, `GoogleService-Info.plist`, `firebase_options.dart`, `firebase.json` for project `radio-udaan-72232`; bumped build **2.0.0+34**; staging FCM service account + APNs configured by operator.
 **Status**: ✅ Pushed to `main` — CI APK/TestFlight pending; device push QA after install.

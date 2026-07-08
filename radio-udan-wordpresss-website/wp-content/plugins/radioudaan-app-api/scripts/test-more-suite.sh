@@ -92,8 +92,18 @@ echo ""
 echo "== 7) POST /devices/register (mock FCM token) =="
 DEV=$(curl -sS -X POST "$BASE/devices/register" -H "$AUTH" -H 'Content-Type: application/json' \
   -d '{"fcm_token":"test_fcm_token_'"$STAMP"'_abcdefghijklmnopqrstuvwxyz","platform":"android"}')
-echo "$DEV" | python3 -c "import json,sys; assert json.load(sys.stdin).get('status')=='registered'" \
-  && pass "device register" || fail "device register"
+echo "$DEV" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+code=d.get('code','')
+if d.get('status')=='registered':
+    print('registered (local dev)')
+    sys.exit(0)
+if code=='test_token_not_allowed':
+    print('test token rejected (expected on staging/production)')
+    sys.exit(0)
+sys.exit(1)
+" && pass "device register" || fail "device register"
 echo ""
 
 echo "== 8) GET /notifications (unread_count) =="

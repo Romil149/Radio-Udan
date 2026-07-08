@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../features/more/notifications_screen.dart';
 import '../../firebase_options.dart';
@@ -44,6 +45,19 @@ class PushNotificationService {
   final _localNotifications = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
   bool _tokenRefreshListening = false;
+  static bool _backgroundHandlerRegistered = false;
+
+  /// Firebase + FCM auto-init only — does not wait for local notification setup.
+  Future<bool> _ensureMessagingCore() async {
+    if (kIsWeb) return false;
+    if (!await ensureFirebase()) return false;
+    try {
+      await FirebaseMessaging.instance.setAutoInitEnabled(true);
+    } catch (e) {
+      debugPrint('FCM auto-init failed: $e');
+    }
+    return true;
+  }
 
   static Future<bool> ensureFirebase() async {
     if (kIsWeb) return false;
@@ -60,28 +74,46 @@ class PushNotificationService {
     }
   }
 
-  /// Background sync after login, cold start, or app resume. No in-app button required.
+  /// Background sync after login, cold start, or app resume. Never blocks UI.
   Future<void> syncForLoggedInUser() async {
-    await syncForLoggedInUserDetailed();
+    if (kIsWeb) return;
+    if (!await _ensureMessagingCore()) return;
+
+    // Listeners / local notifications — best effort, do not block token upload.
+    unawaited(
+      initialize().timeout(
+        Platform.isIOS ? _iosStartupTimeout : _startupTimeout,
+        onTimeout: () {},
+      ),
+    );
+
+    var result = await _ensureRegisteredDetailed();
+    if (Platform.isIOS && result == PushRegistrationResult.tokenUnavailable) {
+      await Future<void>.delayed(const Duration(seconds: 15));
+      result = await _ensureRegisteredDetailed();
+    }
+
+    if (kDebugMode) {
+      debugPrint('Push background registration result: $result');
+    }
   }
 
-  /// Same as [syncForLoggedInUser] but returns a result for Settings / QA.
+  /// Explicit registration (Settings button) — returns outcome for user feedback.
   Future<PushRegistrationResult> syncForLoggedInUserDetailed() async {
+    if (kIsWeb) return PushRegistrationResult.unavailable;
+
     final initTimeout =
         Platform.isIOS ? _iosStartupTimeout : _startupTimeout;
     try {
       await initialize().timeout(initTimeout);
     } on TimeoutException {
-      debugPrint('Push initialize timed out; continuing if core init finished');
+      debugPrint('Push initialize timed out; continuing with token registration');
     } catch (e) {
-      debugPrint('Push sync failed: $e');
-      return PushRegistrationResult.unavailable;
+      debugPrint('Push initialize failed; continuing: $e');
     }
 
-    if (!_initialized) {
-      if (!await ensureFirebase()) {
-        return PushRegistrationResult.unavailable;
-      }
+    if (!await _ensureMessagingCore()) {
+      return PushRegistrationResult.unavailable;
     }
 
     var result = await _ensureRegisteredDetailed();
@@ -108,16 +140,20 @@ class PushNotificationService {
   }
 
   Future<PushRegistrationResult> _ensureRegisteredDetailed() async {
-    if (!_initialized && !await ensureFirebase()) {
+    if (!await _ensureMessagingCore()) {
       return PushRegistrationResult.unavailable;
     }
 
     try {
       final messaging = FirebaseMessaging.instance;
-      await messaging.setAutoInitEnabled(true);
       final settings = await messaging.getNotificationSettings();
       if (settings.authorizationStatus == AuthorizationStatus.notDetermined) {
         await requestSystemPermission();
+      } else if (Platform.isAndroid) {
+        final androidStatus = await Permission.notification.status;
+        if (!androidStatus.isGranted && !androidStatus.isLimited) {
+          await Permission.notification.request();
+        }
       }
     } catch (e) {
       debugPrint('Push permission check failed: $e');
@@ -133,7 +169,10 @@ class PushNotificationService {
     if (_initialized || kIsWeb) return;
     if (!await ensureFirebase()) return;
 
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    if (!_backgroundHandlerRegistered) {
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+      _backgroundHandlerRegistered = true;
+    }
 
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings();
@@ -190,7 +229,13 @@ class PushNotificationService {
   }
 
   Future<void> requestSystemPermission() async {
-    if (kIsWeb || !_initialized) return;
+    if (kIsWeb) return;
+    if (!await _ensureMessagingCore()) return;
+
+    if (Platform.isAndroid) {
+      await Permission.notification.request();
+    }
+
     try {
       await FirebaseMessaging.instance.requestPermission(
         alert: true,
@@ -204,7 +249,16 @@ class PushNotificationService {
   }
 
   Future<bool> hasSystemPermission() async {
-    if (kIsWeb || !_initialized) return false;
+    if (kIsWeb) return false;
+    if (!await _ensureMessagingCore()) return false;
+
+    if (Platform.isAndroid) {
+      final androidStatus = await Permission.notification.status;
+      if (androidStatus.isGranted || androidStatus.isLimited) {
+        return true;
+      }
+    }
+
     try {
       final settings = await FirebaseMessaging.instance.getNotificationSettings();
       return settings.authorizationStatus == AuthorizationStatus.authorized ||
@@ -215,7 +269,7 @@ class PushNotificationService {
   }
 
   Future<void> registerIfPermitted() async {
-    if (kIsWeb || !_initialized) return;
+    if (kIsWeb) return;
     if (!await hasSystemPermission()) return;
     await registerDeviceToken();
   }
@@ -230,7 +284,7 @@ class PushNotificationService {
     int attempts = 3,
   }) async {
     if (kIsWeb) return PushRegistrationResult.unavailable;
-    if (!_initialized && !await ensureFirebase()) {
+    if (!await _ensureMessagingCore()) {
       return PushRegistrationResult.unavailable;
     }
 

@@ -106,6 +106,15 @@ class RadioUdaan_App_Notifications {
 			return new WP_Error( 'token_invalid', __( 'FCM token is required.', 'radioudaan-app-api' ), array( 'status' => 400 ) );
 		}
 
+		// QA scripts use test_fcm_* placeholders — they are not deliverable via FCM.
+		if ( 0 === strpos( $token, 'test_fcm' ) ) {
+			return new WP_Error(
+				'test_token_not_allowed',
+				__( 'Test FCM tokens cannot be registered for push delivery.', 'radioudaan-app-api' ),
+				array( 'status' => 400 )
+			);
+		}
+
 		if ( ! in_array( $platform, array( self::PLATFORM_ANDROID, self::PLATFORM_IOS ), true ) ) {
 			return new WP_Error(
 				'platform_invalid',

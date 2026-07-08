@@ -653,6 +653,7 @@ final class RadioUdaan_App_Api {
 					'app_users_auto_inc'     => $auto_inc,
 					'app_users_row_count'    => RadioUdaan_App_Users::row_count(),
 					'fcm_configured'         => RadioUdaan_App_Fcm_Sender::is_configured(),
+					'fcm_project_id'         => RadioUdaan_App_Settings::get_fcm_project_id(),
 					'push_devices_registered' => RadioUdaan_App_Notifications::count_registered_devices(),
 				),
 			),
