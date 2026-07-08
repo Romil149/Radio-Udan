@@ -520,6 +520,68 @@ class RadioUdaan_Admin_Settings_Page {
 				?>
 			</div>
 			<div class="ru-settings-panel__card">
+				<h3><?php esc_html_e( 'Pay Online (Razorpay)', 'radioudaan-app-api' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'In-app donations before Scan & Donate. Key secret and webhook secret are server-only.', 'radioudaan-app-api' ); ?></p>
+				<div class="ru-admin__toggle">
+					<input type="checkbox" name="donate_razorpay_enabled" id="donate_razorpay_enabled" value="1" <?php checked( ! empty( $c['donate_razorpay_enabled'] ) ); ?> />
+					<label for="donate_razorpay_enabled"><strong><?php esc_html_e( 'Enable Razorpay in the app', 'radioudaan-app-api' ); ?></strong></label>
+				</div>
+				<div class="ru-admin__field">
+					<label for="donate_razorpay_key_id"><?php esc_html_e( 'Razorpay Key ID', 'radioudaan-app-api' ); ?></label>
+					<input type="text" name="donate_razorpay_key_id" id="donate_razorpay_key_id" class="large-text" value="<?php echo esc_attr( $c['donate_razorpay_key_id'] ?? '' ); ?>" autocomplete="off" />
+				</div>
+				<div class="ru-admin__field">
+					<label for="donate_razorpay_key_secret"><?php esc_html_e( 'Razorpay Key Secret', 'radioudaan-app-api' ); ?></label>
+					<input type="password" name="donate_razorpay_key_secret" id="donate_razorpay_key_secret" class="large-text" value="" placeholder="<?php esc_attr_e( 'Paste to set or replace', 'radioudaan-app-api' ); ?>" autocomplete="new-password" />
+				</div>
+				<div class="ru-admin__field">
+					<label for="donate_razorpay_webhook_secret"><?php esc_html_e( 'Webhook secret', 'radioudaan-app-api' ); ?></label>
+					<input type="password" name="donate_razorpay_webhook_secret" id="donate_razorpay_webhook_secret" class="large-text" value="" placeholder="<?php esc_attr_e( 'From Razorpay Dashboard', 'radioudaan-app-api' ); ?>" autocomplete="new-password" />
+					<p class="description"><?php echo esc_html( rest_url( 'radioudaan/v1/donate/webhook' ) ); ?></p>
+				</div>
+				<div class="ru-admin__field">
+					<label for="donate_razorpay_checkout_name"><?php esc_html_e( 'Checkout display name', 'radioudaan-app-api' ); ?></label>
+					<input type="text" name="donate_razorpay_checkout_name" id="donate_razorpay_checkout_name" class="large-text" value="<?php echo esc_attr( $c['donate_razorpay_checkout_name'] ?? '' ); ?>" />
+				</div>
+				<div class="ru-admin__field">
+					<label for="donate_razorpay_preset_amounts"><?php esc_html_e( 'Preset amounts (INR, comma-separated)', 'radioudaan-app-api' ); ?></label>
+					<input type="text" name="donate_razorpay_preset_amounts" id="donate_razorpay_preset_amounts" class="large-text" value="<?php echo esc_attr( $c['donate_razorpay_preset_amounts'] ?? '100,500,1000,5000' ); ?>" />
+				</div>
+				<div class="ru-admin__toggle">
+					<input type="checkbox" name="donate_80g_enabled" id="donate_80g_enabled" value="1" <?php checked( ! empty( $c['donate_80g_enabled'] ) ); ?> />
+					<label for="donate_80g_enabled"><strong><?php esc_html_e( 'Enable 80G receipt option in app', 'radioudaan-app-api' ); ?></strong></label>
+				</div>
+				<div class="ru-admin__toggle">
+					<input type="checkbox" name="donate_80g_pdf_email" id="donate_80g_pdf_email" value="1" <?php checked( ! empty( $c['donate_80g_pdf_email'] ) ); ?> />
+					<label for="donate_80g_pdf_email"><strong><?php esc_html_e( 'Send 80G PDF email from WordPress', 'radioudaan-app-api' ); ?></strong></label>
+				</div>
+				<div class="ru-admin__field">
+					<label for="donate_80g_reg_number"><?php esc_html_e( '80G registration number', 'radioudaan-app-api' ); ?></label>
+					<input type="text" name="donate_80g_reg_number" id="donate_80g_reg_number" class="large-text" value="<?php echo esc_attr( $c['donate_80g_reg_number'] ?? '' ); ?>" />
+				</div>
+				<div class="ru-admin__field">
+					<label for="donate_80g_trust_pan"><?php esc_html_e( 'Trust PAN', 'radioudaan-app-api' ); ?></label>
+					<input type="text" name="donate_80g_trust_pan" id="donate_80g_trust_pan" class="regular-text" value="<?php echo esc_attr( $c['donate_80g_trust_pan'] ?? '' ); ?>" />
+				</div>
+				<div class="ru-admin__field">
+					<label for="donate_80g_legal_text"><?php esc_html_e( '80G legal text (on receipt)', 'radioudaan-app-api' ); ?></label>
+					<textarea name="donate_80g_legal_text" id="donate_80g_legal_text" class="large-text" rows="4"><?php echo esc_textarea( $c['donate_80g_legal_text'] ?? '' ); ?></textarea>
+				</div>
+				<div class="ru-admin__field">
+					<label><?php esc_html_e( 'Authorized signatory image', 'radioudaan-app-api' ); ?></label>
+					<input type="hidden" name="donate_80g_signatory_attachment_id" id="donate_80g_signatory_attachment_id" value="<?php echo (int) ( $c['donate_80g_signatory_attachment_id'] ?? 0 ); ?>" />
+					<div id="ru-donate-signatory-preview" class="ru-admin__logo-preview">
+						<?php if ( ! empty( $c['donate_80g_signatory_url'] ) ) : ?>
+							<img src="<?php echo esc_url( $c['donate_80g_signatory_url'] ); ?>" alt="" style="max-width:220px;border-radius:8px;" />
+						<?php endif; ?>
+					</div>
+					<p>
+						<button type="button" class="button button-secondary" id="ru-pick-donate-signatory"><?php esc_html_e( 'Choose from uploads', 'radioudaan-app-api' ); ?></button>
+						<button type="button" class="button" id="ru-remove-donate-signatory" <?php echo ! empty( $c['donate_80g_signatory_attachment_id'] ) ? '' : 'style="display:none;"'; ?>><?php esc_html_e( 'Remove', 'radioudaan-app-api' ); ?></button>
+					</p>
+				</div>
+			</div>
+			<div class="ru-settings-panel__card">
 				<h3><?php esc_html_e( 'Join WhatsApp', 'radioudaan-app-api' ); ?></h3>
 				<p class="description"><?php esc_html_e( 'Shown in the app About tab. Opens your WhatsApp community or channel link.', 'radioudaan-app-api' ); ?></p>
 				<div class="ru-admin__toggle">

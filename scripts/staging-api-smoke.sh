@@ -32,6 +32,10 @@ REQUIRED=(
   "/radioudaan/v1/library/youtube/recent"
   "/radioudaan/v1/library/youtube/search"
   "/radioudaan/v1/library/schedule"
+  "/radioudaan/v1/library/updates"
+  "/radioudaan/v1/donate/orders"
+  "/radioudaan/v1/donate/verify"
+  "/radioudaan/v1/donate/webhook"
 )
 for r in "${REQUIRED[@]}"; do
   if echo "$ROUTES_JSON" | /usr/bin/python3 -c "import json,sys; d=json.load(sys.stdin); sys.exit(0 if '$r' in d.get('routes',{}) else 1)"; then
@@ -64,6 +68,9 @@ if not support or not (support.get("helpline_phone") or support.get("email")):
 privacy = (d.get("legal") or {}).get("privacy_policy_url") or d.get("privacy_policy_url")
 if not privacy:
     sys.exit("privacy_policy_url missing — set in WP Admin")
+razorpay = ((d.get("info_hub") or {}).get("donate") or {}).get("razorpay")
+if not isinstance(razorpay, dict) or "enabled" not in razorpay:
+    sys.exit("info_hub.donate.razorpay missing — deploy donations plugin")
 PY
 then
   ok "GET /config"
@@ -100,6 +107,14 @@ then
   ok "GET /events"
 else
   bad "GET /events (HTTP $EC or no open events)"
+fi
+
+echo "== GET /library/updates =="
+UC="$(/usr/bin/curl -sS -o /tmp/ru-updates.json -w "%{http_code}" "$STAGING_BASE/library/updates?per_page=5")"
+if [[ "$UC" == "200" ]] && /usr/bin/python3 -c "import json; d=json.load(open('/tmp/ru-updates.json')); assert 'items' in d"; then
+  ok "GET /library/updates"
+else
+  bad "GET /library/updates (HTTP $UC)"
 fi
 
 echo ""

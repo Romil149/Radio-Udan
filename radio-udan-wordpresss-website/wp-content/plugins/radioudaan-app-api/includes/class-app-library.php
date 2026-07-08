@@ -12,6 +12,220 @@ defined( 'ABSPATH' ) || exit;
  */
 class RadioUdaan_App_Library {
 
+	const CPT_WHATS_NEW = 'whats-new';
+	const CPT_IN_NEWS   = 'radio-udaan-in-news';
+
+	/**
+	 * Combined what's-new + in-news feed for the About tab.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response
+	 */
+	public static function list_updates( WP_REST_Request $request ) {
+		$per_page = min( 50, max( 1, (int) $request->get_param( 'per_page' ) ) );
+		$page     = max( 1, (int) $request->get_param( 'page' ) );
+
+		$merged = array();
+		foreach ( array( self::CPT_WHATS_NEW, self::CPT_IN_NEWS ) as $post_type ) {
+			$query = new WP_Query(
+				array(
+					'post_type'      => $post_type,
+					'post_status'    => 'publish',
+					'posts_per_page' => -1,
+					'orderby'        => 'date',
+					'order'          => 'DESC',
+					'no_found_rows'  => true,
+				)
+			);
+			foreach ( $query->posts as $post ) {
+				$merged[] = self::map_update_list_item( $post, $post_type );
+			}
+		}
+
+		usort(
+			$merged,
+			static function ( $a, $b ) {
+				return strcmp( (string) $b['published_at'], (string) $a['published_at'] );
+			}
+		);
+
+		$total       = count( $merged );
+		$total_pages = $total > 0 ? (int) ceil( $total / $per_page ) : 1;
+		$offset      = ( $page - 1 ) * $per_page;
+		$items       = array_slice( $merged, $offset, $per_page );
+
+		return new WP_REST_Response(
+			array(
+				'items'       => $items,
+				'total'       => $total,
+				'page'        => $page,
+				'per_page'    => $per_page,
+				'total_pages' => $total_pages,
+			),
+			200
+		);
+	}
+
+	/**
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function get_whats_new_detail( WP_REST_Request $request ) {
+		$id   = (int) $request['id'];
+		$post = get_post( $id );
+		if ( ! $post || self::CPT_WHATS_NEW !== $post->post_type || 'publish' !== $post->post_status ) {
+			return new WP_Error( 'not_found', __( 'Update not found.', 'radioudaan-app-api' ), array( 'status' => 404 ) );
+		}
+
+		return new WP_REST_Response( self::map_whats_new_detail( $post ), 200 );
+	}
+
+	/**
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function get_in_news_detail( WP_REST_Request $request ) {
+		$id   = (int) $request['id'];
+		$post = get_post( $id );
+		if ( ! $post || self::CPT_IN_NEWS !== $post->post_type || 'publish' !== $post->post_status ) {
+			return new WP_Error( 'not_found', __( 'Update not found.', 'radioudaan-app-api' ), array( 'status' => 404 ) );
+		}
+
+		return new WP_REST_Response( self::map_in_news_detail( $post ), 200 );
+	}
+
+	/**
+	 * @param WP_Post $post      Post.
+	 * @param string  $post_type CPT slug.
+	 * @return array<string,mixed>
+	 */
+	private static function map_update_list_item( WP_Post $post, $post_type ) {
+		if ( self::CPT_IN_NEWS === $post_type ) {
+			$mapped = self::map_in_news_post( $post );
+			return array(
+				'id'            => $mapped['id'],
+				'type'          => 'in-news',
+				'kind_label'    => self::kind_label_for_type( 'in-news' ),
+				'title'         => $mapped['title'],
+				'summary'       => $mapped['summary'],
+				'published_at'  => $mapped['published_at'],
+				'thumbnail_url' => '',
+			);
+		}
+
+		$mapped = self::map_whats_new_post( $post );
+		return array(
+			'id'            => $mapped['id'],
+			'type'          => 'whats-new',
+			'kind_label'    => self::kind_label_for_type( 'whats-new' ),
+			'title'         => $mapped['title'],
+			'summary'       => $mapped['summary'],
+			'published_at'  => $mapped['published_at'],
+			'thumbnail_url' => $mapped['thumbnail_url'],
+		);
+	}
+
+	/**
+	 * @param string $type whats-new|in-news.
+	 * @return string
+	 */
+	private static function kind_label_for_type( $type ) {
+		$copy = RadioUdaan_App_Branding::get_public_copy();
+		if ( 'in-news' === $type ) {
+			return isset( $copy['whats_new_kind_in_news'] ) ? (string) $copy['whats_new_kind_in_news'] : __( 'In the News', 'radioudaan-app-api' );
+		}
+		return isset( $copy['whats_new_kind_announcement'] ) ? (string) $copy['whats_new_kind_announcement'] : __( 'Announcement', 'radioudaan-app-api' );
+	}
+
+	/**
+	 * @param WP_Post $post Post.
+	 * @return array<string,mixed>
+	 */
+	private static function map_whats_new_detail( WP_Post $post ) {
+		$list = self::map_whats_new_post( $post );
+		$body = self::acf_html_body( 'body', $post->ID );
+
+		return array_merge(
+			$list,
+			array(
+				'type'       => 'whats-new',
+				'kind_label' => self::kind_label_for_type( 'whats-new' ),
+				'body_html'  => $body,
+			)
+		);
+	}
+
+	/**
+	 * @param WP_Post $post Post.
+	 * @return array<string,mixed>
+	 */
+	private static function map_in_news_post( WP_Post $post ) {
+		$acf_title = self::acf_string( 'title', $post->ID );
+		$title     = $acf_title ? $acf_title : get_the_title( $post );
+		$url       = self::acf_string( 'url', $post->ID );
+		if ( ! $url ) {
+			$url = self::extract_url( function_exists( 'get_field' ) ? get_field( 'url', $post->ID ) : '' );
+		}
+
+		return array(
+			'id'           => (int) $post->ID,
+			'title'        => $title,
+			'summary'      => $title,
+			'external_url' => $url,
+			'link_text'    => self::acf_string( 'link_text', $post->ID ),
+			'published_on' => self::acf_string( 'published_on', $post->ID ),
+			'published_at' => self::published_at_for_in_news( $post ),
+			'permalink'    => get_permalink( $post ),
+		);
+	}
+
+	/**
+	 * @param WP_Post $post Post.
+	 * @return array<string,mixed>
+	 */
+	private static function map_in_news_detail( WP_Post $post ) {
+		$mapped = self::map_in_news_post( $post );
+
+		return array_merge(
+			$mapped,
+			array(
+				'type'       => 'in-news',
+				'kind_label' => self::kind_label_for_type( 'in-news' ),
+			)
+		);
+	}
+
+	/**
+	 * @param WP_Post $post Post.
+	 * @return string ISO8601.
+	 */
+	private static function published_at_for_in_news( WP_Post $post ) {
+		$raw = self::acf_string( 'published_on', $post->ID );
+		if ( $raw ) {
+			$ts = strtotime( $raw );
+			if ( $ts ) {
+				return gmdate( 'c', $ts );
+			}
+		}
+		return get_post_time( 'c', true, $post );
+	}
+
+	/**
+	 * @param string $field   ACF field key.
+	 * @param int    $post_id Post ID.
+	 * @return string Sanitized HTML for app WebView.
+	 */
+	private static function acf_html_body( $field, $post_id ) {
+		if ( ! function_exists( 'get_field' ) ) {
+			return '';
+		}
+		$body = get_field( $field, $post_id );
+		if ( ! $body ) {
+			return '';
+		}
+		return wp_kses_post( (string) $body );
+	}
+
 	/**
 	 * @param WP_REST_Request $request Request.
 	 * @return WP_REST_Response

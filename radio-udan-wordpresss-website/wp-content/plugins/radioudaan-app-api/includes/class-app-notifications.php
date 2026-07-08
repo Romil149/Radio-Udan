@@ -440,6 +440,49 @@ class RadioUdaan_App_Notifications {
 	}
 
 	/**
+	 * Broadcast inbox + FCM to many users, bypassing notification preference toggles.
+	 *
+	 * @param int[]                $user_ids User ids.
+	 * @param string               $title    Title.
+	 * @param string               $body     Body.
+	 * @param string               $type     Type slug.
+	 * @param array<string,mixed>  $data     Payload.
+	 * @return array{created:int,push_sent:int,push_failed:int}
+	 */
+	public static function create_for_users_force_push( array $user_ids, $title, $body, $type = 'general', array $data = array() ) {
+		$result = array(
+			'created'     => 0,
+			'push_sent'   => 0,
+			'push_failed' => 0,
+			'push_pruned' => 0,
+			'fcm_skipped' => ! RadioUdaan_App_Fcm_Sender::is_configured(),
+		);
+
+		foreach ( array_unique( array_map( 'intval', $user_ids ) ) as $user_id ) {
+			if ( $user_id < 1 ) {
+				continue;
+			}
+
+			$created = self::create( $user_id, $title, $body, $type, $data, true );
+			if ( empty( $created['id'] ) ) {
+				continue;
+			}
+
+			++$result['created'];
+
+			$push = isset( $created['push'] ) && is_array( $created['push'] ) ? $created['push'] : array();
+			$result['push_sent']   += isset( $push['sent'] ) ? (int) $push['sent'] : 0;
+			$result['push_failed'] += isset( $push['failed'] ) ? (int) $push['failed'] : 0;
+			$result['push_pruned'] += isset( $push['pruned'] ) ? (int) $push['pruned'] : 0;
+			if ( ! empty( $push['skipped'] ) ) {
+				$result['fcm_skipped'] = true;
+			}
+		}
+
+		return $result;
+	}
+
+	/**
 	 * Create a notification (admin / internal use).
 	 *
 	 * @param int                  $user_id User id.
@@ -447,9 +490,10 @@ class RadioUdaan_App_Notifications {
 	 * @param string               $body    Body.
 	 * @param string               $type    Type slug.
 	 * @param array<string,mixed>  $data    Optional payload.
+	 * @param bool                 $force_push When true, skip user notification preference gates.
 	 * @return array{id:int|false,push:array{sent:int,failed:int,pruned:int,skipped:bool}}
 	 */
-	public static function create( $user_id, $title, $body, $type = 'general', array $data = array() ) {
+	public static function create( $user_id, $title, $body, $type = 'general', array $data = array(), $force_push = false ) {
 		self::maybe_create_tables();
 
 		global $wpdb;
@@ -479,7 +523,7 @@ class RadioUdaan_App_Notifications {
 			'skipped' => false,
 		);
 
-		if ( $notification_id && self::should_deliver_push_for_type( $type, (int) $user_id ) ) {
+		if ( $notification_id && ( $force_push || self::should_deliver_push_for_type( $type, (int) $user_id ) ) ) {
 			$push_result = self::deliver_push(
 				(int) $user_id,
 				$notification_id,

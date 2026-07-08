@@ -427,6 +427,90 @@ final class RadioUdaan_App_Api {
 
 		register_rest_route(
 			'radioudaan/v1',
+			'/library/updates',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( 'RadioUdaan_App_Library', 'list_updates' ),
+				'permission_callback' => '__return_true',
+				'args'                => array(
+					'per_page' => array(
+						'default'           => 50,
+						'sanitize_callback' => 'absint',
+					),
+					'page'     => array(
+						'default'           => 1,
+						'sanitize_callback' => 'absint',
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			'radioudaan/v1',
+			'/library/updates/whats-new/(?P<id>\d+)',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( 'RadioUdaan_App_Library', 'get_whats_new_detail' ),
+				'permission_callback' => '__return_true',
+				'args'                => array(
+					'id' => array(
+						'validate_callback' => static function ( $value ) {
+							return is_numeric( $value ) && (int) $value > 0;
+						},
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			'radioudaan/v1',
+			'/library/updates/in-news/(?P<id>\d+)',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( 'RadioUdaan_App_Library', 'get_in_news_detail' ),
+				'permission_callback' => '__return_true',
+				'args'                => array(
+					'id' => array(
+						'validate_callback' => static function ( $value ) {
+							return is_numeric( $value ) && (int) $value > 0;
+						},
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			'radioudaan/v1',
+			'/donate/orders',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( 'RadioUdaan_App_Donations', 'create_order' ),
+				'permission_callback' => '__return_true',
+			)
+		);
+
+		register_rest_route(
+			'radioudaan/v1',
+			'/donate/verify',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( 'RadioUdaan_App_Donations', 'verify_payment' ),
+				'permission_callback' => '__return_true',
+			)
+		);
+
+		register_rest_route(
+			'radioudaan/v1',
+			'/donate/webhook',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( 'RadioUdaan_App_Donations', 'handle_webhook' ),
+				'permission_callback' => '__return_true',
+			)
+		);
+
+		register_rest_route(
+			'radioudaan/v1',
 			'/library/schedule',
 			array(
 				'methods'             => 'GET',

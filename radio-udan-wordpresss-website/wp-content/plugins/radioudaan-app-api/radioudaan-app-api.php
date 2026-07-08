@@ -60,7 +60,14 @@ require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-user-notification-pre
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-support.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-fcm-sender.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-notifications.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-updates-notifications.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-favorites.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-donations-settings.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-donations-db.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-razorpay-client.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-donations-80g-pdf.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-donations.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-donations.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-radioudaan-app-api.php';
 
 /**
@@ -71,7 +78,9 @@ function radioudaan_app_api_init() {
 	RadioUdaan_App_Users::init();
 	RadioUdaan_App_Support::init();
 	RadioUdaan_App_Notifications::init();
+	RadioUdaan_App_Updates_Notifications::init();
 	RadioUdaan_App_Favorites::init();
+	RadioUdaan_App_Donations::init();
 	RadioUdaan_Upload_Cleanup::init();
 	RadioUdaan_Event_Meta_Ui::init();
 	RadioUdaan_Entry_Source::init();
@@ -130,6 +139,7 @@ register_activation_hook(
 		RadioUdaan_App_Users::maybe_migrate_columns();
 		RadioUdaan_App_Support::maybe_create_table();
 		RadioUdaan_App_Notifications::maybe_create_tables();
+		RadioUdaan_App_Donations_Db::maybe_create_tables();
 		RadioUdaan_Rj_Profile::ensure_role();
 		RadioUdaan_Rj_Profile_Public::register_rewrites();
 		flush_rewrite_rules();

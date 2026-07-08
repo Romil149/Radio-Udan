@@ -12,8 +12,17 @@ String? e164FromCountryAndNational(Country country, String nationalInput) {
   return normalizeE164Phone('+${country.phoneCode}$national');
 }
 
-/// Max national digits so full E.164 stays within 15 digits (ITU-T E.164).
+/// Max national digits for a country.
+///
+/// Uses the package's example national number length (e.g. India 10, UAE 9,
+/// Singapore 8) so the input cannot exceed the real subscriber-number length.
+/// Falls back to the ITU-T E.164 ceiling (15 − country code) when no example
+/// is available (e.g. World Wide).
 int maxNationalDigitsForCountry(Country country) {
+  final exampleDigits = country.example.replaceAll(RegExp(r'\D'), '');
+  if (exampleDigits.isNotEmpty) {
+    return exampleDigits.length;
+  }
   final ccLen = country.phoneCode.length;
   return (15 - ccLen).clamp(4, 14);
 }

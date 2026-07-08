@@ -34,7 +34,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   String? _error;
   bool _loading = false;
   bool _resending = false;
-  bool _initialSendDone = false;
+  bool _codeSent = false;
   int _resendSecondsRemaining = 0;
   Timer? _resendTimer;
 
@@ -49,22 +49,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
       text: fromArgs.isNotEmpty ? fromArgs : fromUser,
     );
     _prefillEmailFromStorage();
-    if (widget.args?.sendCodeOnOpen ?? false) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _sendInitialCode();
-      });
-    }
-  }
-
-  Future<void> _sendInitialCode() async {
-    if (_initialSendDone) return;
-    final token = ref.read(authTokenProvider);
-    if (token == null || token.isEmpty) return;
-    final user = ref.read(authUserProvider);
-    if (user?.emailVerified == true) return;
-    _initialSendDone = true;
-    await _resend(announceOnSuccess: false);
+    // No code is sent automatically. The user must tap "Send code" first.
   }
 
   Future<void> _prefillEmailFromStorage() async {
@@ -123,7 +108,10 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     return fromArgs.isNotEmpty || userEmail.isNotEmpty;
   }
 
+  Future<void> _sendCode() => _resend();
+
   Future<void> _resend({bool announceOnSuccess = true}) async {
+    final wasSent = _codeSent;
     setState(() {
       _error = null;
       _resending = true;
@@ -132,8 +120,15 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     try {
       await ref.read(radioudaanApiProvider).resendVerificationEmail();
       _startResendCountdown(_resendCooldownSec);
+      if (!mounted) return;
+      setState(() => _codeSent = true);
       if (announceOnSuccess) {
-        _announce(_copy.verificationCodeResent);
+        final email = _emailController.text.trim();
+        _announce(
+          wasSent || email.isEmpty
+              ? _copy.verificationCodeResent
+              : _copy.verifyEmailSentTo(email),
+        );
       }
     } catch (e) {
       _setError(parseApiError(e).message);
@@ -220,7 +215,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                _copy.verifyEmailIntro,
+                _codeSent ? _copy.verifyEmailIntro : _copy.verifyEmailSendPrompt,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 17,
@@ -229,7 +224,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                   height: 1.35,
                 ),
               ),
-              if (email.isNotEmpty) ...[
+              if (_codeSent && email.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Semantics(
                   label: _copy.verifyEmailSentTo(email),
@@ -260,37 +255,39 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                     ? _copy.profileEmailSemantics(email)
                     : null,
               ),
-              const SizedBox(height: 24),
-              ExcludeSemantics(
-                child: Text(
-                  _copy.verificationCodeLabel,
-                  style: GoogleFonts.atkinsonHyperlegible(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: context.udaan.onBackground,
+              if (_codeSent) ...[
+                const SizedBox(height: 24),
+                ExcludeSemantics(
+                  child: Text(
+                    _copy.verificationCodeLabel,
+                    style: GoogleFonts.atkinsonHyperlegible(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: context.udaan.onBackground,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              UdaanOtpPinRow(
-                copy: copy,
-                controller: _codeController,
-                length: 6,
-                enabled: !_loading && !_resending,
-                semanticsHint: _copy.otpPinRowEmailHint(6),
-              ),
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerRight,
-                child: UdaanAuthLink(
-                  label: _resending
-                      ? _copy.resendingCodePleaseWait
-                      : _resendSecondsRemaining > 0
-                          ? _copy.resendInSeconds(_resendSecondsRemaining)
-                          : _copy.resendCode,
-                  onPressed: _canResend ? () => _resend() : null,
+                const SizedBox(height: 8),
+                UdaanOtpPinRow(
+                  copy: copy,
+                  controller: _codeController,
+                  length: 6,
+                  enabled: !_loading && !_resending,
+                  semanticsHint: _copy.otpPinRowEmailHint(6),
                 ),
-              ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: UdaanAuthLink(
+                    label: _resending
+                        ? _copy.resendingCodePleaseWait
+                        : _resendSecondsRemaining > 0
+                            ? _copy.resendInSeconds(_resendSecondsRemaining)
+                            : _copy.resendCode,
+                    onPressed: _canResend ? () => _resend() : null,
+                  ),
+                ),
+              ],
               if (_error != null) ...[
                 const SizedBox(height: 12),
                 Semantics(
@@ -309,12 +306,20 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                 ),
               ],
               const SizedBox(height: 28),
-              UdaanPrimaryButton(
-                label: _copy.verifyAndContinue,
-                icon: Icons.verified_outlined,
-                loading: _loading,
-                onPressed: _loading || _resending ? null : _submit,
-              ),
+              if (_codeSent)
+                UdaanPrimaryButton(
+                  label: _copy.verifyAndContinue,
+                  icon: Icons.verified_outlined,
+                  loading: _loading,
+                  onPressed: _loading || _resending ? null : _submit,
+                )
+              else
+                UdaanPrimaryButton(
+                  label: _copy.otpSendCode,
+                  icon: Icons.mail_outline,
+                  loading: _resending,
+                  onPressed: _resending ? null : _sendCode,
+                ),
             ],
           ),
         ),

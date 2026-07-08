@@ -262,10 +262,9 @@ class RadioUdaan_Otp_Service {
 				);
 			}
 
-			if ( ! (int) $user->email_verified ) {
-				RadioUdaan_App_Password_Auth::resend_email_verification( (int) $user->id );
-			}
-
+			// Email verification is manual: only sent when the user taps
+			// "Send verification code" on the Verify Email screen. Login never
+			// auto-sends an email code.
 			return RadioUdaan_App_Password_Auth::issue_session_for_user( $user );
 		}
 

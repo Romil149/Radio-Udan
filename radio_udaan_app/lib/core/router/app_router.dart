@@ -11,10 +11,12 @@ import '../../features/auth/register_screen.dart';
 import '../../features/auth/reset_password_screen.dart';
 import '../../features/auth/verify_email_screen.dart';
 import '../../features/bootstrap/bootstrap_screen.dart';
+import '../../features/about/donate_verify_deep_link_screen.dart';
 import '../../features/events/event_deep_link_screen.dart';
 import '../../features/shell/main_shell_screen.dart';
 import '../models/otp_purpose.dart';
 import '../providers/app_providers.dart';
+import 'donate_deep_link.dart';
 import 'event_deep_link.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -37,6 +39,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     refreshListenable: refresh,
     initialLocation: '/bootstrap',
     redirect: (context, state) {
+      final donatePath = normalizeDonateDeepLinkUri(state.uri);
+      if (donatePath != null) {
+        return donatePath;
+      }
+
       final normalized = normalizeEventDeepLinkUri(state.uri);
       if (normalized != null) {
         return normalized;
@@ -50,14 +57,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (eventId != null) {
         ref.read(pendingEventDeepLinkProvider.notifier).state = eventId;
       }
+
+      // Donation verify deep link works for guests (no login required).
+      if (path == '/donate/verify') {
+        return null;
+      }
+
       final loggedIn = authToken != null && authToken.isNotEmpty;
       final user = authUser;
-      final requireEmail =
-          config?.authPolicy.requireEmailVerification ?? false;
 
       if (path == '/bootstrap') return null;
 
       if (config == null) {
+        if (path == '/donate/verify') {
+          return null;
+        }
         return '/bootstrap';
       }
 
@@ -75,11 +89,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path != '/login-otp') {
           return '/otp';
         }
-        if (requireEmail &&
-            !user.emailVerified &&
-            path != '/verify-email') {
-          return '/verify-email';
-        }
+        // Email verification is optional and manual: never force-route the
+        // user to /verify-email. They reach it from More → Verify email.
       }
 
       if (loggedIn && _isAuthRoute(path)) {
@@ -170,6 +181,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return EventDeepLinkScreen(eventId: eventId);
         },
       ),
+      GoRoute(
+        path: '/donate/verify',
+        builder: (context, state) {
+          final orderId = parseDonateVerifyOrderId(
+                state.matchedLocation,
+                state.uri.queryParameters,
+              ) ??
+              state.uri.queryParameters['order_id']?.trim() ??
+              '';
+          return DonateVerifyDeepLinkScreen(orderId: orderId);
+        },
+      ),
     ],
   );
 });
@@ -216,13 +239,9 @@ class OtpRouteArgs {
 class VerifyEmailRouteArgs {
   const VerifyEmailRouteArgs({
     this.email = '',
-    this.sendCodeOnOpen = false,
   });
 
   final String email;
-
-  /// When true, requests a verification email on screen open (e.g. from More tab).
-  final bool sendCodeOnOpen;
 }
 
 class ResetPasswordRouteArgs {

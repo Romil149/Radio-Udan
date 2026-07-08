@@ -70,7 +70,8 @@ Any task involving the website must use **Cursor IDE browser MCP tools**:
 - **Timestamp** (if available)
 
 ### Bug reports
-Use the format in `agent-12-real-person-tester.md`.
+- Web / E2E: format in `agent-12-real-person-tester.md`
+- TalkBack / VoiceOver device QA: format in `agent-16-talkback-voiceover-tester.md` (BUG-A11Y-*)
 
 ### Code changes
 - Minimal scope—only what the task requires

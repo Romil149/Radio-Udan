@@ -75,6 +75,8 @@ abstract final class AppStrings {
   static const String emailInvalid = 'Enter a valid email address.';
   static const String createAccount = 'Create account';
   static const String verifyEmailTitle = 'Verify email';
+  static const String verifyEmailSendPrompt =
+      'Tap "Send code" to get a 6-digit verification code by email.';
   static const String verifyEmailIntro =
       'Enter the 6-digit code we sent to your email.';
   static const String verificationCodeLabel = 'Verification code';
@@ -513,6 +515,8 @@ abstract final class AppStrings {
       '$requirement, not met';
   static const String profileEmailVerificationSent =
       'Verification code sent to your new email. Enter the code on the next screen.';
+  static const String profileEmailVerifyNeeded =
+      'Email updated. Open Verify email and tap Send code when you are ready.';
   static String profileMobileSemantics(String phone) =>
       'Mobile number $phone. Cannot be changed.';
 

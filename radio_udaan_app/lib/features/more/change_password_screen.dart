@@ -9,6 +9,7 @@ import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
+import '../../core/utils/keyboard_dismiss.dart';
 import '../auth/auth_session_helper.dart';
 import '../auth/widgets/udaan_auth_widgets.dart';
 import '../events/widgets/registration_form_styles.dart';
@@ -94,6 +95,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     required TextEditingController controller,
     required bool obscure,
     required VoidCallback onToggle,
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onSubmitted,
   }) {
     final semanticsLabel = '$label, required';
     return Padding(
@@ -120,7 +123,13 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     child: TextField(
                       controller: controller,
                       obscureText: obscure,
+                      textInputAction: textInputAction,
                       onChanged: (_) => setState(() {}),
+                      onSubmitted: (value) {
+                        dismissKeyboard(context);
+                        onSubmitted?.call(value);
+                      },
+                      onTapOutside: (_) => dismissKeyboard(context),
                       style: registrationFieldInputStyle(context),
                       decoration: registrationFieldDecoration(context),
                     ),
@@ -247,6 +256,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     label: _copy.currentPassword,
                     controller: _currentController,
                     obscure: _obscureCurrent,
+                    textInputAction: TextInputAction.next,
                     onToggle: () =>
                         setState(() => _obscureCurrent = !_obscureCurrent),
                   ),
@@ -255,6 +265,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     label: _copy.newPassword,
                     controller: _newController,
                     obscure: _obscureNew,
+                    textInputAction: TextInputAction.next,
                     onToggle: () =>
                         setState(() => _obscureNew = !_obscureNew),
                   ),
@@ -280,6 +291,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     label: _copy.confirmNewPassword,
                     controller: _confirmController,
                     obscure: _obscureConfirm,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) {
+                      if (!_loading) _submit();
+                    },
                     onToggle: () =>
                         setState(() => _obscureConfirm = !_obscureConfirm),
                   ),

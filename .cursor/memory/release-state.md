@@ -3,21 +3,22 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+32** (form field a11y + AzuraCast direct fetch) | pending push | 2026-07-05 | Build 32 — VoiceOver form fixes app-wide |
-| TestFlight iOS | **2.0.0+32** | pending CI | 2026-07-05 | User retest after TestFlight install |
-| Staging WP plugin | pending | **no** | — | Deploy plugin: `now_playing_api_url`, live_radio cleanup |
-| Staging API smoke | 14/14 | — | 2026-07-05 | Local verify |
+| GitHub `main` | **2.0.0+33** | pushing | 2026-07-08 | Razorpay donations + 80G, What's New, iOS payment-link verify fix |
+| TestFlight iOS | **2.0.0+33** | CI pending | 2026-07-08 | Trigger after push to `main` |
+| Staging WP plugin | partial | **yes** | 2026-07-08 | API smoke 19/19; redeploy full zip if `class-admin-donations.php` missing on server |
+| Staging API smoke | 19/19 | — | 2026-07-08 | Includes `/donate/*` routes + `info_hub.donate.razorpay` |
 
 ## TestFlight build bump (mandatory — same commit)
 
 When shipping Flutter changes to TestFlight, **always in one commit**:
 
-1. `radio_udaan_app/pubspec.yaml` — increment build after `+` (e.g. `2.0.0+32`)
+1. `radio_udaan_app/pubspec.yaml` — increment build after `+` (e.g. `2.0.0+33`)
 2. `.cursor/memory/release-state.md` — update TestFlight row + `main` commit
 
 Never push app code to `main` without bumping the build if the last build is already on App Store Connect.
 
 ## Open deploy blockers
 
-1. Upload updated **radioudaan-app-api** plugin to staging (`now_playing_api_url`, no show_title in live_radio).
-2. User device QA on TestFlight build 32 — all form fields per FORMS-AUDIT-MASTER.md.
+1. **Razorpay keys** — WP Admin: enable Razorpay + paste test/live Key ID, Secret, Webhook secret before Pay Online works on device.
+2. **Plugin zip** — If donate admin fatal on server, upload `dist/radioudaan-app-api-staging.zip` (full folder replace).
+3. User device QA — Donate Pay Online (Android native + iOS Safari), 80G + PAN, What's New, TalkBack/VoiceOver.

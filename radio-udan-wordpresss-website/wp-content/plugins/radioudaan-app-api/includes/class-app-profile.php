@@ -74,20 +74,15 @@ class RadioUdaan_App_Profile {
 
 		$fresh = RadioUdaan_App_Users::get_by_id( $user_id );
 
-		$email_verification_sent = false;
-		if ( ! empty( $updates['email'] ) ) {
-			$send = RadioUdaan_App_Password_Auth::resend_email_verification( $user_id );
-			if ( ! is_wp_error( $send ) && isset( $send['status'] ) && 'sent' === $send['status'] ) {
-				$email_verification_sent = true;
-			}
-		}
+		$email_verification_required = ! empty( $updates['email'] );
 
 		RadioUdaan_App_Logger::log( 'profile_updated', array( 'user_id' => $user_id ) );
 
 		return array(
-			'status'                  => 'updated',
-			'user'                    => RadioUdaan_App_Password_Auth::format_user( $fresh ),
-			'email_verification_sent' => $email_verification_sent,
+			'status'                      => 'updated',
+			'user'                        => RadioUdaan_App_Password_Auth::format_user( $fresh ),
+			'email_verification_sent'     => false,
+			'email_verification_required' => $email_verification_required,
 		);
 	}
 

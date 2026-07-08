@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
+import '../../core/router/whats_new_deep_link.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
 import '../../core/widgets/empty_state.dart';
@@ -175,9 +176,15 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                             item.createdAt,
                             copy,
                           ),
-                          onTap: () => ref
-                              .read(notificationsListProvider.notifier)
-                              .markRead(item.id),
+                          onTap: () async {
+                            await ref
+                                .read(notificationsListProvider.notifier)
+                                .markRead(item.id);
+                            if (!context.mounted) return;
+                            if (isWhatsNewDetailPayload(item.data)) {
+                              openWhatsNewDetailFromData(item.data);
+                            }
+                          },
                         );
                       },
                     );

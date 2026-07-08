@@ -38,6 +38,7 @@ class DonateConfig {
     this.upiId = '',
     this.qrImageUrl = '',
     this.bank = const DonateBankConfig(),
+    this.razorpay = const RazorpayDonateConfig(),
   });
 
   factory DonateConfig.fromJson(Map<String, dynamic>? json) {
@@ -52,6 +53,9 @@ class DonateConfig {
       bank: DonateBankConfig.fromJson(
         json['bank'] as Map<String, dynamic>?,
       ),
+      razorpay: RazorpayDonateConfig.fromJson(
+        json['razorpay'] as Map<String, dynamic>?,
+      ),
     );
   }
 
@@ -62,13 +66,54 @@ class DonateConfig {
   final String upiId;
   final String qrImageUrl;
   final DonateBankConfig bank;
+  final RazorpayDonateConfig razorpay;
 
   bool get hasContent =>
       headline.trim().isNotEmpty ||
       intro.trim().isNotEmpty ||
       upiId.trim().isNotEmpty ||
       qrImageUrl.trim().isNotEmpty ||
-      bank.hasContent;
+      bank.hasContent ||
+      razorpay.enabled;
+}
+
+/// Public Razorpay slice from `info_hub.donate.razorpay`.
+class RazorpayDonateConfig {
+  const RazorpayDonateConfig({
+    this.enabled = false,
+    this.keyId = '',
+    this.checkoutName = '',
+    this.presetAmounts = const [],
+    this.eightyGEnabled = false,
+    this.eightyGPdfEmailEnabled = false,
+  });
+
+  factory RazorpayDonateConfig.fromJson(Map<String, dynamic>? json) {
+    if (json == null || json.isEmpty) return const RazorpayDonateConfig();
+    final presetsRaw = json['preset_amounts'];
+    final presets = <int>[];
+    if (presetsRaw is List) {
+      for (final item in presetsRaw) {
+        final amount = (item as num?)?.toInt();
+        if (amount != null && amount > 0) presets.add(amount);
+      }
+    }
+    return RazorpayDonateConfig(
+      enabled: json['enabled'] == true,
+      keyId: json['key_id']?.toString() ?? '',
+      checkoutName: json['checkout_name']?.toString() ?? '',
+      presetAmounts: presets,
+      eightyGEnabled: json['eighty_g_enabled'] == true,
+      eightyGPdfEmailEnabled: json['eighty_g_pdf_email_enabled'] == true,
+    );
+  }
+
+  final bool enabled;
+  final String keyId;
+  final String checkoutName;
+  final List<int> presetAmounts;
+  final bool eightyGEnabled;
+  final bool eightyGPdfEmailEnabled;
 }
 
 class DonateBankConfig {

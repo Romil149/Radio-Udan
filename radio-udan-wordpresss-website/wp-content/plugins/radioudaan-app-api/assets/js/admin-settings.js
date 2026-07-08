@@ -180,6 +180,31 @@
 			$('#ru-donate-qr-preview').empty();
 			$(this).hide();
 		});
+
+		$(document).on('click', '#ru-pick-donate-signatory', function (e) {
+			e.preventDefault();
+			var signFrame = wp.media({
+				title: 'Choose signatory image',
+				button: { text: 'Use this image' },
+				multiple: false
+			});
+			signFrame.on('select', function () {
+				var attachment = signFrame.state().get('selection').first().toJSON();
+				$('#donate_80g_signatory_attachment_id').val(attachment.id);
+				$('#ru-donate-signatory-preview').html(
+					'<img src="' + attachment.url + '" alt="" style="max-width:220px;border-radius:8px;" />'
+				);
+				$('#ru-remove-donate-signatory').show();
+			});
+			signFrame.open();
+		});
+
+		$(document).on('click', '#ru-remove-donate-signatory', function (e) {
+			e.preventDefault();
+			$('#donate_80g_signatory_attachment_id').val('0');
+			$('#ru-donate-signatory-preview').empty();
+			$(this).hide();
+		});
 	}
 
 	function initLiveHeroPicker() {

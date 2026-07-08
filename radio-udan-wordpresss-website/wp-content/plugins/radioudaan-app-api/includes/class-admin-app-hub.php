@@ -42,6 +42,7 @@ class RadioUdaan_Admin_App_Hub {
 	const HELP_SLUG          = 'radioudaan-app-help';
 	const API_SLUG           = 'radioudaan-app-api';
 	const NOTIFICATIONS_SLUG = 'radioudaan-app-notifications';
+	const DONATIONS_SLUG     = 'radioudaan-app-donations';
 
 	/**
 	 * Register admin UI.
@@ -116,6 +117,15 @@ class RadioUdaan_Admin_App_Hub {
 			'manage_options',
 			self::NOTIFICATIONS_SLUG,
 			array( 'RadioUdaan_Admin_Notifications', 'render_page' )
+		);
+
+		add_submenu_page(
+			self::MENU_SLUG,
+			__( 'Donations', 'radioudaan-app-api' ),
+			__( 'Donations', 'radioudaan-app-api' ),
+			'manage_options',
+			self::DONATIONS_SLUG,
+			array( 'RadioUdaan_Admin_Donations', 'render_page' )
 		);
 
 		add_submenu_page(
@@ -411,6 +421,65 @@ class RadioUdaan_Admin_App_Hub {
 				max( 0, (int) $_POST['donate_qr_attachment_id'] )
 			);
 		}
+
+		update_option( RadioUdaan_App_Donations_Settings::OPTION_RAZORPAY_ENABLED, ! empty( $_POST['donate_razorpay_enabled'] ) ? 1 : 0 );
+		if ( isset( $_POST['donate_razorpay_key_id'] ) ) {
+			update_option(
+				RadioUdaan_App_Donations_Settings::OPTION_RAZORPAY_KEY_ID,
+				sanitize_text_field( wp_unslash( $_POST['donate_razorpay_key_id'] ) )
+			);
+		}
+		if ( isset( $_POST['donate_razorpay_key_secret'] ) ) {
+			$secret = trim( wp_unslash( $_POST['donate_razorpay_key_secret'] ) );
+			if ( '' !== $secret ) {
+				update_option( RadioUdaan_App_Donations_Settings::OPTION_RAZORPAY_KEY_SECRET, $secret );
+			}
+		}
+		if ( isset( $_POST['donate_razorpay_webhook_secret'] ) ) {
+			$wh = trim( wp_unslash( $_POST['donate_razorpay_webhook_secret'] ) );
+			if ( '' !== $wh ) {
+				update_option( RadioUdaan_App_Donations_Settings::OPTION_RAZORPAY_WEBHOOK_SECRET, $wh );
+			}
+		}
+		if ( isset( $_POST['donate_razorpay_checkout_name'] ) ) {
+			update_option(
+				RadioUdaan_App_Donations_Settings::OPTION_RAZORPAY_CHECKOUT_NAME,
+				sanitize_text_field( wp_unslash( $_POST['donate_razorpay_checkout_name'] ) )
+			);
+		}
+		if ( isset( $_POST['donate_razorpay_preset_amounts'] ) ) {
+			update_option(
+				RadioUdaan_App_Donations_Settings::OPTION_RAZORPAY_PRESET_AMOUNTS,
+				sanitize_text_field( wp_unslash( $_POST['donate_razorpay_preset_amounts'] ) )
+			);
+		}
+		update_option( RadioUdaan_App_Donations_Settings::OPTION_80G_ENABLED, ! empty( $_POST['donate_80g_enabled'] ) ? 1 : 0 );
+		update_option( RadioUdaan_App_Donations_Settings::OPTION_80G_PDF_EMAIL, ! empty( $_POST['donate_80g_pdf_email'] ) ? 1 : 0 );
+		if ( isset( $_POST['donate_80g_reg_number'] ) ) {
+			update_option(
+				RadioUdaan_App_Donations_Settings::OPTION_80G_REG_NUMBER,
+				sanitize_text_field( wp_unslash( $_POST['donate_80g_reg_number'] ) )
+			);
+		}
+		if ( isset( $_POST['donate_80g_legal_text'] ) ) {
+			update_option(
+				RadioUdaan_App_Donations_Settings::OPTION_80G_LEGAL_TEXT,
+				sanitize_textarea_field( wp_unslash( $_POST['donate_80g_legal_text'] ) )
+			);
+		}
+		if ( isset( $_POST['donate_80g_trust_pan'] ) ) {
+			update_option(
+				RadioUdaan_App_Donations_Settings::OPTION_80G_TRUST_PAN,
+				strtoupper( sanitize_text_field( wp_unslash( $_POST['donate_80g_trust_pan'] ) ) )
+			);
+		}
+		if ( isset( $_POST['donate_80g_signatory_attachment_id'] ) ) {
+			update_option(
+				RadioUdaan_App_Donations_Settings::OPTION_80G_SIGNATORY_ATTACHMENT_ID,
+				max( 0, (int) $_POST['donate_80g_signatory_attachment_id'] )
+			);
+		}
+
 		$social_fields = array(
 			'social_facebook_url'  => RadioUdaan_App_Info_Hub::OPTION_SOCIAL_FACEBOOK,
 			'social_instagram_url' => RadioUdaan_App_Info_Hub::OPTION_SOCIAL_INSTAGRAM,

@@ -55,6 +55,7 @@ class RadioUdaan_App_Info_Hub {
 					'micr'           => self::get_string( self::OPTION_DONATE_MICR, '' ),
 					'address'        => self::get_text( self::OPTION_DONATE_BANK_ADDRESS, '' ),
 				),
+				'razorpay'           => RadioUdaan_App_Donations_Settings::get_public_config(),
 			),
 			'social'  => self::get_social_links(),
 		);

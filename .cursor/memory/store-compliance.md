@@ -38,6 +38,7 @@ Re-check Apple [Upcoming Requirements](https://developer.apple.com/news/upcoming
 | **Live radio** | Use **background audio** mode correctly (iOS `audio` background mode; Android foreground service for media). |
 | **YouTube / library** | Use **official YouTube IFrame Player API** (or compliant embed). **Stream only** — no download/save YouTube video. Show YouTube branding/attribution per API terms. Player min size ~200×200px with visible controls. |
 | **Uploads** | Request camera/mic/**storage** only when user starts upload. Prefer **system pickers** (Photo Picker / document picker) over broad `READ_MEDIA_*` on Android. |
+| **Donations (Razorpay)** | Charitable donations to trust — **not** IAP. **Android**: native Razorpay SDK. **iOS**: open Payment Link in **Safari** (not in-app WebView checkout). Disclose payment processor + PAN collection when 80G opted in. Privacy policy must mention donation data. App Review notes: `.cursor/memory/app-review-donations.md`. |
 | **Accessibility** | **VoiceOver + TalkBack** on every screen — ship blocker for this product (not optional). |
 | **Data disclosure** | Complete **Apple App Privacy** labels and **Google Play Data safety** to match real behavior (phone, files, audio, identity docs). |
 | **Permissions** | Request **incrementally** with clear in-app explanation before system dialog. |

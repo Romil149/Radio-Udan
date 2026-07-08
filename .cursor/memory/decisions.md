@@ -48,6 +48,13 @@
 **Decision**: Follow `.cursor/rules/coding-standards.mdc` — centralised `AppStrings` / `AppConstants`, `parseApiError()` for Dio, module doc comments, dev UI only in `kDebugMode`, no filler comments.
 **Consequences**: All new Flutter/PHP work must match; bump `AppConstants.appVersion` when `pubspec` version changes.
 
+### 2026-07-08 — Razorpay donations: Android native SDK, iOS payment link
+**Context**: In-app donations via Razorpay with 80G receipts; Apple Guideline 3.1.1 restricts in-app purchase of digital goods — charitable donations to a registered trust are generally exempt, but embedding third-party checkout in WebView on iOS is risky.
+**Options Considered**: (1) WebView Razorpay on both platforms; (2) native SDK both; (3) native Android + Payment Link (Safari) on iOS.
+**Decision**: **Android** uses `razorpay_flutter` native checkout; **iOS** opens Razorpay **Payment Link** in external browser, then user taps “I completed payment” → `POST /donate/verify`. Orders created server-side; secrets only in WP admin.
+**Reasoning**: Matches plan legal review; avoids iOS WebView/store friction; webhook + verify endpoint cover Safari return without mandatory deep link in v1.
+**Consequences**: iOS UX is two-step (browser + verify button). WP must be deployed with webhook URL in Razorpay dashboard. 80G PDF emailed from WP when toggles + donor opt-in + email present.
+
 ### 2026-06-04 — App accounts v2 (password + OTP, soft delete)
 **Context**: Move from phone-only OTP login to full registration (name, email, mobile, password) with mandatory mobile OTP at signup; login via email/mobile + password or mobile + OTP.
 **Decision**: WordPress `wp_ru_app_users` holds all app accounts (hashed passwords, E.164 mobile, email). Mobile **always** unique among active users. Email uniqueness **enforced by default** with WP admin toggle to allow duplicate emails (mobile stays unique). Soft-delete on account deletion frees mobile/email for new registration. Email verify optional in profile; admin toggle can require email verification. OTP: iOS/Android **oneTimeCode autofill only** — no READ_SMS. Password min 8 chars. Purge legacy test OTP-only users on deploy. Event registration unchanged.

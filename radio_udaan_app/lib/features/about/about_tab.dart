@@ -14,6 +14,7 @@ import '../more/widgets/more_menu_tile.dart';
 import 'contact_email_screen.dart';
 import 'contact_phone_screen.dart';
 import 'donate_screen.dart';
+import 'whats_new_list_screen.dart';
 import 'widgets/about_social_footer.dart';
 
 /// About tab: organisation info, contact, donate, and social links.
@@ -96,6 +97,13 @@ class AboutTab extends ConsumerWidget {
                   content: config?.legalPages.about,
                 ),
               ),
+            MoreMenuTile(
+              title: copy.aboutWhatsNew,
+              subtitle: copy.aboutWhatsNewSubtitle,
+              icon: Icons.campaign_outlined,
+              iconBackground: context.udaan.primary,
+              onTap: () => _push(context, const WhatsNewListScreen()),
+            ),
             MoreMenuTile(
               title: copy.helpAndContact,
               subtitle: copy.helpAndContactSubtitle,

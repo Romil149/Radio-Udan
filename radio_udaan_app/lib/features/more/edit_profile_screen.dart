@@ -14,6 +14,7 @@ import '../../core/providers/app_providers.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
+import '../../core/utils/keyboard_dismiss.dart';
 import '../auth/auth_session_helper.dart';
 import '../auth/widgets/udaan_auth_widgets.dart';
 import '../events/registration_account_prefill.dart';
@@ -34,6 +35,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
   late final TextEditingController _emailController;
+  late final String _originalEmail;
   bool _loading = false;
   String? _error;
   String? _localAvatarPath;
@@ -47,6 +49,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       text: formatPhoneForDisplay(user?.phoneE164 ?? ''),
     );
     _emailController = TextEditingController(text: user?.email ?? '');
+    _originalEmail = (user?.email ?? '').trim().toLowerCase();
   }
 
   @override
@@ -124,8 +127,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
       if (!mounted) return;
 
-      if (result.emailVerificationSent) {
-        _announce(_copy.profileEmailVerificationSent);
+      final emailChanged = email != _originalEmail;
+      if (emailChanged && !result.session.emailVerified) {
+        _announce(_copy.profileEmailVerifyNeeded);
         Navigator.of(context).pop();
         context.push(
           '/verify-email',
@@ -241,6 +245,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     context: context,
                     label: _copy.nameLabel,
                     controller: _nameController,
+                    textInputAction: TextInputAction.next,
                   ),
                   _labeledField(
                     context: context,
@@ -261,6 +266,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     label: _copy.emailLabel,
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) {
+                      if (!_loading) _save();
+                    },
                   ),
                   const SizedBox(height: 16),
                   Container(
@@ -338,6 +347,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     required String label,
     required TextEditingController controller,
     TextInputType? keyboardType,
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onSubmitted,
     bool readOnly = false,
     String? semanticsLabel,
     String? hint,
@@ -346,8 +357,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final field = TextField(
       controller: controller,
       keyboardType: keyboardType,
+      textInputAction: textInputAction,
       readOnly: readOnly,
       enableInteractiveSelection: !readOnly,
+      onSubmitted: (value) {
+        dismissKeyboard(context);
+        onSubmitted?.call(value);
+      },
+      onTapOutside: (_) => dismissKeyboard(context),
       style: registrationFieldInputStyle(context, readOnly: readOnly),
       decoration: registrationFieldDecoration(context).copyWith(
         suffixIcon: suffixIcon,

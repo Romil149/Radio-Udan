@@ -13,6 +13,7 @@ import '../../firebase_options.dart';
 import '../api/radioudaan_api.dart';
 import '../providers/app_providers.dart';
 import '../router/app_router.dart';
+import '../router/whats_new_deep_link.dart';
 
 /// Android notification channel — must match WP FCM `channel_id`.
 const kPushAndroidChannelId = 'radioudaan_alerts';
@@ -179,7 +180,7 @@ class PushNotificationService {
           .getInitialMessage()
           .timeout(_startupTimeout, onTimeout: () => null);
       if (initial != null) {
-        _scheduleOpenNotificationsInbox();
+        _handleNotificationOpenData(initial.data);
       }
     } on TimeoutException {
       debugPrint('getInitialMessage timed out');
@@ -321,10 +322,20 @@ class PushNotificationService {
   }
 
   void _onRemoteMessageOpened(RemoteMessage message) {
-    _scheduleOpenNotificationsInbox();
+    _handleNotificationOpenData(message.data);
   }
 
   void _onLocalNotificationTap(NotificationResponse response) {
+    _scheduleOpenNotificationsInbox();
+  }
+
+  void _handleNotificationOpenData(Map<String, dynamic> data) {
+    if (isWhatsNewDetailPayload(data)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        openWhatsNewDetailFromData(data);
+      });
+      return;
+    }
     _scheduleOpenNotificationsInbox();
   }
 

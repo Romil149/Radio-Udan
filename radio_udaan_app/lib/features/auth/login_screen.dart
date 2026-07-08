@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
-import '../../core/router/app_router.dart';
 import '../../core/router/event_deep_link.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
@@ -89,19 +88,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           );
       await persistAuthSession(ref, session);
       if (!mounted) return;
-      final requireEmail = ref
-              .read(remoteConfigProvider)
-              ?.authPolicy
-              .requireEmailVerification ??
-          false;
-      if (requireEmail && !session.emailVerified) {
-        context.go(
-          '/verify-email',
-          extra: VerifyEmailRouteArgs(email: session.email ?? ''),
-        );
-      } else {
-        navigateAfterAuth(context, ref);
-      }
+      // Email verification is optional and manual; go straight into the app.
+      navigateAfterAuth(context, ref);
     } catch (e) {
       _setError(parseApiError(e).message);
     } finally {

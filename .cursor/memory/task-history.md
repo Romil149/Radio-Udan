@@ -1,5 +1,49 @@
 # Task History
 
+### 2026-07-08 — Razorpay donations + 80G (Pay Online on Donate screen)
+**Requested by**: User — Razorpay before Scan & Donate; presets + custom amount; guest OK; full WP backend; Android native checkout; iOS payment link; 80G toggles + optional PAN; WP PDF email.
+**What was done**:
+- **WP (local)**: donations settings/DB/Razorpay client/REST (`/donate/orders`, `/donate/verify`, `/donate/webhook`), 80G PDF email, admin toggles + donations list, copy catalog (+14 keys), `info_hub.donate.razorpay` in `/config`.
+- **Flutter (local)**: `RazorpayDonateConfig`, API methods, `DonatePayOnlineCard`, `DonateRazorpayService` (Android SDK / iOS Safari link + verify), wired into `donate_screen.dart`, `razorpay_flutter` dependency.
+- **Smoke**: script checks donate routes + `info_hub.donate.razorpay`.
+**Verification**: `dart analyze lib` = 0 errors; `verify-wp-plugin.sh` = 7/7 (428 copy keys); staging smoke = **15/19** (donate routes + razorpay config — deploy plugin to staging).
+**Status**: ✅ Code complete locally. Staging deploy + Razorpay keys in WP admin required before live QA.
+**Notes**: App Review paste text in `.cursor/memory/app-review-donations.md`. Deep link `radioudaan://donate/verify`. Android proguard rules added.
+
+### 2026-07-08 — About tab What's New (combined feed + push)
+**Requested by**: User — What's New entry under About Us; combined `whats-new` + `radio-udaan-in-news` feed; detail screens; push on publish to all device users; tap opens detail.
+**What was done**:
+- **WP**: `GET /library/updates`, detail routes, `class-app-updates-notifications.php` (first-publish hook + force push), copy catalog keys (+9), smoke script route + test; fixed `single-radio-udaan-in-news.php` theme template.
+- **Flutter**: models, API, providers, `WhatsNewListScreen` + `WhatsNewDetailScreen`, About tab tile, `whats_new_deep_link.dart`, push + inbox tap routing for `whats_new_detail` payload.
+**Verification**: `dart analyze lib` = 0 errors; `verify-wp-plugin.sh` = 7/7 (414 copy keys); staging smoke = **16/16** (plugin deployed; `/library/updates` returns 33 items).
+**Status**: ✅ Complete (local code + staging API). App changes not on `main`/TestFlight yet. Manual device QA + push tap still pending.
+**Notes**: FCM on staging may still need BUG-019 fix for real push delivery.
+
+### 2026-07-08 — Keyboard Done/Next on More forms + country picker
+**Requested by**: User (add keyboard Done button pattern app-wide for blind users)
+**What was done**: Added `textInputAction` (Next/Done/Search), `onSubmitted`, and `onTapOutside` → `dismissKeyboard` to:
+- `edit_profile_screen.dart` — Name: Next; Email: Done + submit on Done
+- `change_password_screen.dart` — Current/New: Next; Confirm: Done + submit on Done
+- `help_contact_screen.dart` — Name/Email/Subject: Next; Message: Done + send on Done
+- `accessible_country_picker_sheet.dart` — Search: Search action + dismiss on submit
+**Verification**: `dart analyze lib` = 0 errors (8 pre-existing info lints)
+**Status**: ✅ Complete (local)
+
+### 2026-07-08 — Email verification made manual (no auto-send on login)
+**Requested by**: User ("email verification OTP only sends when we click Verify email, nothing else"). Popup answers: let user into app after phone OTP; only a Send button on the Verify Email screen sends the code; leave WP `require_email_verification` toggle as-is.
+**What was done**:
+- **Server** (`class-otp-service.php`, `class-app-password-auth.php`): removed the 3 auth-time auto-sends of the email verification code — phone OTP login, password login, and activate-after-phone-verify now just issue the session. Explicit resend route (`/auth/email/resend`) unchanged. Profile email-change auto-send (`class-app-profile.php:79`) left as-is.
+- **App**: `verify_email_screen.dart` no longer auto-sends on open; shows a "Send code" primary button first, then reveals the 6-digit entry + Verify after a code is sent. Router (`app_router.dart`) no longer force-routes to `/verify-email`; `otp_verify`/`login`/`email_login` go straight into the app. `more_tab.dart` opens Verify Email without auto-send. Removed unused `VerifyEmailRouteArgs.sendCodeOnOpen`. Added copy key `verify_email_send_prompt`.
+**Verification**: dart analyze lib = 0 errors (8 pre-existing info lints); verify-wp-plugin.sh = 7/7 (405 copy keys); staging smoke = 14/14. PHP -l clean on both changed files.
+**Status**: ✅ Complete (local). Not deployed — WP plugin must be re-deployed to staging for server behavior to take effect.
+**Notes**: Email verification is now fully optional/manual; the WP `require_email_verification` toggle no longer gates app entry (app ignores it for routing). Flag to user if they later want login gating back.
+
+### 2026-07-08 — VILPOWER DLT content template submitted (OTP)
+**Requested by**: User (header approved; proceed with OTP setup in browser)
+**What was done**: Via VILPOWER browser session — confirmed approved header **RUDAAN**; submitted transactional content template **Radio Udaan OTP** (ID `1107178349700604138`, pending). MSG91 account `udaan11` logged in; AuthKey view blocked on mobile verification. Documented full pipeline in `.cursor/memory/otp-production-setup.md`.
+**Status**: ⚠️ Partial — await VILPOWER template approval + MSG91 TM chain + WP admin MSG91 fields + disable dev OTP
+**Notes**: Sender is **RUDAAN** (not UDAANR from older proof PDF).
+
 ### 2026-07-05 — Forms accessibility master audit + top blocker fixes
 **Requested by**: User (urgent — all form fields on all screens)
 **What was done**: Code audit across Auth, Events registration, More, Library → `FORMS-AUDIT-MASTER.md`. Logged A11Y-001–009 in bugs-found. **Fix phase started:** phone field ExcludeSemantics + autofill normalize; password toggle moved outside excluded TextField in `UdaanLabeledField`; validation `announceValidationError` on Login, Register, Phone login.

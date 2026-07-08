@@ -136,10 +136,8 @@ class RadioUdaan_App_Password_Auth {
 			return new WP_Error( 'phone_not_verified', __( 'Verify your mobile number to continue.', 'radioudaan-app-api' ), array( 'status' => 403 ) );
 		}
 
-		if ( ! (int) $user->email_verified ) {
-			self::send_email_verification_code( $user );
-		}
-
+		// Email verification is manual: no code is sent at login. The user
+		// requests it explicitly from the Verify Email screen.
 		return self::issue_session_for_user( $user );
 	}
 
@@ -281,10 +279,8 @@ class RadioUdaan_App_Password_Auth {
 		RadioUdaan_App_Users::activate_phone( $user_id );
 		$user = RadioUdaan_App_Users::get_by_id( $user_id );
 
-		if ( ! (int) $user->email_verified ) {
-			self::send_email_verification_code( $user );
-		}
-
+		// Email verification is manual: activation no longer sends an email
+		// code. The user requests it from the Verify Email screen.
 		return self::issue_session_for_user( $user );
 	}
 

@@ -23,6 +23,7 @@ This folder contains **ready-to-run prompts** for a dedicated AI agent team to d
 10. **Agent 10 — DevOps/CI Engineer**: CI for WP plugin + Flutter, environments, build signing hygiene.
 11. **Agent 11 — Request Clarifier**: turns short requests into precise specs; asks for human confirmation on all ambiguities.
 12. **Agent 12 — “Real Person” Tester**: end-to-end tests via browser/builds; stops for human login/OTP/admin steps.
+16. **Agent 16 — TalkBack / VoiceOver Device Tester**: physical-device screen-reader QA; expert KB at `.cursor/memory/accessibility-kb/`; invoke `@agent-16-talkback-voiceover`.
 13. **Agent 14 — Legal/Policy Packager**: App Store/Play compliance (Privacy Policy, Terms, data disclosure for OTP+uploads, retention).
 14. **Agent 15 — Observability/Monitoring**: crash reporting, API error logs, registration failure alerts, stream uptime monitoring.
 

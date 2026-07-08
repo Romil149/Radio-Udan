@@ -230,18 +230,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
   }
 
   void _navigateAfterSession() {
-    final user = ref.read(authUserProvider);
-    final requireEmail =
-        ref.read(remoteConfigProvider)?.authPolicy.requireEmailVerification ??
-            false;
-
-    if (requireEmail && user != null && !user.emailVerified) {
-      context.go(
-        '/verify-email',
-        extra: VerifyEmailRouteArgs(email: user.email ?? ''),
-      );
-      return;
-    }
+    // Email verification is optional and manual, so we never block entry on it.
     navigateAfterAuth(context, ref);
   }
 

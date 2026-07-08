@@ -150,19 +150,34 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  _field(context, _copy.nameLabel, _nameController),
+                  _field(
+                    context,
+                    _copy.nameLabel,
+                    _nameController,
+                    textInputAction: TextInputAction.next,
+                  ),
                   _field(
                     context,
                     _copy.emailLabel,
                     _emailController,
                     keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
                   ),
-                  _field(context, _copy.helpSubject, _subjectController),
+                  _field(
+                    context,
+                    _copy.helpSubject,
+                    _subjectController,
+                    textInputAction: TextInputAction.next,
+                  ),
                   _field(
                     context,
                     _copy.helpMessage,
                     _messageController,
                     maxLines: 5,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) {
+                      if (!_sending) _send();
+                    },
                   ),
                   if (_error != null)
                     Semantics(
@@ -212,8 +227,13 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
     String label,
     TextEditingController controller, {
     TextInputType? keyboardType,
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onSubmitted,
     int maxLines = 1,
   }) {
+    final action = textInputAction ??
+        (maxLines > 1 ? TextInputAction.newline : TextInputAction.done);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
@@ -231,6 +251,11 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
                 controller: controller,
                 keyboardType: keyboardType,
                 maxLines: maxLines,
+                textInputAction: action,
+                onSubmitted: (value) {
+                  dismissKeyboard(context);
+                  onSubmitted?.call(value);
+                },
                 onTapOutside: (_) => dismissKeyboard(context),
                 style: registrationFieldInputStyle(context),
                 decoration: registrationFieldDecoration(context),

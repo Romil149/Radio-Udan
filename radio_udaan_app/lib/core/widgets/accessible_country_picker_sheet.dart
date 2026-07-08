@@ -161,7 +161,9 @@ class _AccessibleCountryPickerSheetState
             child: ExcludeSemantics(
               child: TextField(
                 controller: _searchController,
+                textInputAction: TextInputAction.search,
                 onChanged: (_) => setState(() {}),
+                onSubmitted: (_) => dismissKeyboard(context),
                 onTapOutside: (_) => dismissKeyboard(context),
                 style: GoogleFonts.atkinsonHyperlegible(
                   fontSize: 16,

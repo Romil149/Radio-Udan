@@ -147,7 +147,6 @@ class MoreTab extends ConsumerWidget {
                   '/verify-email',
                   extra: VerifyEmailRouteArgs(
                     email: user.email ?? '',
-                    sendCodeOnOpen: true,
                   ),
                 ),
               ),

@@ -30,6 +30,7 @@ Use **parallel** Task invocations when work is independent (e.g. Flutter UI + WP
 |--------|----------------|---------|
 | WordPress / PHP / Forminator | `generalPurpose` | Plugin, REST, admin, migrations |
 | Flutter / Dart / mobile UX | `generalPurpose` | App screens, theme, Riverpod |
+| TalkBack / VoiceOver device QA | `agent-16-talkback-voiceover` or paste `agent-16-talkback-voiceover-tester.md` | Physical-device screen-reader sessions; `scripts/a11y-device-qa.md` |
 | Codebase discovery | `explore` | Read-only mapping, find usages |
 | Shell / tests / curl | `shell` | `flutter analyze`, API scripts, git |
 | Security review | `explore` (readonly) | OWASP-style pass on changed files |

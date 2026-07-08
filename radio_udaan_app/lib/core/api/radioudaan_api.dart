@@ -5,12 +5,14 @@ import '../config/remote_config.dart';
 import '../constants/app_constants.dart';
 import '../models/app_notification.dart';
 import '../models/auth_session.dart';
+import '../models/donation_order.dart';
 import '../models/event_summary.dart';
 import '../models/youtube_video.dart';
 import '../models/otp_purpose.dart';
 import '../models/otp_request_result.dart';
 import '../models/otp_verify_result.dart';
 import '../models/radio_schedule.dart';
+import '../models/whats_new_update.dart';
 import '../models/register_result.dart';
 import '../models/registration_result.dart';
 import '../models/saved_favorite.dart';
@@ -283,6 +285,34 @@ class RadioUdaanApi {
     return YoutubeVideoListResponse.fromJson(response.data ?? {});
   }
 
+  Future<WhatsNewListResponse> listUpdates({
+    int page = 1,
+    int perPage = 50,
+  }) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/library/updates',
+      queryParameters: {
+        'page': page,
+        'per_page': perPage,
+      },
+    );
+    return WhatsNewListResponse.fromJson(response.data ?? {});
+  }
+
+  Future<WhatsNewAnnouncementDetail> getWhatsNewDetail(int id) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/library/updates/whats-new/$id',
+    );
+    return WhatsNewAnnouncementDetail.fromJson(response.data ?? {});
+  }
+
+  Future<WhatsNewInNewsDetail> getInNewsDetail(int id) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/library/updates/in-news/$id',
+    );
+    return WhatsNewInNewsDetail.fromJson(response.data ?? {});
+  }
+
   Future<YoutubePlaylistListResponse> listFeaturedYoutubePlaylists() async {
     final response = await _dio.get<Map<String, dynamic>>(
       '/library/youtube/playlists/featured',
@@ -497,5 +527,43 @@ class RadioUdaanApi {
       },
     );
     return SavedFavorite.listFromJson(response.data?['items'] as List<dynamic>?);
+  }
+
+  Future<DonationOrderResult> createDonationOrder({
+    required int amountPaise,
+    bool want80g = false,
+    String pan = '',
+    String name = '',
+    String email = '',
+    String phone = '',
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/donate/orders',
+      data: {
+        'amount_paise': amountPaise,
+        'want_80g': want80g,
+        if (pan.isNotEmpty) 'pan': pan,
+        if (name.isNotEmpty) 'name': name,
+        if (email.isNotEmpty) 'email': email,
+        if (phone.isNotEmpty) 'phone': phone,
+      },
+    );
+    return DonationOrderResult.fromJson(response.data ?? {});
+  }
+
+  Future<DonationVerifyResult> verifyDonation({
+    required String razorpayOrderId,
+    String razorpayPaymentId = '',
+    String razorpaySignature = '',
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/donate/verify',
+      data: {
+        'razorpay_order_id': razorpayOrderId,
+        if (razorpayPaymentId.isNotEmpty) 'razorpay_payment_id': razorpayPaymentId,
+        if (razorpaySignature.isNotEmpty) 'razorpay_signature': razorpaySignature,
+      },
+    );
+    return DonationVerifyResult.fromJson(response.data ?? {});
   }
 }

@@ -11,6 +11,7 @@ import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_google_fonts.dart';
 import '../../core/widgets/brand_app_bar.dart';
 import '../auth/widgets/udaan_auth_widgets.dart';
+import 'widgets/donate_pay_online_card.dart';
 
 /// Donate screen: UPI QR + bank transfer details from WordPress config.
 class DonateScreen extends ConsumerWidget {
@@ -109,6 +110,10 @@ class DonateScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+            ],
+            if (donate.razorpay.enabled) ...[
+              const SizedBox(height: 24),
+              DonatePayOnlineCard(copy: copy, razorpay: donate.razorpay),
             ],
             const SizedBox(height: 24),
             LayoutBuilder(
