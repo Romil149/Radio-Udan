@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../api/api_client.dart';
 import '../api/radioudaan_api.dart';
 import '../config/app_env.dart';
+import '../config/force_update_gate.dart';
 import '../config/remote_config.dart';
 import '../models/auth_session.dart';
 import '../providers/app_providers.dart';
@@ -141,9 +143,25 @@ class AppBootstrap {
 
     final loggedIn = _ref.read(authTokenProvider) != null;
 
+    // Evaluate minimum build enforcement once per cold start.
+    int? buildNumber;
+    try {
+      final info = await PackageInfo.fromPlatform();
+      buildNumber = int.tryParse(info.buildNumber);
+    } catch (_) {
+      buildNumber = null;
+    }
+    _ref.read(appBuildNumberProvider.notifier).state = buildNumber;
+
+    final forceUpdateRequired = ForceUpdateGate.evaluate(
+      config: config,
+      currentBuild: buildNumber,
+    ).required;
+
     return BootstrapResult(
       configLoaded: config != null,
       isLoggedIn: loggedIn,
+      forceUpdateRequired: forceUpdateRequired,
     );
   }
 }
@@ -152,10 +170,12 @@ class BootstrapResult {
   const BootstrapResult({
     required this.configLoaded,
     required this.isLoggedIn,
+    required this.forceUpdateRequired,
   });
 
   final bool configLoaded;
   final bool isLoggedIn;
+  final bool forceUpdateRequired;
 }
 
 final bootstrapProvider = FutureProvider<BootstrapResult>((ref) async {

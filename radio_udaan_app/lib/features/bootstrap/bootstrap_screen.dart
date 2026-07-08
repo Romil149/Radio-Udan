@@ -43,14 +43,27 @@ class _BootstrapScreenState extends ConsumerState<BootstrapScreen> {
     _navigated = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (result.isLoggedIn) {
+      if (result.forceUpdateRequired) {
+        context.go('/force-update');
+        return;
+      }
+      final pendingDonateVerifyOrderId =
+          ref.read(pendingDonateVerifyOrderIdProvider);
+      if (pendingDonateVerifyOrderId != null) {
+        ref
+            .read(pendingDonateVerifyOrderIdProvider.notifier)
+            .state = null;
+        context.go(
+          '/donate/verify?order_id=${Uri.encodeComponent(pendingDonateVerifyOrderId)}',
+        );
+      } else if (result.isLoggedIn) {
         final pending = ref.read(pendingEventDeepLinkProvider);
         context.go(pending != null ? '/event/$pending' : '/');
       } else {
         context.go('/login');
       }
       // Push must not block splash — iOS FCM getToken() can hang indefinitely.
-      if (result.isLoggedIn) {
+      if (result.isLoggedIn && !result.forceUpdateRequired) {
         unawaited(
           ref.read(pushNotificationServiceProvider).syncForLoggedInUser(),
         );

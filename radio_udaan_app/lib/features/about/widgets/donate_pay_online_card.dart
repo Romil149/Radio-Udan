@@ -34,6 +34,7 @@ class DonatePayOnlineCard extends ConsumerStatefulWidget {
 
 class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard> {
   final _customAmountController = TextEditingController();
+  final _customAmountFocus = FocusNode();
   final _panController = TextEditingController();
   final _emailController = TextEditingController();
 
@@ -66,6 +67,7 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard> {
   @override
   void dispose() {
     _customAmountController.dispose();
+    _customAmountFocus.dispose();
     _panController.dispose();
     _emailController.dispose();
     _checkout?.dispose();
@@ -267,6 +269,8 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard> {
           UdaanLabeledField(
             label: widget.copy.donateAmountCustomLabel,
             controller: _customAmountController,
+            focusNode: _customAmountFocus,
+            keyboardDoneLabel: widget.copy.keyboardDone,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),

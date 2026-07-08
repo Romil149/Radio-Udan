@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/udaan_colors.dart';
 import '../../../core/utils/keyboard_dismiss.dart';
 import '../../../core/widgets/accessible_country_picker_sheet.dart';
+import '../../../core/widgets/keyboard_accessory.dart';
 import '../../../core/utils/phone_country.dart';
 import '../../../core/utils/phone_e164.dart';
 
@@ -90,6 +91,7 @@ class UdaanPhoneField extends StatefulWidget {
 
 class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
   PhoneCountryInputController get _input => widget.controller;
+  final _numberFocus = FocusNode();
 
   @override
   void initState() {
@@ -102,6 +104,7 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
   void dispose() {
     _input.removeListener(_onInputChanged);
     _input.nationalController.removeListener(_onNationalTextChanged);
+    _numberFocus.dispose();
     super.dispose();
   }
 
@@ -250,23 +253,37 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
                 textField: true,
                 label: nationalSemanticsLabel,
                 child: ExcludeSemantics(
-                  child: TextField(
-                    controller: _input.nationalController,
-                    keyboardType: TextInputType.phone,
-                    textInputAction: widget.textInputAction,
-                    autofillHints: const [AutofillHints.telephoneNumber],
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(_input.maxNationalDigits),
-                    ],
-                    onChanged: (_) => _onNationalTextChanged(),
-                    onSubmitted: widget.onSubmitted,
-                    onTapOutside: (_) => dismissKeyboard(context),
-                    style: GoogleFonts.atkinsonHyperlegible(
-                      fontSize: 18,
-                      color: context.udaan.onBackground,
+                  child: KeyboardAccessory(
+                    focusNode: _numberFocus,
+                    doneLabel: widget.copy.keyboardDone,
+                    nextLabel:
+                        widget.textInputAction == TextInputAction.next
+                            ? widget.copy.keyboardNext
+                            : null,
+                    onNext: widget.textInputAction == TextInputAction.next
+                        ? () => FocusScope.of(context).nextFocus()
+                        : null,
+                    child: TextField(
+                      controller: _input.nationalController,
+                      focusNode: _numberFocus,
+                      keyboardType: TextInputType.phone,
+                      textInputAction: widget.textInputAction,
+                      autofillHints: const [AutofillHints.telephoneNumber],
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(
+                          _input.maxNationalDigits,
+                        ),
+                      ],
+                      onChanged: (_) => _onNationalTextChanged(),
+                      onSubmitted: widget.onSubmitted,
+                      onTapOutside: (_) => dismissKeyboard(context),
+                      style: GoogleFonts.atkinsonHyperlegible(
+                        fontSize: 18,
+                        color: context.udaan.onBackground,
+                      ),
+                      decoration: _fieldDecoration(hint: hint),
                     ),
-                    decoration: _fieldDecoration(hint: hint),
                   ),
                 ),
               ),

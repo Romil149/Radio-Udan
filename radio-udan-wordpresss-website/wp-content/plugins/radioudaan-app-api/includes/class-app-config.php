@@ -124,6 +124,7 @@ class RadioUdaan_App_Config {
 				'email'          => RadioUdaan_App_Settings::get_support_email(),
 			),
 			'info_hub'           => RadioUdaan_App_Info_Hub::get_config_payload(),
+			'app_update'        => RadioUdaan_App_Version_Policy::get_public_config(),
 			'notification_preferences' => RadioUdaan_App_Settings::get_notification_preferences_defaults(),
 			'branding'           => RadioUdaan_App_Branding::get_public_branding(),
 			'copy'               => RadioUdaan_App_Branding::get_public_copy(),

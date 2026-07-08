@@ -20,6 +20,12 @@ extension AppCopyStrings on AppCopy {
   String get boldTextHint => text('bold_text_hint');
   String get bootstrapLoading => text('bootstrap_loading');
   String get bootstrapOffline => text('bootstrap_offline');
+  String get forceUpdateTitle => text('force_update_title');
+  String get forceUpdateMessage => text('force_update_message');
+  String get forceUpdateCurrentBuild => text('force_update_current_build');
+  String get forceUpdateButton => text('force_update_button');
+  String get keyboardDone => text('keyboard_done');
+  String get keyboardNext => text('keyboard_next');
   String get callAccessibilityHelpline => text('call_accessibility_helpline');
   String get cancel => text('cancel');
   String get changePasswordIntro => text('change_password_intro');

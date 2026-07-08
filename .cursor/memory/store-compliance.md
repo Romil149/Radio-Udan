@@ -40,6 +40,7 @@ Re-check Apple [Upcoming Requirements](https://developer.apple.com/news/upcoming
 | **Uploads** | Request camera/mic/**storage** only when user starts upload. Prefer **system pickers** (Photo Picker / document picker) over broad `READ_MEDIA_*` on Android. |
 | **Donations (Razorpay)** | Charitable donations to trust — **not** IAP. **Android**: native Razorpay SDK. **iOS**: open Payment Link in **Safari** (not in-app WebView checkout). Disclose payment processor + PAN collection when 80G opted in. Privacy policy must mention donation data. App Review notes: `.cursor/memory/app-review-donations.md`. |
 | **Accessibility** | **VoiceOver + TalkBack** on every screen — ship blocker for this product (not optional). |
+| **Minimum-version enforcement** | Allowed when needed for API-breaking changes/security fixes. Block only when installed `buildNumber` is below WP-configured minimum per platform, use official store links, and show an accessible hard-block screen. Raise min only after the new build is available on the relevant store. |
 | **Data disclosure** | Complete **Apple App Privacy** labels and **Google Play Data safety** to match real behavior (phone, files, audio, identity docs). |
 | **Permissions** | Request **incrementally** with clear in-app explanation before system dialog. |
 | **Metadata** | Screenshots show real app UI; description matches features (events, radio, library, OTP). |

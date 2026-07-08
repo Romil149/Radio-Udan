@@ -67,6 +67,7 @@ require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-donations-db.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-razorpay-client.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-donations-80g-pdf.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-donations.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-version-policy.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-donations.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-radioudaan-app-api.php';
 

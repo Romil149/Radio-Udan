@@ -7,6 +7,7 @@ export '../config/app_branding.dart';
 export '../config/app_copy_accessors.dart';
 import '../config/app_env.dart';
 import '../config/live_radio_config.dart';
+import '../config/force_update_gate.dart';
 import '../config/remote_config.dart';
 import '../models/auth_session.dart';
 import '../storage/settings_storage.dart';
@@ -27,6 +28,19 @@ final apiBaseUrlProvider = StateProvider<String>((ref) {
 
 final remoteConfigProvider = StateProvider<RemoteConfig?>((ref) => null);
 
+final appBuildNumberProvider = StateProvider<int?>((ref) => null);
+
+final forceUpdateStateProvider = Provider<ForceUpdateState>((ref) {
+  return ForceUpdateGate.evaluate(
+    config: ref.watch(remoteConfigProvider),
+    currentBuild: ref.watch(appBuildNumberProvider),
+  );
+});
+
+final forceUpdateRequiredProvider = Provider<bool>((ref) {
+  return ref.watch(forceUpdateStateProvider).required;
+});
+
 final appBrandingProvider = Provider<AppBranding>((ref) {
   return ref.watch(remoteConfigProvider)?.branding ?? AppBranding.defaults;
 });
@@ -44,6 +58,10 @@ final mainShellTabIndexProvider = StateProvider<int>((ref) => 0);
 
 /// Pending event ID from a deep link, consumed after auth completes.
 final pendingEventDeepLinkProvider = StateProvider<int?>((ref) => null);
+
+/// Pending donation verification order id from a deep link.
+final pendingDonateVerifyOrderIdProvider =
+    StateProvider<String?>((ref) => null);
 
 final authTokenProvider = StateProvider<String?>((ref) => null);
 

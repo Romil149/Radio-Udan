@@ -68,6 +68,10 @@ if not support or not (support.get("helpline_phone") or support.get("email")):
 privacy = (d.get("legal") or {}).get("privacy_policy_url") or d.get("privacy_policy_url")
 if not privacy:
     sys.exit("privacy_policy_url missing — set in WP Admin")
+policy = d.get("app_update") or {}
+assert "enabled" in policy, "app_update.enabled missing"
+assert "android_min_build" in policy, "app_update.android_min_build missing"
+assert "ios_min_build" in policy, "app_update.ios_min_build missing"
 razorpay = ((d.get("info_hub") or {}).get("donate") or {}).get("razorpay")
 if not isinstance(razorpay, dict) or "enabled" not in razorpay:
     sys.exit("info_hub.donate.razorpay missing — deploy donations plugin")

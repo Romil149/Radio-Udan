@@ -185,6 +185,9 @@ class RadioUdaan_Admin_Pages {
 		$legal_privacy_page_id = (int) get_option( RadioUdaan_App_Legal_Pages::OPTION_PRIVACY_PAGE_ID, 0 );
 		$legal_terms_page_id   = (int) get_option( RadioUdaan_App_Legal_Pages::OPTION_TERMS_PAGE_ID, 0 );
 		$legal_about_page_id   = (int) get_option( RadioUdaan_App_Legal_Pages::OPTION_ABOUT_PAGE_ID, 0 );
+		$force_update_enabled  = RadioUdaan_App_Version_Policy::is_force_update_enabled();
+		$min_android_build     = RadioUdaan_App_Version_Policy::get_min_android_build();
+		$min_ios_build         = RadioUdaan_App_Version_Policy::get_min_ios_build();
 		$page_choices          = RadioUdaan_Event_Meta_Ui::get_page_choices();
 		$support_helpline = RadioUdaan_App_Settings::get_support_helpline_phone();
 		$support_email    = RadioUdaan_App_Settings::get_support_email();
@@ -285,6 +288,9 @@ class RadioUdaan_Admin_Pages {
 					'play_store_url' => $play_store_url,
 					'app_store_ov'  => $app_store_ov,
 					'play_store_ov' => $play_store_ov,
+					'force_update_enabled' => $force_update_enabled,
+					'min_android_build'    => $min_android_build,
+					'min_ios_build'        => $min_ios_build,
 					'support_helpline' => $support_helpline,
 					'support_email'    => $support_email,
 					'donate_badge'              => $donate_badge,

@@ -76,6 +76,12 @@
 **Reasoning**: Single `/config` fetch (cached 5 min WP + 6 h device) avoids extra round-trips; stale-while-revalidate shows branded UI immediately.
 **Consequences**: Admin has many copy fields (grouped). Template strings use `{placeholders}` in copy values. App rebuild not needed for text changes.
 
+### 2026-07-08 — Force App Update (minimum build gate)
+**Context**: Prevent API-breaking changes and security fixes from being used on older app builds.
+**Decision**: WordPress exposes `GET /config.app_update` with enabled + min Android/iOS build numbers. Flutter compares `package_info_plus.buildNumber` against the platform minimum and hard-blocks the app via `/force-update` when violated (with accessible copy and official store links).
+**Reasoning**: Store-compliant approach (official store listing + minimum-version enforcement only). Hard-block avoids broken/unsafe API behavior while still being controllable from WP admin.
+**Consequences**: Staging WP deployment must include the `app_update` config slice before QA. Admin must raise minimum builds only after the new build is live on the relevant store.
+
 ## Template:
 ### [Date] — [Decision Title]
 **Context**: Why was this decision needed?

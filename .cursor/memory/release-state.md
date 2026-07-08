@@ -3,8 +3,8 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+33** @ `a6e7be9` | pushed | 2026-07-08 | Razorpay donations + 80G, What's New, iOS payment-link verify fix |
-| TestFlight iOS | **2.0.0+33** | CI pending | 2026-07-08 | Trigger after push to `main` |
+| GitHub `main` | **2.0.0+34** | push pending | 2026-07-08 | Firebase project `radio-udaan-72232` (Android + iOS client configs); push pipeline aligned with new FCM project |
+| TestFlight iOS | **2.0.0+34** | CI pending | 2026-07-08 | Trigger after push to `main` |
 | Staging WP plugin | partial | **yes** | 2026-07-08 | API smoke 19/19; redeploy full zip if `class-admin-donations.php` missing on server |
 | Staging API smoke | 19/19 | — | 2026-07-08 | Includes `/donate/*` routes + `info_hub.donate.razorpay` |
 

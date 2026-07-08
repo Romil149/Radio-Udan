@@ -293,10 +293,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 onSignIn: _loading ? null : () => context.go('/login'),
               ),
               const SizedBox(height: 24),
-              UdaanAccessibilityAssistCard(
-                copy: copy,
-                ),
-              const SizedBox(height: 16),
               Text(
                 _copy.registerCopyright,
                 textAlign: TextAlign.center,

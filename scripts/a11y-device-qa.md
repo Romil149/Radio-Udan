@@ -13,7 +13,7 @@
 
 ## 2. Tab cycle (5 tabs)
 
-Switch: Live → Library → Events → Favorites → More.
+Switch: Live → Library → Events → About → More.
 
 | Check | Pass |
 |-------|------|

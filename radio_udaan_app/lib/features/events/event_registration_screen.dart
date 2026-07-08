@@ -12,8 +12,8 @@ import '../../core/storage/registration_draft_storage.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/accessibility_scope.dart';
 import '../../core/theme/udaan_text_styles.dart';
-import '../../core/utils/keyboard_dismiss.dart';
 import '../../core/widgets/accessible_html_content.dart';
+import '../../core/widgets/keyboard_accessory.dart';
 import '../auth/widgets/udaan_auth_widgets.dart';
 import 'form_field_validator.dart';
 import 'models/form_schema.dart';
@@ -53,6 +53,7 @@ class _EventRegistrationScreenState
   final _pendingUploads = <String, ({String path, String name})>{};
   final _fieldKeys = <String, GlobalKey>{};
   final _textControllers = <String, TextEditingController>{};
+  final _fieldFocusNodes = <String, FocusNode>{};
   final _scrollController = ScrollController();
   String? _error;
   int? _successEntryId;
@@ -81,6 +82,9 @@ class _EventRegistrationScreenState
     for (final controller in _textControllers.values) {
       controller.dispose();
     }
+    for (final node in _fieldFocusNodes.values) {
+      node.dispose();
+    }
     super.dispose();
   }
 
@@ -89,6 +93,10 @@ class _EventRegistrationScreenState
       final text = displayValueForField(field, _values[field.key]);
       return TextEditingController(text: text);
     });
+  }
+
+  FocusNode _focusNodeFor(FormFieldSchema field) {
+    return _fieldFocusNodes.putIfAbsent(field.key, FocusNode.new);
   }
 
   void _syncTextController(FormFieldSchema field) {
@@ -389,6 +397,50 @@ class _EventRegistrationScreenState
     final controller = _textControllerFor(field);
     final isAccountLocked = _isAccountLockedField(field);
     final palette = context.udaan;
+    // Numeric keypads have no OS action button, so attach a Done/Next bar.
+    final isNumeric = keyboardType == TextInputType.number ||
+        keyboardType == TextInputType.phone;
+    final focusNode = isNumeric ? _focusNodeFor(field) : null;
+
+    Widget input = TextFormField(
+      controller: controller,
+      focusNode: focusNode,
+      readOnly: isAccountLocked,
+      style: registrationFieldInputStyle(
+        context,
+        readOnly: isAccountLocked,
+      ),
+      decoration: _fieldDecoration(context, field).copyWith(
+        hintText: hintOverride ?? field.placeholder,
+        suffixIcon: isAccountLocked
+            ? Icon(
+                Icons.lock_outline,
+                color: palette.onSurfaceVariant,
+              )
+            : null,
+      ),
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      textCapitalization: textCapitalization,
+      // Single-line fields chain to the next field with "Next"; multiline
+      // keeps the newline key.
+      textInputAction:
+          maxLines > 1 ? TextInputAction.newline : TextInputAction.next,
+      onFieldSubmitted: maxLines > 1
+          ? null
+          : (_) => FocusScope.of(context).nextFocus(),
+      onChanged: isAccountLocked ? null : (v) => _onTextFieldChanged(field, v),
+    );
+
+    if (focusNode != null && !isAccountLocked) {
+      input = KeyboardAccessory(
+        focusNode: focusNode,
+        doneLabel: _copy.keyboardDone,
+        nextLabel: _copy.keyboardNext,
+        onNext: () => FocusScope.of(context).nextFocus(),
+        child: input,
+      );
+    }
 
     return _fieldShell(
       context,
@@ -400,34 +452,7 @@ class _EventRegistrationScreenState
             : (hintOverride ?? field.placeholder),
         textField: true,
         readOnly: isAccountLocked,
-        child: ExcludeSemantics(
-          child: TextFormField(
-            controller: controller,
-            readOnly: isAccountLocked,
-            style: registrationFieldInputStyle(
-              context,
-              readOnly: isAccountLocked,
-            ),
-            decoration: _fieldDecoration(context, field).copyWith(
-              hintText: hintOverride ?? field.placeholder,
-              suffixIcon: isAccountLocked
-                  ? Icon(
-                      Icons.lock_outline,
-                      color: palette.onSurfaceVariant,
-                    )
-                  : null,
-            ),
-            keyboardType: keyboardType,
-            maxLines: maxLines,
-            textCapitalization: textCapitalization,
-            textInputAction:
-                maxLines > 1 ? TextInputAction.newline : TextInputAction.done,
-            onEditingComplete: () => dismissKeyboard(context),
-            onFieldSubmitted: (_) => dismissKeyboard(context),
-            onChanged:
-                isAccountLocked ? null : (v) => _onTextFieldChanged(field, v),
-          ),
-        ),
+        child: ExcludeSemantics(child: input),
       ),
       errorOnDecoration: true,
     );
@@ -1404,9 +1429,8 @@ class _EventRegistrationScreenState
                       ? TextInputType.streetAddress
                       : TextInputType.name,
                   textCapitalization: TextCapitalization.words,
-                  textInputAction: TextInputAction.done,
-                  onEditingComplete: () => dismissKeyboard(context),
-                  onFieldSubmitted: (_) => dismissKeyboard(context),
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
                   onChanged: (v) => _setSubfieldValue(field, sub, v),
                 ),
               ),

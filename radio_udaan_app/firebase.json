@@ -3,25 +3,25 @@
     "platforms": {
       "android": {
         "default": {
-          "projectId": "radio-udan-2412a",
-          "appId": "1:860433527358:android:b4f6cd16e5a950513b976f",
+          "projectId": "radio-udaan-72232",
+          "appId": "1:508596678027:android:88f0398cfe2642ac1b938e",
           "fileOutput": "android/app/google-services.json"
         }
       },
       "ios": {
         "default": {
-          "projectId": "radio-udan-2412a",
-          "appId": "1:860433527358:ios:dd042cfa744981f23b976f",
+          "projectId": "radio-udaan-72232",
+          "appId": "1:508596678027:ios:a01f237968a65b5b1b938e",
           "uploadDebugSymbols": false,
           "fileOutput": "ios/Runner/GoogleService-Info.plist"
         }
       },
       "dart": {
         "lib/firebase_options.dart": {
-          "projectId": "radio-udan-2412a",
+          "projectId": "radio-udaan-72232",
           "configurations": {
-            "android": "1:860433527358:android:b4f6cd16e5a950513b976f",
-            "ios": "1:860433527358:ios:dd042cfa744981f23b976f"
+            "android": "1:508596678027:android:88f0398cfe2642ac1b938e",
+            "ios": "1:508596678027:ios:a01f237968a65b5b1b938e"
           }
         }
       }

@@ -452,6 +452,30 @@ class RadioUdaan_Admin_Settings_Page {
 					<p class="description"><?php esc_html_e( 'In-app contact form messages are sent here (falls back to WP admin email).', 'radioudaan-app-api' ); ?></p>
 				</div>
 			</div>
+
+			<div class="ru-settings-panel__card">
+				<h3><?php esc_html_e( 'App update policy', 'radioudaan-app-api' ); ?></h3>
+				<p class="description">
+					<?php esc_html_e( 'When enabled, users on older builds will see a hard “Update required” block. Raise the minimum build only after the new build is live on Play / App Store.', 'radioudaan-app-api' ); ?>
+					<br />
+					<?php esc_html_e( 'Current production build: 33.', 'radioudaan-app-api' ); ?>
+				</p>
+
+				<div class="ru-admin__field">
+					<label for="force_update_enabled"><strong><?php esc_html_e( 'Force update enabled', 'radioudaan-app-api' ); ?></strong></label>
+					<input type="checkbox" name="force_update_enabled" id="force_update_enabled" value="1" <?php checked( ! empty( $c['force_update_enabled'] ) ); ?> />
+				</div>
+
+				<div class="ru-admin__field">
+					<label for="min_android_build"><?php esc_html_e( 'Minimum Android build (versionCode)', 'radioudaan-app-api' ); ?></label>
+					<input type="number" name="min_android_build" id="min_android_build" class="small-text" value="<?php echo esc_attr( (string) ( $c['min_android_build'] ?? 0 ) ); ?>" min="0" step="1" />
+				</div>
+
+				<div class="ru-admin__field">
+					<label for="min_ios_build"><?php esc_html_e( 'Minimum iOS build (CFBundleVersion)', 'radioudaan-app-api' ); ?></label>
+					<input type="number" name="min_ios_build" id="min_ios_build" class="small-text" value="<?php echo esc_attr( (string) ( $c['min_ios_build'] ?? 0 ) ); ?>" min="0" step="1" />
+				</div>
+			</div>
 		</section>
 
 		<!-- About tab (app) -->

@@ -1,4 +1,5 @@
 import 'app_branding.dart';
+import 'package:flutter/foundation.dart';
 import 'info_hub_config.dart';
 import 'legal_pages_config.dart';
 import 'live_radio_config.dart';
@@ -18,6 +19,7 @@ class RemoteConfig {
     required this.copy,
     required this.liveRadio,
     required this.authPolicy,
+    this.appUpdate = const AppUpdatePolicy(),
     this.privacyPolicyUrl,
     this.termsUrl,
     this.aboutUrl,
@@ -53,6 +55,9 @@ class RemoteConfig {
         json['live_radio'] as Map<String, dynamic>?,
       ),
       authPolicy: AuthPolicy.fromJson(auth),
+      appUpdate: AppUpdatePolicy.fromJson(
+        json['app_update'] as Map<String, dynamic>?,
+      ),
       privacyPolicyUrl: _parseOptionalUrl(json['privacy_policy_url']),
       termsUrl: _parseOptionalUrl(json['terms_url']),
       aboutUrl: _parseOptionalUrl(json['about_url']),
@@ -92,6 +97,7 @@ class RemoteConfig {
   final AppCopy copy;
   final LiveRadioConfig liveRadio;
   final AuthPolicy authPolicy;
+  final AppUpdatePolicy appUpdate;
   final String? privacyPolicyUrl;
   final String? termsUrl;
   final String? aboutUrl;
@@ -102,6 +108,38 @@ class RemoteConfig {
   final SupportConfig support;
   final InfoHubConfig infoHub;
   final NotificationPreferenceDefaults notificationDefaults;
+}
+
+/// Minimum build enforcement from WordPress `GET /config` → `app_update`.
+class AppUpdatePolicy {
+  const AppUpdatePolicy({
+    this.enabled = false,
+    this.androidMinBuild = 0,
+    this.iosMinBuild = 0,
+  });
+
+  factory AppUpdatePolicy.fromJson(Map<String, dynamic>? json) {
+    if (json == null || json.isEmpty) {
+      return const AppUpdatePolicy();
+    }
+
+    return AppUpdatePolicy(
+      enabled: json['enabled'] == true,
+      androidMinBuild: (json['android_min_build'] as num?)?.toInt() ?? 0,
+      iosMinBuild: (json['ios_min_build'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  final bool enabled;
+  final int androidMinBuild;
+  final int iosMinBuild;
+
+  bool isUpdateRequired(int currentBuild, TargetPlatform platform) {
+    if (!enabled) return false;
+    final min = platform == TargetPlatform.android ? androidMinBuild : iosMinBuild;
+    if (min <= 0) return false;
+    return currentBuild < min;
+  }
 }
 
 /// Support contacts from `GET /config` → `support`.

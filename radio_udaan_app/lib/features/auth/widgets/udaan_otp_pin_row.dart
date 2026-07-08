@@ -6,6 +6,7 @@ import '../../../core/config/app_branding.dart';
 import '../../../core/config/app_copy_accessors.dart';
 import '../../../core/theme/udaan_colors.dart';
 import '../../../core/utils/keyboard_dismiss.dart';
+import '../../../core/widgets/keyboard_accessory.dart';
 
 /// Six-digit OTP entry with manual SMS entry only (no READ_SMS).
 class UdaanOtpPinRow extends StatefulWidget {
@@ -69,7 +70,10 @@ class _UdaanOtpPinRowState extends State<UdaanOtpPinRow> {
               height: 56,
               width: 1,
               child: ExcludeSemantics(
-                child: TextField(
+                child: KeyboardAccessory(
+                  focusNode: _focusNode,
+                  doneLabel: widget.copy.keyboardDone,
+                  child: TextField(
                   controller: widget.controller,
                   focusNode: _focusNode,
                   enabled: widget.enabled,
@@ -90,6 +94,7 @@ class _UdaanOtpPinRowState extends State<UdaanOtpPinRow> {
                   onChanged: (_) => setState(() {}),
                   onTapOutside: (_) => dismissKeyboard(context),
                   onSubmitted: (_) => dismissKeyboard(context),
+                  ),
                 ),
               ),
             ),

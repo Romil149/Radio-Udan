@@ -8,6 +8,7 @@ import '../../../core/theme/brand_tokens.dart';
 import '../../../core/theme/udaan_colors.dart';
 import '../../../core/theme/udaan_text_styles.dart';
 import '../../../core/utils/keyboard_dismiss.dart';
+import '../../../core/widgets/keyboard_accessory.dart';
 import '../../../core/widgets/offline_brand_logo.dart';
 
 /// Top bar: back + centered app title (OTP verify and similar flows).
@@ -28,51 +29,57 @@ class UdaanAuthTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.udaan;
-    return SizedBox(
-      height: 48,
-      child: Stack(
-        alignment: Alignment.center,
+    // Row layout reserves equal space for back/trailing so a long, centered
+    // title can never slide under the back button (Stack overlap bug).
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: BrandTokens.a11yMinTapTarget),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Semantics(
-              button: true,
-              label: copy.backButton,
-              child: ExcludeSemantics(
-                child: IconButton(
-                  onPressed: onBack,
-                  constraints: const BoxConstraints(
-                    minWidth: BrandTokens.a11yMinTapTarget,
-                    minHeight: BrandTokens.a11yMinTapTarget,
-                  ),
-                  icon: Icon(
-                    Icons.arrow_back,
-                    color: palette.onBackground,
-                  ),
-                ),
-              ),
-            ),
-          ),
           Semantics(
-            header: true,
-            label: title,
+            button: true,
+            label: copy.backButton,
             child: ExcludeSemantics(
-              child: Text(
-                title,
-                style: udaanTextStyle(
-                  context,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: palette.primaryGlow,
+              child: IconButton(
+                onPressed: onBack,
+                constraints: const BoxConstraints(
+                  minWidth: BrandTokens.a11yMinTapTarget,
+                  minHeight: BrandTokens.a11yMinTapTarget,
+                ),
+                icon: Icon(
+                  Icons.arrow_back,
+                  color: palette.onBackground,
                 ),
               ),
             ),
           ),
-          if (trailing != null)
-            Align(
-              alignment: Alignment.centerRight,
-              child: trailing,
+          Expanded(
+            child: Semantics(
+              header: true,
+              label: title,
+              child: ExcludeSemantics(
+                child: Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: udaanTextStyle(
+                    context,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: palette.primaryGlow,
+                  ),
+                ),
+              ),
             ),
+          ),
+          SizedBox(
+            width: BrandTokens.a11yMinTapTarget,
+            height: BrandTokens.a11yMinTapTarget,
+            child: trailing != null
+                ? Align(alignment: Alignment.center, child: trailing)
+                : null,
+          ),
         ],
       ),
     );
@@ -318,6 +325,8 @@ class UdaanLabeledField extends StatelessWidget {
     this.readOnly = false,
     this.required = false,
     this.semanticsLabel,
+    this.focusNode,
+    this.keyboardDoneLabel,
     super.key,
   });
 
@@ -336,6 +345,13 @@ class UdaanLabeledField extends StatelessWidget {
   final Widget? suffixIcon;
   final List<TextInputFormatter>? inputFormatters;
   final ValueChanged<String>? onSubmitted;
+
+  /// Optional external focus node. Required to enable [keyboardDoneLabel].
+  final FocusNode? focusNode;
+
+  /// When set (with [focusNode]), shows a "Done" bar above numeric keyboards
+  /// that otherwise have no action button on Android/iOS.
+  final String? keyboardDoneLabel;
 
   String get _fieldSemanticsLabel {
     if (semanticsLabel != null && semanticsLabel!.isNotEmpty) {
@@ -370,7 +386,7 @@ class UdaanLabeledField extends StatelessWidget {
             readOnly: readOnly,
             obscured: obscureText,
             child: ExcludeSemantics(
-              child: _buildTextField(context, palette),
+              child: _fieldWithAccessory(context, palette),
             ),
           )
         else
@@ -384,7 +400,7 @@ class UdaanLabeledField extends StatelessWidget {
                   readOnly: readOnly,
                   obscured: obscureText,
                   child: ExcludeSemantics(
-                    child: _buildTextField(context, palette),
+                    child: _fieldWithAccessory(context, palette),
                   ),
                 ),
               ),
@@ -400,9 +416,20 @@ class UdaanLabeledField extends StatelessWidget {
     );
   }
 
+  Widget _fieldWithAccessory(BuildContext context, UdaanPalette palette) {
+    final field = _buildTextField(context, palette);
+    if (keyboardDoneLabel == null || focusNode == null) return field;
+    return KeyboardAccessory(
+      focusNode: focusNode!,
+      doneLabel: keyboardDoneLabel!,
+      child: field,
+    );
+  }
+
   Widget _buildTextField(BuildContext context, UdaanPalette palette) {
     return TextField(
       controller: controller,
+      focusNode: focusNode,
       readOnly: readOnly,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
@@ -516,18 +543,22 @@ class UdaanPrimaryButton extends StatelessWidget {
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   if (icon != null) ...[
                     Icon(icon, size: 22),
                     const SizedBox(width: 10),
                   ],
-                  Text(
-                    label,
-                    style: udaanTextStyle(
-                      context,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: palette.onPrimary,
+                  Flexible(
+                    child: Text(
+                      label,
+                      textAlign: TextAlign.center,
+                      style: udaanTextStyle(
+                        context,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: palette.onPrimary,
+                      ),
                     ),
                   ),
                 ],
@@ -587,18 +618,22 @@ class UdaanOutlineButton extends StatelessWidget {
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   if (icon != null) ...[
                     Icon(icon, size: 22, color: palette.primaryGlow),
                     const SizedBox(width: 10),
                   ],
-                  Text(
-                    label,
-                    style: udaanTextStyle(
-                      context,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: palette.primaryGlow,
+                  Flexible(
+                    child: Text(
+                      label,
+                      textAlign: TextAlign.center,
+                      style: udaanTextStyle(
+                        context,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: palette.primaryGlow,
+                      ),
                     ),
                   ),
                 ],

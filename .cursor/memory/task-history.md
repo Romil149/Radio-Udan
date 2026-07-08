@@ -1,5 +1,11 @@
 # Task History
 
+### 2026-07-08 — Firebase project migration to radio-udaan-72232 (build 34)
+**Requested by**: User — fresh Firebase project for push; align app + staging WP.
+**What was done**: Replaced `google-services.json`, `GoogleService-Info.plist`, `firebase_options.dart`, `firebase.json` for project `radio-udaan-72232`; bumped build **2.0.0+34**; staging FCM service account + APNs configured by operator.
+**Status**: ✅ Pushed to `main` — CI APK/TestFlight pending; device push QA after install.
+**Notes**: Web/Chrome skips push. Real device required to register FCM token.
+
 ### 2026-07-08 — Razorpay donations + 80G (Pay Online on Donate screen)
 **Requested by**: User — Razorpay before Scan & Donate; presets + custom amount; guest OK; full WP backend; Android native checkout; iOS payment link; 80G toggles + optional PAN; WP PDF email.
 **What was done**:
@@ -394,3 +400,13 @@
 **Files changed**: `class-app-azuracast-now-playing.php`, `class-app-config.php`, `class-app-live-radio.php`, admin settings, `live_radio_config.dart`, `live_now_playing.dart`, `radio_tab.dart`, tests
 **Status**: ✅ Complete locally — **deploy plugin to staging** required for live API
 **Notes**: Fallback hero image in WP admin when stream has no album art. Schedule kept for favorites/upcoming only.
+
+### 2026-07-08 — Force App Update (Minimum Build, WP-driven)
+**Requested by**: User
+**Agents involved**: Manager → Planner → Developer (WP + Flutter) → QA gate (verification scripts)
+**What was done**:
+- **WP (App API)**: Added `app_update` slice in `GET /config` (`enabled`, `android_min_build`, `ios_min_build`) via `RadioUdaan_App_Version_Policy`; wired to WP Admin “App update policy” card + save handlers; added copy catalog keys `force_update_*`.
+- **Flutter**: Added `AppUpdatePolicy` parsing in `RemoteConfig`, `package_info_plus` build detection in `AppBootstrap`, a `ForceUpdateGate` helper, and a hard-block `/force-update` screen with accessible semantics.
+**Files changed**: WP config/admin/settings/copy catalog + `scripts/staging-api-smoke.sh`; Flutter `remote_config.dart`, `app_providers.dart`, `app_bootstrap.dart`, router/bootstrap + `force_update_gate.dart` and `force_update_screen.dart`.
+**Status**: ⚠️ Partial — local verification passed; staging API smoke failed because `/config.app_update.enabled` was missing (staging plugin redeploy required).
+**Notes**: Re-run `bash scripts/staging-api-smoke.sh` after uploading the full packaged plugin zip to staging.

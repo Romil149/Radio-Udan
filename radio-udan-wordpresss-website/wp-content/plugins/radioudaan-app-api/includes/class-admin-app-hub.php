@@ -202,6 +202,9 @@ class RadioUdaan_Admin_App_Hub {
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Settings::OPTION_CONTACT_URL );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Settings::OPTION_APP_STORE_URL );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Settings::OPTION_PLAY_STORE_URL );
+		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Version_Policy::OPTION_FORCE_UPDATE_ENABLED );
+		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Version_Policy::OPTION_MIN_ANDROID_BUILD );
+		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Version_Policy::OPTION_MIN_IOS_BUILD );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Legal_Pages::OPTION_PRIVACY_PAGE_ID );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Legal_Pages::OPTION_TERMS_PAGE_ID );
 		register_setting( 'radioudaan_app_settings', RadioUdaan_App_Legal_Pages::OPTION_ABOUT_PAGE_ID );
@@ -366,6 +369,23 @@ class RadioUdaan_Admin_App_Hub {
 			if ( isset( $_POST[ $post_key ] ) ) {
 				update_option( $option_key, esc_url_raw( trim( wp_unslash( $_POST[ $post_key ] ) ) ) );
 			}
+		}
+
+		update_option(
+			RadioUdaan_App_Version_Policy::OPTION_FORCE_UPDATE_ENABLED,
+			! empty( $_POST['force_update_enabled'] ) ? 1 : 0
+		);
+		if ( isset( $_POST['min_android_build'] ) ) {
+			update_option(
+				RadioUdaan_App_Version_Policy::OPTION_MIN_ANDROID_BUILD,
+				max( 0, (int) $_POST['min_android_build'] )
+			);
+		}
+		if ( isset( $_POST['min_ios_build'] ) ) {
+			update_option(
+				RadioUdaan_App_Version_Policy::OPTION_MIN_IOS_BUILD,
+				max( 0, (int) $_POST['min_ios_build'] )
+			);
 		}
 
 		$page_fields = array(

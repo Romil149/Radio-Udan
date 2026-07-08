@@ -1,4 +1,4 @@
-// Firebase client configuration for Radio Udaan (project: radio-udan-2412a).
+// Firebase client configuration for Radio Udaan (project: radio-udaan-72232).
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
@@ -28,19 +28,19 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyC4Dp_WOnvLLjjebn0FUKskJ5aPm0_6kXQ',
-    appId: '1:860433527358:android:b4f6cd16e5a950513b976f',
-    messagingSenderId: '860433527358',
-    projectId: 'radio-udan-2412a',
-    storageBucket: 'radio-udan-2412a.firebasestorage.app',
+    apiKey: 'AIzaSyCguBzurEU8WdwT_wzSuahE-DQViCG8vSE',
+    appId: '1:508596678027:android:88f0398cfe2642ac1b938e',
+    messagingSenderId: '508596678027',
+    projectId: 'radio-udaan-72232',
+    storageBucket: 'radio-udaan-72232.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAaEF-avXWuNGwJzPUtm604HJdgAPqboic',
-    appId: '1:860433527358:ios:dd042cfa744981f23b976f',
-    messagingSenderId: '860433527358',
-    projectId: 'radio-udan-2412a',
-    storageBucket: 'radio-udan-2412a.firebasestorage.app',
+    apiKey: 'AIzaSyChfhTPfxKFGGf_7eLsHyD8ng9oSSE5FHI',
+    appId: '1:508596678027:ios:a01f237968a65b5b1b938e',
+    messagingSenderId: '508596678027',
+    projectId: 'radio-udaan-72232',
+    storageBucket: 'radio-udaan-72232.firebasestorage.app',
     iosBundleId: 'org.reactjs.native.example.Radio',
   );
 }

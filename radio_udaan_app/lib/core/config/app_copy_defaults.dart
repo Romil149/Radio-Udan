@@ -19,6 +19,13 @@ const Map<String, String> appCopyDefaults = {
   'bold_text_hint': 'Heavier text for easier reading',
   'bootstrap_loading': 'READY TO LAUNCH',
   'bootstrap_offline': 'Could not connect to the server. Check your network and try again.',
+  'force_update_title': 'Update required',
+  'force_update_message':
+      'This version of Radio Udaan is no longer supported. Please update to continue.',
+  'force_update_current_build': 'Your current build is {build}.',
+  'force_update_button': 'Update app',
+  'keyboard_done': 'Done',
+  'keyboard_next': 'Next field',
   'call_accessibility_helpline': 'Call Accessibility Helpline',
   'cancel': 'Cancel',
   'change_password_intro': 'Keep your account secure with a strong password.',

@@ -11,6 +11,7 @@ import '../../features/auth/register_screen.dart';
 import '../../features/auth/reset_password_screen.dart';
 import '../../features/auth/verify_email_screen.dart';
 import '../../features/bootstrap/bootstrap_screen.dart';
+import '../../features/bootstrap/force_update_screen.dart';
 import '../../features/about/donate_verify_deep_link_screen.dart';
 import '../../features/events/event_deep_link_screen.dart';
 import '../../features/shell/main_shell_screen.dart';
@@ -58,9 +59,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ref.read(pendingEventDeepLinkProvider.notifier).state = eventId;
       }
 
-      // Donation verify deep link works for guests (no login required).
       if (path == '/donate/verify') {
-        return null;
+        final orderId = state.uri.queryParameters['order_id']?.trim() ?? '';
+        ref.read(pendingDonateVerifyOrderIdProvider.notifier).state =
+            orderId.isNotEmpty ? orderId : null;
       }
 
       final loggedIn = authToken != null && authToken.isNotEmpty;
@@ -69,10 +71,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (path == '/bootstrap') return null;
 
       if (config == null) {
-        if (path == '/donate/verify') {
-          return null;
-        }
         return '/bootstrap';
+      }
+
+      // Hard block: once minimum build is violated, force the app update
+      // screen for any route except itself.
+      if (path != '/force-update' && ref.read(forceUpdateRequiredProvider)) {
+        return '/force-update';
+      }
+
+      // Donation verify deep link works for guests and logged-in users,
+      // but is still blocked by the force-update gate above.
+      if (path == '/donate/verify') {
+        ref.read(pendingDonateVerifyOrderIdProvider.notifier).state = null;
+        return null;
       }
 
       if (!loggedIn && !_isAuthRoute(path)) {
@@ -113,6 +125,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/bootstrap',
         builder: (context, state) => const BootstrapScreen(),
+      ),
+      GoRoute(
+        path: '/force-update',
+        builder: (context, state) => const ForceUpdateScreen(),
       ),
       GoRoute(
         path: '/login',
