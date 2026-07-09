@@ -437,6 +437,13 @@ class UdaanLabeledField extends StatelessWidget {
       autofillHints: autofillHints,
       inputFormatters: inputFormatters,
       onSubmitted: (value) {
+        if (textInputAction == TextInputAction.next) {
+          FocusScope.of(context).nextFocus();
+          return;
+        }
+        if (textInputAction == TextInputAction.newline) {
+          return;
+        }
         dismissKeyboard(context);
         onSubmitted?.call(value);
       },

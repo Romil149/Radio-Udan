@@ -26,6 +26,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   final _phoneInput = PhoneCountryInputController();
   final _passwordController = TextEditingController();
+  final _phoneFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+  final _phoneKey = GlobalKey();
+  final _passwordKey = GlobalKey();
   String? _error;
   bool _loading = false;
   bool _otpLoading = false;
@@ -35,18 +39,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void dispose() {
     _phoneInput.dispose();
     _passwordController.dispose();
+    _phoneFocus.dispose();
+    _passwordFocus.dispose();
     super.dispose();
   }
 
-  void _setError(String message) {
+  void _validationError(
+    String message, {
+    GlobalKey? anchorKey,
+    FocusNode? focusNode,
+  }) {
     setState(() => _error = message);
     announceValidationError(context, message);
+    revealFieldForValidation(
+      context,
+      anchorKey: anchorKey,
+      focusNode: focusNode,
+    );
   }
 
   Future<void> _startOtpLogin() async {
     final phone = _phoneInput.e164;
     if (phone == null) {
-      _setError(_copy.phoneInvalid);
+      _validationError(_copy.phoneInvalid, anchorKey: _phoneKey, focusNode: _phoneFocus);
       return;
     }
 
@@ -58,7 +73,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final message = await requestLoginOtpAndOpenVerify(context, ref, phone);
     if (!mounted) return;
     if (message != null) {
-      _setError(message);
+      _validationError(message, anchorKey: _phoneKey, focusNode: _phoneFocus);
     }
     setState(() => _otpLoading = false);
   }
@@ -68,11 +83,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final password = _passwordController.text;
 
     if (phone == null) {
-      _setError(_copy.phoneInvalid);
+      _validationError(_copy.phoneInvalid, anchorKey: _phoneKey, focusNode: _phoneFocus);
       return;
     }
     if (password.isEmpty) {
-      _setError(_copy.passwordRequired);
+      _validationError(
+        _copy.passwordRequired,
+        anchorKey: _passwordKey,
+        focusNode: _passwordFocus,
+      );
       return;
     }
 
@@ -91,7 +110,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // Email verification is optional and manual; go straight into the app.
       navigateAfterAuth(context, ref);
     } catch (e) {
-      _setError(parseApiError(e).message);
+      _validationError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -137,24 +156,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 subtitle: _copy.loginMobileIntro,
               ),
               const SizedBox(height: 32),
-              UdaanPhoneField(
-                copy: copy,
-                controller: _phoneInput,
-                textInputAction: TextInputAction.next,
-                required: true,
+              FormFieldAnchor(
+                anchorKey: _phoneKey,
+                child: UdaanPhoneField(
+                  copy: copy,
+                  controller: _phoneInput,
+                  focusNode: _phoneFocus,
+                  textInputAction: TextInputAction.next,
+                  required: true,
+                ),
               ),
               const SizedBox(height: 20),
-              UdaanLabeledField(
-                label: _copy.passwordLabel,
-                controller: _passwordController,
-                hint: _copy.loginPasswordHint,
-                obscureText: _obscurePassword,
-                textInputAction: TextInputAction.done,
-                prefixIcon: Icons.lock_outline,
-                autofillHints: const [AutofillHints.password],
-                required: true,
-                suffixIcon: _passwordVisibilityToggle(),
-                onSubmitted: (_) => _loading ? null : _submit(),
+              FormFieldAnchor(
+                anchorKey: _passwordKey,
+                child: UdaanLabeledField(
+                  label: _copy.passwordLabel,
+                  controller: _passwordController,
+                  focusNode: _passwordFocus,
+                  hint: _copy.loginPasswordHint,
+                  obscureText: _obscurePassword,
+                  textInputAction: TextInputAction.done,
+                  prefixIcon: Icons.lock_outline,
+                  autofillHints: const [AutofillHints.password],
+                  required: true,
+                  suffixIcon: _passwordVisibilityToggle(),
+                  onSubmitted: (_) => _loading ? null : _submit(),
+                ),
               ),
               Align(
                 alignment: Alignment.centerRight,

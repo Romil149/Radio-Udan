@@ -25,6 +25,10 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+  final _emailKey = GlobalKey();
+  final _passwordKey = GlobalKey();
   String? _error;
   bool _loading = false;
   bool _obscurePassword = true;
@@ -33,12 +37,23 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
     super.dispose();
   }
 
-  void _setError(String message) {
+  void _validationError(
+    String message, {
+    GlobalKey? anchorKey,
+    FocusNode? focusNode,
+  }) {
     setState(() => _error = message);
     announceValidationError(context, message);
+    revealFieldForValidation(
+      context,
+      anchorKey: anchorKey,
+      focusNode: focusNode,
+    );
   }
 
   Future<void> _submit() async {
@@ -46,11 +61,15 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
     final password = _passwordController.text;
 
     if (!isValidEmail(email)) {
-      _setError(_copy.emailInvalid);
+      _validationError(_copy.emailInvalid, anchorKey: _emailKey, focusNode: _emailFocus);
       return;
     }
     if (password.isEmpty) {
-      _setError(_copy.passwordRequired);
+      _validationError(
+        _copy.passwordRequired,
+        anchorKey: _passwordKey,
+        focusNode: _passwordFocus,
+      );
       return;
     }
 
@@ -69,7 +88,7 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
       // Email verification is optional and manual; go straight into the app.
       navigateAfterAuth(context, ref);
     } catch (e) {
-      _setError(parseApiError(e).message);
+      _validationError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -128,15 +147,19 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
                 showAppNameHeader: false,
               ),
               const SizedBox(height: 32),
-              UdaanLabeledField(
-                label: _copy.emailLabel,
-                controller: _emailController,
-                hint: _copy.emailHint,
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.next,
-                prefixIcon: Icons.mail_outline,
-                autofillHints: const [AutofillHints.email, AutofillHints.username],
-                required: true,
+              FormFieldAnchor(
+                anchorKey: _emailKey,
+                child: UdaanLabeledField(
+                  label: _copy.emailLabel,
+                  controller: _emailController,
+                  focusNode: _emailFocus,
+                  hint: _copy.emailHint,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  prefixIcon: Icons.mail_outline,
+                  autofillHints: const [AutofillHints.email, AutofillHints.username],
+                  required: true,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -146,17 +169,21 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
                     ),
               ),
               const SizedBox(height: 12),
-              UdaanLabeledField(
-                label: _copy.passwordLabel,
-                controller: _passwordController,
-                hint: _copy.loginPasswordHint,
-                obscureText: _obscurePassword,
-                textInputAction: TextInputAction.done,
-                prefixIcon: Icons.lock_outline,
-                autofillHints: const [AutofillHints.password],
-                required: true,
-                suffixIcon: _passwordVisibilityToggle(),
-                onSubmitted: (_) => _loading ? null : _submit(),
+              FormFieldAnchor(
+                anchorKey: _passwordKey,
+                child: UdaanLabeledField(
+                  label: _copy.passwordLabel,
+                  controller: _passwordController,
+                  focusNode: _passwordFocus,
+                  hint: _copy.loginPasswordHint,
+                  obscureText: _obscurePassword,
+                  textInputAction: TextInputAction.done,
+                  prefixIcon: Icons.lock_outline,
+                  autofillHints: const [AutofillHints.password],
+                  required: true,
+                  suffixIcon: _passwordVisibilityToggle(),
+                  onSubmitted: (_) => _loading ? null : _submit(),
+                ),
               ),
               Align(
                 alignment: Alignment.centerRight,

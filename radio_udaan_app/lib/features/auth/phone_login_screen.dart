@@ -24,6 +24,8 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
   AppCopy get _copy => ref.read(appCopyProvider);
 
   final _phoneInput = PhoneCountryInputController();
+  final _phoneFocus = FocusNode();
+  final _phoneKey = GlobalKey();
   String? _error;
   bool _loading = false;
 
@@ -39,18 +41,28 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
   @override
   void dispose() {
     _phoneInput.dispose();
+    _phoneFocus.dispose();
     super.dispose();
   }
 
-  void _setError(String message) {
+  void _validationError(
+    String message, {
+    GlobalKey? anchorKey,
+    FocusNode? focusNode,
+  }) {
     setState(() => _error = message);
     announceValidationError(context, message);
+    revealFieldForValidation(
+      context,
+      anchorKey: anchorKey,
+      focusNode: focusNode,
+    );
   }
 
   Future<void> _submit() async {
     final phone = _phoneInput.e164;
     if (phone == null) {
-      _setError(_copy.phoneInvalid);
+      _validationError(_copy.phoneInvalid, anchorKey: _phoneKey, focusNode: _phoneFocus);
       return;
     }
 
@@ -62,7 +74,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
     final message = await requestLoginOtpAndOpenVerify(context, ref, phone);
     if (!mounted) return;
     if (message != null) {
-      _setError(message);
+      _validationError(message, anchorKey: _phoneKey, focusNode: _phoneFocus);
     }
     setState(() => _loading = false);
   }
@@ -98,14 +110,18 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
                 showAppNameHeader: false,
               ),
               const SizedBox(height: 32),
-              UdaanPhoneField(
-                copy: copy,
-                controller: _phoneInput,
-                textInputAction: TextInputAction.done,
-                required: true,
-                onSubmitted: (_) {
-                  if (!_loading) _submit();
-                },
+              FormFieldAnchor(
+                anchorKey: _phoneKey,
+                child: UdaanPhoneField(
+                  copy: copy,
+                  controller: _phoneInput,
+                  focusNode: _phoneFocus,
+                  textInputAction: TextInputAction.done,
+                  required: true,
+                  onSubmitted: (_) {
+                    if (!_loading) _submit();
+                  },
+                ),
               ),
               if (_error != null) ...[
                 const SizedBox(height: 12),

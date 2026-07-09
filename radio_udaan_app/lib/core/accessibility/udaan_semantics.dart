@@ -19,6 +19,47 @@ void announceValidationError(BuildContext context, String message) {
   announce(context, message);
 }
 
+/// Scrolls a field into view and moves keyboard / screen-reader focus to it.
+void revealFieldForValidation(
+  BuildContext context, {
+  GlobalKey? anchorKey,
+  FocusNode? focusNode,
+}) {
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    if (!context.mounted) return;
+    final anchorContext = anchorKey?.currentContext;
+    if (anchorContext != null) {
+      await Scrollable.ensureVisible(
+        anchorContext,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        alignment: 0.2,
+      );
+    }
+    if (!context.mounted) return;
+    if (focusNode != null && focusNode.canRequestFocus) {
+      focusNode.requestFocus();
+    }
+  });
+}
+
+/// Wraps a form control so validation can scroll to it via [anchorKey].
+class FormFieldAnchor extends StatelessWidget {
+  const FormFieldAnchor({
+    required this.anchorKey,
+    required this.child,
+    super.key,
+  });
+
+  final GlobalKey anchorKey;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return KeyedSubtree(key: anchorKey, child: child);
+  }
+}
+
 /// Speaks for screen readers and shows a SnackBar for sighted users.
 void announceAndSnack(BuildContext context, String message) {
   if (message.trim().isEmpty) return;

@@ -30,6 +30,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _phoneInput = PhoneCountryInputController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
+  final _nameFocus = FocusNode();
+  final _emailFocus = FocusNode();
+  final _phoneFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+  final _confirmFocus = FocusNode();
+  final _nameKey = GlobalKey();
+  final _emailKey = GlobalKey();
+  final _phoneKey = GlobalKey();
+  final _passwordKey = GlobalKey();
+  final _confirmKey = GlobalKey();
   String? _error;
   bool _loading = false;
   bool _obscurePassword = true;
@@ -45,6 +55,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _phoneInput.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
+    _nameFocus.dispose();
+    _emailFocus.dispose();
+    _phoneFocus.dispose();
+    _passwordFocus.dispose();
+    _confirmFocus.dispose();
     super.dispose();
   }
 
@@ -71,9 +86,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  void _setError(String message) {
+  void _validationError(
+    String message, {
+    GlobalKey? anchorKey,
+    FocusNode? focusNode,
+  }) {
     setState(() => _error = message);
     announceValidationError(context, message);
+    revealFieldForValidation(
+      context,
+      anchorKey: anchorKey,
+      focusNode: focusNode,
+    );
   }
 
   Future<void> _submit() async {
@@ -85,23 +109,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final minLen = _passwordMinLength;
 
     if (name.isEmpty) {
-      _setError(_copy.nameRequired);
+      _validationError(_copy.nameRequired, anchorKey: _nameKey, focusNode: _nameFocus);
       return;
     }
     if (!isValidEmail(email)) {
-      _setError(_copy.emailInvalid);
+      _validationError(_copy.emailInvalid, anchorKey: _emailKey, focusNode: _emailFocus);
       return;
     }
     if (phone == null) {
-      _setError(_copy.phoneInvalid);
+      _validationError(_copy.phoneInvalid, anchorKey: _phoneKey, focusNode: _phoneFocus);
       return;
     }
     if (!isValidPassword(password, minLength: minLen)) {
-      _setError(_copy.passwordTooShort);
+      _validationError(
+        _copy.passwordTooShort,
+        anchorKey: _passwordKey,
+        focusNode: _passwordFocus,
+      );
       return;
     }
     if (password != confirm) {
-      _setError(_copy.passwordMismatch);
+      _validationError(
+        _copy.passwordMismatch,
+        anchorKey: _confirmKey,
+        focusNode: _confirmFocus,
+      );
       return;
     }
 
@@ -120,7 +152,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       );
 
       if (!pending.needsPhoneVerification) {
-        _setError(_copy.registrationIncomplete);
+        _validationError(_copy.registrationIncomplete);
         return;
       }
 
@@ -141,7 +173,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ),
       );
     } catch (e) {
-      _setError(parseApiError(e).message);
+      _validationError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -202,66 +234,86 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 28),
-              UdaanLabeledField(
-                label: _copy.nameLabel,
-                controller: _nameController,
-                hint: _copy.registerNameHint,
-                textInputAction: TextInputAction.next,
-                prefixIcon: Icons.person_outline,
-                autofillHints: const [AutofillHints.name],
-                required: true,
-              ),
-              const SizedBox(height: 18),
-              UdaanLabeledField(
-                label: _copy.emailLabel,
-                controller: _emailController,
-                hint: _copy.emailHint,
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.next,
-                prefixIcon: Icons.mail_outline,
-                autofillHints: const [AutofillHints.email],
-                required: true,
-              ),
-              const SizedBox(height: 18),
-              UdaanPhoneField(
-                copy: copy,
-                controller: _phoneInput,
-                nationalHint: _copy.registerMobileHint,
-                textInputAction: TextInputAction.next,
-                required: true,
-              ),
-              const SizedBox(height: 18),
-              UdaanLabeledField(
-                label: _copy.passwordLabel,
-                controller: _passwordController,
-                hint: passwordHint,
-                obscureText: _obscurePassword,
-                textInputAction: TextInputAction.next,
-                prefixIcon: Icons.lock_outline,
-                autofillHints: const [AutofillHints.newPassword],
-                required: true,
-                suffixIcon: _visibilityToggle(
-                  obscured: _obscurePassword,
-                  onToggle: () =>
-                      setState(() => _obscurePassword = !_obscurePassword),
+              FormFieldAnchor(
+                anchorKey: _nameKey,
+                child: UdaanLabeledField(
+                  label: _copy.nameLabel,
+                  controller: _nameController,
+                  focusNode: _nameFocus,
+                  hint: _copy.registerNameHint,
+                  textInputAction: TextInputAction.next,
+                  prefixIcon: Icons.person_outline,
+                  autofillHints: const [AutofillHints.name],
+                  required: true,
                 ),
               ),
               const SizedBox(height: 18),
-              UdaanLabeledField(
-                label: _copy.confirmPasswordLabel,
-                controller: _confirmController,
-                hint: _copy.registerConfirmHint,
-                obscureText: _obscureConfirm,
-                textInputAction: TextInputAction.done,
-                prefixIcon: Icons.shield_outlined,
-                autofillHints: const [AutofillHints.newPassword],
-                required: true,
-                suffixIcon: _visibilityToggle(
-                  obscured: _obscureConfirm,
-                  onToggle: () =>
-                      setState(() => _obscureConfirm = !_obscureConfirm),
+              FormFieldAnchor(
+                anchorKey: _emailKey,
+                child: UdaanLabeledField(
+                  label: _copy.emailLabel,
+                  controller: _emailController,
+                  focusNode: _emailFocus,
+                  hint: _copy.emailHint,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  prefixIcon: Icons.mail_outline,
+                  autofillHints: const [AutofillHints.email],
+                  required: true,
                 ),
-                onSubmitted: (_) => _loading ? null : _submit(),
+              ),
+              const SizedBox(height: 18),
+              FormFieldAnchor(
+                anchorKey: _phoneKey,
+                child: UdaanPhoneField(
+                  copy: copy,
+                  controller: _phoneInput,
+                  focusNode: _phoneFocus,
+                  nationalHint: _copy.registerMobileHint,
+                  textInputAction: TextInputAction.next,
+                  required: true,
+                ),
+              ),
+              const SizedBox(height: 18),
+              FormFieldAnchor(
+                anchorKey: _passwordKey,
+                child: UdaanLabeledField(
+                  label: _copy.passwordLabel,
+                  controller: _passwordController,
+                  focusNode: _passwordFocus,
+                  hint: passwordHint,
+                  obscureText: _obscurePassword,
+                  textInputAction: TextInputAction.next,
+                  prefixIcon: Icons.lock_outline,
+                  autofillHints: const [AutofillHints.newPassword],
+                  required: true,
+                  suffixIcon: _visibilityToggle(
+                    obscured: _obscurePassword,
+                    onToggle: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              FormFieldAnchor(
+                anchorKey: _confirmKey,
+                child: UdaanLabeledField(
+                  label: _copy.confirmPasswordLabel,
+                  controller: _confirmController,
+                  focusNode: _confirmFocus,
+                  hint: _copy.registerConfirmHint,
+                  obscureText: _obscureConfirm,
+                  textInputAction: TextInputAction.done,
+                  prefixIcon: Icons.shield_outlined,
+                  autofillHints: const [AutofillHints.newPassword],
+                  required: true,
+                  suffixIcon: _visibilityToggle(
+                    obscured: _obscureConfirm,
+                    onToggle: () =>
+                        setState(() => _obscureConfirm = !_obscureConfirm),
+                  ),
+                  onSubmitted: (_) => _loading ? null : _submit(),
+                ),
               ),
               if (_error != null) ...[
                 const SizedBox(height: 12),

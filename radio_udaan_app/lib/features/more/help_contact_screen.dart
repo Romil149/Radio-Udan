@@ -26,6 +26,14 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
   late final TextEditingController _emailController;
   late final TextEditingController _subjectController;
   late final TextEditingController _messageController;
+  final _nameFocus = FocusNode();
+  final _emailFocus = FocusNode();
+  final _subjectFocus = FocusNode();
+  final _messageFocus = FocusNode();
+  final _nameKey = GlobalKey();
+  final _emailKey = GlobalKey();
+  final _subjectKey = GlobalKey();
+  final _messageKey = GlobalKey();
   bool _sending = false;
   String? _error;
   String? _success;
@@ -46,12 +54,25 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
     _emailController.dispose();
     _subjectController.dispose();
     _messageController.dispose();
+    _nameFocus.dispose();
+    _emailFocus.dispose();
+    _subjectFocus.dispose();
+    _messageFocus.dispose();
     super.dispose();
   }
 
-  void _setError(String message) {
+  void _validationError(
+    String message, {
+    GlobalKey? anchorKey,
+    FocusNode? focusNode,
+  }) {
     setState(() => _error = message);
     announceValidationError(context, message);
+    revealFieldForValidation(
+      context,
+      anchorKey: anchorKey,
+      focusNode: focusNode,
+    );
   }
 
   void _setSuccess(String message) {
@@ -66,19 +87,35 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
     final message = _messageController.text.trim();
 
     if (name.isEmpty) {
-      _setError('${_copy.nameLabel}, ${_copy.registrationFieldRequired}');
+      _validationError(
+        '${_copy.nameLabel}, ${_copy.registrationFieldRequired}',
+        anchorKey: _nameKey,
+        focusNode: _nameFocus,
+      );
       return;
     }
     if (email.isEmpty) {
-      _setError('${_copy.emailLabel}, ${_copy.registrationFieldRequired}');
+      _validationError(
+        '${_copy.emailLabel}, ${_copy.registrationFieldRequired}',
+        anchorKey: _emailKey,
+        focusNode: _emailFocus,
+      );
       return;
     }
     if (subject.isEmpty) {
-      _setError('${_copy.helpSubject}, ${_copy.registrationFieldRequired}');
+      _validationError(
+        '${_copy.helpSubject}, ${_copy.registrationFieldRequired}',
+        anchorKey: _subjectKey,
+        focusNode: _subjectFocus,
+      );
       return;
     }
     if (message.isEmpty) {
-      _setError('${_copy.helpMessage}, ${_copy.registrationFieldRequired}');
+      _validationError(
+        '${_copy.helpMessage}, ${_copy.registrationFieldRequired}',
+        anchorKey: _messageKey,
+        focusNode: _messageFocus,
+      );
       return;
     }
 
@@ -99,7 +136,7 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
       _subjectController.clear();
       _messageController.clear();
     } catch (e) {
-      _setError(parseApiError(e).message);
+      _validationError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -150,34 +187,50 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  _field(
-                    context,
-                    _copy.nameLabel,
-                    _nameController,
-                    textInputAction: TextInputAction.next,
+                  FormFieldAnchor(
+                    anchorKey: _nameKey,
+                    child: _field(
+                      context,
+                      _copy.nameLabel,
+                      _nameController,
+                      focusNode: _nameFocus,
+                      textInputAction: TextInputAction.next,
+                    ),
                   ),
-                  _field(
-                    context,
-                    _copy.emailLabel,
-                    _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
+                  FormFieldAnchor(
+                    anchorKey: _emailKey,
+                    child: _field(
+                      context,
+                      _copy.emailLabel,
+                      _emailController,
+                      focusNode: _emailFocus,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                    ),
                   ),
-                  _field(
-                    context,
-                    _copy.helpSubject,
-                    _subjectController,
-                    textInputAction: TextInputAction.next,
+                  FormFieldAnchor(
+                    anchorKey: _subjectKey,
+                    child: _field(
+                      context,
+                      _copy.helpSubject,
+                      _subjectController,
+                      focusNode: _subjectFocus,
+                      textInputAction: TextInputAction.next,
+                    ),
                   ),
-                  _field(
-                    context,
-                    _copy.helpMessage,
-                    _messageController,
-                    maxLines: 5,
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) {
-                      if (!_sending) _send();
-                    },
+                  FormFieldAnchor(
+                    anchorKey: _messageKey,
+                    child: _field(
+                      context,
+                      _copy.helpMessage,
+                      _messageController,
+                      focusNode: _messageFocus,
+                      maxLines: 5,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) {
+                        if (!_sending) _send();
+                      },
+                    ),
                   ),
                   if (_error != null)
                     Semantics(
@@ -226,6 +279,7 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
     BuildContext context,
     String label,
     TextEditingController controller, {
+    FocusNode? focusNode,
     TextInputType? keyboardType,
     TextInputAction? textInputAction,
     ValueChanged<String>? onSubmitted,
@@ -249,10 +303,18 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
             child: ExcludeSemantics(
               child: TextField(
                 controller: controller,
+                focusNode: focusNode,
                 keyboardType: keyboardType,
                 maxLines: maxLines,
                 textInputAction: action,
                 onSubmitted: (value) {
+                  if (action == TextInputAction.next) {
+                    FocusScope.of(context).nextFocus();
+                    return;
+                  }
+                  if (action == TextInputAction.newline) {
+                    return;
+                  }
                   dismissKeyboard(context);
                   onSubmitted?.call(value);
                 },

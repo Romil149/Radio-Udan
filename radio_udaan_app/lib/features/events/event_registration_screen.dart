@@ -233,15 +233,20 @@ class _EventRegistrationScreenState
   }
 
   void _scrollToField(String key) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final ctx = _fieldKeys[key]?.currentContext;
       if (ctx == null || !mounted) return;
-      Scrollable.ensureVisible(
+      await Scrollable.ensureVisible(
         ctx,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
         alignment: 0.2,
       );
+      if (!mounted) return;
+      final node = _fieldFocusNodes[key];
+      if (node != null && node.canRequestFocus) {
+        node.requestFocus();
+      }
     });
   }
 
@@ -400,7 +405,7 @@ class _EventRegistrationScreenState
     // Numeric keypads have no OS action button, so attach a Done/Next bar.
     final isNumeric = keyboardType == TextInputType.number ||
         keyboardType == TextInputType.phone;
-    final focusNode = isNumeric ? _focusNodeFor(field) : null;
+    final focusNode = isAccountLocked ? null : _focusNodeFor(field);
 
     Widget input = TextFormField(
       controller: controller,

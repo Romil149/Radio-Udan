@@ -1,4 +1,10 @@
 
+### 2026-07-09 — Form focus + blind-user validation (build 38)
+**Requested by**: User — fix keyboard Next chaining and scroll/focus on validation errors.
+**What was done**: `revealFieldForValidation` + `FormFieldAnchor`; `UdaanLabeledField` Next→`nextFocus()`; auth/profile/help/password screens get FocusNodes + scroll/focus on error; event registration focuses field after scroll.
+**Verification**: `dart analyze lib` = 0 errors.
+**Status**: ✅ Pushed to `main` — build 38.
+
 ### 2026-07-08 — Push diagnostics screen (build 36)
 **Requested by**: User — live logging to debug zero device registrations on release builds.
 **What was done**: `PushDiagnostics` recorder; instrumented `push_notification_service.dart` (permission, APNs, FCM token, API); `PushDiagnosticsScreen` in Settings with Run / Copy log / Clear; bumped **2.0.0+36**.

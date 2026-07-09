@@ -72,6 +72,7 @@ class UdaanPhoneField extends StatefulWidget {
     this.nationalHint,
     this.textInputAction,
     this.onSubmitted,
+    this.focusNode,
     this.required = false,
     super.key,
   });
@@ -83,6 +84,7 @@ class UdaanPhoneField extends StatefulWidget {
   final String? nationalHint;
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onSubmitted;
+  final FocusNode? focusNode;
   final bool required;
 
   @override
@@ -91,11 +93,16 @@ class UdaanPhoneField extends StatefulWidget {
 
 class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
   PhoneCountryInputController get _input => widget.controller;
-  final _numberFocus = FocusNode();
+  FocusNode? _ownedFocusNode;
+
+  FocusNode get _numberFocus => widget.focusNode ?? _ownedFocusNode!;
 
   @override
   void initState() {
     super.initState();
+    if (widget.focusNode == null) {
+      _ownedFocusNode = FocusNode();
+    }
     _input.addListener(_onInputChanged);
     _input.nationalController.addListener(_onNationalTextChanged);
   }
@@ -104,7 +111,7 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
   void dispose() {
     _input.removeListener(_onInputChanged);
     _input.nationalController.removeListener(_onNationalTextChanged);
-    _numberFocus.dispose();
+    _ownedFocusNode?.dispose();
     super.dispose();
   }
 
@@ -276,7 +283,14 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
                         ),
                       ],
                       onChanged: (_) => _onNationalTextChanged(),
-                      onSubmitted: widget.onSubmitted,
+                      onSubmitted: (value) {
+                        if (widget.textInputAction == TextInputAction.next) {
+                          FocusScope.of(context).nextFocus();
+                          return;
+                        }
+                        dismissKeyboard(context);
+                        widget.onSubmitted?.call(value);
+                      },
                       onTapOutside: (_) => dismissKeyboard(context),
                       style: GoogleFonts.atkinsonHyperlegible(
                         fontSize: 18,

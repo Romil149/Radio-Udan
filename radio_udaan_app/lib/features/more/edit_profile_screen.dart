@@ -35,6 +35,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
   late final TextEditingController _emailController;
+  final _nameFocus = FocusNode();
+  final _emailFocus = FocusNode();
+  final _nameKey = GlobalKey();
+  final _emailKey = GlobalKey();
   late final String _originalEmail;
   bool _loading = false;
   String? _error;
@@ -57,6 +61,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _nameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
+    _nameFocus.dispose();
+    _emailFocus.dispose();
     super.dispose();
   }
 
@@ -89,15 +95,24 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       await persistAuthSession(ref, session);
       _announce(_copy.profileUpdated);
     } catch (e) {
-      _setError(parseApiError(e).message);
+      _validationError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
-  void _setError(String message) {
+  void _validationError(
+    String message, {
+    GlobalKey? anchorKey,
+    FocusNode? focusNode,
+  }) {
     setState(() => _error = message);
     announceValidationError(context, message);
+    revealFieldForValidation(
+      context,
+      anchorKey: anchorKey,
+      focusNode: focusNode,
+    );
   }
 
   Future<void> _save() async {
@@ -105,11 +120,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final email = _emailController.text.trim().toLowerCase();
 
     if (name.length < 2) {
-      _setError(_copy.nameRequired);
+      _validationError(_copy.nameRequired, anchorKey: _nameKey, focusNode: _nameFocus);
       return;
     }
     if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(email)) {
-      _setError(_copy.emailInvalid);
+      _validationError(_copy.emailInvalid, anchorKey: _emailKey, focusNode: _emailFocus);
       return;
     }
 
@@ -141,7 +156,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _announce(_copy.profileUpdated);
       Navigator.of(context).pop();
     } catch (e) {
-      _setError(parseApiError(e).message);
+      _validationError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -241,11 +256,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  _labeledField(
-                    context: context,
-                    label: _copy.nameLabel,
-                    controller: _nameController,
-                    textInputAction: TextInputAction.next,
+                  FormFieldAnchor(
+                    anchorKey: _nameKey,
+                    child: _labeledField(
+                      context: context,
+                      label: _copy.nameLabel,
+                      controller: _nameController,
+                      focusNode: _nameFocus,
+                      textInputAction: TextInputAction.next,
+                    ),
                   ),
                   _labeledField(
                     context: context,
@@ -261,15 +280,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       color: context.udaan.onSurfaceVariant,
                     ),
                   ),
-                  _labeledField(
-                    context: context,
-                    label: _copy.emailLabel,
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) {
-                      if (!_loading) _save();
-                    },
+                  FormFieldAnchor(
+                    anchorKey: _emailKey,
+                    child: _labeledField(
+                      context: context,
+                      label: _copy.emailLabel,
+                      controller: _emailController,
+                      focusNode: _emailFocus,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) {
+                        if (!_loading) _save();
+                      },
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Container(
@@ -346,6 +369,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     required BuildContext context,
     required String label,
     required TextEditingController controller,
+    FocusNode? focusNode,
     TextInputType? keyboardType,
     TextInputAction? textInputAction,
     ValueChanged<String>? onSubmitted,
@@ -356,11 +380,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }) {
     final field = TextField(
       controller: controller,
+      focusNode: focusNode,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       readOnly: readOnly,
       enableInteractiveSelection: !readOnly,
       onSubmitted: (value) {
+        if (textInputAction == TextInputAction.next) {
+          FocusScope.of(context).nextFocus();
+          return;
+        }
         dismissKeyboard(context);
         onSubmitted?.call(value);
       },

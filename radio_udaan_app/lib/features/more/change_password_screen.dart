@@ -28,6 +28,12 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   final _currentController = TextEditingController();
   final _newController = TextEditingController();
   final _confirmController = TextEditingController();
+  final _currentFocus = FocusNode();
+  final _newFocus = FocusNode();
+  final _confirmFocus = FocusNode();
+  final _currentKey = GlobalKey();
+  final _newKey = GlobalKey();
+  final _confirmKey = GlobalKey();
   bool _obscureCurrent = true;
   bool _obscureNew = true;
   bool _obscureConfirm = true;
@@ -42,6 +48,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     _currentController.dispose();
     _newController.dispose();
     _confirmController.dispose();
+    _currentFocus.dispose();
+    _newFocus.dispose();
+    _confirmFocus.dispose();
     super.dispose();
   }
 
@@ -53,14 +62,31 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       _newController.text.isNotEmpty &&
       _newController.text == _confirmController.text;
 
-  void _setError(String message) {
+  void _validationError(
+    String message, {
+    GlobalKey? anchorKey,
+    FocusNode? focusNode,
+  }) {
     setState(() => _error = message);
     announceValidationError(context, message);
+    revealFieldForValidation(
+      context,
+      anchorKey: anchorKey,
+      focusNode: focusNode,
+    );
   }
 
   Future<void> _submit() async {
     if (!_hasMinLength || !_passwordsMatch) {
-      _setError(_copy.passwordRequirementsNotMet);
+      _validationError(
+        _copy.passwordRequirementsNotMet,
+        anchorKey: !_hasMinLength || !_hasNumber || !_hasSpecial
+            ? _newKey
+            : _confirmKey,
+        focusNode: !_hasMinLength || !_hasNumber || !_hasSpecial
+            ? _newFocus
+            : _confirmFocus,
+      );
       return;
     }
 
@@ -83,7 +109,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       );
       context.go('/login');
     } catch (e) {
-      _setError(parseApiError(e).message);
+      _validationError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -93,49 +119,58 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     required BuildContext context,
     required String label,
     required TextEditingController controller,
+    required FocusNode focusNode,
+    required GlobalKey anchorKey,
     required bool obscure,
     required VoidCallback onToggle,
     TextInputAction? textInputAction,
     ValueChanged<String>? onSubmitted,
   }) {
     final semanticsLabel = '$label, required';
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ExcludeSemantics(
-            child: Text(
-              label,
-              style: registrationFieldLabelStyle(context, required: true),
+    return FormFieldAnchor(
+      anchorKey: anchorKey,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ExcludeSemantics(
+              child: Text(
+                label,
+                style: registrationFieldLabelStyle(context, required: true),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Semantics(
-                  label: semanticsLabel,
-                  textField: true,
-                  obscured: obscure,
-                  child: ExcludeSemantics(
-                    child: TextField(
-                      controller: controller,
-                      obscureText: obscure,
-                      textInputAction: textInputAction,
-                      onChanged: (_) => setState(() {}),
-                      onSubmitted: (value) {
-                        dismissKeyboard(context);
-                        onSubmitted?.call(value);
-                      },
-                      onTapOutside: (_) => dismissKeyboard(context),
-                      style: registrationFieldInputStyle(context),
-                      decoration: registrationFieldDecoration(context),
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Semantics(
+                    label: semanticsLabel,
+                    textField: true,
+                    obscured: obscure,
+                    child: ExcludeSemantics(
+                      child: TextField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        obscureText: obscure,
+                        textInputAction: textInputAction,
+                        onChanged: (_) => setState(() {}),
+                        onSubmitted: (value) {
+                          if (textInputAction == TextInputAction.next) {
+                            FocusScope.of(context).nextFocus();
+                            return;
+                          }
+                          dismissKeyboard(context);
+                          onSubmitted?.call(value);
+                        },
+                        onTapOutside: (_) => dismissKeyboard(context),
+                        style: registrationFieldInputStyle(context),
+                        decoration: registrationFieldDecoration(context),
+                      ),
                     ),
                   ),
                 ),
-              ),
               const SizedBox(width: 4),
               SizedBox(
                 width: BrandTokens.a11yMinTapTarget,
@@ -168,6 +203,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -255,6 +291,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     context: context,
                     label: _copy.currentPassword,
                     controller: _currentController,
+                    focusNode: _currentFocus,
+                    anchorKey: _currentKey,
                     obscure: _obscureCurrent,
                     textInputAction: TextInputAction.next,
                     onToggle: () =>
@@ -264,6 +302,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     context: context,
                     label: _copy.newPassword,
                     controller: _newController,
+                    focusNode: _newFocus,
+                    anchorKey: _newKey,
                     obscure: _obscureNew,
                     textInputAction: TextInputAction.next,
                     onToggle: () =>
@@ -290,6 +330,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     context: context,
                     label: _copy.confirmNewPassword,
                     controller: _confirmController,
+                    focusNode: _confirmFocus,
+                    anchorKey: _confirmKey,
                     obscure: _obscureConfirm,
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) {

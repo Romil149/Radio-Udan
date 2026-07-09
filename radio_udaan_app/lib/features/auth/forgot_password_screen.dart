@@ -31,6 +31,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   _ForgotChannel _channel = _ForgotChannel.email;
   final _emailController = TextEditingController();
   final _phoneInput = PhoneCountryInputController();
+  final _emailFocus = FocusNode();
+  final _phoneFocus = FocusNode();
+  final _emailKey = GlobalKey();
+  final _phoneKey = GlobalKey();
   String? _error;
   String? _success;
   bool _loading = false;
@@ -39,6 +43,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   void dispose() {
     _emailController.dispose();
     _phoneInput.dispose();
+    _emailFocus.dispose();
+    _phoneFocus.dispose();
     super.dispose();
   }
 
@@ -51,12 +57,21 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     });
   }
 
-  void _setError(String message) {
+  void _validationError(
+    String message, {
+    GlobalKey? anchorKey,
+    FocusNode? focusNode,
+  }) {
     setState(() {
       _error = message;
       _success = null;
     });
     announceValidationError(context, message);
+    revealFieldForValidation(
+      context,
+      anchorKey: anchorKey,
+      focusNode: focusNode,
+    );
   }
 
   void _setSuccess(String message) {
@@ -72,14 +87,22 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     if (_channel == _ForgotChannel.email) {
       final email = _emailController.text.trim().toLowerCase();
       if (!isValidEmail(email)) {
-        _setError(_copy.emailInvalid);
+        _validationError(
+          _copy.emailInvalid,
+          anchorKey: _emailKey,
+          focusNode: _emailFocus,
+        );
         return;
       }
       identifier = email;
     } else {
       final phone = _phoneInput.e164;
       if (phone == null) {
-        _setError(_copy.phoneInvalid);
+        _validationError(
+          _copy.phoneInvalid,
+          anchorKey: _phoneKey,
+          focusNode: _phoneFocus,
+        );
         return;
       }
       identifier = phone;
@@ -117,7 +140,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
       _setSuccess(_copy.forgotPasswordSuccess);
     } catch (e) {
-      _setError(parseApiError(e).message);
+      _validationError(parseApiError(e).message);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -214,16 +237,20 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 ),
               const SizedBox(height: 20),
               if (isEmail) ...[
-                UdaanLabeledField(
-                  label: _copy.emailLabel,
-                  controller: _emailController,
-                  hint: _copy.forgotPasswordEmailHint,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.done,
-                  prefixIcon: Icons.mail_outline,
-                  autofillHints: const [AutofillHints.email],
-                  required: true,
-                  onSubmitted: (_) => _loading ? null : _submit(),
+                FormFieldAnchor(
+                  anchorKey: _emailKey,
+                  child: UdaanLabeledField(
+                    label: _copy.emailLabel,
+                    controller: _emailController,
+                    focusNode: _emailFocus,
+                    hint: _copy.forgotPasswordEmailHint,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.done,
+                    prefixIcon: Icons.mail_outline,
+                    autofillHints: const [AutofillHints.email],
+                    required: true,
+                    onSubmitted: (_) => _loading ? null : _submit(),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -234,14 +261,18 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   ),
                 ),
               ] else ...[
-                UdaanPhoneField(
-                copy: copy,
-                controller: _phoneInput,
-                  textInputAction: TextInputAction.done,
-                  required: true,
-                  onSubmitted: (_) {
-                    if (!_loading) _submit();
-                  },
+                FormFieldAnchor(
+                  anchorKey: _phoneKey,
+                  child: UdaanPhoneField(
+                    copy: copy,
+                    controller: _phoneInput,
+                    focusNode: _phoneFocus,
+                    textInputAction: TextInputAction.done,
+                    required: true,
+                    onSubmitted: (_) {
+                      if (!_loading) _submit();
+                    },
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
