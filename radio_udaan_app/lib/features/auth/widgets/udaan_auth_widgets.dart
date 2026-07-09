@@ -253,12 +253,15 @@ class UdaanAuthLogoHeader extends StatelessWidget {
   const UdaanAuthLogoHeader({
     required this.branding,
     this.subtitle,
+    this.screenTitle,
     this.showAppNameHeader = true,
     super.key,
   });
 
   final AppBranding branding;
   final String? subtitle;
+  /// Optional screen landmark (e.g. "Login") after the brand header.
+  final String? screenTitle;
   final bool showAppNameHeader;
 
   static const double _logoHeight = 120;
@@ -290,6 +293,26 @@ class UdaanAuthLogoHeader extends StatelessWidget {
           ),
         ] else
           const SizedBox(height: 20),
+        if (screenTitle != null && screenTitle!.trim().isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Semantics(
+            header: true,
+            label: screenTitle!.trim(),
+            child: ExcludeSemantics(
+              child: Text(
+                screenTitle!.trim(),
+                textAlign: TextAlign.center,
+                style: udaanTextStyle(
+                  context,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: palette.onBackground,
+                  height: 1.2,
+                ),
+              ),
+            ),
+          ),
+        ],
         if (subtitle != null && subtitle!.isNotEmpty) ...[
           const SizedBox(height: 10),
           Text(
@@ -386,6 +409,7 @@ class UdaanLabeledField extends StatelessWidget {
             semanticsLabel: _fieldSemanticsLabel,
             readOnly: readOnly,
             obscured: obscureText,
+            focusNode: focusNode,
             child: _fieldWithAccessory(context, palette),
           )
         else
@@ -398,6 +422,7 @@ class UdaanLabeledField extends StatelessWidget {
                   semanticsLabel: _fieldSemanticsLabel,
                   readOnly: readOnly,
                   obscured: obscureText,
+                  focusNode: focusNode,
                   child: _fieldWithAccessory(context, palette),
                 ),
               ),

@@ -16,11 +16,15 @@ Future<Country?> showAccessibleCountryPicker({
   required AppCopy copy,
   List<String> favoriteIso = const ['IN'],
 }) {
-  final sheetHeight = MediaQuery.sizeOf(context).height * 0.92;
   return showModalBottomSheet<Country>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    enableDrag: false,
+    isDismissible: true,
+    // Opaque barrier so login chrome behind the sheet is not visible or
+    // reachable in the VoiceOver swipe path (FIND-035/036/038).
+    barrierColor: Colors.black.withValues(alpha: 0.72),
     backgroundColor: context.udaan.surfaceContainer,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -31,8 +35,9 @@ Future<Country?> showAccessibleCountryPicker({
           announce(sheetContext, copy.phoneCountryPickerTitle);
         }
       });
+      // Full-height sheet — no logo gap above the modal (FIND-038).
       return SizedBox(
-        height: sheetHeight,
+        height: MediaQuery.sizeOf(sheetContext).height,
         child: UdaanModalSheet(
           title: copy.phoneCountryPickerTitle,
           child: _AccessibleCountryPickerSheet(
@@ -62,6 +67,7 @@ class _AccessibleCountryPickerSheet extends StatefulWidget {
 class _AccessibleCountryPickerSheetState
     extends State<_AccessibleCountryPickerSheet> {
   final _searchController = TextEditingController();
+  final _searchFocus = FocusNode();
   late List<Country> _allCountries;
 
   @override
@@ -75,6 +81,7 @@ class _AccessibleCountryPickerSheetState
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -158,28 +165,30 @@ class _AccessibleCountryPickerSheetState
           const SizedBox(height: 12),
           AccessibleTextFieldSemantics(
             controller: _searchController,
+            focusNode: _searchFocus,
             semanticsLabel: widget.copy.phoneCountrySearchHint,
             child: TextField(
-                controller: _searchController,
-                textInputAction: TextInputAction.search,
-                onChanged: (_) => setState(() {}),
-                onSubmitted: (_) => dismissKeyboard(context),
-                onTapOutside: (_) => dismissKeyboard(context),
-                style: GoogleFonts.atkinsonHyperlegible(
-                  fontSize: 16,
-                  color: context.udaan.onBackground,
-                ),
-                decoration: InputDecoration(
-                  hintText: widget.copy.phoneCountrySearchHint,
-                  filled: true,
-                  fillColor: context.udaan.background,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        BorderSide(color: context.udaan.outlineVariant),
-                  ),
+              controller: _searchController,
+              focusNode: _searchFocus,
+              textInputAction: TextInputAction.search,
+              onChanged: (_) => setState(() {}),
+              onSubmitted: (_) => dismissKeyboard(context),
+              onTapOutside: (_) => dismissKeyboard(context),
+              style: GoogleFonts.atkinsonHyperlegible(
+                fontSize: 16,
+                color: context.udaan.onBackground,
+              ),
+              decoration: InputDecoration(
+                hintText: widget.copy.phoneCountrySearchHint,
+                filled: true,
+                fillColor: context.udaan.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide:
+                      BorderSide(color: context.udaan.outlineVariant),
                 ),
               ),
+            ),
           ),
           const SizedBox(height: 12),
           Expanded(

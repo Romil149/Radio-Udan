@@ -430,6 +430,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               controller: controller,
               semanticsLabel: semanticsLabel,
               readOnly: true,
+              focusNode: focusNode,
               child: field,
             )
           else
@@ -437,6 +438,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               controller: controller,
               semanticsLabel: '$label, required',
               readOnly: readOnly,
+              focusNode: focusNode,
               child: field,
             ),
         ],

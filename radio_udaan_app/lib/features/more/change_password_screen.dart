@@ -150,6 +150,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     controller: controller,
                     semanticsLabel: semanticsLabel,
                     obscured: obscure,
+                    focusNode: focusNode,
                     child: TextField(
                         controller: controller,
                         focusNode: focusNode,

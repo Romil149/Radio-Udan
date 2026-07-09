@@ -8,6 +8,15 @@ alwaysApply: true
 
 For any non-trivial task, **delegate to focused sub-agents** via the Task tool instead of doing everything in one pass. Frame each agent as a **senior specialist (20+ years)** in its domain.
 
+## ALWAYS — best employee on the task (non-negotiable)
+
+**User mandate (2026-07-09):** Always assign the **best** specialist for the work. Never give a critical task to a generic or weak fit.
+
+1. **Match role → best roster specialist** — pick the named Nexus employee / Task `subagent_type` whose domain owns the work (e.g. TalkBack → Agent 16 / `agent-16-talkback-voiceover`; Flutter a11y UI → Maya + Daniel framing; WP API → Marcus; QA evidence → Elena; release gate → Ravi).
+2. **If no worker fits — hire** — create or extend a specialist (new `.cursor/agents/*.md` and/or roster row + Task prompt role) with the **best skills required** for that gap before doing the work yourself as a generalist.
+3. **Senior framing required** — every Task prompt: “Senior [exact domain] specialist (20+ years)” with acceptance criteria; do not under-skill the brief.
+4. **Coordinator (@alex) never codes** — Alex only routes to the best employee; parent still merges and runs the verification gate.
+
 ## When to delegate
 
 - Multi-file changes (WP plugin + Flutter app)
@@ -24,16 +33,18 @@ Use **parallel** Task invocations when work is independent (e.g. Flutter UI + WP
 - Do **not** omit `model` or use heavier models for sub-agents unless the user explicitly requests an allowed model slug.
 - See also `.cursor/rules/max-agents-auto.mdc`.
 
-## Specialist roster
+## Specialist roster (prefer named best fit)
 
-| Domain | Sub-agent type | Use for |
-|--------|----------------|---------|
-| WordPress / PHP / Forminator | `generalPurpose` | Plugin, REST, admin, migrations |
-| Flutter / Dart / mobile UX | `generalPurpose` | App screens, theme, Riverpod |
-| TalkBack / VoiceOver device QA | `agent-16-talkback-voiceover` or paste `agent-16-talkback-voiceover-tester.md` | Physical-device screen-reader sessions; `scripts/a11y-device-qa.md` |
+| Domain | Best employee / sub-agent | Use for |
+|--------|---------------------------|---------|
+| WordPress / PHP / Forminator | Marcus → `generalPurpose` (WP brief) | Plugin, REST, admin, migrations |
+| Flutter / Dart / mobile UX | Daniel / Yuki → `generalPurpose` (Flutter brief) | App screens, theme, Riverpod |
+| UX / accessibility engineering | Maya → `generalPurpose` (a11y brief) | Semantics, labels, WCAG in code |
+| TalkBack / VoiceOver device QA | Jordan / Agent 16 → `agent-16-talkback-voiceover` | Physical-device screen-reader sessions; `scripts/a11y-device-qa.md` |
 | Codebase discovery | `explore` | Read-only mapping, find usages |
-| Shell / tests / curl | `shell` | `flutter analyze`, API scripts, git |
-| Security review | `explore` (readonly) | OWASP-style pass on changed files |
+| Shell / tests / curl | Elena / Chris → `shell` | `flutter analyze`, API scripts, git |
+| Security review | James → `explore` (readonly) or security-review | OWASP-style pass on changed files |
+| Release / PASS-FAIL gate | Ravi | Final ship gate with evidence |
 | Cursor product | `cursor-guide` | IDE features only |
 
 ## Task prompt requirements

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/accessibility/udaan_semantics.dart';
 import '../../../core/config/app_branding.dart';
 import '../../../core/config/app_copy_accessors.dart';
 import '../../../core/theme/udaan_colors.dart';
@@ -36,16 +37,26 @@ class _UdaanOtpPinRowState extends State<UdaanOtpPinRow> {
   void initState() {
     super.initState();
     widget.controller.addListener(_onCodeChanged);
+    _focusNode.addListener(_onFocusChanged);
   }
 
   @override
   void dispose() {
     widget.controller.removeListener(_onCodeChanged);
+    _focusNode.removeListener(_onFocusChanged);
     _focusNode.dispose();
     super.dispose();
   }
 
   void _onCodeChanged() => setState(() {});
+
+  void _onFocusChanged() {
+    if (!mounted) return;
+    setState(() {});
+    if (_focusNode.hasFocus) {
+      announce(context, 'Editing ${widget.copy.otpPinRowLabel}');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +69,7 @@ class _UdaanOtpPinRowState extends State<UdaanOtpPinRow> {
       label: widget.copy.otpPinRowLabel,
       hint: widget.semanticsHint ?? widget.copy.otpPinRowSmsHint(widget.length),
       textField: true,
+      focused: _focusNode.hasFocus,
       value: code.isEmpty
           ? widget.copy.otpPinRowEmpty
           : widget.copy.otpPinRowValue(code),

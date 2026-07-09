@@ -1,9 +1,55 @@
 
+### 2026-07-09 — Standing rule: always best employee on the task
+**Requested by**: User (@alex) — always use the best employee; if no worker for the role, hire one with the best skills required.
+**What was done**: Logged in `decisions.md`, `project-knowledge.md`, and `.cursor/rules/specialist-agents.mdc` (BEST employee section + named roster).
+**Status**: ✅ Complete — applies to all future sessions.
+
+### 2026-07-09 — Fix Screen 02 a11y issues globally (L1–L6 + POPUP-02 + W4)
+**Requested by**: User (@alex) — fix all Screen 02 issues globally.
+**What was done**: L6 Editing announce + focused in AccessibleTextFieldSemantics (app-wide) + OTP pin; L1/L2/L4 phone semantics + autofill normalize; L3 loading announce; L5 Login heading; W4 logo ExcludeSemantics; POPUP-02 full-height + BlockSemantics + barrier.
+**Verification**: `dart analyze lib` = 0 errors (16 pre-existing infos).
+**Status**: ⚠️ Code complete local — not committed; device QA pending.
+**Notes**: Ask before commit/build bump +41.
+
+### 2026-07-09 — L6 GLOBAL: “editing” never announced on text fields
+**Requested by**: User — does not hear “text field is editing” on any screen.
+**What was done**: Confirmed root cause in `AccessibleTextFieldSemantics` (ExcludeSemantics strips native editing; no `focused:` / no announce on focus). Logged L6 in SCREEN-02-login.md + canvas. No code fix yet — awaiting Q-E1–E4.
+**Status**: ⚠️ Open finding — discuss before fix.
+**Notes**: Affects all screens using AccessibleTextFieldSemantics.
+
+### 2026-07-09 — SCREEN-02 Login line-by-line a11y audit (discuss before fix)
+**Requested by**: User — move to Screen 2; same process (read all code, apply guide, discuss wrong in popup).
+**What was done**: Full read of login_screen / udaan_phone_field / udaan_auth_widgets / AccessibleTextFieldSemantics. Confirmed FIND-024/033/034 fixed in +40. Open wrong: **L1–L5** (helper silent, redundant phone label, loading silent, autofill edge, no Login heading). Canvas + SCREEN-02-login.md §8 updated. Screen 01 parked.
+**Status**: ⚠️ Partial — discussion open; no code fixes.
+**Notes**: Popup = `a11y-screen-01-review.canvas.tsx` (now Screen 02 content).
+
+### 2026-07-09 — SCREEN-01 line-by-line a11y audit (discuss before fix)
+**Requested by**: User — go to first screen, read all code, apply COMPLETE-ACCESSIBILITY-GUIDE line-by-line, discuss wrong items in popup.
+**What was done**: Full read of bootstrap_screen / splash_body / app_bootstrap / offline_brand_logo. Found **W1–W5** (critical: offline/Retry UI unreachable because AppBootstrap swallows errors). Updated canvas + SCREEN-01-bootstrap.md §8. No code changes — awaiting Q1–Q6.
+**Status**: ⚠️ Partial — discussion open; Screen 02 not started.
+**Notes**: Popup = `a11y-screen-01-review.canvas.tsx`
+
+### 2026-07-09 — Screen-by-screen a11y review started (SCREEN-01)
+**Requested by**: User (@alex) — compare app vs COMPLETE-ACCESSIBILITY-GUIDE from Screen 1 → end; discuss in popup; write gaps into doc.
+**What was done**: Re-checked Bootstrap/Splash live code vs guide; opened discussion canvas `a11y-screen-01-review.canvas.tsx`; appended session log + open findings to `device-audit/SCREEN-01-bootstrap.md`. No code fixes yet — awaiting Q1–Q6.
+**Status**: ⚠️ Partial — Screen 01 in discussion; Scenarios B/C + Android pending; FIND-004 still incorrect in code.
+**Notes**: Next = human answers popup questions, then Screen 02 Login.
+
+### 2026-07-09 — Complete accessibility guide offline edition (full text, not links)
+**Requested by**: User — single file with **actual downloaded content**, not link indexes or raw HTML.
+**What was done**: Curated 15 clean markdown archives under `00-sources/offline/downloaded/` (Flutter, Android testing/principles, Apple VoiceOver/testing, W3C forms tutorials, Harvard TalkBack, Semantics API). Rebuilt `COMPLETE-ACCESSIBILITY-GUIDE.md` (~7,437 lines / ~317 KB): Part A = full project KB (37 sections); Part B = archived official text. Compile script skips re-download by default to preserve clean archives.
+**Status**: ✅ Complete — `python3 scripts/compile-complete-accessibility-guide.py`
+
+### 2026-07-09 — Complete accessibility guide (single file)
+**Requested by**: User — consolidate all a11y docs into one file (not just fields).
+**What was done**: Generated `.cursor/memory/accessibility-kb/COMPLETE-ACCESSIBILITY-GUIDE.md` (~5,115 lines) from KB, rules, scripts, Agent 16, device audits, copy snapshot, and production code (`accessible_text_field_semantics.dart`, `udaan_semantics.dart`). Updated KB README pointer.
+**Status**: ✅ Complete — refresh by re-running compile script when KB changes.
+
 ### 2026-07-09 — Screen reader field value on refocus (build 40)
 **Requested by**: User — announce existing text when refocusing every field (TalkBack/VoiceOver).
 **What was done**: `AccessibleTextFieldSemantics` + `AccessibleStaticFieldSemantics`; wired into `UdaanLabeledField`, phone national field, help/profile/password, event registration text + subfields, library search, country picker search. Passwords stay obscured (label only). OTP row already had value.
 **Verification**: `dart analyze lib` = 0 errors.
-**Status**: ⚠️ Local — not pushed until user confirms commit.
+**Status**: ✅ Pushed to `main` — build 40.
 
 ### 2026-07-09 — Form focus + blind-user validation (build 38)
 **Requested by**: User — fix keyboard Next chaining and scroll/focus on validation errors.

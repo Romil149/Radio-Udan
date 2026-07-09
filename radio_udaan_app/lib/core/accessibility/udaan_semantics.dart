@@ -142,15 +142,19 @@ class UdaanModalSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      scopesRoute: true,
-      namesRoute: true,
-      label: title.trim().isNotEmpty ? title.trim() : null,
-      explicitChildNodes: true,
-      child: Container(
-        decoration: decoration,
-        padding: padding,
-        child: child,
+    // BlockSemantics keeps the route below out of the swipe path while the
+    // sheet is open (FIND-035/036). namesRoute + label announce the modal title.
+    return BlockSemantics(
+      child: Semantics(
+        scopesRoute: true,
+        namesRoute: true,
+        label: title.trim().isNotEmpty ? title.trim() : null,
+        explicitChildNodes: true,
+        child: Container(
+          decoration: decoration,
+          padding: padding,
+          child: child,
+        ),
       ),
     );
   }

@@ -34,6 +34,7 @@
 - **WP admin**: Settings → YouTube — API key + channel only; no featured picker.
 
 ## Patterns to Follow
+- **ALWAYS best employee on the task (2026-07-09)**: Alex routes every non-trivial job to the **best** specialist for that domain (Maya a11y code, Jordan/Agent 16 device SR, Daniel Flutter, Marcus WP, Elena QA, Ravi gate, etc.). If no worker fits — **hire** a new specialist with the required skills (new agent brief + roster) before doing the work as a generalist. See `.cursor/rules/specialist-agents.mdc` + `decisions.md`.
 - **Primary audience**: blind and low-vision users — see `.cursor/rules/accessibility-blind-users.mdc` (56px targets, persistent labels, Semantics + liveRegion, no icon-only controls).
 - **100% WP-driven copy (non-negotiable)**: All user-visible strings come from `GET /config` → `copy` map + `branding`. Flutter `appCopyProvider` / `AppCopy` accessors in UI; `AppStrings` + `app_copy_defaults.dart` are offline fallbacks only. WP admin: Settings → App copy (full `RadioUdaan_App_Copy_Catalog`).
 - **Fast cold start (non-negotiable)**: Never block first frame on network. `ConfigCacheStorage` stale-while-revalidate; single `/config` fetch (parallel with `/auth/me` when logged in); WP transient cache 5 min. No extra startup API calls for copy.

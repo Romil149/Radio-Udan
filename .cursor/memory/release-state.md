@@ -3,8 +3,8 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+40** | local only | 2026-07-09 | SR field value on refocus (all text fields) |
-| TestFlight iOS | **2.0.0+40** | not pushed | 2026-07-09 | After push: TalkBack/VoiceOver refocus value test |
+| GitHub `main` | **2.0.0+41** @ `08205fc` | pushed | 2026-07-09 | Login a11y L1–L6 + global Editing announce + country picker |
+| TestFlight iOS | **2.0.0+41** | CI pending | 2026-07-09 | Device QA: Editing announce, country sheet focus |
 | Staging WP plugin | partial | **yes** | 2026-07-08 | API smoke 19/19; redeploy full zip if `class-admin-donations.php` missing on server |
 | Staging API smoke | 19/19 | — | 2026-07-08 | Includes `/donate/*` routes + `info_hub.donate.razorpay` |
 

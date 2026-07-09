@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'udaan_semantics.dart';
+
 /// Spoken [Semantics.value] for a text field — null when empty or obscured.
 String? accessibilitySpokenFieldValue(
   String text, {
@@ -14,6 +16,9 @@ String? accessibilitySpokenFieldValue(
 ///
 /// Use when the inner [TextField] is wrapped in [ExcludeSemantics] so refocus
 /// announces both the field label and the current contents.
+///
+/// Pass [focusNode] so [Semantics.focused] stays accurate and focus gain
+/// announces "Editing {label}" (L6 GLOBAL).
 class AccessibleTextFieldSemantics extends StatefulWidget {
   const AccessibleTextFieldSemantics({
     required this.controller,
@@ -22,6 +27,7 @@ class AccessibleTextFieldSemantics extends StatefulWidget {
     this.hint,
     this.obscured = false,
     this.readOnly = false,
+    this.focusNode,
     super.key,
   });
 
@@ -31,6 +37,7 @@ class AccessibleTextFieldSemantics extends StatefulWidget {
   final String? hint;
   final bool obscured;
   final bool readOnly;
+  final FocusNode? focusNode;
 
   @override
   State<AccessibleTextFieldSemantics> createState() =>
@@ -43,6 +50,7 @@ class _AccessibleTextFieldSemanticsState
   void initState() {
     super.initState();
     widget.controller.addListener(_repaint);
+    widget.focusNode?.addListener(_onFocusChanged);
   }
 
   @override
@@ -52,16 +60,30 @@ class _AccessibleTextFieldSemanticsState
       oldWidget.controller.removeListener(_repaint);
       widget.controller.addListener(_repaint);
     }
+    if (oldWidget.focusNode != widget.focusNode) {
+      oldWidget.focusNode?.removeListener(_onFocusChanged);
+      widget.focusNode?.addListener(_onFocusChanged);
+    }
   }
 
   @override
   void dispose() {
     widget.controller.removeListener(_repaint);
+    widget.focusNode?.removeListener(_onFocusChanged);
     super.dispose();
   }
 
   void _repaint() {
     if (mounted) setState(() {});
+  }
+
+  void _onFocusChanged() {
+    if (!mounted) return;
+    setState(() {});
+    final node = widget.focusNode;
+    if (node != null && node.hasFocus) {
+      announce(context, 'Editing ${widget.semanticsLabel}');
+    }
   }
 
   @override
@@ -76,6 +98,7 @@ class _AccessibleTextFieldSemanticsState
       ),
       obscured: widget.obscured,
       readOnly: widget.readOnly,
+      focused: widget.focusNode?.hasFocus ?? false,
       child: ExcludeSemantics(child: widget.child),
     );
   }

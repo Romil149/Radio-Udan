@@ -458,6 +458,7 @@ class _EventRegistrationScreenState
             ? _copy.registrationAccountLockedHint
             : (hintOverride ?? field.placeholder),
         readOnly: isAccountLocked,
+        focusNode: focusNode,
         child: input,
       ),
       errorOnDecoration: true,

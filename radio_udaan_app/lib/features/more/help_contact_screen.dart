@@ -301,6 +301,7 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
           AccessibleTextFieldSemantics(
             controller: controller,
             semanticsLabel: '$label, required',
+            focusNode: focusNode,
             child: TextField(
                 controller: controller,
                 focusNode: focusNode,

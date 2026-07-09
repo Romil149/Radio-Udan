@@ -60,6 +60,7 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
           child: AccessibleTextFieldSemantics(
             controller: widget.controller,
             semanticsLabel: _copy.librarySearchHint,
+            focusNode: widget.focusNode,
             child: TextField(
               controller: widget.controller,
               focusNode: widget.focusNode,

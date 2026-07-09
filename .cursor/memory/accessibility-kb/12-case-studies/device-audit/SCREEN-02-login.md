@@ -1,8 +1,9 @@
 # SCREEN 02 — Login (`/login`)
 
 **Audit ID:** SCREEN-02  
-**Status:** IN PROGRESS — popup audit  
-**Code reviewed:** 2026-07-04 by Jordan Lee  
+**Status:** IN DISCUSSION (popup) — 2026-07-09 line-by-line vs COMPLETE-ACCESSIBILITY-GUIDE  
+**Code reviewed:** 2026-07-04 by Jordan Lee · **Re-verified code:** 2026-07-09 by Alex vs build **2.0.0+40**  
+**Discussion canvas:** `a11y-screen-01-review.canvas.tsx` (now showing Screen 02)  
 **Files:**
 
 | File | Role |
@@ -278,4 +279,123 @@ Semantics(textField: true, label: ..., child: TextField(...))  // no ExcludeSema
 
 ---
 
-*Popups: open country picker only when Jordan sends POPUP checkpoint.*
+## 8. Line-by-line audit — 2026-07-09 (vs COMPLETE-ACCESSIBILITY-GUIDE)
+
+**Method:** Read every line of Login stack → apply guide → discuss wrong items in popup before fixing.  
+**Files read in full:** `login_screen.dart`, `udaan_phone_field.dart`, `udaan_auth_widgets.dart` (header / labeled field / buttons / footer), `accessible_text_field_semantics.dart`.  
+**Deferred:** Country picker sheet → POPUP-02 (separate). Screen 01 parked.
+
+### FIXED since Jul 4 device FAIL (do not re-open as open code bugs)
+
+| Old ID | What | Evidence in 2.0.0+40 |
+|--------|------|----------------------|
+| FIND-024 | Error not auto-announced | `_validationError` → `announceValidationError` + liveRegion + `revealFieldForValidation` |
+| FIND-033 | Double VoiceOver stop on phone | `AccessibleTextFieldSemantics` + `ExcludeSemantics` on national `TextField` |
+| FIND-034 | Show password not in swipe path | `suffixIcon` in `Row` **outside** field `ExcludeSemantics` (`UdaanLabeledField` L392–410) |
+| FIND-028 (code) | `required` in phone label | Joined when `required: true` (device may still drop — verify) |
+| App name header | Missing label | `UdaanAuthLogoHeader` has `label: branding.appName` |
+| Autofill (partial) | Long paste / `+` / `00` | `_onNationalTextChanged` → `setFromRawInput` |
+
+### WRONG (must discuss — not fixed yet)
+
+| ID | Sev | Finding | Lines | Guide rule |
+|----|-----|---------|-------|------------|
+| **L1** | HIGH | Phone helper (`phone_field_helper`) is `ExcludeSemantics` — never spoken | `udaan_phone_field.dart` L195–204 | Do not hide critical form instructions |
+| **L2** | MED | National label repeats country; unused `phone_national_field_semantics` | `udaan_phone_field.dart` L174–179 | Unique meaningful labels |
+| **L3** | MED | Login / OTP loading: spinner only, no `announce()` | `UdaanPrimaryButton` / `_submit` / `_startOtpLogin` | Announce submit progress |
+| **L4** | MED | Autofill double dial-code still possible if paste fits max length | `udaan_phone_field.dart` L123–129 | Correct input + announce normalize |
+| **L5** | LOW–MED | No “Login” screen heading landmark (brand only) | `login_screen.dart` | Header on titles / focus order |
+
+### VERIFY ON DEVICE
+
+| ID | Item | Note |
+|----|------|------|
+| V1 | Intro `login_mobile_intro` plain Text | iOS PASS Jul 4; TalkBack pending |
+| V2 | Footer `dont_have_account` plain Text | iOS PASS Jul 4; TalkBack pending |
+
+### Questions for human (popup)
+
+1. L1: Fold helper into spoken label, or own focus stop?
+2. L2: Use “Mobile number without country code, required”?
+3. L3: Announce “Signing in…” / “Sending OTP…”?
+4. L4: Always normalize autofill — fix now or later?
+5. L5: Add “Login” heading, or brand-only OK?
+6. Next: fix Screen 02 / POPUP-02 / Screen 03?
+
+### Typing / editing speech — 2026-07-09 (user question)
+
+**Question:** When adding/editing the number, does it speak? Does it say where we are editing?
+
+| Moment | Speaks? | Source |
+|--------|---------|--------|
+| Focus national field | Yes — label + text field role | `AccessibleTextFieldSemantics` |
+| Digits already in field (refocus) | Yes — `Semantics.value` = current text | Build 40 listener |
+| Double-tap to edit | System “double tap to edit” + number pad | OS |
+| Each digit while typing | Usually yes (character echo) | TalkBack/VoiceOver — **not** app `announce()` |
+| Custom “Editing mobile number…” | **No** | Not implemented |
+| Cursor position | **No** | Not implemented |
+| Helper “no leading zero” | **No** | L1 — `ExcludeSemantics` |
+| Password (compare) | Label only; value hidden | `obscured: true` |
+
+**Open device checks:** Q-T1 hear each digit? Q-T2 hear full number on refocus? Q-T3 want custom “Editing mobile number” announce?
+
+### L6 / GLOBAL — “Editing” never spoken (user report 2026-07-09)
+
+**User:** *“I don't hear this text field is editing — I don't hear this from any screen.”*
+
+**Alex verdict: CORRECT — code gap, app-wide.**
+
+| Fact | Detail |
+|------|--------|
+| Pattern | All fields use `AccessibleTextFieldSemantics` → `Semantics(textField)` + `ExcludeSemantics(TextField)` |
+| Missing | No `focused:` synced from `FocusNode`; no `announce("Editing …")` on focus gain |
+| Side effect | Native TextField “editing” / focused signals are stripped with the child |
+| Scope | Login phone/password, register, OTP-related fields, profile, help, library search, country search, event registration text fields |
+| Guide | WCAG 4.1.2 name/role/value; role present but editing state absent |
+
+**Fix options (await human):**
+
+- **A (recommended):** `focused:` + announce `Editing {label}` on focus gain  
+- **B:** `focused:` only  
+- **C:** Append “editing” to label while focused  
+- **D:** Remove `ExcludeSemantics` (risk double-stop regression)
+
+**Questions:** Q-E1 platform? Q-E2 option A/B/C/D? Q-E3 wording OK? Q-E4 global now or Login only?
+
+### 9. Full issue inventory — 2026-07-09 (nothing left unlisted for Login body)
+
+| Bucket | Count | IDs |
+|--------|------:|-----|
+| **OPEN — Login** | **6** | L1, L2, L3, L4, L5, L6 |
+| **OPEN — Country popup (attached)** | **5** | FIND-035, 036, 037, 038, 039 |
+| **FIXED in +40** | **6** | FIND-024, 033, 034, 028(code), app-name label, autofill partial |
+| **VERIFY / SHARED** | **4** | V1, V2, FIND-028(device), W4 logo (shared Screen 01) |
+
+**Login + popup open total = 11.** Login-only open = **6**.
+
+Second pass: no additional Login-body gaps beyond L1–L6 + verify/shared. Password hint not spoken is minor (label sufficient). Android TalkBack session still pending.
+
+---
+
+## 10. Fixes applied — 2026-07-09 (global)
+
+**Status:** Code fixed in local workspace · **not committed / not shipped** · `dart analyze lib` = **0 errors**
+
+| ID | Fix |
+|----|-----|
+| **L1** | National semantics include `without the leading zero` (visual helper still ExcludeSemantics) |
+| **L2** | Label = `phoneNationalFieldSemantics` + required; country only on dial button |
+| **L3** | `announce('Signing in…')` on password submit; `sendingCodePleaseWait` on OTP start |
+| **L4** | Normalize autofill when dial prefix present; announce when text changes; length allows code+national |
+| **L5** | `UdaanAuthLogoHeader(screenTitle: loginButton)` → “Login” heading |
+| **L6** | `AccessibleTextFieldSemantics`: `focused:` + `announce('Editing {label}')` on focus gain; wired app-wide; OTP pin row same pattern |
+| **W4** | `OfflineBrandLogo` Image in `ExcludeSemantics` |
+| **FIND-035/036/038** | Full-height country sheet + opaque barrier + `BlockSemantics` on `UdaanModalSheet` |
+| **FIND-037** | `namesRoute` + title label + open announce (verified) |
+| **FIND-039** | Search `FocusNode` → L6 Editing announce |
+
+**Device QA still required** before calling Screen 02 PASS.
+
+---
+
+*Next: human device verify, or Screen 03, or commit + build bump on request.*

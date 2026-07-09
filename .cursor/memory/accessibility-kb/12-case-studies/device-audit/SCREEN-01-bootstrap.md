@@ -1,8 +1,9 @@
 # SCREEN 01 — Bootstrap / Splash (`/bootstrap`)
 
 **Audit ID:** SCREEN-01  
-**Status:** AWAITING DEVICE TEST (human)  
-**Code reviewed:** 2026-07-04 by Jordan Lee  
+**Status:** PARKED — 2026-07-09 (human moved to Screen 02; W1–W5 still open)  
+**Code reviewed:** 2026-07-04 by Jordan Lee · **Re-verified code:** 2026-07-09 by Alex (coordinator) vs build **2.0.0+40**  
+**Discussion canvas:** `a11y-screen-01-review.canvas.tsx`  
 **Files:**
 
 | File | Role |
@@ -186,8 +187,53 @@ Enable **TalkBack** (Android) or **VoiceOver** (iOS) **before** force-quitting t
 | Open findings | AUDIT-FIND-003, 004, 005 — not device-tested; 001/002 not reproduced on iOS |
 | Android TalkBack | Pending |
 | Scenario C offline/Retry | Pending |
-| Ready for Screen 02? | **Yes** — on human go |
+| Ready for Screen 02? | **Blocked** until human answers popup Q1–Q6 (2026-07-09) |
 
 ---
 
-*Next: `SCREEN-02-login.md` — Jordan will code-review then popup CP-01 one at a time.*
+## 7. Session log — 2026-07-09 (Alex / guide re-check)
+
+Superseded by §8 line-by-line audit.
+
+---
+
+## 8. Line-by-line audit — 2026-07-09 (vs COMPLETE-ACCESSIBILITY-GUIDE)
+
+**Method:** Read every line of Screen 01 stack → apply guide rules → discuss wrong items in popup before fixing.  
+**Files read in full:** `bootstrap_screen.dart`, `splash_body.dart`, `app_bootstrap.dart`, `offline_brand_logo.dart` (+ force_update_screen for branch).  
+**Canvas:** `a11y-screen-01-review.canvas.tsx`
+
+### WRONG (must discuss — not fixed yet)
+
+| ID | Sev | Finding | Lines | Guide rule broken |
+|----|-----|---------|-------|-------------------|
+| **W1** | CRITICAL | `AppBootstrap.run()` catch never rethrows → `bootstrapProvider` almost never `AsyncValue.error` → SplashBody offline + Retry **unreachable** on network fail | `app_bootstrap.dart` L135–165; `bootstrap_screen.dart` L103–113 | Errors must be spoken + recoverable (liveRegion / Retry) |
+| **W2** | HIGH | App name: `Semantics(header: true)` + `ExcludeSemantics(Text)` **without `label:`** — unlike `UdaanScreenHeader` | `splash_body.dart` L175–189 | Meaningful label; ExcludeSemantics must not strip spoken name |
+| **W3** | MED | If error UI ever shows: `errorDetail: error.toString()` spoken | `bootstrap_screen.dart` L108; `splash_body.dart` L68–83 | Errors = user message, not jargon |
+| **W4** | MED | Logo `Image.asset` not wrapped in `ExcludeSemantics` under labeled parent | `offline_brand_logo.dart` L21–33 | Avoid duplicate / bare “Image” node |
+| **W5** | MED | No `announce()` on navigate away, Retry, or silent session clear | `bootstrap_screen.dart` L41–71, L109–112; `app_bootstrap.dart` L136–141 | Announcements for important state changes |
+
+### VERIFY ON DEVICE
+
+| ID | Item | Note |
+|----|------|------|
+| V1 | Tagline plain `Text` | Usually OK as static text; confirm TalkBack |
+| V2 | `liveRegion` auto-speak status | iOS previously needed focus swipe |
+
+### OK vs guide
+
+Status liveRegion; Loading… label + reduceMotion; Retry 56px + label (when shown); a11y badge ExcludeSemantics; decorative glow unlabeled; copy keys present; force-update screen uses header + liveRegion + announceAndSnack.
+
+### Questions for human (popup)
+
+1. W1: Offline always stay on splash + Retry? (Yes / No / Only if no cache)
+2. W2: Fix heading `label: branding.appName`?
+3. W3: Drop technical `errorDetail` from SR?
+4. W4: ExcludeSemantics on logo Image?
+5. W5: Silent nav vs announce destination vs only session/offline/retry?
+6. Fix Screen 01 now or log-only then Screen 02?
+7. Device for V1/V2: TalkBack / VoiceOver / both?
+
+---
+
+*Next: after human answers Q1–Q6 — either implement Screen 01 fixes or open Screen 02 line-by-line.*

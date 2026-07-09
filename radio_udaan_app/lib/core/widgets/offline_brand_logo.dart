@@ -21,14 +21,16 @@ class OfflineBrandLogo extends StatelessWidget {
     return Semantics(
       label: '${branding.appName} logo',
       image: true,
-      child: Image.asset(
-        assetPath,
-        height: height,
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.high,
-        errorBuilder: (context, error, stackTrace) {
-          return _TextFallback(branding: branding, height: height);
-        },
+      child: ExcludeSemantics(
+        child: Image.asset(
+          assetPath,
+          height: height,
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.high,
+          errorBuilder: (context, error, stackTrace) {
+            return _TextFallback(branding: branding, height: height);
+          },
+        ),
       ),
     );
   }

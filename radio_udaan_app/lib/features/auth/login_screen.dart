@@ -69,6 +69,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = null;
       _otpLoading = true;
     });
+    announce(context, _copy.sendingCodePleaseWait);
 
     final message = await requestLoginOtpAndOpenVerify(context, ref, phone);
     if (!mounted) return;
@@ -99,6 +100,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = null;
       _loading = true;
     });
+    // Match "Signing out" tone; no dedicated copy key for password submit.
+    announce(context, 'Signing in…');
 
     try {
       final session = await ref.read(radioudaanApiProvider).login(
@@ -153,6 +156,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             children: [
               UdaanAuthLogoHeader(
                 branding: branding,
+                screenTitle: _copy.loginButton,
                 subtitle: _copy.loginMobileIntro,
               ),
               const SizedBox(height: 32),

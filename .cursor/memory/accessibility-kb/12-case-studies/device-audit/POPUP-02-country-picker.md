@@ -1,10 +1,11 @@
 # POPUP 02 — Country picker (login phone field)
 
-**Audit ID:** POPUP-02  
+**Status:** CODE FIXED 2026-07-09 — awaiting device re-test  
 **Parent screen:** SCREEN-02 Login  
 **Trigger:** Double-tap country code button  
 **Code:** `accessible_country_picker_sheet.dart`, `UdaanModalSheet`  
-**Status:** IN PROGRESS (iOS VoiceOver)
+
+**2026-07-09 code fixes:** full-height sheet, opaque barrier, `BlockSemantics` on modal, search FocusNode + Editing announce. Re-run POP-01–07 on device before PASS.
 
 ---
 

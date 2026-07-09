@@ -76,6 +76,12 @@
 **Reasoning**: Single `/config` fetch (cached 5 min WP + 6 h device) avoids extra round-trips; stale-while-revalidate shows branded UI immediately.
 **Consequences**: Admin has many copy fields (grouped). Template strings use `{placeholders}` in copy values. App rebuild not needed for text changes.
 
+### 2026-07-09 — Always best employee on the task (hire if missing)
+**Context**: User (@alex) mandated that every task go to the best specialist; if no worker fits the role, hire a new employee with the best skills required.
+**Decision**: Coordinator always routes to the best roster specialist for the domain. If the roster/Task types lack a fit, create/extend a specialist agent (skills + brief) before assigning work. Never default to a weak generalist for critical work. Documented in `.cursor/rules/specialist-agents.mdc`.
+**Reasoning**: Radio Udaan quality (especially a11y) requires domain experts; wrong assignee wastes cycles and ships gaps.
+**Consequences**: Alex must pick named best fit (Maya/Daniel/Jordan/Marcus/Elena/Ravi/etc.) or hire; Task prompts stay “Senior [domain] 20+ years”; parent still verifies.
+
 ### 2026-07-08 — Force App Update (minimum build gate)
 **Context**: Prevent API-breaking changes and security fixes from being used on older app builds.
 **Decision**: WordPress exposes `GET /config.app_update` with enabled + min Android/iOS build numbers. Flutter compares `package_info_plus.buildNumber` against the platform minimum and hard-blocks the app via `/force-update` when violated (with accessible copy and official store links).
