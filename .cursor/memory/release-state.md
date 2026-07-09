@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+39** @ pending | pushed | 2026-07-09 | CI fix: restore isNumeric for KeyboardAccessory guard |
+| GitHub `main` | **2.0.0+39** @ `7e53ea8` | pushed | 2026-07-09 | CI fix: restore isNumeric for KeyboardAccessory guard |
 | TestFlight iOS | **2.0.0+39** | CI pending | 2026-07-09 | Build 38 analyze warning fixed |
 | Staging WP plugin | partial | **yes** | 2026-07-08 | API smoke 19/19; redeploy full zip if `class-admin-donations.php` missing on server |
 | Staging API smoke | 19/19 | — | 2026-07-08 | Includes `/donate/*` routes + `info_hub.donate.razorpay` |
