@@ -5,6 +5,7 @@ import '../../../core/config/app_copy_accessors.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/accessibility/accessible_text_field_semantics.dart';
 import '../../../core/theme/udaan_colors.dart';
 import '../../../core/utils/keyboard_dismiss.dart';
 import '../../../core/widgets/accessible_country_picker_sheet.dart';
@@ -256,11 +257,10 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: Semantics(
-                textField: true,
-                label: nationalSemanticsLabel,
-                child: ExcludeSemantics(
-                  child: KeyboardAccessory(
+              child: AccessibleTextFieldSemantics(
+                controller: _input.nationalController,
+                semanticsLabel: nationalSemanticsLabel,
+                child: KeyboardAccessory(
                     focusNode: _numberFocus,
                     doneLabel: widget.copy.keyboardDone,
                     nextLabel:
@@ -298,7 +298,6 @@ class _UdaanPhoneFieldState extends State<UdaanPhoneField> {
                       ),
                       decoration: _fieldDecoration(hint: hint),
                     ),
-                  ),
                 ),
               ),
             ),

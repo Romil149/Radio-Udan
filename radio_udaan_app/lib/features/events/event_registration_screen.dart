@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/accessibility/accessible_text_field_semantics.dart';
 import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
@@ -450,14 +451,14 @@ class _EventRegistrationScreenState
     return _fieldShell(
       context,
       field,
-      Semantics(
-        label: _fieldSemanticsLabel(field),
+      AccessibleTextFieldSemantics(
+        controller: controller,
+        semanticsLabel: _fieldSemanticsLabel(field),
         hint: isAccountLocked
             ? _copy.registrationAccountLockedHint
             : (hintOverride ?? field.placeholder),
-        textField: true,
         readOnly: isAccountLocked,
-        child: ExcludeSemantics(child: input),
+        child: input,
       ),
       errorOnDecoration: true,
     );
@@ -1416,11 +1417,11 @@ class _EventRegistrationScreenState
               ),
             ),
             const SizedBox(height: 8),
-            Semantics(
-              label: sub.required ? '${sub.label}, required' : sub.label,
-              textField: true,
-              child: ExcludeSemantics(
-                child: TextFormField(
+            AccessibleStaticFieldSemantics(
+              semanticsLabel:
+                  sub.required ? '${sub.label}, required' : sub.label,
+              value: map[sub.key]?.toString(),
+              child: TextFormField(
                   initialValue: map[sub.key]?.toString() ?? '',
                   style: registrationFieldInputStyle(context),
                   decoration: registrationFieldDecoration(
@@ -1438,7 +1439,6 @@ class _EventRegistrationScreenState
                   onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
                   onChanged: (v) => _setSubfieldValue(field, sub, v),
                 ),
-              ),
             ),
             const SizedBox(height: 12),
           ],

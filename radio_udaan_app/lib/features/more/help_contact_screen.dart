@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/accessibility/accessible_text_field_semantics.dart';
 import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
@@ -297,11 +298,10 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
             child: Text(label, style: registrationFieldLabelStyle(context)),
           ),
           const SizedBox(height: 8),
-          Semantics(
-            label: '$label, required',
-            textField: true,
-            child: ExcludeSemantics(
-              child: TextField(
+          AccessibleTextFieldSemantics(
+            controller: controller,
+            semanticsLabel: '$label, required',
+            child: TextField(
                 controller: controller,
                 focusNode: focusNode,
                 keyboardType: keyboardType,
@@ -322,7 +322,6 @@ class _HelpContactScreenState extends ConsumerState<HelpContactScreen> {
                 style: registrationFieldInputStyle(context),
                 decoration: registrationFieldDecoration(context),
               ),
-            ),
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/accessibility/accessible_text_field_semantics.dart';
 import '../../../core/theme/brand_tokens.dart';
 import '../../../core/utils/keyboard_dismiss.dart';
 import '../../../core/theme/udaan_colors.dart';
@@ -30,6 +31,22 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
   AppCopy get _copy => ref.read(appCopyProvider);
 
   @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onTextChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onTextChanged);
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     final query = ref.watch(librarySearchQueryProvider);
 
@@ -40,11 +57,10 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
         LibrarySectionHeading(title: _copy.librarySearchVideos),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: BrandTokens.screenPadding),
-          child: Semantics(
-            label: _copy.librarySearchHint,
-            textField: true,
-            child: ExcludeSemantics(
-              child: TextField(
+          child: AccessibleTextFieldSemantics(
+            controller: widget.controller,
+            semanticsLabel: _copy.librarySearchHint,
+            child: TextField(
               controller: widget.controller,
               focusNode: widget.focusNode,
               textInputAction: TextInputAction.search,
@@ -107,7 +123,6 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
                   ),
                 ),
               ),
-            ),
             ),
           ),
         ),

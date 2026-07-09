@@ -2,6 +2,7 @@ import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../accessibility/accessible_text_field_semantics.dart';
 import '../accessibility/udaan_semantics.dart';
 import '../config/app_branding.dart';
 import '../config/app_copy_accessors.dart';
@@ -155,11 +156,10 @@ class _AccessibleCountryPickerSheetState
             ],
           ),
           const SizedBox(height: 12),
-          Semantics(
-            label: widget.copy.phoneCountrySearchHint,
-            textField: true,
-            child: ExcludeSemantics(
-              child: TextField(
+          AccessibleTextFieldSemantics(
+            controller: _searchController,
+            semanticsLabel: widget.copy.phoneCountrySearchHint,
+            child: TextField(
                 controller: _searchController,
                 textInputAction: TextInputAction.search,
                 onChanged: (_) => setState(() {}),
@@ -180,7 +180,6 @@ class _AccessibleCountryPickerSheetState
                   ),
                 ),
               ),
-            ),
           ),
           const SizedBox(height: 12),
           Expanded(

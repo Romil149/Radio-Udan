@@ -1,4 +1,10 @@
 
+### 2026-07-09 — Screen reader field value on refocus (build 40)
+**Requested by**: User — announce existing text when refocusing every field (TalkBack/VoiceOver).
+**What was done**: `AccessibleTextFieldSemantics` + `AccessibleStaticFieldSemantics`; wired into `UdaanLabeledField`, phone national field, help/profile/password, event registration text + subfields, library search, country picker search. Passwords stay obscured (label only). OTP row already had value.
+**Verification**: `dart analyze lib` = 0 errors.
+**Status**: ⚠️ Local — not pushed until user confirms commit.
+
 ### 2026-07-09 — Form focus + blind-user validation (build 38)
 **Requested by**: User — fix keyboard Next chaining and scroll/focus on validation errors.
 **What was done**: `revealFieldForValidation` + `FormFieldAnchor`; `UdaanLabeledField` Next→`nextFocus()`; auth/profile/help/password screens get FocusNodes + scroll/focus on error; event registration focuses field after scroll.

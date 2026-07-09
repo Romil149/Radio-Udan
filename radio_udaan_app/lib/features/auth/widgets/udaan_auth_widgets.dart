@@ -7,6 +7,7 @@ import '../../../core/theme/accessibility_scope.dart';
 import '../../../core/theme/brand_tokens.dart';
 import '../../../core/theme/udaan_colors.dart';
 import '../../../core/theme/udaan_text_styles.dart';
+import '../../../core/accessibility/accessible_text_field_semantics.dart';
 import '../../../core/utils/keyboard_dismiss.dart';
 import '../../../core/widgets/keyboard_accessory.dart';
 import '../../../core/widgets/offline_brand_logo.dart';
@@ -380,28 +381,24 @@ class UdaanLabeledField extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         if (suffixIcon == null)
-          Semantics(
-            textField: true,
-            label: _fieldSemanticsLabel,
+          AccessibleTextFieldSemantics(
+            controller: controller,
+            semanticsLabel: _fieldSemanticsLabel,
             readOnly: readOnly,
             obscured: obscureText,
-            child: ExcludeSemantics(
-              child: _fieldWithAccessory(context, palette),
-            ),
+            child: _fieldWithAccessory(context, palette),
           )
         else
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Semantics(
-                  textField: true,
-                  label: _fieldSemanticsLabel,
+                child: AccessibleTextFieldSemantics(
+                  controller: controller,
+                  semanticsLabel: _fieldSemanticsLabel,
                   readOnly: readOnly,
                   obscured: obscureText,
-                  child: ExcludeSemantics(
-                    child: _fieldWithAccessory(context, palette),
-                  ),
+                  child: _fieldWithAccessory(context, palette),
                 ),
               ),
               const SizedBox(width: 4),

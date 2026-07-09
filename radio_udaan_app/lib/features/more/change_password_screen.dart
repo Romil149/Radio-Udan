@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/accessibility/accessible_text_field_semantics.dart';
 import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
@@ -145,12 +146,11 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Semantics(
-                    label: semanticsLabel,
-                    textField: true,
+                  child: AccessibleTextFieldSemantics(
+                    controller: controller,
+                    semanticsLabel: semanticsLabel,
                     obscured: obscure,
-                    child: ExcludeSemantics(
-                      child: TextField(
+                    child: TextField(
                         controller: controller,
                         focusNode: focusNode,
                         obscureText: obscure,
@@ -168,7 +168,6 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                         style: registrationFieldInputStyle(context),
                         decoration: registrationFieldDecoration(context),
                       ),
-                    ),
                   ),
                 ),
               const SizedBox(width: 4),

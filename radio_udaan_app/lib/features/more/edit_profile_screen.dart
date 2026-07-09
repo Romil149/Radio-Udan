@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../core/accessibility/accessible_text_field_semantics.dart';
 import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/network/dio_exception_mapper.dart';
 import '../../core/providers/app_providers.dart';
@@ -425,17 +426,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           ],
           const SizedBox(height: 8),
           if (readOnly && semanticsLabel != null)
-            Semantics(
-              label: semanticsLabel,
+            AccessibleTextFieldSemantics(
+              controller: controller,
+              semanticsLabel: semanticsLabel,
               readOnly: true,
-              textField: true,
-              child: ExcludeSemantics(child: field),
+              child: field,
             )
           else
-            Semantics(
-              textField: true,
-              label: '$label, required',
-              child: ExcludeSemantics(child: field),
+            AccessibleTextFieldSemantics(
+              controller: controller,
+              semanticsLabel: '$label, required',
+              readOnly: readOnly,
+              child: field,
             ),
         ],
       ),
