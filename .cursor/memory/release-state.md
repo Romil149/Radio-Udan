@@ -3,8 +3,8 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+36** @ `68d0b05` | pushed | 2026-07-08 | Push diagnostics screen + step-by-step registration logging |
-| TestFlight iOS | **2.0.0+36** | CI pending | 2026-07-08 | Triggered by push to `main` |
+| GitHub `main` | **2.0.0+37** | pending push | 2026-07-09 | iOS App Store profile with Push — rebuild for APNs token fix |
+| TestFlight iOS | **2.0.0+37** | CI pending | 2026-07-09 | New provisioning profile `Radio Udaan App Store 2026` |
 | Staging WP plugin | partial | **yes** | 2026-07-08 | API smoke 19/19; redeploy full zip if `class-admin-donations.php` missing on server |
 | Staging API smoke | 19/19 | — | 2026-07-08 | Includes `/donate/*` routes + `info_hub.donate.razorpay` |
 
