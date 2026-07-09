@@ -437,7 +437,7 @@ class _EventRegistrationScreenState
       onChanged: isAccountLocked ? null : (v) => _onTextFieldChanged(field, v),
     );
 
-    if (focusNode != null && !isAccountLocked) {
+    if (isNumeric && focusNode != null && !isAccountLocked) {
       input = KeyboardAccessory(
         focusNode: focusNode,
         doneLabel: _copy.keyboardDone,
