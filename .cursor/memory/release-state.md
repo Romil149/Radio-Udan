@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+42** (this push) | pushing | 2026-07-10 | A11y + Library player + What's New community + Events keyboard/unlock |
+| GitHub `main` | **2.0.0+42** @ `3a262ef` | pushing | 2026-07-10 | A11y + Library player + What's New community + Events keyboard/unlock |
 | TestFlight iOS | **2.0.0+42** | CI after push | 2026-07-10 | Device QA: YouTube play/pause, Events fields, schedule Close |
 | Staging WP plugin | local zip needed | **no** (redeploy) | 2026-07-10 | Must deploy for `latestcommunitynews` What's New feed |
 | Staging API smoke | — | — | — | Re-run after plugin deploy |
