@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+48** @ `062094b` +**yes** | 2026-07-10 | Fix +47 iOS launch crash (restore UIScene); donate auto-confirm + a11y |
+| GitHub `main` | **2.0.0+48** @ `062094b` | **yes** | 2026-07-10 | Fix +47 iOS launch crash (restore UIScene); donate auto-confirm + a11y |
 | TestFlight iOS | **2.0.0+48** | CI after push | 2026-07-10 | Do not use +47 (crashes). Retest launch + APNs + donate |
 | Staging WP plugin | local zip needed | **no** (redeploy) | 2026-07-10 | New donate copy keys + Razorpay Payment Link fixes |
 | Staging API smoke | 19/19 | yes | 2026-07-10 | |
