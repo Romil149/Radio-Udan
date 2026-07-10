@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+44** | pushing | 2026-07-10 | Push: iOS APNs AppDelegate handoff, Android Firebase init diagnostics, FCM project mismatch guards |
+| GitHub `main` | **2.0.0+44** @ `bcdc2c5` | pushing | 2026-07-10 | Push: iOS APNs AppDelegate handoff, Android Firebase init diagnostics, FCM project mismatch guards |
 | TestFlight iOS | **2.0.0+44** | CI after push | 2026-07-10 | Device QA: push diagnostics after production APNs key uploaded |
 | Staging WP plugin | local zip needed | **no** (redeploy) | 2026-07-10 | Deploy for FCM project match warnings + About Us + Save fix; paste `radio-udaan-72232` SA |
 | Staging API smoke | 19/19 | yes (routes) | 2026-07-10 | Health still showed `cbfdc` + 0 devices before SA fix |
