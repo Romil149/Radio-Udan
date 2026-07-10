@@ -3,10 +3,10 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+44** @ `bcdc2c5` | **yes** | 2026-07-10 | Push: iOS APNs AppDelegate handoff, Android Firebase init diagnostics, FCM project mismatch guards |
-| TestFlight iOS | **2.0.0+44** | CI after push | 2026-07-10 | Device QA: push diagnostics after production APNs key uploaded |
-| Staging WP plugin | local zip needed | **no** (redeploy) | 2026-07-10 | Deploy for FCM project match warnings + About Us + Save fix; paste `radio-udaan-72232` SA |
-| Staging API smoke | 19/19 | yes (routes) | 2026-07-10 | Health still showed `cbfdc` + 0 devices before SA fix |
+| GitHub `main` | **2.0.0+45** | pushing | 2026-07-10 | Android: Crashlytics Gradle + ProGuard so Firebase init works with Razorpay |
+| TestFlight iOS | **2.0.0+45** | CI after push | 2026-07-10 | Same client as +44 iOS APNs fix + Android Crashlytics fix |
+| Staging WP plugin | local zip needed | **no** (redeploy) | 2026-07-10 | Still need `radio-udaan-72232` FCM SA + plugin deploy |
+| Staging API smoke | 19/19 | yes (routes) | 2026-07-10 | Health previously `cbfdc` + 0 devices |
 
 ## TestFlight build bump (mandatory — same commit)
 
@@ -20,5 +20,5 @@ Never push app code to `main` without bumping the build if the last build is alr
 ## Open deploy blockers
 
 1. **WP FCM** — paste service account from Firebase **`radio-udaan-72232`** (not `cbfdc`); Test FCM; deploy plugin zip.
-2. **Device register** — install +44, allow notifications, confirm `push_devices_registered` ≥ 1.
-3. Firebase production APNs key — **done** (same Key ID as development).
+2. **Device register** — install +45, allow notifications, confirm `push_devices_registered` ≥ 1.
+3. Firebase production APNs key — **done**.

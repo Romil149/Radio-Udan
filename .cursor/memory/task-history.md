@@ -1,4 +1,10 @@
 
+### 2026-07-10 — Android Firebase init: Crashlytics component missing (Razorpay)
+**Requested by**: User — +44 Android diagnostics: `FirebaseCrashlytics component is not present` (stack via `com.razorpay`).
+**Root cause**: `firebase_crashlytics` in pubspec but Crashlytics Gradle plugin missing; R8 release strip broke Crashlytics registrar; Razorpay touches Crashlytics during Firebase init.
+**What was done**: Apply `com.google.firebase.crashlytics` plugin; ProGuard keep Firebase/Crashlytics; build **2.0.0+45**.
+**Status**: Pushing to main.
+
 ### 2026-07-10 — Push diagnostics: iOS APNs + Android Firebase init
 **Requested by**: User — iPhone `apns-token-not-set`; Android `Firebase not initialized`.
 **Root cause**: iOS UIScene/`FlutterImplicitEngineDelegate` skips FlutterFire APNs swizzling; Android `ensureFirebase` hid real init errors.
