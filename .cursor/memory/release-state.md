@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+47** (this commit) | pushing | 2026-07-10 | iOS classic AppDelegate (no UIScene) + APNs; Razorpay Payment Link fixes |
+| GitHub `main` | **2.0.0+47** @ `a942271` | **yes** | 2026-07-10 | iOS classic AppDelegate (no UIScene) + APNs; Razorpay Payment Link fixes |
 | TestFlight iOS | **2.0.0+47** | CI after push | 2026-07-10 | Retest APNs token after install |
 | Staging WP plugin | local zip needed | **no** (redeploy) | 2026-07-10 | Razorpay Payment Link + FCM SA `72232` still need deploy |
 | Staging API smoke | 19/19 | yes (routes) | 2026-07-10 | Health previously `cbfdc` + 0 devices |
