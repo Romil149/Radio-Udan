@@ -72,25 +72,62 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
   void _onPlaybackStarted({bool announce = true}) {
     _cancelPlaybackTimeout();
     if (!mounted) return;
-    if (!_startingPlayback && _isPlaying) return;
+    // Always clear the loader when real playback is detected — even if
+    // `_isPlaying` was already true from a flaky prior state event.
     setState(() {
       _startingPlayback = false;
       _isPlaying = true;
     });
-    if (announce) {
+    if (announce && _lastAnnouncedPlayerState != PlayerState.playing) {
+      _lastAnnouncedPlayerState = PlayerState.playing;
       _announce('${_copy.libraryPlayVideo}. ${widget.video.title}');
     }
-  }
-
-  void _clearStartingPlayback() {
-    _cancelPlaybackTimeout();
-    if (!_startingPlayback || !mounted) return;
-    setState(() => _startingPlayback = false);
   }
 
   bool _isAudiblePlaybackState(PlayerState state) {
     return state == PlayerState.playing || state == PlayerState.buffering;
   }
+
+  /// Single source of truth for iframe [PlayerState] → UI flags.
+  ///
+  /// Iframe often emits [PlayerState.unknown] / [PlayerState.cued] /
+  /// [PlayerState.unStarted] while audio continues — those must not flip
+  /// `_isPlaying` to false once playback has started.
+  void _applyPlayerState(PlayerState state) {
+    switch (state) {
+      case PlayerState.playing:
+      case PlayerState.buffering:
+        _onPlaybackStarted();
+        break;
+      case PlayerState.paused:
+        _cancelPlaybackTimeout();
+        if (!mounted) return;
+        setState(() {
+          _startingPlayback = false;
+          _isPlaying = false;
+        });
+        if (_lastAnnouncedPlayerState != PlayerState.paused) {
+          _lastAnnouncedPlayerState = PlayerState.paused;
+          _announce(_copy.libraryPlayerPaused);
+        }
+        break;
+      case PlayerState.ended:
+        _cancelPlaybackTimeout();
+        if (!mounted) return;
+        setState(() {
+          _startingPlayback = false;
+          _isPlaying = false;
+        });
+        _lastAnnouncedPlayerState = PlayerState.ended;
+        break;
+      case PlayerState.unknown:
+      case PlayerState.unStarted:
+      case PlayerState.cued:
+        // Keep `_isPlaying` as-is; poll / position / timeout resolve starting.
+        break;
+    }
+  }
+
 
   Future<void> _pollUntilPlaybackStarts(YoutubePlayerController controller) async {
     const pollInterval = Duration(milliseconds: 400);
@@ -103,8 +140,8 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
           _onPlaybackStarted();
           return;
         }
-        if (state == PlayerState.paused) {
-          _clearStartingPlayback();
+        if (state == PlayerState.paused || state == PlayerState.ended) {
+          _applyPlayerState(state);
           return;
         }
         final elapsed = await controller.currentTime;
@@ -121,6 +158,25 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
         // Player iframe may not be ready yet.
       }
       await Future<void>.delayed(pollInterval);
+    }
+  }
+
+  /// One-shot probe shortly after load — catches playback when state events lag.
+  Future<void> _probePlaybackAfterLoad(YoutubePlayerController controller) async {
+    await Future<void>.delayed(const Duration(milliseconds: 350));
+    if (!mounted || !_startingPlayback) return;
+    try {
+      final state = await controller.playerState;
+      if (_isAudiblePlaybackState(state)) {
+        _onPlaybackStarted();
+        return;
+      }
+      final elapsed = await controller.currentTime;
+      if (elapsed > 0.1) {
+        _onPlaybackStarted();
+      }
+    } catch (_) {
+      // Iframe may still be initializing.
     }
   }
 
@@ -157,21 +213,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
         _handlePlayerFailure();
         return;
       }
-
-      final state = value.playerState;
-      if (_isAudiblePlaybackState(state)) {
-        _onPlaybackStarted();
-      } else if (state == PlayerState.paused) {
-        _clearStartingPlayback();
-      }
-
-      final playing = _isAudiblePlaybackState(state);
-      if (playing != _isPlaying && mounted) {
-        setState(() => _isPlaying = playing);
-      }
-
-      if (state == _lastAnnouncedPlayerState) return;
-      _lastAnnouncedPlayerState = state;
+      _applyPlayerState(value.playerState);
     });
 
     _videoStateSubscription = controller.videoStateStream.listen((state) {
@@ -187,6 +229,10 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
       await controller.loadVideoById(videoId: videoId);
       // loadVideoById auto-plays; do not await playVideo — it can hang after playback starts.
       unawaited(controller.playVideo());
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        unawaited(_probePlaybackAfterLoad(controller));
+      });
     } catch (_) {
       _handlePlayerFailure();
     }
@@ -220,20 +266,36 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
       } else {
         unawaited(_pollUntilPlaybackStarts(controller));
         unawaited(controller.playVideo());
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          unawaited(_probePlaybackAfterLoad(controller));
+        });
       }
     } catch (_) {
       _handlePlayerFailure();
     }
   }
 
-  Future<void> _pausePlayback() async {
+  void _pausePlayback() {
     final controller = _controller;
     if (controller == null) return;
+    _cancelPlaybackTimeout();
+    if (!mounted) return;
+    setState(() {
+      _startingPlayback = false;
+      _isPlaying = false;
+    });
+    if (_lastAnnouncedPlayerState != PlayerState.paused) {
+      _lastAnnouncedPlayerState = PlayerState.paused;
+      _announce(_copy.libraryPlayerPaused);
+    }
+    // Do not await — pauseVideo can hang the same way playVideo can.
+    unawaited(_pauseVideoSafe(controller));
+  }
+
+  Future<void> _pauseVideoSafe(YoutubePlayerController controller) async {
     try {
       await controller.pauseVideo();
-      if (!mounted) return;
-      setState(() => _isPlaying = false);
-      _announce(_copy.libraryPlayerPaused);
     } catch (_) {
       _handlePlayerFailure();
     }
@@ -267,7 +329,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
           loading: _startingPlayback,
           isPlaying: _isPlaying,
           onPlay: () => unawaited(_startPlayback()),
-          onPause: () => unawaited(_pausePlayback()),
+          onPause: _pausePlayback,
         ),
       ],
     );
@@ -545,46 +607,49 @@ class _LibraryNativeControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Semantics(
-            button: true,
-            enabled: enabled && !loading && !isPlaying,
-            label: copy.libraryPlayVideo,
-            child: ExcludeSemantics(
-              child: FilledButton.icon(
-                onPressed:
-                    enabled && !loading && !isPlaying ? onPlay : null,
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(56),
-                ),
-                icon: Icon(Icons.play_arrow_rounded),
-                label: Text(copy.libraryPlayVideo),
+    if (loading) {
+      return Semantics(
+        button: true,
+        enabled: false,
+        label: copy.libraryPlayVideo,
+        child: ExcludeSemantics(
+          child: FilledButton.icon(
+            onPressed: null,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(56),
+            ),
+            icon: SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: context.udaan.onPrimary.withValues(alpha: 0.7),
               ),
             ),
+            label: Text(copy.libraryPlayVideo),
           ),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Semantics(
-            button: true,
-            enabled: enabled && !loading && isPlaying,
-            label: copy.libraryPauseVideo,
-            child: ExcludeSemantics(
-              child: OutlinedButton.icon(
-                onPressed:
-                    enabled && !loading && isPlaying ? onPause : null,
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(56),
-                ),
-                icon: Icon(Icons.pause_rounded),
-                label: Text(copy.libraryPauseVideo),
-              ),
-            ),
+      );
+    }
+
+    final showPause = isPlaying;
+    final label = showPause ? copy.libraryPauseVideo : copy.libraryPlayVideo;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: label,
+      child: ExcludeSemantics(
+        child: FilledButton.icon(
+          onPressed: !enabled ? null : (showPause ? onPause : onPlay),
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(56),
           ),
+          icon: Icon(
+            showPause ? Icons.pause_rounded : Icons.play_arrow_rounded,
+          ),
+          label: Text(label),
         ),
-      ],
+      ),
     );
   }
 }

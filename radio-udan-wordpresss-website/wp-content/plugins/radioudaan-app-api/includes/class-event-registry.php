@@ -105,7 +105,7 @@ class RadioUdaan_Event_Registry {
 			array(
 				'post_type'      => RadioUdaan_Cpt_Ru_Event::POST_TYPE,
 				'post_status'    => 'publish',
-				'posts_per_page' => 50,
+				'posts_per_page' => 100,
 				'orderby'        => 'menu_order title',
 				'order'          => 'ASC',
 			)

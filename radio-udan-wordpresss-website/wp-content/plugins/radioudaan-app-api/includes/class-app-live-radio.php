@@ -12,8 +12,11 @@ defined( 'ABSPATH' ) || exit;
  */
 class RadioUdaan_App_Live_Radio {
 
-	const OPTION_SHOW_TITLE           = 'radioudaan_live_show_title';
-	const OPTION_SHOW_SUBTITLE        = 'radioudaan_live_show_subtitle';
+	/** @deprecated Removed — use App copy key radio_show_title instead. */
+	const OPTION_SHOW_TITLE_LEGACY    = 'radioudaan_live_show_title';
+	/** @deprecated Removed — use App copy / AzuraCast metadata instead. */
+	const OPTION_SHOW_SUBTITLE_LEGACY = 'radioudaan_live_show_subtitle';
+
 	const OPTION_HERO_ATTACHMENT_ID   = 'radioudaan_live_hero_id';
 	const OPTION_WHATSAPP_URL         = 'radioudaan_live_whatsapp_url';
 	const OPTION_WHATSAPP_LABEL       = 'radioudaan_live_whatsapp_label';
@@ -28,8 +31,6 @@ class RadioUdaan_App_Live_Radio {
 	 */
 	public static function defaults() {
 		return array(
-			'show_title'       => __( 'Udaan Morning Show', 'radioudaan-app-api' ),
-			'show_subtitle'    => __( 'with RJ Karan & RJ Meera', 'radioudaan-app-api' ),
 			'whatsapp_url'     => 'https://chat.whatsapp.com/BYOPTP8rLR3H53vlrnHSmF',
 			'whatsapp_label'   => __( 'Join WhatsApp Channel', 'radioudaan-app-api' ),
 			'share_label'      => __( 'Share', 'radioudaan-app-api' ),
@@ -41,6 +42,19 @@ class RadioUdaan_App_Live_Radio {
 	}
 
 	/**
+	 * Delete unused legacy options from early plugin builds (one-time).
+	 */
+	public static function maybe_remove_legacy_show_title_options() {
+		if ( get_option( 'radioudaan_live_title_options_removed', '' ) === RADIOUDAAN_APP_API_VERSION ) {
+			return;
+		}
+
+		delete_option( self::OPTION_SHOW_TITLE_LEGACY );
+		delete_option( self::OPTION_SHOW_SUBTITLE_LEGACY );
+		update_option( 'radioudaan_live_title_options_removed', RADIOUDAAN_APP_API_VERSION );
+	}
+
+	/**
 	 * @param string $option Option key.
 	 * @param string $default Default value.
 	 * @return string
@@ -48,20 +62,6 @@ class RadioUdaan_App_Live_Radio {
 	private static function text_option( $option, $default ) {
 		$val = trim( (string) get_option( $option, '' ) );
 		return $val !== '' ? $val : $default;
-	}
-
-	/**
-	 * @return string
-	 */
-	public static function get_show_title() {
-		return self::text_option( self::OPTION_SHOW_TITLE, self::defaults()['show_title'] );
-	}
-
-	/**
-	 * @return string
-	 */
-	public static function get_show_subtitle() {
-		return self::text_option( self::OPTION_SHOW_SUBTITLE, self::defaults()['show_subtitle'] );
 	}
 
 	/**
@@ -104,9 +104,6 @@ class RadioUdaan_App_Live_Radio {
 	/**
 	 * @return string
 	 */
-	/**
-	 * @return string
-	 */
 	public static function get_share_label() {
 		return self::text_option( self::OPTION_SHARE_LABEL, self::defaults()['share_label'] );
 	}
@@ -125,9 +122,6 @@ class RadioUdaan_App_Live_Radio {
 		return (bool) get_option( self::OPTION_SHOW_WHATSAPP, 1 );
 	}
 
-	/**
-	 * @return bool
-	 */
 	/**
 	 * @return bool
 	 */

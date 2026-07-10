@@ -1,6 +1,17 @@
 # Architecture Decisions Log
 <!-- When a design choice is made, document it here so we don't re-debate it. -->
 
+### 2026-07-10 — What's New: latestcommunitynews instead of in-news
+**Context**: About What's New was merging `whats-new` + `radio-udaan-in-news`. User wants `whats-new` + `latestcommunitynews` only.
+**Decision**: Feed and push use those two CPTs; API type `latestcommunitynews`; detail HTML body like announcements; remove in-news from feed/routes.
+**Consequences**: Staging needs App API plugin deploy. Old in-news posts no longer appear in app What's New.
+
+### 2026-07-10 — Event registration: prefill name/email/phone, do not lock
+**Context**: Account name/email/phone were prefilled and read-only with lock icon (“cannot edit”). User wants prefill but editable.
+**Decision**: Keep `_applyAccountDefaults` / `accountValueForField` prefill when empty; remove registration lock (`readOnly`, lock icon, `registration_account_locked_hint`). Profile email/mobile lock elsewhere unchanged.
+**Reasoning**: Registrants may correct typos or use a different contact for an event without changing account settings.
+**Consequences**: Submitted values may differ from account profile; WP/Forminator receives edited values as entered.
+
 ### 2026-06-13 — Library featured playlists: auto top-5 (no admin picker)
 **Context**: Admin manually picked featured playlists; user wanted latest activity surfaced automatically.
 **Decision**: `GET /library/youtube/playlists/featured` returns **5 playlists** ranked by **newest video `published_at`** inside each playlist (first playlist item = newest). Exclude empty playlists and channel uploads playlist. No WP admin selection UI.

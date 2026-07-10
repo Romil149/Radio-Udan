@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/accessibility/udaan_semantics.dart';
+import '../../../core/providers/app_providers.dart';
 import '../../../core/theme/accessibility_scope.dart';
 import '../../../core/theme/brand_tokens.dart';
 import '../../../core/theme/udaan_text_styles.dart';
@@ -96,6 +99,9 @@ TextStyle registrationChoiceOptionStyle(BuildContext context) {
 }
 
 /// Radio or checkbox row — 56px min height, Udaan colors.
+///
+/// Spoken label includes checked/selected state because custom [Semantics.onTap]
+/// often fails to announce state changes on TalkBack (Flutter #155298).
 Widget registrationChoiceTile({
   required BuildContext context,
   required String label,
@@ -105,18 +111,31 @@ Widget registrationChoiceTile({
   String? groupLabel,
 }) {
   final palette = context.udaan;
-  final semanticsLabel =
-      groupLabel != null ? '$groupLabel, $label' : label;
+  final copy = ProviderScope.containerOf(context).read(appCopyProvider);
+  final stateWord = isRadio
+      ? (selected ? copy.a11ySelected : copy.a11yNotSelected)
+      : (selected ? copy.a11yChecked : copy.a11yNotChecked);
+  final base = groupLabel != null ? '$groupLabel, $label' : label;
+  final semanticsLabel = '$base, $stateWord';
+
+  void handleActivate() {
+    onTap();
+    final newStateWord = isRadio
+        ? copy.a11ySelected
+        : (!selected ? copy.a11yChecked : copy.a11yNotChecked);
+    announce(context, '$label, $newStateWord');
+  }
+
   return Semantics(
     checked: selected,
     inMutuallyExclusiveGroup: isRadio,
     label: semanticsLabel,
-    onTap: onTap,
+    onTap: handleActivate,
     child: ExcludeSemantics(
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: onTap,
+          onTap: handleActivate,
           borderRadius: BorderRadius.circular(8),
           child: ConstrainedBox(
             constraints: const BoxConstraints(

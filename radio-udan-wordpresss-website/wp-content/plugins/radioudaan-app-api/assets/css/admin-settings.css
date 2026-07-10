@@ -23,12 +23,69 @@
 .ru-settings-tabs {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 8px;
+	align-items: flex-start;
+	gap: 16px;
 	margin-bottom: 20px;
-	padding: 4px;
+	padding: 12px;
 	background: var(--ru-bg);
 	border: 1px solid var(--ru-border);
 	border-radius: 12px;
+}
+
+.ru-settings-tabs__group {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	flex: 1 1 280px;
+	min-width: 0;
+}
+
+.ru-settings-tabs__group--advanced {
+	padding-left: 16px;
+	border-left: 2px solid var(--ru-border);
+}
+
+.ru-settings-tabs__group-label {
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--ru-muted);
+	padding: 0 4px;
+}
+
+.ru-settings-tabs__group-btns {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.ru-settings-toolbar {
+	margin-bottom: 16px;
+}
+
+.ru-settings-search,
+.ru-copy-search {
+	width: 100%;
+	max-width: 480px;
+	min-height: 44px;
+	padding: 10px 14px;
+	border: 1px solid var(--ru-border);
+	border-radius: 10px;
+	background: #fff;
+}
+
+.ru-settings-search__status {
+	margin: 8px 0 0;
+}
+
+.ru-settings-tabs__btn.has-match:not(.is-active) {
+	border-color: rgba(255, 107, 0, 0.35);
+	background: #fff7ed;
+}
+
+.ru-copy-search-wrap {
+	margin: 0 0 16px;
 }
 
 .ru-settings-tabs__btn {
@@ -341,3 +398,16 @@
 }
 
 /* Sticky save bar: base styles in admin.css (.ru-form-sticky-footer) */
+
+.ru-settings-sticky-footer {
+	margin-bottom: 24px;
+}
+
+@media (max-width: 960px) {
+	.ru-settings-tabs__group--advanced {
+		padding-left: 0;
+		border-left: none;
+		padding-top: 12px;
+		border-top: 2px solid var(--ru-border);
+	}
+}

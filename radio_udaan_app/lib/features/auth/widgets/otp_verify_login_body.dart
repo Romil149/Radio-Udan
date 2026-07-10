@@ -52,49 +52,56 @@ class OtpVerifyLoginBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         UdaanAuthTopBar(
-                copy: copy,
-                title: brandingAppName,
+          copy: copy,
+          title: copy.otpEnterTitle,
           onBack: onBack,
         ),
         const SizedBox(height: 24),
-        Center(child: UdaanOtpHeroIcon(
-                copy: copy,
-                )),
+        Center(
+          child: UdaanOtpHeroIcon(
+            copy: copy,
+          ),
+        ),
         const SizedBox(height: 28),
-        Semantics(
-          header: true,
-          label: copy.otpEnterTitle,
-          child: ExcludeSemantics(
-            child: Text(
-              copy.otpEnterTitle,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.atkinsonHyperlegible(
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-                color: context.udaan.onBackground,
-              ),
+        ExcludeSemantics(
+          child: Text(
+            copy.otpEnterTitle,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.atkinsonHyperlegible(
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              color: context.udaan.onBackground,
             ),
           ),
         ),
         const SizedBox(height: 12),
-        Text(
-          copy.otpSentIntro,
-          textAlign: TextAlign.center,
-          style: GoogleFonts.atkinsonHyperlegible(
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-            color: context.udaan.onBackground.withValues(alpha: 0.9),
-            height: 1.35,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          maskedPhone,
-          textAlign: TextAlign.center,
-          style: GoogleFonts.atkinsonHyperlegible(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: context.udaan.onBackground,
+        Semantics(
+          label: '${copy.otpSentIntro} $maskedPhone',
+          child: ExcludeSemantics(
+            child: Column(
+              children: [
+                Text(
+                  copy.otpSentIntro,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.atkinsonHyperlegible(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    color: context.udaan.onBackground.withValues(alpha: 0.9),
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  maskedPhone,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.atkinsonHyperlegible(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: context.udaan.onBackground,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         if (kDebugMode && devOtp != null) ...[
@@ -148,6 +155,7 @@ class OtpVerifyLoginBody extends StatelessWidget {
         if (resendSecondsRemaining > 0) ...[
           const SizedBox(height: 16),
           Semantics(
+            liveRegion: true,
             label:
                 '${copy.otpWaitPrompt}${copy.otpWaitTimer(resendSecondsRemaining)}',
             child: ExcludeSemantics(

@@ -98,6 +98,7 @@ class RadioUdaan_App_Auth {
 
 		$user = RadioUdaan_App_Users::get_by_id( (int) $data['user_id'] );
 		if ( ! $user || RadioUdaan_App_Users::STATUS_ACTIVE !== $user->status ) {
+			// Paused, pending, and deleted accounts cannot use bearer tokens.
 			return null;
 		}
 
@@ -105,6 +106,14 @@ class RadioUdaan_App_Auth {
 			'user_id'    => (int) $data['user_id'],
 			'phone_e164' => isset( $data['phone_e164'] ) ? (string) $data['phone_e164'] : $user->phone_e164,
 		);
+	}
+
+	/**
+	 * @param object|null $user App user row.
+	 * @return bool
+	 */
+	public static function is_account_paused( $user ) {
+		return RadioUdaan_App_Users::is_paused( $user );
 	}
 
 	/**

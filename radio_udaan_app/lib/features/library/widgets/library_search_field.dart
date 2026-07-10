@@ -46,9 +46,14 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
     if (mounted) setState(() {});
   }
 
+  void _clearSearch() {
+    widget.controller.clear();
+    ref.read(librarySearchQueryProvider.notifier).state = '';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final query = ref.watch(librarySearchQueryProvider);
+    final hasText = widget.controller.text.isNotEmpty;
 
     return Column(
       key: widget.sectionKey,
@@ -57,74 +62,93 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
         LibrarySectionHeading(title: _copy.librarySearchVideos),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: BrandTokens.screenPadding),
-          child: AccessibleTextFieldSemantics(
-            controller: widget.controller,
-            semanticsLabel: _copy.librarySearchHint,
-            focusNode: widget.focusNode,
-            child: TextField(
-              controller: widget.controller,
-              focusNode: widget.focusNode,
-              textInputAction: TextInputAction.search,
-              onSubmitted: (_) => dismissKeyboard(context),
-              onTapOutside: (_) => dismissKeyboard(context),
-              style: GoogleFonts.atkinsonHyperlegible(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: context.udaan.onBackground,
-              ),
-              decoration: InputDecoration(
-                hintText: _copy.librarySearchHint,
-                hintStyle: GoogleFonts.atkinsonHyperlegible(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: context.udaan.onSurfaceMuted,
-                ),
-                suffixIcon: query.isNotEmpty
-                    ? Semantics(
-                        button: true,
-                        label: _copy.cancel,
-                        child: ExcludeSemantics(
-                          child: IconButton(
-                            onPressed: () {
-                              widget.controller.clear();
-                              ref
-                                  .read(librarySearchQueryProvider.notifier)
-                                  .state = '';
-                            },
-                            icon: Icon(
-                              Icons.clear,
-                              color: context.udaan.primaryGlow,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: AccessibleTextFieldSemantics(
+                  controller: widget.controller,
+                  semanticsLabel: _copy.librarySearchHint,
+                  focusNode: widget.focusNode,
+                  child: TextField(
+                    controller: widget.controller,
+                    focusNode: widget.focusNode,
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: (_) => dismissKeyboard(context),
+                    onTapOutside: (_) => dismissKeyboard(context),
+                    style: GoogleFonts.atkinsonHyperlegible(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      color: context.udaan.onBackground,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: _copy.librarySearchHint,
+                      hintStyle: GoogleFonts.atkinsonHyperlegible(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: context.udaan.onSurfaceMuted,
+                      ),
+                      // Decorative search icon only when empty — non-interactive.
+                      suffixIcon: hasText
+                          ? null
+                          : ExcludeSemantics(
+                              child: Icon(
+                                Icons.search,
+                                color: context.udaan.primaryGlow,
+                              ),
                             ),
-                          ),
-                        ),
-                      )
-                    : ExcludeSemantics(
-                        child: Icon(
-                          Icons.search,
-                          color: context.udaan.primaryGlow,
+                      filled: true,
+                      fillColor: context.udaan.surfaceContainer,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide:
+                            BorderSide(color: context.udaan.outlineVariant),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide:
+                            BorderSide(color: context.udaan.outlineVariant),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(
+                          color: context.udaan.primary,
+                          width: 2,
                         ),
                       ),
-                filled: true,
-                fillColor: context.udaan.surfaceContainer,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: context.udaan.outlineVariant),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: context.udaan.outlineVariant),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(
-                    color: context.udaan.primary,
-                    width: 2,
+                    ),
                   ),
                 ),
               ),
-            ),
+              if (hasText) ...[
+                const SizedBox(width: 4),
+                SizedBox(
+                  width: BrandTokens.a11yMinTapTarget,
+                  height: BrandTokens.a11yMinTapTarget,
+                  child: Semantics(
+                    button: true,
+                    label: _copy.librarySearchClear,
+                    child: ExcludeSemantics(
+                      child: IconButton(
+                        onPressed: _clearSearch,
+                        constraints: const BoxConstraints(
+                          minWidth: BrandTokens.a11yMinTapTarget,
+                          minHeight: BrandTokens.a11yMinTapTarget,
+                        ),
+                        icon: Icon(
+                          Icons.clear,
+                          color: context.udaan.primaryGlow,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
         const SizedBox(height: 8),

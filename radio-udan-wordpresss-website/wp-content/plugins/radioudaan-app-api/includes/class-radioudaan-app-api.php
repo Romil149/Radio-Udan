@@ -464,10 +464,10 @@ final class RadioUdaan_App_Api {
 
 		register_rest_route(
 			'radioudaan/v1',
-			'/library/updates/in-news/(?P<id>\d+)',
+			'/library/updates/latestcommunitynews/(?P<id>\d+)',
 			array(
 				'methods'             => 'GET',
-				'callback'            => array( 'RadioUdaan_App_Library', 'get_in_news_detail' ),
+				'callback'            => array( 'RadioUdaan_App_Library', 'get_community_news_detail' ),
 				'permission_callback' => '__return_true',
 				'args'                => array(
 					'id' => array(
@@ -649,12 +649,15 @@ final class RadioUdaan_App_Api {
 				'status'  => ( $app_users_ok && $auto_inc ) ? 'ok' : 'degraded',
 				'version' => RADIOUDAAN_APP_API_VERSION,
 				'checks'  => array(
-					'app_users_table'        => $app_users_ok,
-					'app_users_auto_inc'     => $auto_inc,
-					'app_users_row_count'    => RadioUdaan_App_Users::row_count(),
-					'fcm_configured'         => RadioUdaan_App_Fcm_Sender::is_configured(),
-					'fcm_project_id'         => RadioUdaan_App_Settings::get_fcm_project_id(),
-					'push_devices_registered' => RadioUdaan_App_Notifications::count_registered_devices(),
+					'app_users_table'             => $app_users_ok,
+					'app_users_auto_inc'          => $auto_inc,
+					'app_users_row_count'         => RadioUdaan_App_Users::row_count(),
+					'app_users_active_count'      => RadioUdaan_App_Users::count_by_status( RadioUdaan_App_Users::STATUS_ACTIVE ),
+					'app_users_pending_count'     => RadioUdaan_App_Users::count_by_status( RadioUdaan_App_Users::STATUS_PENDING ),
+					'app_users_deleted_count'     => RadioUdaan_App_Users::count_by_status( RadioUdaan_App_Users::STATUS_DELETED ),
+					'fcm_configured'              => RadioUdaan_App_Fcm_Sender::is_configured(),
+					'fcm_project_id'              => RadioUdaan_App_Settings::get_fcm_project_id(),
+					'push_devices_registered'     => RadioUdaan_App_Notifications::count_registered_devices(),
 				),
 			),
 			( $app_users_ok && $auto_inc ) ? 200 : 503
@@ -867,6 +870,8 @@ final class RadioUdaan_App_Api {
 
 		$user    = RadioUdaan_App_Users::get_by_id( $user_id );
 		$phone   = $user ? $user->phone_e164 : '';
+		RadioUdaan_App_Notifications::delete_devices_for_user( $user_id );
+		RadioUdaan_App_Notifications::anonymize_notifications_for_user( $user_id );
 		RadioUdaan_App_Favorites::delete_for_user( $user_id );
 		$removed = RadioUdaan_App_Users::soft_delete( $user_id );
 

@@ -1,20 +1,20 @@
 # SCREEN 03 — Phone OTP login (`/login-otp`)
 
 **Audit ID:** SCREEN-03  
-**Status:** IN PROGRESS  
-**Route:** `/login-otp` (also `/login/phone` alias in router)  
-**Code reviewed:** 2026-07-04  
+**Status:** CODE FIXED 2026-07-10 — P1 done; P2 intro plain Text still optional / parked  
+**Route:** `/login-otp` (also `/otp-login` alias)  
+**Code reviewed:** 2026-07-04 · **Re-verified:** 2026-07-09 vs build **2.0.0+41**  
+**How to reach:** Login → **Login with OTP**
+
 **Files:**
 
 | File | Role |
 |------|------|
 | `lib/features/auth/phone_login_screen.dart` | OTP phone entry + Send code |
 | `lib/features/auth/widgets/udaan_auth_widgets.dart` | Top bar, logo, buttons |
-| `lib/features/auth/widgets/udaan_phone_field.dart` | Country + national (shared with login) |
+| `lib/features/auth/widgets/udaan_phone_field.dart` | Country + national (shared) |
 
-**How to reach:** Login → **Login with OTP** button.
-
-**Popups:** Country picker (same as POPUP-02 — inherits FIND-035/036).
+**Popups:** Country picker — POPUP-02 (code fixed in +41; device re-verify).
 
 ---
 
@@ -25,62 +25,45 @@
 | `back_button` | Back |
 | `sign_in_with_mobile` | Login using mobile |
 | `sign_in_intro` | Choose your country code and mobile number. We will send a one-time code by SMS. |
-| `phone_field_label` | Mobile number |
-| `phone_country_code_semantics` | Country code, {country}, plus {dial_code}. Double tap to change country. |
 | `otp_send_code` | Send code |
 | `sign_in_with_password` | Sign in with password |
 | `phone_invalid` | Enter a valid mobile number for the country you selected. |
+| `sending_code_please_wait` | (used on Login OTP path — should use here for P1) |
 
 ---
 
-## Widget tree (focus order)
+## Widget tree (2026-07-09)
 
-| # | Widget | Expected speech |
-|---|--------|-----------------|
-| 1 | `UdaanAuthTopBar` back | Back, button |
-| 2 | Top bar title | Login using mobile, heading |
-| 3 | Logo (`showAppNameHeader: false`) | Radio Udaan logo |
-| 4 | Subtitle `signInIntro` | Plain Text — ⚠️ may miss on some platforms (FIND-020 pattern) |
-| 5 | Country code button | Country code, India, plus 91… |
-| 6 | National phone field | Mobile number… required, text field (**inherits FIND-033** from login) |
-| 7 | Error (if shown) | liveRegion only — **inherits FIND-024** |
-| 8 | Send code | Send code, button |
-| 9 | Sign in with password | Sign in with password, button |
-
-**Note:** No app name heading on this screen (only top bar title).
+| # | Widget | Verdict |
+|---|--------|---------|
+| 1 | Back | OK |
+| 2 | Title Login using mobile, heading | OK |
+| 3 | Logo | OK (W4) |
+| 4 | Intro `signInIntro` | **P2** plain Text |
+| 5 | Country + national phone | OK (L1/L2/L4/L6 inherited) |
+| 6 | Error | OK (announce + liveRegion) |
+| 7 | Send code | **P1** loading silent |
+| 8 | Sign in with password | OK |
 
 ---
 
-## Inherited findings from Screen 02 (same widgets)
+## OPEN (discuss before fix)
 
-| ID | Applies here? |
-|----|----------------|
-| FIND-033 | Yes — phone double stop |
-| FIND-032 | Yes — autofill double 91 |
-| FIND-028–031 | Yes — phone label gaps |
-| FIND-024 | Yes — error not auto-announced |
-| POPUP-02 | Yes — country picker |
+| ID | Sev | Finding | Proposed |
+|----|-----|---------|----------|
+| **P1** | HIGH | No announce when Send code starts loading | `announce(context, _copy.sendingCodePleaseWait)` like `login_screen.dart` |
+| **P2** | MED | Intro plain Text | Optional Semantics, or accept if device reads |
 
----
+## Inherited FIXED from build 41
 
-## Device checkpoints
+FIND-024, FIND-033, L1, L2, L4, L6, W4, POPUP-02 code, top bar heading, 56px buttons.
 
-**Platform:** VoiceOver iOS  
-**Setup:** Login screen → tap **Login with OTP** → on Phone login screen
+## Questions
 
-| ID | Checkpoint | Expected | Heard (device) | PASS/FAIL | Notes |
-|----|------------|----------|----------------|-----------|-------|
-| CP-01 | Back button | Back, button | | | |
-| CP-02 | Screen title | Login using mobile, heading | | | |
-| CP-03 | Logo | Radio Udaan logo | | | No app name header |
-| CP-04 | Intro subtitle | Choose your country code and mobile number… | | | FIND-020 pattern |
-| CP-05 | Country code | Country code, India, plus 91… | | | |
-| CP-06 | Phone field | Mobile number… required, one stop | | | FIND-033 |
-| CP-07 | Send code | Send code, button | | | |
-| CP-08 | Sign in with password | Sign in with password, button | | | |
-| CP-09 | End of screen | Last = Sign in with password | | | |
-| CP-10 | Error (optional) | Invalid phone → auto-spoken error | | | FIND-024 |
+1. Fix P1 now?
+2. P2 Semantics or leave plain?
+3. Next: Screen 04 or device-check 03?
 
 ---
 
-*Jordan waiting for CP-01 — one checkpoint at a time.*
+*Next: Screen 04 OTP verify after P1/P2 decision.*

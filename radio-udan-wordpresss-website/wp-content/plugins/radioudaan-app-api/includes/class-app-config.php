@@ -93,6 +93,9 @@ class RadioUdaan_App_Config {
 	 * @return array<string,mixed>
 	 */
 	private static function build_public_config() {
+		$notification_defaults = RadioUdaan_App_Settings::get_notification_preferences_defaults();
+		$notification_defaults['live_broadcasts_enabled'] = ! empty( $notification_defaults['library_enabled'] );
+
 		return array(
 			'api_version'        => RADIOUDAAN_APP_API_VERSION,
 			'api_base_url'       => RadioUdaan_App_Settings::get_api_base_url(),
@@ -125,7 +128,7 @@ class RadioUdaan_App_Config {
 			),
 			'info_hub'           => RadioUdaan_App_Info_Hub::get_config_payload(),
 			'app_update'        => RadioUdaan_App_Version_Policy::get_public_config(),
-			'notification_preferences' => RadioUdaan_App_Settings::get_notification_preferences_defaults(),
+			'notification_preferences' => $notification_defaults,
 			'branding'           => RadioUdaan_App_Branding::get_public_branding(),
 			'copy'               => RadioUdaan_App_Branding::get_public_copy(),
 		);

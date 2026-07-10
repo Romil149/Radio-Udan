@@ -70,6 +70,7 @@ class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
       _error = null;
       _loading = true;
     });
+    announce(context, _copy.sendingCodePleaseWait);
 
     final message = await requestLoginOtpAndOpenVerify(context, ref, phone);
     if (!mounted) return;

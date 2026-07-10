@@ -58,12 +58,40 @@ class RadioScheduleSheet extends ConsumerWidget {
       child: Column(
         children: [
           const SizedBox(height: 4),
-          UdaanScreenHeader(
-            title: copy.radioScheduleTitle,
-            style: GoogleFonts.atkinsonHyperlegible(
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-              color: context.udaan.onBackground,
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: BrandTokens.screenPadding,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: UdaanScreenHeader(
+                    title: copy.radioScheduleTitle,
+                    style: GoogleFonts.atkinsonHyperlegible(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: context.udaan.onBackground,
+                    ),
+                  ),
+                ),
+                Semantics(
+                  button: true,
+                  label: copy.close,
+                  child: ExcludeSemantics(
+                    child: IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      constraints: const BoxConstraints(
+                        minWidth: BrandTokens.a11yMinTapTarget,
+                        minHeight: BrandTokens.a11yMinTapTarget,
+                      ),
+                      icon: Icon(
+                        Icons.close,
+                        color: context.udaan.onBackground,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 14),

@@ -21,18 +21,23 @@ class RadioUdaan_Admin_Settings_Page {
 		$copy_groups   = RadioUdaan_App_Copy_Catalog::groups();
 
 		$tabs = array(
-			'branding'   => array( __( 'Branding', 'radioudaan-app-api' ), 'dashicons-art' ),
-			'copy'       => array( __( 'App copy', 'radioudaan-app-api' ), 'dashicons-edit' ),
-			'connection' => array( __( 'Connection', 'radioudaan-app-api' ), 'dashicons-admin-links' ),
-			'live_radio'      => array( __( 'Live radio', 'radioudaan-app-api' ), 'dashicons-controls-play' ),
-			'youtube_library' => array( __( 'YouTube library', 'radioudaan-app-api' ), 'dashicons-video-alt3' ),
-			'auth'       => array( __( 'App accounts', 'radioudaan-app-api' ), 'dashicons-groups' ),
-			'legal'      => array( __( 'Legal URLs', 'radioudaan-app-api' ), 'dashicons-shield' ),
-			'about_tab'  => array( __( 'About tab', 'radioudaan-app-api' ), 'dashicons-info-outline' ),
-			'uploads'    => array( __( 'Uploads', 'radioudaan-app-api' ), 'dashicons-upload' ),
-			'security'   => array( __( 'OTP & limits', 'radioudaan-app-api' ), 'dashicons-lock' ),
-			'sms'           => array( __( 'SMS (MSG91)', 'radioudaan-app-api' ), 'dashicons-email-alt' ),
-			'notifications' => array( __( 'Notifications', 'radioudaan-app-api' ), 'dashicons-bell' ),
+			'branding'   => array( __( 'Branding', 'radioudaan-app-api' ), 'dashicons-art', 'basics' ),
+			'copy'       => array( __( 'App copy', 'radioudaan-app-api' ), 'dashicons-edit', 'basics' ),
+			'connection' => array( __( 'Connection', 'radioudaan-app-api' ), 'dashicons-admin-links', 'basics' ),
+			'live_radio'      => array( __( 'Live radio', 'radioudaan-app-api' ), 'dashicons-controls-play', 'basics' ),
+			'auth'       => array( __( 'App accounts', 'radioudaan-app-api' ), 'dashicons-groups', 'basics' ),
+			'legal'      => array( __( 'Legal URLs', 'radioudaan-app-api' ), 'dashicons-shield', 'basics' ),
+			'about_tab'  => array( __( 'About tab', 'radioudaan-app-api' ), 'dashicons-info-outline', 'basics' ),
+			'youtube_library' => array( __( 'YouTube library', 'radioudaan-app-api' ), 'dashicons-video-alt3', 'advanced' ),
+			'uploads'    => array( __( 'Uploads', 'radioudaan-app-api' ), 'dashicons-upload', 'advanced' ),
+			'security'   => array( __( 'OTP & limits', 'radioudaan-app-api' ), 'dashicons-lock', 'advanced' ),
+			'sms'           => array( __( 'SMS (MSG91)', 'radioudaan-app-api' ), 'dashicons-email-alt', 'advanced' ),
+			'notifications' => array( __( 'Notifications', 'radioudaan-app-api' ), 'dashicons-bell', 'advanced' ),
+		);
+
+		$tab_groups = array(
+			'basics'   => __( 'Basics', 'radioudaan-app-api' ),
+			'advanced' => __( 'Advanced', 'radioudaan-app-api' ),
 		);
 		?>
 		<p class="ru-settings-intro">
@@ -40,21 +45,45 @@ class RadioUdaan_Admin_Settings_Page {
 			<?php esc_html_e( 'Branding, text, and limits are sent to the app via GET /config. Save once, then reopen the app to see changes.', 'radioudaan-app-api' ); ?>
 		</p>
 
+		<div class="ru-settings-toolbar">
+			<label for="ru-settings-search" class="screen-reader-text"><?php esc_html_e( 'Search settings', 'radioudaan-app-api' ); ?></label>
+			<input type="search" id="ru-settings-search" class="ru-settings-search regular-text"
+				placeholder="<?php esc_attr_e( 'Search settings fields…', 'radioudaan-app-api' ); ?>"
+				autocomplete="off" />
+			<p id="ru-settings-search-status" class="ru-settings-search__status description" aria-live="polite" hidden></p>
+		</div>
+
 		<nav class="ru-settings-tabs" role="tablist" aria-label="<?php esc_attr_e( 'Settings sections', 'radioudaan-app-api' ); ?>">
 			<?php
 			$first = true;
-			foreach ( $tabs as $slug => $meta ) :
+			foreach ( $tab_groups as $group_slug => $group_label ) :
+				$group_tabs = array_filter(
+					$tabs,
+					static function ( $meta ) use ( $group_slug ) {
+						return isset( $meta[2] ) && $group_slug === $meta[2];
+					}
+				);
+				if ( empty( $group_tabs ) ) {
+					continue;
+				}
 				?>
-				<button type="button" class="ru-settings-tabs__btn<?php echo $first ? ' is-active' : ''; ?>"
-					role="tab" aria-selected="<?php echo $first ? 'true' : 'false'; ?>"
-					data-tab="<?php echo esc_attr( $slug ); ?>" id="ru-tab-<?php echo esc_attr( $slug ); ?>">
-					<span class="dashicons <?php echo esc_attr( $meta[1] ); ?>"></span>
-					<?php echo esc_html( $meta[0] ); ?>
-				</button>
-				<?php
-				$first = false;
-			endforeach;
-			?>
+				<div class="ru-settings-tabs__group ru-settings-tabs__group--<?php echo esc_attr( $group_slug ); ?>">
+					<span class="ru-settings-tabs__group-label"><?php echo esc_html( $group_label ); ?></span>
+					<div class="ru-settings-tabs__group-btns">
+						<?php foreach ( $group_tabs as $slug => $meta ) : ?>
+							<button type="button" class="ru-settings-tabs__btn<?php echo $first ? ' is-active' : ''; ?>"
+								role="tab" aria-selected="<?php echo $first ? 'true' : 'false'; ?>"
+								data-tab="<?php echo esc_attr( $slug ); ?>" id="ru-tab-<?php echo esc_attr( $slug ); ?>">
+								<span class="dashicons <?php echo esc_attr( $meta[1] ); ?>"></span>
+								<?php echo esc_html( $meta[0] ); ?>
+							</button>
+							<?php
+							$first = false;
+						endforeach;
+						?>
+					</div>
+				</div>
+			<?php endforeach; ?>
 		</nav>
 
 		<!-- Branding -->
@@ -64,6 +93,21 @@ class RadioUdaan_Admin_Settings_Page {
 					<div class="ru-settings-panel__card">
 						<h3><?php esc_html_e( 'Identity', 'radioudaan-app-api' ); ?></h3>
 						<p class="description"><?php esc_html_e( 'App name and tagline appear on splash, sign-in, and More.', 'radioudaan-app-api' ); ?></p>
+						<?php if ( RadioUdaan_App_Branding::branding_copy_app_name_mismatch() ) : ?>
+							<div class="notice notice-warning inline" style="margin:0 0 12px;">
+								<p>
+									<?php
+									$copy_name = RadioUdaan_App_Branding::get_public_copy()['app_name'] ?? '';
+									printf(
+										/* translators: 1: branding app name, 2: copy app name */
+										esc_html__( 'Branding app name (%1$s) differs from App copy → app_name (%2$s). Listeners may see two different names in the app.', 'radioudaan-app-api' ),
+										esc_html( RadioUdaan_App_Branding::get_app_name() ),
+										esc_html( (string) $copy_name )
+									);
+									?>
+								</p>
+							</div>
+						<?php endif; ?>
 						<div class="ru-admin__field">
 							<label for="branding_app_name"><?php esc_html_e( 'App name', 'radioudaan-app-api' ); ?></label>
 							<input type="text" name="branding_app_name" id="branding_app_name" class="large-text"
@@ -156,6 +200,12 @@ class RadioUdaan_Admin_Settings_Page {
 			<div class="ru-settings-panel__card">
 				<h3><?php esc_html_e( 'In-app text', 'radioudaan-app-api' ); ?></h3>
 				<p class="description"><?php esc_html_e( 'Short, plain-language strings. Leave blank to use defaults.', 'radioudaan-app-api' ); ?></p>
+				<div class="ru-copy-search-wrap">
+					<label for="ru-copy-search" class="screen-reader-text"><?php esc_html_e( 'Search copy keys', 'radioudaan-app-api' ); ?></label>
+					<input type="search" id="ru-copy-search" class="ru-copy-search regular-text"
+						placeholder="<?php esc_attr_e( 'Filter copy keys by label or key name…', 'radioudaan-app-api' ); ?>"
+						autocomplete="off" />
+				</div>
 				<div class="ru-copy-groups">
 					<?php foreach ( $copy_groups as $group_title => $catalog_keys ) : ?>
 						<details class="ru-copy-group" open>
@@ -169,7 +219,7 @@ class RadioUdaan_Admin_Settings_Page {
 									$label      = RadioUdaan_App_Copy_Catalog::field_label( $catalog_key );
 									$is_long    = RadioUdaan_App_Copy_Catalog::is_long_text( $catalog_key );
 									?>
-									<div class="ru-admin__field">
+									<div class="ru-admin__field ru-copy-field" data-copy-key="<?php echo esc_attr( $catalog_key ); ?>">
 										<label for="<?php echo esc_attr( $input_name ); ?>"><?php echo esc_html( $label ); ?></label>
 										<?php if ( $is_long ) : ?>
 											<textarea name="<?php echo esc_attr( $input_name ); ?>" id="<?php echo esc_attr( $input_name ); ?>"
@@ -211,6 +261,11 @@ class RadioUdaan_Admin_Settings_Page {
 					<label for="stream_url"><?php esc_html_e( 'Live radio stream URL', 'radioudaan-app-api' ); ?></label>
 					<input type="url" name="stream_url" id="stream_url" class="large-text" value="<?php echo esc_attr( $c['stream_url'] ); ?>" />
 				</div>
+				<p>
+					<a class="button button-secondary" href="<?php echo esc_url( ( $c['api_override'] ? $c['api_override'] : $c['api_base'] ) . '/health' ); ?>" target="_blank" rel="noopener">
+						<?php esc_html_e( 'Open API health check', 'radioudaan-app-api' ); ?>
+					</a>
+				</p>
 			</div>
 		</section>
 
@@ -218,7 +273,7 @@ class RadioUdaan_Admin_Settings_Page {
 		<section class="ru-settings-panel" data-panel="live_radio" role="tabpanel">
 			<div class="ru-settings-panel__card">
 				<h3><?php esc_html_e( 'Live tab (home after sign-in)', 'radioudaan-app-api' ); ?></h3>
-				<p class="description"><?php esc_html_e( 'Song title and album art come from AzuraCast (see URL below). Set a fallback hero image for tracks without artwork.', 'radioudaan-app-api' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Song title and album art come from AzuraCast (see URL below). Set a fallback hero image for tracks without artwork. Show title copy lives under App copy → radio_show_title (legacy radioudaan_live_show_title options are removed).', 'radioudaan-app-api' ); ?></p>
 				<div class="ru-admin__field">
 					<label for="azuracast_now_playing_url"><?php esc_html_e( 'AzuraCast now playing API URL', 'radioudaan-app-api' ); ?></label>
 					<input type="url" name="azuracast_now_playing_url" id="azuracast_now_playing_url" class="large-text"
@@ -369,9 +424,28 @@ class RadioUdaan_Admin_Settings_Page {
 						placeholder="<?php echo esc_attr( RadioUdaan_App_Settings::get_email_reset_body() ); ?>"><?php echo esc_textarea( $c['email_reset_body'] ); ?></textarea>
 				</div>
 			</div>
+			<div class="ru-settings-panel__card">
+				<h3><?php esc_html_e( 'Event registration limits', 'radioudaan-app-api' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'Rate limits for event form submissions (not OTP login).', 'radioudaan-app-api' ); ?></p>
+				<div class="ru-settings-grid-2">
+					<div class="ru-admin__field">
+						<label for="reg_limit_phone"><?php esc_html_e( 'Per phone / hour', 'radioudaan-app-api' ); ?></label>
+						<input type="number" name="reg_limit_phone" id="reg_limit_phone" min="1" max="100" value="<?php echo (int) $c['reg_phone']; ?>" class="small-text" />
+					</div>
+					<div class="ru-admin__field">
+						<label for="reg_limit_ip"><?php esc_html_e( 'Per IP / hour', 'radioudaan-app-api' ); ?></label>
+						<input type="number" name="reg_limit_ip" id="reg_limit_ip" min="1" max="500" value="<?php echo (int) $c['reg_ip']; ?>" class="small-text" />
+					</div>
+				</div>
+				<div class="ru-admin__toggle">
+					<input type="checkbox" name="prevent_duplicate" id="prevent_duplicate" value="1" <?php checked( $c['prevent_dup'] ); ?> />
+					<div>
+						<label for="prevent_duplicate"><strong><?php esc_html_e( 'One registration per email per event', 'radioudaan-app-api' ); ?></strong></label>
+						<p class="description"><?php esc_html_e( 'Per-event override: allow multiple registrations per email on individual App Events.', 'radioudaan-app-api' ); ?></p>
+					</div>
+				</div>
+			</div>
 		</section>
-
-		<!-- Legal -->
 		<section class="ru-settings-panel" data-panel="legal" role="tabpanel">
 			<?php
 			RadioUdaan_Admin_Layout::render_page_intro(
@@ -480,8 +554,16 @@ class RadioUdaan_Admin_Settings_Page {
 
 		<!-- About tab (app) -->
 		<section class="ru-settings-panel" data-panel="about_tab" role="tabpanel" aria-labelledby="ru-tab-about_tab">
+			<?php
+			RadioUdaan_Admin_Layout::render_page_intro(
+				'<strong>' . esc_html__( 'About tab content', 'radioudaan-app-api' ) . '</strong> — ' .
+				esc_html__( 'Configure donate screen copy, UPI/bank details, and Razorpay here. Completed donations, receipts, and exports are on the Donations page.', 'radioudaan-app-api' ) .
+				' <a href="' . esc_url( admin_url( 'admin.php?page=' . RadioUdaan_Admin_App_Hub::DONATIONS_SLUG ) ) . '">' .
+				esc_html__( 'Open Donations', 'radioudaan-app-api' ) . '</a>'
+			);
+			?>
 			<p class="description" style="margin-top:0;">
-				<?php esc_html_e( 'Content for the mobile app About tab: Donate Us screen and social icons at the bottom. Sent via GET /config → info_hub.', 'radioudaan-app-api' ); ?>
+				<?php esc_html_e( 'Sent via GET /config → info_hub for the mobile app About tab.', 'radioudaan-app-api' ); ?>
 			</p>
 			<div class="ru-settings-panel__card">
 				<h3><?php esc_html_e( 'Donate', 'radioudaan-app-api' ); ?></h3>
@@ -680,7 +762,8 @@ class RadioUdaan_Admin_Settings_Page {
 				<div class="ru-admin__toggle">
 					<input type="checkbox" name="notif_library_default" id="notif_library_default" value="1" <?php checked( $c['notif_library'] ); ?> />
 					<div>
-						<label for="notif_library_default"><strong><?php esc_html_e( 'Library updates', 'radioudaan-app-api' ); ?></strong></label>
+						<label for="notif_library_default"><strong><?php esc_html_e( 'Live broadcasts (live_broadcasts_enabled)', 'radioudaan-app-api' ); ?></strong></label>
+						<p class="description"><?php esc_html_e( 'Default preference for live broadcast push notifications. GET /config exposes live_broadcasts_enabled; library_enabled remains a legacy alias for the same value.', 'radioudaan-app-api' ); ?></p>
 					</div>
 				</div>
 				<div class="ru-admin__toggle">
@@ -690,6 +773,7 @@ class RadioUdaan_Admin_Settings_Page {
 					</div>
 				</div>
 			</div>
+			<?php RadioUdaan_Admin_Settings_Tests::render_test_button( 'radioudaan_test_fcm', __( 'Test FCM credentials', 'radioudaan-app-api' ), 'notifications' ); ?>
 		</section>
 
 		<!-- Uploads -->
@@ -719,26 +803,6 @@ class RadioUdaan_Admin_Settings_Page {
 					<div>
 						<label for="private_uploads"><strong><?php esc_html_e( 'Private upload storage', 'radioudaan-app-api' ); ?></strong></label>
 						<p class="description"><?php esc_html_e( 'Recommended for UDID and media files.', 'radioudaan-app-api' ); ?></p>
-					</div>
-				</div>
-			</div>
-			<div class="ru-settings-panel__card">
-				<h3><?php esc_html_e( 'Registration limits', 'radioudaan-app-api' ); ?></h3>
-				<div class="ru-settings-grid-2">
-					<div class="ru-admin__field">
-						<label for="reg_limit_phone"><?php esc_html_e( 'Per phone / hour', 'radioudaan-app-api' ); ?></label>
-						<input type="number" name="reg_limit_phone" id="reg_limit_phone" min="1" max="100" value="<?php echo (int) $c['reg_phone']; ?>" class="small-text" />
-					</div>
-					<div class="ru-admin__field">
-						<label for="reg_limit_ip"><?php esc_html_e( 'Per IP / hour', 'radioudaan-app-api' ); ?></label>
-						<input type="number" name="reg_limit_ip" id="reg_limit_ip" min="1" max="500" value="<?php echo (int) $c['reg_ip']; ?>" class="small-text" />
-					</div>
-				</div>
-				<div class="ru-admin__toggle">
-					<input type="checkbox" name="prevent_duplicate" id="prevent_duplicate" value="1" <?php checked( $c['prevent_dup'] ); ?> />
-					<div>
-						<label for="prevent_duplicate"><strong><?php esc_html_e( 'One registration per email per event', 'radioudaan-app-api' ); ?></strong></label>
-						<p class="description"><?php esc_html_e( 'Per-event override: allow multiple registrations per email on individual App Events.', 'radioudaan-app-api' ); ?></p>
 					</div>
 				</div>
 			</div>
@@ -850,6 +914,7 @@ class RadioUdaan_Admin_Settings_Page {
 					</div>
 				</div>
 			</div>
+			<?php RadioUdaan_Admin_Settings_Tests::render_test_button( 'radioudaan_test_msg91', __( 'Test MSG91 (placeholder)', 'radioudaan-app-api' ), 'sms' ); ?>
 		</section>
 
 		<div class="ru-settings-sticky-footer ru-form-sticky-footer">

@@ -28,6 +28,29 @@ class RadioUdaan_Admin_Notifications {
 		$push_sent     = isset( $_GET['push_sent'] ) ? (int) $_GET['push_sent'] : 0;
 		$push_failed   = isset( $_GET['push_failed'] ) ? (int) $_GET['push_failed'] : 0;
 		$fcm_skipped   = isset( $_GET['fcm_skipped'] ) ? (int) $_GET['fcm_skipped'] : 0;
+		$prefill_user  = isset( $_GET['user_id'] ) ? (int) $_GET['user_id'] : 0;
+		$broadcast_log = self::list_broadcast_history( 15 );
+
+		if ( $prefill_user > 0 ) {
+			$found = false;
+			foreach ( $users_devices as $row ) {
+				if ( (int) $row['id'] === $prefill_user ) {
+					$found = true;
+					break;
+				}
+			}
+			if ( ! $found ) {
+				$prefill_row = RadioUdaan_App_Users::get_by_id( $prefill_user );
+				if ( $prefill_row && RadioUdaan_App_Users::STATUS_DELETED !== $prefill_row->status ) {
+					$users_devices[] = array(
+						'id'           => (int) $prefill_row->id,
+						'display_name' => $prefill_row->display_name,
+						'email'        => $prefill_row->email,
+						'device_count' => 0,
+					);
+				}
+			}
+		}
 
 		RadioUdaan_Admin_Layout::render_open( 'notifications', __( 'Send notification', 'radioudaan-app-api' ) );
 		RadioUdaan_Admin_Layout::render_page_intro(
@@ -134,8 +157,8 @@ class RadioUdaan_Admin_Notifications {
 				<div class="ru-admin__field">
 					<label for="notif_target"><strong><?php esc_html_e( 'Send to', 'radioudaan-app-api' ); ?></strong></label>
 					<select name="notif_target" id="notif_target" class="regular-text">
-						<option value="all"><?php esc_html_e( 'All users with registered devices', 'radioudaan-app-api' ); ?></option>
-						<option value="user"><?php esc_html_e( 'One app user', 'radioudaan-app-api' ); ?></option>
+						<option value="all" <?php selected( $prefill_user < 1 ); ?>><?php esc_html_e( 'All users with registered devices', 'radioudaan-app-api' ); ?></option>
+						<option value="user" <?php selected( $prefill_user > 0 ); ?>><?php esc_html_e( 'One app user', 'radioudaan-app-api' ); ?></option>
 					</select>
 				</div>
 				<div class="ru-admin__field" id="ru-notif-user-wrap">
@@ -143,7 +166,7 @@ class RadioUdaan_Admin_Notifications {
 					<select name="notif_user_id" id="notif_user_id" class="regular-text">
 						<option value=""><?php esc_html_e( 'Select user…', 'radioudaan-app-api' ); ?></option>
 						<?php foreach ( $users_devices as $row ) : ?>
-							<option value="<?php echo (int) $row['id']; ?>">
+							<option value="<?php echo (int) $row['id']; ?>" <?php selected( $prefill_user, (int) $row['id'] ); ?>>
 								<?php
 								echo esc_html(
 									sprintf(
@@ -175,6 +198,19 @@ class RadioUdaan_Admin_Notifications {
 					<label for="notif_body"><strong><?php esc_html_e( 'Message', 'radioudaan-app-api' ); ?></strong></label>
 					<textarea name="notif_body" id="notif_body" class="large-text" rows="4" maxlength="1000" required></textarea>
 				</div>
+				<div class="ru-admin__panel ru-notif-preview-panel" style="margin-top:16px;">
+					<div class="ru-admin__panel-head">
+						<h3><?php esc_html_e( 'Preview before send', 'radioudaan-app-api' ); ?></h3>
+					</div>
+					<div class="ru-admin__panel-body">
+						<p class="description" style="margin-top:0;"><?php esc_html_e( 'Approximate look on the phone lock screen and in-app inbox.', 'radioudaan-app-api' ); ?></p>
+						<div class="ru-notif-preview" aria-live="polite">
+							<div class="ru-notif-preview__app"><?php echo esc_html( RadioUdaan_App_Branding::get_app_name() ); ?></div>
+							<div class="ru-notif-preview__title" id="ru-notif-preview-title"><?php esc_html_e( 'Notification title', 'radioudaan-app-api' ); ?></div>
+							<div class="ru-notif-preview__body" id="ru-notif-preview-body"><?php esc_html_e( 'Message body appears here as you type.', 'radioudaan-app-api' ); ?></div>
+						</div>
+					</div>
+				</div>
 			</div>
 			<div class="ru-admin__panel-foot">
 				<?php submit_button( __( 'Send notification', 'radioudaan-app-api' ), 'primary ru-btn-large', 'submit', false ); ?>
@@ -184,14 +220,79 @@ class RadioUdaan_Admin_Notifications {
 		(function () {
 			var target = document.getElementById('notif_target');
 			var wrap = document.getElementById('ru-notif-user-wrap');
-			if (!target || !wrap) return;
-			function sync() {
-				wrap.style.display = target.value === 'user' ? 'block' : 'none';
+			if (target && wrap) {
+				function syncTarget() {
+					wrap.style.display = target.value === 'user' ? 'block' : 'none';
+				}
+				target.addEventListener('change', syncTarget);
+				syncTarget();
 			}
-			target.addEventListener('change', sync);
-			sync();
+
+			var titleInput = document.getElementById('notif_title');
+			var bodyInput = document.getElementById('notif_body');
+			var previewTitle = document.getElementById('ru-notif-preview-title');
+			var previewBody = document.getElementById('ru-notif-preview-body');
+			if (!titleInput || !bodyInput || !previewTitle || !previewBody) {
+				return;
+			}
+
+			var titleDefault = previewTitle.textContent;
+			var bodyDefault = previewBody.textContent;
+
+			function syncPreview() {
+				var title = titleInput.value.trim();
+				var body = bodyInput.value.trim();
+				previewTitle.textContent = title || titleDefault;
+				previewBody.textContent = body || bodyDefault;
+			}
+
+			titleInput.addEventListener('input', syncPreview);
+			bodyInput.addEventListener('input', syncPreview);
+			syncPreview();
 		})();
 		</script>
+
+		<div class="ru-admin__panel">
+			<div class="ru-admin__panel-head">
+				<h2><?php esc_html_e( 'Recent admin sends', 'radioudaan-app-api' ); ?></h2>
+			</div>
+			<div class="ru-admin__panel-body" style="padding:0;">
+				<?php if ( empty( $broadcast_log ) ) : ?>
+					<div class="ru-admin__empty">
+						<p><?php esc_html_e( 'No admin notification history yet.', 'radioudaan-app-api' ); ?></p>
+					</div>
+				<?php else : ?>
+					<table class="ru-admin__table">
+						<thead>
+							<tr>
+								<th><?php esc_html_e( 'When', 'radioudaan-app-api' ); ?></th>
+								<th><?php esc_html_e( 'Action', 'radioudaan-app-api' ); ?></th>
+								<th><?php esc_html_e( 'Admin', 'radioudaan-app-api' ); ?></th>
+								<th><?php esc_html_e( 'Target', 'radioudaan-app-api' ); ?></th>
+								<th><?php esc_html_e( 'Details', 'radioudaan-app-api' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+						<?php foreach ( $broadcast_log as $row ) : ?>
+							<tr>
+								<td><?php echo esc_html( RadioUdaan_Admin_App_Users::format_date( $row['created_at'] ) ); ?></td>
+								<td><?php echo esc_html( $row['action_label'] ); ?></td>
+								<td><?php echo esc_html( $row['admin_label'] ); ?></td>
+								<td>
+									<?php if ( ! empty( $row['target_url'] ) ) : ?>
+										<a href="<?php echo esc_url( $row['target_url'] ); ?>"><?php echo esc_html( $row['target_label'] ); ?></a>
+									<?php else : ?>
+										<?php echo esc_html( $row['target_label'] ); ?>
+									<?php endif; ?>
+								</td>
+								<td><?php echo esc_html( $row['details_label'] ); ?></td>
+							</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
+				<?php endif; ?>
+			</div>
+		</div>
 		<?php
 		RadioUdaan_Admin_Layout::render_close();
 	}
@@ -222,11 +323,23 @@ class RadioUdaan_Admin_Notifications {
 			}
 			$user_ids = array( $user_id );
 		} else {
-			$user_ids = RadioUdaan_App_Notifications::user_ids_with_devices();
+			global $wpdb;
+
+			$table = RadioUdaan_App_Users::table_name();
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$rows = $wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT id FROM {$table} WHERE status = %s ORDER BY id ASC",
+					RadioUdaan_App_Users::STATUS_ACTIVE
+				)
+			);
+
+			$user_ids = array_map( 'intval', is_array( $rows ) ? $rows : array() );
 		}
 
 		if ( empty( $user_ids ) ) {
-			wp_die( esc_html__( 'No registered devices to notify.', 'radioudaan-app-api' ) );
+			wp_die( esc_html__( 'No app users to notify.', 'radioudaan-app-api' ) );
 		}
 
 		$result = RadioUdaan_App_Notifications::create_for_users(
@@ -252,6 +365,31 @@ class RadioUdaan_Admin_Notifications {
 			)
 		);
 
+		if ( 'user' === $target && count( $user_ids ) === 1 ) {
+			RadioUdaan_App_Admin_Audit::log(
+				RadioUdaan_App_Admin_Audit::ACTION_USER_NOTIFIED,
+				get_current_user_id(),
+				(int) $user_ids[0],
+				array(
+					'type'    => $type,
+					'created' => (int) $result['created'],
+					'push_sent' => (int) $result['push_sent'],
+				)
+			);
+		} else {
+			RadioUdaan_App_Admin_Audit::log(
+				RadioUdaan_App_Admin_Audit::ACTION_BULK_NOTIFIED,
+				get_current_user_id(),
+				null,
+				array(
+					'type'    => $type,
+					'count'   => count( $user_ids ),
+					'created' => (int) $result['created'],
+					'push_sent' => (int) $result['push_sent'],
+				)
+			);
+		}
+
 		$redirect = add_query_arg(
 			array(
 				'page'        => RadioUdaan_Admin_App_Hub::NOTIFICATIONS_SLUG,
@@ -266,5 +404,115 @@ class RadioUdaan_Admin_Notifications {
 
 		wp_safe_redirect( $redirect );
 		exit;
+	}
+
+	/**
+	 * Deep link to notify a specific app user.
+	 *
+	 * @param int $user_id App user id.
+	 * @return string
+	 */
+	public static function notify_user_url( $user_id ) {
+		return add_query_arg(
+			array(
+				'page'    => RadioUdaan_Admin_App_Hub::NOTIFICATIONS_SLUG,
+				'user_id' => (int) $user_id,
+			),
+			admin_url( 'admin.php' )
+		);
+	}
+
+	/**
+	 * Recent admin notification audit rows for the history panel.
+	 *
+	 * @param int $limit Max rows.
+	 * @return array<int,array<string,mixed>>
+	 */
+	public static function list_broadcast_history( $limit = 15 ) {
+		$rows = RadioUdaan_App_Admin_Audit::list_recent( max( 1, min( 100, (int) $limit ) * 3 ) );
+		$out  = array();
+
+		$notify_actions = array(
+			RadioUdaan_App_Admin_Audit::ACTION_USER_NOTIFIED,
+			RadioUdaan_App_Admin_Audit::ACTION_BULK_NOTIFIED,
+		);
+
+		foreach ( $rows as $row ) {
+			if ( ! in_array( $row->action, $notify_actions, true ) ) {
+				continue;
+			}
+
+			$details = array();
+			if ( ! empty( $row->details ) ) {
+				$decoded = json_decode( (string) $row->details, true );
+				if ( is_array( $decoded ) ) {
+					$details = $decoded;
+				}
+			}
+
+			$admin_label = __( 'System', 'radioudaan-app-api' );
+			if ( ! empty( $row->admin_user_id ) ) {
+				$wp_user = get_userdata( (int) $row->admin_user_id );
+				$admin_label = $wp_user ? $wp_user->display_name : sprintf( '#%d', (int) $row->admin_user_id );
+			}
+
+			$target_label = __( 'Multiple users', 'radioudaan-app-api' );
+			$target_url   = '';
+			if ( ! empty( $row->target_user_id ) ) {
+				$app_user = RadioUdaan_App_Users::get_by_id( (int) $row->target_user_id );
+				$target_label = $app_user ? $app_user->display_name : sprintf( '#%d', (int) $row->target_user_id );
+				$target_url   = RadioUdaan_Admin_App_User_Detail::view_url( (int) $row->target_user_id );
+			}
+
+			$action_labels = array(
+				RadioUdaan_App_Admin_Audit::ACTION_USER_NOTIFIED  => __( 'User notified', 'radioudaan-app-api' ),
+				RadioUdaan_App_Admin_Audit::ACTION_BULK_NOTIFIED => __( 'Broadcast', 'radioudaan-app-api' ),
+			);
+
+			$detail_parts = array();
+			if ( isset( $details['type'] ) ) {
+				$detail_parts[] = sprintf(
+					/* translators: %s: notification type */
+					__( 'Type: %s', 'radioudaan-app-api' ),
+					sanitize_key( (string) $details['type'] )
+				);
+			}
+			if ( isset( $details['count'] ) ) {
+				$detail_parts[] = sprintf(
+					/* translators: %d: user count */
+					__( '%d users', 'radioudaan-app-api' ),
+					(int) $details['count']
+				);
+			}
+			if ( isset( $details['created'] ) ) {
+				$detail_parts[] = sprintf(
+					/* translators: %d: inbox rows created */
+					__( '%d inbox', 'radioudaan-app-api' ),
+					(int) $details['created']
+				);
+			}
+			if ( isset( $details['push_sent'] ) ) {
+				$detail_parts[] = sprintf(
+					/* translators: %d: push deliveries */
+					__( '%d push', 'radioudaan-app-api' ),
+					(int) $details['push_sent']
+				);
+			}
+
+			$out[] = array(
+				'created_at'    => $row->created_at,
+				'action_label'  => isset( $action_labels[ $row->action ] ) ? $action_labels[ $row->action ] : $row->action,
+				'admin_label'   => $admin_label,
+				'target_label'  => $target_label,
+				'target_url'    => $target_url,
+				'details_label' => ! empty( $detail_parts ) ? implode( ' · ', $detail_parts ) : '—',
+			);
+
+			if ( count( $out ) >= (int) $limit ) {
+				break;
+			}
+		}
+
+		return $out;
 	}
 }

@@ -219,7 +219,11 @@ class RadioUdaan_Otp_Service {
 	 * @return array|WP_Error
 	 */
 	private static function complete_verify( $phone, $purpose, array $context, $otp ) {
-		$user = RadioUdaan_App_Users::find_by_phone( $phone );
+		$user = RadioUdaan_App_Users::find_by_phone_for_auth( $phone );
+
+		if ( self::is_paused_user( $user ) ) {
+			return RadioUdaan_App_Users::account_paused_error();
+		}
 
 		if ( self::PURPOSE_VERIFY_PHONE === $purpose ) {
 			if ( ! $user ) {
@@ -308,7 +312,11 @@ class RadioUdaan_Otp_Service {
 	 * @return true|WP_Error
 	 */
 	private static function precheck_purpose( $phone, $purpose ) {
-		$user = RadioUdaan_App_Users::find_by_phone( $phone );
+		$user = RadioUdaan_App_Users::find_by_phone_for_auth( $phone );
+
+		if ( self::is_paused_user( $user ) ) {
+			return RadioUdaan_App_Users::account_paused_error();
+		}
 
 		if ( self::PURPOSE_LOGIN === $purpose ) {
 			if ( ! $user || RadioUdaan_App_Users::STATUS_ACTIVE !== $user->status ) {
@@ -351,6 +359,14 @@ class RadioUdaan_Otp_Service {
 		}
 
 		return true;
+	}
+
+	/**
+	 * @param object|null $user App user row.
+	 * @return bool
+	 */
+	private static function is_paused_user( $user ) {
+		return RadioUdaan_App_Users::is_paused( $user );
 	}
 
 	/**

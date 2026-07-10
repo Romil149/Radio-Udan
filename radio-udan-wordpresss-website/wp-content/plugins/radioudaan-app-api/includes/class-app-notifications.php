@@ -575,6 +575,65 @@ class RadioUdaan_App_Notifications {
 	}
 
 	/**
+	 * Remove all FCM device rows for a user (account deletion).
+	 *
+	 * @param int $user_id User id.
+	 * @return int Rows deleted.
+	 */
+	public static function delete_devices_for_user( $user_id ) {
+		self::maybe_create_tables();
+
+		$user_id = (int) $user_id;
+		if ( $user_id < 1 ) {
+			return 0;
+		}
+
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$deleted = $wpdb->delete(
+			self::devices_table(),
+			array( 'user_id' => $user_id ),
+			array( '%d' )
+		);
+
+		return false === $deleted ? 0 : (int) $deleted;
+	}
+
+	/**
+	 * Redact inbox content for a deleted account.
+	 *
+	 * @param int $user_id User id.
+	 * @return int Rows updated.
+	 */
+	public static function anonymize_notifications_for_user( $user_id ) {
+		self::maybe_create_tables();
+
+		$user_id = (int) $user_id;
+		if ( $user_id < 1 ) {
+			return 0;
+		}
+
+		global $wpdb;
+
+		$table = self::notifications_table();
+		$title = __( 'Account deleted', 'radioudaan-app-api' );
+		$body  = __( 'This notification is no longer available.', 'radioudaan-app-api' );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$updated = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$table} SET title = %s, body = %s, data_json = NULL WHERE user_id = %d",
+				$title,
+				$body,
+				$user_id
+			)
+		);
+
+		return false === $updated ? 0 : (int) $updated;
+	}
+
+	/**
 	 * @param int $device_id Device row id.
 	 * @return bool
 	 */

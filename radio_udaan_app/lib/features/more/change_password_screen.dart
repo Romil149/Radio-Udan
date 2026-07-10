@@ -150,6 +150,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     controller: controller,
                     semanticsLabel: semanticsLabel,
                     obscured: obscure,
+                    isPassword: true,
+                    passwordShownAnnounce: _copy.passwordShownAnnounce,
+                    passwordHiddenAnnounce: _copy.passwordHiddenAnnounce,
                     focusNode: focusNode,
                     child: TextField(
                         controller: controller,

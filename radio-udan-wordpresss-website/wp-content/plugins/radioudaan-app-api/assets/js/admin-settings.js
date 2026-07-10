@@ -1,5 +1,5 @@
 /**
- * Settings page: tabs, live phone preview, logo picker, color sync.
+ * Settings page: tabs, search/filter, live preview, media pickers.
  */
 (function ($) {
 	'use strict';
@@ -45,6 +45,131 @@
 					value: activeTab
 				}).appendTo($form);
 			}
+		});
+	}
+
+	function fieldSearchText($el) {
+		var parts = [];
+		$el.find('label, .description, input, textarea, select, strong').each(function () {
+			var $node = $(this);
+			if ($node.is('input, textarea')) {
+				parts.push($node.attr('name') || '');
+				parts.push($node.attr('id') || '');
+				parts.push($node.attr('placeholder') || '');
+			} else {
+				parts.push($node.text());
+			}
+		});
+		return parts.join(' ').toLowerCase();
+	}
+
+	function initSettingsSearch() {
+		var $search = $('#ru-settings-search');
+		var $status = $('#ru-settings-search-status');
+		if (!$search.length) {
+			return;
+		}
+
+		function applyFilter() {
+			var query = $search.val().trim().toLowerCase();
+			var totalMatches = 0;
+			var tabsWithMatches = [];
+
+			$('.ru-settings-tabs__btn').removeClass('has-match');
+
+			if (!query) {
+				$('.ru-settings-panel').removeClass('is-filtered');
+				$('.ru-settings-panel__card, .ru-admin__field, .ru-admin__toggle, .ru-page-intro').show();
+				$status.prop('hidden', true).text('');
+				return;
+			}
+
+			$('.ru-settings-panel').each(function () {
+				var $panel = $(this);
+				var panelMatches = 0;
+				var panelTab = $panel.data('panel');
+
+				$panel.addClass('is-filtered');
+				$panel.find('.ru-page-intro').each(function () {
+					var match = fieldSearchText($(this)).indexOf(query) !== -1;
+					$(this).toggle(match);
+					if (match) {
+						panelMatches += 1;
+					}
+				});
+
+				$panel.find('.ru-settings-panel__card').each(function () {
+					var $card = $(this);
+					var cardText = fieldSearchText($card);
+					var cardMatch = cardText.indexOf(query) !== -1;
+					var fieldMatches = 0;
+
+					$card.find('.ru-admin__field, .ru-admin__toggle').each(function () {
+						var match = fieldSearchText($(this)).indexOf(query) !== -1;
+						$(this).toggle(match);
+						if (match) {
+							fieldMatches += 1;
+						}
+					});
+
+					if (fieldMatches > 0 || cardMatch) {
+						$card.show();
+						panelMatches += fieldMatches || 1;
+					} else {
+						$card.hide();
+					}
+				});
+
+				if (panelMatches > 0) {
+					tabsWithMatches.push(panelTab);
+					totalMatches += panelMatches;
+					$('.ru-settings-tabs__btn[data-tab="' + panelTab + '"]').addClass('has-match');
+				}
+			});
+
+			if (tabsWithMatches.length && $.inArray($('.ru-settings-tabs__btn.is-active').data('tab'), tabsWithMatches) === -1) {
+				activateSettingsTab(tabsWithMatches[0]);
+			}
+
+			if (totalMatches === 0) {
+				$status.prop('hidden', false).text('No settings match your search.');
+			} else {
+				$status.prop('hidden', false).text(totalMatches + ' field(s) match.');
+			}
+		}
+
+		$search.on('input', applyFilter);
+	}
+
+	function initCopySearch() {
+		var $search = $('#ru-copy-search');
+		if (!$search.length) {
+			return;
+		}
+
+		$search.on('input', function () {
+			var query = $search.val().trim().toLowerCase();
+
+			$('.ru-copy-group').each(function () {
+				var $group = $(this);
+				var visible = 0;
+
+				$group.find('.ru-copy-field').each(function () {
+					var $field = $(this);
+					var key = ($field.data('copy-key') || '').toString().toLowerCase();
+					var text = fieldSearchText($field);
+					var match = !query || key.indexOf(query) !== -1 || text.indexOf(query) !== -1;
+					$field.toggle(match);
+					if (match) {
+						visible += 1;
+					}
+				});
+
+				$group.toggle(visible > 0);
+				if (query && visible > 0) {
+					$group.prop('open', true);
+				}
+			});
 		});
 	}
 
@@ -245,6 +370,8 @@
 		}
 		initTabs();
 		initFormSubmit();
+		initSettingsSearch();
+		initCopySearch();
 		initPreview();
 		initLogoPicker();
 		initDonateQrPicker();

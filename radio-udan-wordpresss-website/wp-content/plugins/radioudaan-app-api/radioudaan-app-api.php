@@ -33,10 +33,12 @@ require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-copy-catalog.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-branding.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-live-radio.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-azuracast-now-playing.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-route-registry.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-config.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-upload-cleanup.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-mailer.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-users.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-admin-audit.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-app-password-auth.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-entry-source.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/class-event-meta-ui.php';
@@ -77,6 +79,7 @@ require_once RADIOUDAAN_APP_API_PATH . 'includes/class-radioudaan-app-api.php';
 function radioudaan_app_api_init() {
 	RadioUdaan_Cpt_Ru_Event::init();
 	RadioUdaan_App_Users::init();
+	RadioUdaan_App_Admin_Audit::init();
 	RadioUdaan_App_Support::init();
 	RadioUdaan_App_Notifications::init();
 	RadioUdaan_App_Updates_Notifications::init();
@@ -109,6 +112,7 @@ function radioudaan_app_api_init() {
 		}
 	}
 	RadioUdaan_App_Cors::init();
+	RadioUdaan_App_Live_Radio::maybe_remove_legacy_show_title_options();
 	RadioUdaan_Rj_Profile::init();
 	RadioUdaan_App_Api::instance()->init();
 }
@@ -138,6 +142,7 @@ register_activation_hook(
 		RadioUdaan_Cpt_Ru_Event::register_post_type();
 		RadioUdaan_App_Users::maybe_create_table();
 		RadioUdaan_App_Users::maybe_migrate_columns();
+		RadioUdaan_App_Admin_Audit::maybe_create_table();
 		RadioUdaan_App_Support::maybe_create_table();
 		RadioUdaan_App_Notifications::maybe_create_tables();
 		RadioUdaan_App_Donations_Db::maybe_create_tables();

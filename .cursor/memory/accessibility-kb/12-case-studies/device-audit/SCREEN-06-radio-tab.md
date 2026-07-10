@@ -1,93 +1,128 @@
 # SCREEN 06 — Live Radio tab (main shell)
 
 **Audit ID:** SCREEN-06  
-**Status:** IN PROGRESS  
-**Route:** `/` — tab index 0 (Radio)  
-**Platform:** VoiceOver iOS
+**Status:** DISCUSSION — line-by-line code audit 2026-07-10 (Maya); discuss before fix  
+**Route:** `/` — tab index 0 (Radio) after auth  
+**Discussion canvas:** `a11y-screen-01-review.canvas.tsx`  
+**Related sheet:** [POPUP-06-radio-schedule.md](./POPUP-06-radio-schedule.md)
 
 **Files:**
 
 | File | Role |
 |------|------|
 | `lib/features/radio/radio_tab.dart` | Hero play card, schedule, share, favorite |
+| `lib/features/radio/radio_schedule_sheet.dart` | Schedule modal (POPUP-06) |
 | `lib/features/shell/main_shell_screen.dart` | IndexedStack + bottom NavigationBar |
 | `lib/core/widgets/main_tab_app_bar.dart` | Logo + tab title |
 | `lib/features/radio/widgets/radio_volume_control.dart` | Volume slider (if enabled in config) |
 
 ---
 
-## Expected focus order (code)
+## Expected focus order (code — 2026-07-10)
 
-| # | Element | Expected speech (pattern) |
-|---|---------|---------------------------|
-| 1 | App bar logo | `{app_name} logo` — `app_logo_semantics` |
-| 2 | Screen title | Live Radio, heading — `tab_radio` |
-| 3 | Hero card | Play Live Stream… + show title + hosts — `radioPlayButtonSemantics` |
-| 4 | Volume (if shown) | Volume slider + percent |
-| 5 | Upcoming segments | Upcoming segments + next show — opens schedule sheet |
-| 6 | Share | Share label button |
-| 7 | Favorite | Favorite / add favorite button |
-| 8+ | Bottom tabs | Live Radio tab selected; Library; Events; About; More |
+| # | Element | Expected speech (copy keys / pattern) | Evidence |
+|---|---------|----------------------------------------|----------|
+| 1 | App bar logo | `{app_logo_semantics}` | `app_bar_brand_logo.dart` |
+| 2 | App bar title | `{tab_radio}` heading — “Live Radio” | `radio_tab.dart` + `MainTabAppBar` |
+| 3 | Hero play/stop (merged) | `{radio_play}` / `{radio_stop}` / `{radio_connecting}` + title + hosts | `radioPlayButtonSemantics` |
+| 4 | Playback error (if any) | Error string, liveRegion | `radio_tab.dart` ~L141–156 |
+| 5 | Volume (if `live.showVolume`) | `{radio_volume}` + percent; change → `{radio_volume_announce}` | `radio_volume_control.dart` |
+| 6 | Upcoming | `{radio_upcoming_segments}` + next + view schedule | `_UpcomingSegmentsCard` |
+| 7 | Share | `{radio_share_live}` / share label | `_LiveActionsRow` |
+| 8 | Favorite | add/remove label; off-air disabled | `_LiveActionsRow` |
+| 9+ | Bottom tabs | Live Radio selected + Library / Events / About / More | `main_shell_screen.dart` |
 
-**Risk:** `IndexedStack` keeps all tabs alive — inactive tabs may appear in swipe path (verify).
-
----
-
-## Input & keyboard inventory (code vs guide)
-
-**Live Radio tab has no text fields** — nothing opens the on-screen keyboard on this screen.
-
-| Control | Type | Keyboard? | VoiceOver action | Guide pattern |
-|---------|------|-----------|------------------|---------------|
-| Hero play card | Button | No | Double-tap play/stop | Audio player — state in label |
-| **Volume** | **Adjustable slider** | No typing; optional **arrow keys** when focused | **Swipe up/down** to change; should announce new % | Audio player — volume spoken on change |
-| Upcoming segments | Button | No | Double-tap → schedule sheet | Bottom sheet |
-| Share / Favorite | Buttons | No | Double-tap | — |
-| Bottom tabs | Tab bar | No | Double-tap switch tab | 5-tab nav |
-
-**Schedule sheet** (from Upcoming): list + favorite buttons only — **no search, no TextField**.
-
-Per `patterns-library.md` **Audio player** checklist:
-- ☐ Play reachable quickly — CP-09
-- ☐ State in label — CP-03
-- ☐ **Volume changes spoken** — CP-11 below
-- ☐ Slider adjustable without sighted drag — CP-11
-
-Known code issue: **FIND-043** — `radio_volume_slider_hint` repeats iOS’s built-in “swipe up/down” instructions.
+**Risk:** `IndexedStack` — inactive tabs in swipe path (R9 / CP-08, CP-10).
 
 ---
 
-## Device checkpoints (input / adjustable)
+## Open findings (code audit 2026-07-10)
+
+| ID | Severity | Guide / prior | Evidence | Proposed fix |
+|----|----------|---------------|----------|--------------|
+| **R1** | **HIGH** | Journey 4 — hear play/stop change | `radio_tab.dart` L109–115 empty `ref.listen`; unused `{radio_playing}` / `{radio_stopped}` | `announce()` on status change (and/or hero `liveRegion`) |
+| **R2** | **HIGH** | Errors: liveRegion **and** announce | Error UI liveRegion only; listen ignores errors | `announce` when `errorMessage` becomes non-null |
+| **R3** | **MED** | **FIND-043** duplicate swipe hint | `radio_volume_control.dart` L119 + `radio_volume_slider_hint` | Clear or shorten hint (no swipe-up/down wording) |
+| **R4** | **MED** | Favorite success spoken | Main toggle L533–540 no announce; sheet announces | Same announce as schedule sheet |
+| **R5** | **MED** | Sheet Close control | **FIXED 2026-07-10** — Close X (`close` copy) on schedule header | Done |
+| **R6** | **MED** | Modal title once | Route `namesRoute` + header same title | Route **or** header, not both |
+| **R7** | **MED** | Semantics.onTap with ExcludeSemantics | Upcoming / Share / Favorite lack `onTap` (hero has it) | Wire `onTap: onPressed` |
+| **R8** | **LOW** | Segment completeness | Schedule semantics may omit `category` | Append category when present |
+| **R9** | **LOW** | IndexedStack leak | `main_shell_screen.dart` IndexedStack | Device-verify; ExcludeSemantics if leak |
+| **R10** | **LOW** | Disabled favorite clarity | Off-air: disabled, label still “add” | Hide or “Favorite unavailable…” |
+
+**Strengths:** Merged hero + ExcludeSemantics; volume onIncrease/Decrease + percent announce; Share fail via announceAndSnack; 56px Share/Favorite; schedule BlockSemantics + favorite announces.
+
+---
+
+## Prior FIND-043 / FIND-044
+
+| ID | Status | Notes |
+|----|--------|-------|
+| **AUDIT-FIND-043** | **Still open (code)** = **R3** | Hint still duplicates iOS adjustable/swipe speech |
+| **AUDIT-FIND-044** | **Fixed in code · device recheck** | `radioPlayButtonSemantics` always includes show title; re-run CP-03 |
+
+---
+
+## Input & keyboard inventory
+
+**No text fields** on Live Radio — no on-screen keyboard.
+
+| Control | Type | VoiceOver action | Guide |
+|---------|------|------------------|-------|
+| Hero | Button | Double-tap play/stop | Audio player — state in label + **announce on change (R1)** |
+| Volume | Adjustable | Swipe up/down; hear % | Volume spoken on change |
+| Upcoming | Button | → POPUP-06 | Bottom sheet |
+| Share / Favorite | Buttons | Double-tap | Favorite announce (R4) |
+| Bottom tabs | Tab bar | Switch tab | 5-tab nav |
+
+---
+
+## Device checkpoints
 
 | ID | Checkpoint | Expected | Heard | PASS/FAIL | Notes |
 |----|------------|----------|-------|-----------|-------|
-| CP-01 | First focus (logo) | Radio Udaan logo | **Heard:** Radio Udaan logo image (+ udaan) | **PASS** | iOS adds "image" trait — OK |
-| CP-02 | App bar title | Live Radio, heading | **Heard:** Live Radio heading | **PASS** | `tab_radio` |
-| CP-03 | Hero play card | Play Live Stream + show + hosts, one button | **Heard:** Play Live stream with RJ Karan & RJ Meera | **PASS (partial)** | One merged stop ✅; confirm full label includes **show title** between action and hosts |
-| CP-04 | Volume slider | Volume, N percent, adjustable | **Heard:** volume 40% adjustable + swipe hint **twice** | **PASS (partial)** | Slider works; **FIND-043** duplicate swipe instructions |
-| CP-05 | Upcoming / schedule | Upcoming Shows + segment, button | **Heard:** Upcoming Shows + show name, button | **PASS** | `radio_upcoming_segments` |
-| CP-06 | Share | Share live, button | **Heard:** Share button; double-tap opens Apple share sheet | **PASS** | Dismiss: no Close in swipe path; **two-finger scrub (Z)** works — expected for iOS system sheet |
-| CP-07 | Favorite | Add to favorites, button | **Heard:** Add to favourite button | **PASS** | `radio_favorite_add` |
-| CP-08 | Tab bar | Live Radio tab selected + other tabs | **Not reported yet** | **PENDING** | Continue swiping |
-| CP-09 | Play action | Double-tap hero → plays/stops | **Not tested yet** | **PENDING** | |
-| CP-10 | End of screen | No extra hidden fields after tabs | **Not reported yet** | **PENDING** | |
-| CP-11 | Volume swipe up | Level rises; hears **“Volume, N percent”** | **Not reported yet** | **PENDING** | Not keyboard — VoiceOver swipe up on slider |
-| CP-12 | Volume swipe down | Level falls; announcement | **Not reported yet** | **PENDING** | |
-| CP-13 | Volume limits | Stops at 0% and 100% | **Not reported yet** | **PENDING** | |
-| CP-14 | Schedule sheet | Upcoming → list only, no text fields | **Not reported yet** | **PENDING** | Dismiss: scrub Z |
+| CP-01 | First focus (logo) | Radio Udaan logo | Radio Udaan logo image | **PASS** | 2026-07-05 |
+| CP-02 | App bar title | Live Radio, heading | Live Radio heading | **PASS** | |
+| CP-03 | Hero play card | Play + **show title** + hosts | Hosts heard; title unclear | **PASS (partial)** | Recheck FIND-044 |
+| CP-04 | Volume slider | Volume, N%, adjustable | Hint **twice** | **PASS (partial)** | FIND-043 / R3 |
+| CP-05 | Upcoming | Upcoming + segment, button | PASS | **PASS** | |
+| CP-06 | Share | Share live | PASS | **PASS** | System sheet scrub Z |
+| CP-07 | Favorite | Add to favorites | PASS | **PASS** | Label only; announce R4 untested |
+| CP-08 | Tab bar | Live Radio selected + others | — | **PENDING** | R9 |
+| CP-09 | Play action | Double-tap → play/stop + **hear state** | — | **PENDING** | Validates R1 |
+| CP-10 | End of screen | No inactive-tab leak | — | **PENDING** | R9 |
+| CP-11 | Volume swipe up | “Volume, N percent” | — | **PENDING** | |
+| CP-12 | Volume swipe down | Announcement | — | **PENDING** | |
+| CP-13 | Volume limits | 0% / 100% | — | **PENDING** | |
+| CP-14 | Schedule sheet | POPUP-06 | — | **PENDING** | See POPUP-06 |
 
 ---
 
-## Findings (Screen 06)
+## Questions for human (before fix)
 
-| ID | Severity | Finding |
-|----|----------|---------|
-| AUDIT-FIND-043 | MED | Volume slider — user heard adjustable / swipe instructions **twice** (hint + iOS default) |
-| AUDIT-FIND-044 | LOW | Hero play label — verify show **title** spoken separately from hosts (user reported hosts only) |
+1. Play/stop: prefer **`announce()`** with `{radio_playing}` / `{radio_stopped}` / `{radio_connecting}`, or **`liveRegion` on hero**, or both?
+2. FIND-043 / R3: **remove** volume hint entirely, or short non-gesture hint (e.g. “ten percent steps” only)?
+3. Schedule sheet: require visible **Close**, or scrub/drag enough?
+4. Main-tab favorite: always announce add/remove (parity with sheet)?
+5. On device after Play: any state change **without** re-swiping hero? (R1)
+6. Schedule open: title once or twice? Background Radio out of swipe path?
 
 ---
 
 ## Screen 06 — partial sign-off (2026-07-05)
 
 **Body content (logo → favorite): PASS with minor FIND-043/044.**  
-**Still needed:** CP-08 tabs, CP-09 play/stop, **CP-11–14 volume + schedule input audit**.
+**Still needed:** CP-08–14; code blockers **R1–R2** before a11y ship.
+
+## Ready for ship? **No**
+
+Silent play/stop & errors (R1/R2), FIND-043 still in code, main favorite silence (R4), device CP-08–14 / POPUP-06 incomplete.
+
+---
+
+## Session log — 2026-07-10 (line-by-line code)
+
+**Agents:** Alex → Maya (code audit, no edits).  
+**Method:** Live Radio tree vs COMPLETE guide Audio player / Journey 4 / sheets; prior device CPs.  
+**Outcome:** Open **R1–R10**; POPUP-06 stub created; canvas updated for discussion. **No code fixes** until human answers Q1–Q6 or says go.

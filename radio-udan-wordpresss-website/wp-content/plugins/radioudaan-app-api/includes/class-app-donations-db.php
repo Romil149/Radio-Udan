@@ -249,13 +249,143 @@ class RadioUdaan_App_Donations_Db {
 	 * @return array<int,object>
 	 */
 	public static function list_recent( $limit = 50 ) {
-		global $wpdb;
-		$limit = max( 1, min( 200, (int) $limit ) );
-		return $wpdb->get_results(
-			$wpdb->prepare(
-				'SELECT * FROM ' . self::table() . ' ORDER BY id DESC LIMIT %d',
-				$limit
+		$result = self::list_paginated(
+			array(
+				'per_page' => max( 1, min( 200, (int) $limit ) ),
+				'page'     => 1,
 			)
+		);
+		return $result['items'];
+	}
+
+	/**
+	 * @param array<string,mixed> $args page, per_page, status, search.
+	 * @return array{items:array<int,object>,page:int,per_page:int,total:int,total_pages:int}
+	 */
+	public static function list_paginated( array $args = array() ) {
+		global $wpdb;
+
+		$page     = max( 1, (int) ( $args['page'] ?? 1 ) );
+		$per_page = max( 1, min( 100, (int) ( $args['per_page'] ?? 25 ) ) );
+		$offset   = ( $page - 1 ) * $per_page;
+		$status   = isset( $args['status'] ) ? sanitize_key( (string) $args['status'] ) : '';
+		$search   = isset( $args['search'] ) ? trim( (string) $args['search'] ) : '';
+
+		$table  = self::table();
+		$where  = array( '1=1' );
+		$params = array();
+
+		$allowed_statuses = array(
+			self::STATUS_CREATED,
+			self::STATUS_CAPTURED,
+			self::STATUS_FAILED,
+		);
+		if ( '' !== $status && in_array( $status, $allowed_statuses, true ) ) {
+			$where[]  = 'status = %s';
+			$params[] = $status;
+		}
+
+		if ( '' !== $search ) {
+			$like     = '%' . $wpdb->esc_like( $search ) . '%';
+			$where[]  = '(donor_name LIKE %s OR email LIKE %s OR phone LIKE %s OR razorpay_payment_id LIKE %s OR razorpay_order_id LIKE %s)';
+			$params[] = $like;
+			$params[] = $like;
+			$params[] = $like;
+			$params[] = $like;
+			$params[] = $like;
+		}
+
+		$where_sql = implode( ' AND ', $where );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$total = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table} WHERE {$where_sql}",
+				$params
+			)
+		);
+
+		$query_params   = $params;
+		$query_params[] = $per_page;
+		$query_params[] = $offset;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$table} WHERE {$where_sql} ORDER BY id DESC LIMIT %d OFFSET %d",
+				$query_params
+			)
+		);
+
+		return array(
+			'items'       => is_array( $rows ) ? $rows : array(),
+			'page'        => $page,
+			'per_page'    => $per_page,
+			'total'       => $total,
+			'total_pages' => $per_page > 0 ? (int) ceil( $total / $per_page ) : 0,
+		);
+	}
+
+	/**
+	 * Aggregates for the donations admin screen.
+	 *
+	 * @return array<string,int|float>
+	 */
+	public static function get_admin_stats() {
+		global $wpdb;
+
+		$table = self::table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$captured = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table} WHERE status = %s",
+				self::STATUS_CAPTURED
+			)
+		);
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$failed = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table} WHERE status = %s",
+				self::STATUS_FAILED
+			)
+		);
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$pending = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table} WHERE status = %s",
+				self::STATUS_CREATED
+			)
+		);
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$captured_paise = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COALESCE(SUM(amount_paise), 0) FROM {$table} WHERE status = %s",
+				self::STATUS_CAPTURED
+			)
+		);
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$with_80g = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table} WHERE want_80g = 1 AND status = %s",
+				self::STATUS_CAPTURED
+			)
+		);
+
+		return array(
+			'total'               => $total,
+			'captured'            => $captured,
+			'failed'              => $failed,
+			'pending'             => $pending,
+			'captured_amount_inr' => $captured_paise / 100,
+			'with_80g'            => $with_80g,
 		);
 	}
 }

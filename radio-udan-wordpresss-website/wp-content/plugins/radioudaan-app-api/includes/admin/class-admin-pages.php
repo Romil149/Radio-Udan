@@ -33,6 +33,7 @@ class RadioUdaan_Admin_Pages {
 
 		self::render_stats_row( $stats );
 		self::render_production_warnings();
+		self::render_setup_checklist();
 		?>
 		<div class="ru-admin__grid">
 			<div>
@@ -43,6 +44,16 @@ class RadioUdaan_Admin_Pages {
 					</div>
 					<div class="ru-admin__panel-body">
 						<?php self::render_event_cards( $events, false ); ?>
+					</div>
+				</div>
+
+				<div class="ru-admin__panel" style="margin-top:20px;">
+					<div class="ru-admin__panel-head">
+						<h2><?php esc_html_e( 'Recent app logins', 'radioudaan-app-api' ); ?></h2>
+						<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . RadioUdaan_Admin_App_Hub::APP_USERS_SLUG ) ); ?>" class="button button-small"><?php esc_html_e( 'All app users', 'radioudaan-app-api' ); ?></a>
+					</div>
+					<div class="ru-admin__panel-body" style="padding:0;">
+						<?php self::render_recent_app_users_table( RadioUdaan_Admin_Data::get_recent_app_logins( 5 ) ); ?>
 					</div>
 				</div>
 
@@ -75,7 +86,14 @@ class RadioUdaan_Admin_Pages {
 			wp_die( esc_html__( 'Insufficient permissions.', 'radioudaan-app-api' ) );
 		}
 
-		$events = RadioUdaan_Admin_Data::get_managed_events();
+		$filter = isset( $_GET['filter'] ) ? sanitize_key( wp_unslash( $_GET['filter'] ) ) : 'all';
+		if ( ! in_array( $filter, array( 'all', 'open', 'closed', 'incomplete' ), true ) ) {
+			$filter = 'all';
+		}
+		$search = isset( $_GET['search'] ) ? trim( sanitize_text_field( wp_unslash( $_GET['search'] ) ) ) : '';
+
+		$events = self::filter_events( RadioUdaan_Admin_Data::get_managed_events(), $filter, $search );
+		$base_url = admin_url( 'admin.php?page=' . RadioUdaan_Admin_App_Hub::EVENTS_SLUG );
 
 		RadioUdaan_Admin_Layout::render_open( 'events', __( 'Events', 'radioudaan-app-api' ) );
 		RadioUdaan_Admin_Layout::render_page_intro(
@@ -87,16 +105,87 @@ class RadioUdaan_Admin_Pages {
 			<div class="ru-admin__panel-head">
 				<h2><?php esc_html_e( 'All app events', 'radioudaan-app-api' ); ?></h2>
 				<div class="ru-admin__panel-head-actions">
+					<nav class="ru-filter-tabs" aria-label="<?php esc_attr_e( 'Filter events', 'radioudaan-app-api' ); ?>">
+						<?php
+						$chips = array(
+							'all'        => __( 'All', 'radioudaan-app-api' ),
+							'open'       => __( 'Open', 'radioudaan-app-api' ),
+							'closed'     => __( 'Closed', 'radioudaan-app-api' ),
+							'incomplete' => __( 'Incomplete', 'radioudaan-app-api' ),
+						);
+						foreach ( $chips as $chip_key => $chip_label ) :
+							$chip_args = array( 'filter' => $chip_key );
+							if ( '' !== $search ) {
+								$chip_args['search'] = $search;
+							}
+							?>
+							<a href="<?php echo esc_url( add_query_arg( $chip_args, $base_url ) ); ?>" class="ru-filter-tabs__link <?php echo $filter === $chip_key ? 'is-active' : ''; ?>">
+								<?php echo esc_html( $chip_label ); ?>
+							</a>
+						<?php endforeach; ?>
+					</nav>
 					<span id="ru-events-order-status" class="ru-events-order-status description" aria-live="polite"></span>
 					<a href="<?php echo esc_url( RadioUdaan_Admin_Event_Editor::edit_url( 0 ) ); ?>" class="button button-primary ru-btn-large"><?php esc_html_e( 'Add new event', 'radioudaan-app-api' ); ?></a>
 				</div>
 			</div>
+			<?php if ( '' !== $search ) : ?>
+				<div class="ru-admin__panel-body" style="padding:12px 20px 0;border-bottom:1px solid var(--ru-border);">
+					<span class="ru-filter-chip">
+						<?php
+						echo esc_html(
+							sprintf(
+								/* translators: %s: search query */
+								__( 'Search: %s', 'radioudaan-app-api' ),
+								$search
+							)
+						);
+						?>
+						<a href="<?php echo esc_url( add_query_arg( 'filter', $filter, $base_url ) ); ?>" class="ru-filter-chip__clear" aria-label="<?php esc_attr_e( 'Clear search', 'radioudaan-app-api' ); ?>">&times;</a>
+					</span>
+				</div>
+			<?php endif; ?>
 			<div class="ru-admin__panel-body">
 				<?php self::render_event_cards( $events, true ); ?>
 			</div>
 		</div>
 		<?php
 		RadioUdaan_Admin_Layout::render_close();
+	}
+
+	/**
+	 * @param array<int,array<string,mixed>> $events Events.
+	 * @param string                         $filter Filter slug.
+	 * @param string                         $search Title search.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function filter_events( $events, $filter, $search ) {
+		$out = array();
+		foreach ( $events as $event ) {
+			$status = isset( $event['status'] ) ? (string) $event['status'] : 'open';
+			$form_id = (int) ( $event['form_id'] ?? 0 );
+			$event_code = isset( $event['event_code'] ) ? trim( (string) $event['event_code'] ) : '';
+			$incomplete = ( '' === $event_code || $form_id <= 0 );
+
+			if ( 'open' === $filter && 'open' !== $status ) {
+				continue;
+			}
+			if ( 'closed' === $filter && 'closed' !== $status ) {
+				continue;
+			}
+			if ( 'incomplete' === $filter && ! $incomplete ) {
+				continue;
+			}
+
+			if ( '' !== $search ) {
+				$title = isset( $event['title'] ) ? strtolower( (string) $event['title'] ) : '';
+				if ( false === strpos( $title, strtolower( $search ) ) ) {
+					continue;
+				}
+			}
+
+			$out[] = $event;
+		}
+		return $out;
 	}
 
 	/**
@@ -111,8 +200,24 @@ class RadioUdaan_Admin_Pages {
 		if ( ! in_array( $filter, array( 'all', 'app', 'web' ), true ) ) {
 			$filter = 'all';
 		}
-		$rows           = RadioUdaan_Admin_Data::get_recent_registrations( 50, $filter );
-		$base_url = admin_url( 'admin.php?page=' . RadioUdaan_Admin_App_Hub::EVENT_ENTRIES_SLUG );
+		$event_form = isset( $_GET['event_form'] ) ? (int) $_GET['event_form'] : 0;
+		$rows       = RadioUdaan_Admin_Data::get_recent_registrations( 50, $filter, $event_form );
+		$base_url   = admin_url( 'admin.php?page=' . RadioUdaan_Admin_App_Hub::EVENT_ENTRIES_SLUG );
+
+		$event_form_label = '';
+		if ( $event_form > 0 ) {
+			foreach ( RadioUdaan_Admin_Data::get_managed_events() as $event ) {
+				if ( (int) ( $event['form_id'] ?? 0 ) === $event_form ) {
+					$event_form_label = (string) $event['title'];
+					break;
+				}
+			}
+		}
+
+		$filter_query_args = array();
+		if ( $event_form > 0 ) {
+			$filter_query_args['event_form'] = $event_form;
+		}
 
 		RadioUdaan_Admin_Layout::render_open( 'event-entries', __( 'Event entries', 'radioudaan-app-api' ) );
 		RadioUdaan_Admin_Layout::render_page_intro(
@@ -124,12 +229,33 @@ class RadioUdaan_Admin_Pages {
 			<div class="ru-admin__panel-head">
 				<h2><?php esc_html_e( 'Event entries', 'radioudaan-app-api' ); ?></h2>
 				<nav class="ru-filter-tabs" aria-label="<?php esc_attr_e( 'Filter by source', 'radioudaan-app-api' ); ?>">
-					<a href="<?php echo esc_url( $base_url ); ?>" class="ru-filter-tabs__link <?php echo 'all' === $filter ? 'is-active' : ''; ?>"><?php esc_html_e( 'All', 'radioudaan-app-api' ); ?></a>
-					<a href="<?php echo esc_url( add_query_arg( 'source', 'app', $base_url ) ); ?>" class="ru-filter-tabs__link <?php echo 'app' === $filter ? 'is-active' : ''; ?>"><?php esc_html_e( 'Mobile app', 'radioudaan-app-api' ); ?></a>
-					<a href="<?php echo esc_url( add_query_arg( 'source', 'web', $base_url ) ); ?>" class="ru-filter-tabs__link <?php echo 'web' === $filter ? 'is-active' : ''; ?>"><?php esc_html_e( 'Website', 'radioudaan-app-api' ); ?></a>
-					<a href="<?php echo esc_url( RadioUdaan_Admin_Export::export_url( $filter ) ); ?>" class="ru-filter-tabs__link"><?php esc_html_e( 'Export CSV', 'radioudaan-app-api' ); ?></a>
+					<a href="<?php echo esc_url( add_query_arg( $filter_query_args, $base_url ) ); ?>" class="ru-filter-tabs__link <?php echo 'all' === $filter ? 'is-active' : ''; ?>"><?php esc_html_e( 'All', 'radioudaan-app-api' ); ?></a>
+					<a href="<?php echo esc_url( add_query_arg( array_merge( array( 'source' => 'app' ), $filter_query_args ), $base_url ) ); ?>" class="ru-filter-tabs__link <?php echo 'app' === $filter ? 'is-active' : ''; ?>"><?php esc_html_e( 'Mobile app', 'radioudaan-app-api' ); ?></a>
+					<a href="<?php echo esc_url( add_query_arg( array_merge( array( 'source' => 'web' ), $filter_query_args ), $base_url ) ); ?>" class="ru-filter-tabs__link <?php echo 'web' === $filter ? 'is-active' : ''; ?>"><?php esc_html_e( 'Website', 'radioudaan-app-api' ); ?></a>
+					<a href="<?php echo esc_url( RadioUdaan_Admin_Export::export_url( $filter, $event_form ) ); ?>" class="ru-filter-tabs__link"><?php esc_html_e( 'Export CSV', 'radioudaan-app-api' ); ?></a>
 				</nav>
 			</div>
+			<?php if ( $event_form > 0 && $event_form_label ) : ?>
+				<?php
+				$clear_event_url = 'all' === $filter
+					? $base_url
+					: add_query_arg( 'source', $filter, $base_url );
+				?>
+				<div class="ru-admin__panel-body" style="padding:12px 20px 0;border-bottom:1px solid var(--ru-border);">
+					<span class="ru-filter-chip">
+						<?php
+						echo esc_html(
+							sprintf(
+								/* translators: %s: event title */
+								__( 'Event: %s', 'radioudaan-app-api' ),
+								$event_form_label
+							)
+						);
+						?>
+						<a href="<?php echo esc_url( $clear_event_url ); ?>" class="ru-filter-chip__clear" aria-label="<?php esc_attr_e( 'Clear event filter', 'radioudaan-app-api' ); ?>">&times;</a>
+					</span>
+				</div>
+			<?php endif; ?>
 			<div class="ru-admin__panel-body" style="padding:0;">
 				<?php self::render_registrations_table( $rows ); ?>
 			</div>
@@ -377,25 +503,7 @@ class RadioUdaan_Admin_Pages {
 		$api_base = RadioUdaan_App_Settings::get_api_base_url();
 		$health   = RadioUdaan_Admin_Data::fetch_health();
 
-		$endpoints = array(
-			array( 'GET', '/health', __( 'API status', 'radioudaan-app-api' ), false ),
-			array( 'GET', '/config', __( 'App config (stream, legal URLs, upload rules)', 'radioudaan-app-api' ), false ),
-			array( 'POST', '/auth/otp/request', __( 'Send login OTP', 'radioudaan-app-api' ), false ),
-			array( 'POST', '/auth/otp/verify', __( 'Verify OTP → bearer token', 'radioudaan-app-api' ), false ),
-			array( 'GET', '/auth/me', __( 'Current session', 'radioudaan-app-api' ), true ),
-			array( 'POST', '/auth/logout', __( 'Revoke token', 'radioudaan-app-api' ), true ),
-			array( 'POST', '/auth/account/delete', __( 'Delete app account (Apple 5.1.1(v))', 'radioudaan-app-api' ), true ),
-			array( 'GET', '/events', __( 'List open events', 'radioudaan-app-api' ), false ),
-			array( 'GET', '/events/{id}', __( 'Event details', 'radioudaan-app-api' ), false ),
-			array( 'GET', '/events/{id}/form', __( 'Dynamic form schema', 'radioudaan-app-api' ), false ),
-			array( 'POST', '/uploads', __( 'Stage file (multipart)', 'radioudaan-app-api' ), true ),
-			array( 'POST', '/events/{id}/registrations', __( 'Submit registration', 'radioudaan-app-api' ), true ),
-			array( 'GET', '/library/youtube/recent', __( 'Recent @radioudaan uploads', 'radioudaan-app-api' ), false ),
-			array( 'GET', '/library/youtube/playlists', __( 'All channel playlists', 'radioudaan-app-api' ), false ),
-			array( 'GET', '/library/youtube/playlists/featured', __( '5 latest playlists (auto)', 'radioudaan-app-api' ), false ),
-			array( 'GET', '/library/youtube/playlists/{id}/videos', __( 'Videos in a playlist', 'radioudaan-app-api' ), false ),
-			array( 'GET', '/library/youtube/search?q=', __( 'Channel-scoped video search', 'radioudaan-app-api' ), false ),
-		);
+		$routes = RadioUdaan_App_Route_Registry::get_routes();
 
 		RadioUdaan_Admin_Layout::render_open( 'api', __( 'API', 'radioudaan-app-api' ) );
 		RadioUdaan_Admin_Layout::render_page_intro(
@@ -411,16 +519,28 @@ class RadioUdaan_Admin_Pages {
 						<h2><?php esc_html_e( 'Endpoints', 'radioudaan-app-api' ); ?></h2>
 					</div>
 					<div class="ru-admin__panel-body">
-						<?php foreach ( $endpoints as $ep ) : ?>
-							<div class="ru-admin__endpoint">
-								<span class="ru-admin__method ru-admin__method--<?php echo esc_attr( strtolower( $ep[0] ) ); ?>"><?php echo esc_html( $ep[0] ); ?></span>
-								<code><?php echo esc_html( $ep[1] ); ?></code>
-								— <?php echo esc_html( $ep[2] ); ?>
-								<?php if ( $ep[3] ) : ?>
+						<p class="description" style="margin-top:0;">
+							<?php esc_html_e( 'Canonical routes from RadioUdaan_App_Route_Registry. Search by path, method, or description.', 'radioudaan-app-api' ); ?>
+						</p>
+						<label for="ru-api-route-search" class="screen-reader-text"><?php esc_html_e( 'Search API routes', 'radioudaan-app-api' ); ?></label>
+						<input type="search" id="ru-api-route-search" class="ru-admin__search-input widefat" placeholder="<?php esc_attr_e( 'Search routes…', 'radioudaan-app-api' ); ?>" autocomplete="off" style="margin-bottom:12px;" />
+						<p class="ru-api-routes-empty description" hidden><?php esc_html_e( 'No routes match your search.', 'radioudaan-app-api' ); ?></p>
+						<div class="ru-api-routes">
+						<?php foreach ( $routes as $route ) : ?>
+							<?php
+							$method_class = sanitize_html_class( strtolower( preg_replace( '/\s*,\s*/', '-', $route['methods'] ) ) );
+							$search_blob  = strtolower( $route['methods'] . ' ' . $route['path'] . ' ' . $route['description'] );
+							?>
+							<div class="ru-admin__endpoint" data-ru-search="<?php echo esc_attr( $search_blob ); ?>">
+								<span class="ru-admin__method ru-admin__method--<?php echo esc_attr( $method_class ); ?>"><?php echo esc_html( $route['methods'] ); ?></span>
+								<code><?php echo esc_html( $route['path'] ); ?></code>
+								— <?php echo esc_html( $route['description'] ); ?>
+								<?php if ( $route['auth'] ) : ?>
 									<span class="ru-admin__badge ru-admin__badge--draft" style="margin-left:6px;"><?php esc_html_e( 'Auth required', 'radioudaan-app-api' ); ?></span>
 								<?php endif; ?>
 							</div>
 						<?php endforeach; ?>
+						</div>
 						<p class="description" style="margin-top:16px;">
 							<?php esc_html_e( 'Protected routes need header: Authorization: Bearer {token}', 'radioudaan-app-api' ); ?>
 						</p>
@@ -433,6 +553,53 @@ class RadioUdaan_Admin_Pages {
 		</div>
 		<?php
 		RadioUdaan_Admin_Layout::render_close();
+	}
+
+	/**
+	 * Pre-launch setup checklist with links to relevant settings tabs.
+	 */
+	private static function render_setup_checklist() {
+		$items   = RadioUdaan_Admin_Data::get_setup_checklist();
+		$passed  = 0;
+		foreach ( $items as $item ) {
+			if ( ! empty( $item['ok'] ) ) {
+				++$passed;
+			}
+		}
+		$total = count( $items );
+		$all_ok = $passed === $total;
+		?>
+		<div class="ru-admin__panel ru-admin__panel--setup-checklist">
+			<div class="ru-admin__panel-head">
+				<h2><?php esc_html_e( 'Setup checklist', 'radioudaan-app-api' ); ?></h2>
+				<span class="ru-admin__badge <?php echo $all_ok ? 'ru-admin__badge--ok' : 'ru-admin__badge--draft'; ?>">
+					<?php
+					printf(
+						/* translators: 1: passed count, 2: total count */
+						esc_html__( '%1$d / %2$d ready', 'radioudaan-app-api' ),
+						$passed,
+						$total
+					);
+					?>
+				</span>
+			</div>
+			<div class="ru-admin__panel-body ru-setup-checklist">
+				<ul class="ru-setup-checklist__list">
+					<?php foreach ( $items as $item ) : ?>
+						<li class="ru-setup-checklist__item<?php echo ! empty( $item['ok'] ) ? ' is-ok' : ' is-pending'; ?>">
+							<span class="ru-setup-checklist__status dashicons <?php echo ! empty( $item['ok'] ) ? 'dashicons-yes-alt' : 'dashicons-warning'; ?>" aria-hidden="true"></span>
+							<div class="ru-setup-checklist__body">
+								<a class="ru-setup-checklist__label" href="<?php echo esc_url( $item['url'] ); ?>">
+									<?php echo esc_html( $item['label'] ); ?>
+								</a>
+								<p class="ru-setup-checklist__detail description"><?php echo esc_html( $item['detail'] ); ?></p>
+							</div>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+		</div>
+		<?php
 	}
 
 	/**
@@ -463,13 +630,31 @@ class RadioUdaan_Admin_Pages {
 			<div class="ru-admin__stat">
 				<div class="ru-admin__stat-label"><?php esc_html_e( 'Events', 'radioudaan-app-api' ); ?></div>
 				<div class="ru-admin__stat-value"><?php echo (int) $stats['events_open']; ?> <span style="font-size:16px;color:var(--ru-muted);">/ <?php echo (int) $stats['events_total']; ?></span></div>
-				<div class="ru-admin__stat-hint"><?php esc_html_e( 'Open / total', 'radioudaan-app-api' ); ?></div>
+				<div class="ru-admin__stat-hint">
+					<?php esc_html_e( 'Open / total', 'radioudaan-app-api' ); ?>
+					· <?php echo (int) $stats['events_open_in_app']; ?> <?php esc_html_e( 'open in app', 'radioudaan-app-api' ); ?>
+				</div>
 			</div>
 			<div class="ru-admin__stat">
-				<div class="ru-admin__stat-label"><?php esc_html_e( 'Registrations', 'radioudaan-app-api' ); ?></div>
-				<div class="ru-admin__stat-value"><?php echo (int) $stats['app_users']; ?></div>
+				<div class="ru-admin__stat-label"><?php esc_html_e( 'App users', 'radioudaan-app-api' ); ?></div>
+				<div class="ru-admin__stat-value" style="font-size:18px;">
+					<?php echo (int) $stats['app_users_active']; ?> <?php esc_html_e( 'active', 'radioudaan-app-api' ); ?>
+					· <?php echo (int) $stats['app_users_pending']; ?> <?php esc_html_e( 'pending', 'radioudaan-app-api' ); ?>
+				</div>
 				<div class="ru-admin__stat-hint">
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . RadioUdaan_Admin_App_Hub::APP_USERS_SLUG ) ); ?>"><?php esc_html_e( 'Logged in with OTP', 'radioudaan-app-api' ); ?></a>
+					<?php
+					printf(
+						/* translators: 1: total count */
+						esc_html__( '%1$d total', 'radioudaan-app-api' ),
+						(int) $stats['app_users_total']
+					);
+					?>
+					·
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . RadioUdaan_Admin_App_Hub::APP_USERS_SLUG . '&status=active' ) ); ?>"><?php esc_html_e( 'Active', 'radioudaan-app-api' ); ?></a>
+					·
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . RadioUdaan_Admin_App_Hub::APP_USERS_SLUG . '&status=pending' ) ); ?>"><?php esc_html_e( 'Pending', 'radioudaan-app-api' ); ?></a>
+					·
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . RadioUdaan_Admin_App_Hub::APP_USERS_SLUG ) ); ?>"><?php esc_html_e( 'All', 'radioudaan-app-api' ); ?></a>
 				</div>
 			</div>
 			<div class="ru-admin__stat">
@@ -520,7 +705,7 @@ class RadioUdaan_Admin_Pages {
 			<div class="ru-admin__empty">
 				<span class="dashicons dashicons-calendar-alt"></span>
 				<p><?php esc_html_e( 'No events yet.', 'radioudaan-app-api' ); ?></p>
-				<a href="<?php echo esc_url( admin_url( 'post-new.php?post_type=' . RadioUdaan_Cpt_Ru_Event::POST_TYPE ) ); ?>" class="button button-primary"><?php esc_html_e( 'Create your first event', 'radioudaan-app-api' ); ?></a>
+				<a href="<?php echo esc_url( RadioUdaan_Admin_Event_Editor::edit_url( 0 ) ); ?>" class="button button-primary"><?php esc_html_e( 'Create your first event', 'radioudaan-app-api' ); ?></a>
 			</div>
 			<?php
 			return;
@@ -542,6 +727,8 @@ class RadioUdaan_Admin_Pages {
 		$status = isset( $event['status'] ) ? $event['status'] : 'open';
 		$form_id = (int) ( $event['form_id'] ?? 0 );
 		$event_id = (int) ( $event['event_id'] ?? 0 );
+		$event_code = isset( $event['event_code'] ) ? trim( (string) $event['event_code'] ) : '';
+		$incomplete = ( '' === $event_code || $form_id <= 0 );
 		?>
 		<article class="ru-admin__event-card<?php echo $full ? ' ru-admin__event-card--sortable' : ''; ?>" data-event-id="<?php echo (int) $event_id; ?>">
 			<?php if ( $full ) : ?>
@@ -561,9 +748,12 @@ class RadioUdaan_Admin_Pages {
 				<h3 class="ru-admin__event-title"><?php echo esc_html( $event['title'] ); ?></h3>
 				<div class="ru-admin__event-meta">
 					<span class="ru-admin__badge ru-admin__badge--<?php echo esc_attr( $status ); ?>"><?php echo esc_html( $status ); ?></span>
+					<?php if ( $incomplete ) : ?>
+						<span class="ru-admin__badge ru-admin__badge--closed" style="margin-left:6px;"><?php esc_html_e( 'Incomplete — hidden from app', 'radioudaan-app-api' ); ?></span>
+					<?php endif; ?>
 					&nbsp;·&nbsp; ID <code><?php echo (int) $event_id; ?></code>
-					<?php if ( ! empty( $event['event_code'] ) ) : ?>
-						· <code><?php echo esc_html( $event['event_code'] ); ?></code>
+					<?php if ( '' !== $event_code ) : ?>
+						· <code><?php echo esc_html( $event_code ); ?></code>
 					<?php endif; ?>
 					<?php if ( $form_id ) : ?>
 						· <?php echo (int) ( $event['entries_app'] ?? 0 ); ?> <?php esc_html_e( 'mobile', 'radioudaan-app-api' ); ?>
@@ -580,6 +770,10 @@ class RadioUdaan_Admin_Pages {
 					<a class="button ru-btn-large" href="<?php echo esc_url( $event['edit_url'] ); ?>"><?php esc_html_e( 'Edit event', 'radioudaan-app-api' ); ?></a>
 				<?php endif; ?>
 				<?php if ( $form_id ) : ?>
+					<?php $form_url = RadioUdaan_Admin_Data::forminator_form_url( $form_id ); ?>
+					<?php if ( $form_url ) : ?>
+						<a class="button ru-btn-large" href="<?php echo esc_url( $form_url ); ?>"><?php esc_html_e( 'Edit form fields', 'radioudaan-app-api' ); ?></a>
+					<?php endif; ?>
 					<a class="button ru-btn-large" href="<?php echo esc_url( admin_url( 'admin.php?page=' . RadioUdaan_Admin_App_Hub::EVENT_ENTRIES_SLUG . '&event_form=' . $form_id ) ); ?>"><?php esc_html_e( 'View entries', 'radioudaan-app-api' ); ?></a>
 				<?php endif; ?>
 			</div>
@@ -627,6 +821,55 @@ class RadioUdaan_Admin_Pages {
 			$class = 'ru-admin__badge--closed';
 		}
 		echo '<span class="ru-admin__badge ' . esc_attr( $class ) . '">' . esc_html( RadioUdaan_Entry_Source::label_for( $source ) ) . '</span>';
+	}
+
+	/**
+	 * @param array<int,object> $users App user rows.
+	 */
+	private static function render_recent_app_users_table( $users ) {
+		if ( empty( $users ) ) {
+			RadioUdaan_Admin_Components::render_empty_state(
+				__( 'No app logins recorded yet.', 'radioudaan-app-api' ),
+				array(
+					'icon'         => 'dashicons-groups',
+					'action_label' => __( 'View app users', 'radioudaan-app-api' ),
+					'action_url'   => admin_url( 'admin.php?page=' . RadioUdaan_Admin_App_Hub::APP_USERS_SLUG ),
+				)
+			);
+			return;
+		}
+		?>
+		<table class="ru-admin__table ru-admin__table--users">
+			<thead>
+				<tr>
+					<th><?php esc_html_e( 'Name', 'radioudaan-app-api' ); ?></th>
+					<th><?php esc_html_e( 'Status', 'radioudaan-app-api' ); ?></th>
+					<th><?php esc_html_e( 'Last login', 'radioudaan-app-api' ); ?></th>
+					<th><?php esc_html_e( 'Action', 'radioudaan-app-api' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php foreach ( $users as $user ) : ?>
+				<tr>
+					<td>
+						<strong>
+							<a href="<?php echo esc_url( RadioUdaan_Admin_App_User_Detail::view_url( (int) $user->id ) ); ?>">
+								<?php echo esc_html( $user->display_name ); ?>
+							</a>
+						</strong>
+					</td>
+					<td><?php RadioUdaan_Admin_App_Users::render_status_badge( $user->status ); ?></td>
+					<td><?php echo esc_html( RadioUdaan_Admin_App_Users::format_date( $user->last_login_at ) ); ?></td>
+					<td>
+						<a class="button ru-btn-large" href="<?php echo esc_url( RadioUdaan_Admin_App_User_Detail::view_url( (int) $user->id ) ); ?>">
+							<?php esc_html_e( 'View details', 'radioudaan-app-api' ); ?>
+						</a>
+					</td>
+				</tr>
+			<?php endforeach; ?>
+			</tbody>
+		</table>
+		<?php
 	}
 
 	/**

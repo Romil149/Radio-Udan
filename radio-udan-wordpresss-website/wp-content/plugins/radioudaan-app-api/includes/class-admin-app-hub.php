@@ -9,15 +9,20 @@ defined( 'ABSPATH' ) || exit;
 
 require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-assets.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-layout.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-components.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-event-editor.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-entry-viewer.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-help.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-app-users.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-app-user-detail.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-app-user-actions.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-data.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-settings-page.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-pages.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-export.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-notifications.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-global-search.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-settings-tests.php';
 
 /**
  * Top-level WordPress admin for the Radio Udaan mobile app.
@@ -37,6 +42,7 @@ class RadioUdaan_Admin_App_Hub {
 	const REGISTRATIONS_SLUG = 'radioudaan-app-registrations';
 
 	const APP_USERS_SLUG     = 'radioudaan-app-users';
+	const VIEW_USER_SLUG     = 'radioudaan-app-view-user';
 	const VIEW_ENTRY_SLUG    = 'radioudaan-app-view-entry';
 	const SETTINGS_SLUG      = 'radioudaan-app-settings';
 	const HELP_SLUG          = 'radioudaan-app-help';
@@ -50,6 +56,9 @@ class RadioUdaan_Admin_App_Hub {
 	public static function init() {
 		RadioUdaan_Admin_Assets::init();
 		RadioUdaan_Admin_Export::init();
+		RadioUdaan_Admin_App_User_Actions::init();
+		RadioUdaan_Admin_Global_Search::init();
+		RadioUdaan_Admin_Settings_Tests::init();
 		RadioUdaan_App_Youtube_Library::init_admin();
 
 		add_action( 'admin_menu', array( __CLASS__, 'register_menus' ), 9 );
@@ -94,8 +103,8 @@ class RadioUdaan_Admin_App_Hub {
 
 		add_submenu_page(
 			self::MENU_SLUG,
-			__( 'Registrations', 'radioudaan-app-api' ),
-			__( 'Registrations', 'radioudaan-app-api' ),
+			__( 'App users', 'radioudaan-app-api' ),
+			__( 'App users', 'radioudaan-app-api' ),
 			'manage_options',
 			self::APP_USERS_SLUG,
 			array( 'RadioUdaan_Admin_App_Users', 'render_page' )
@@ -163,6 +172,15 @@ class RadioUdaan_Admin_App_Hub {
 			'manage_options',
 			self::VIEW_ENTRY_SLUG,
 			array( 'RadioUdaan_Admin_Entry_Viewer', 'render_page' )
+		);
+
+		add_submenu_page(
+			null,
+			__( 'App user details', 'radioudaan-app-api' ),
+			__( 'App user details', 'radioudaan-app-api' ),
+			'manage_options',
+			self::VIEW_USER_SLUG,
+			array( 'RadioUdaan_Admin_App_User_Detail', 'render_page' )
 		);
 
 		if ( class_exists( 'RadioUdaan_Admin_Form_Migration' ) ) {

@@ -20,6 +20,7 @@ class OtpVerifyIdentityBody extends StatelessWidget {
     required this.loading,
     required this.resending,
     required this.canResend,
+    required this.resendSecondsRemaining,
     required this.devOtp,
     required this.onBack,
     required this.onVerify,
@@ -36,6 +37,7 @@ class OtpVerifyIdentityBody extends StatelessWidget {
   final bool loading;
   final bool resending;
   final bool canResend;
+  final int resendSecondsRemaining;
   final String? devOtp;
   final VoidCallback onBack;
   final VoidCallback onVerify;
@@ -58,11 +60,10 @@ class OtpVerifyIdentityBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         UdaanAuthTopBar(
-                copy: copy,
-                title: brandingAppName,
+          copy: copy,
+          title: copy.verifyIdentityTitle,
           onBack: onBack,
-          trailing: Semantics(
-            label: copy.secureVerificationHero,
+          trailing: ExcludeSemantics(
             child: Icon(
               Icons.verified_user_outlined,
               color: context.udaan.primaryGlow.withValues(alpha: 0.95),
@@ -76,22 +77,20 @@ class OtpVerifyIdentityBody extends StatelessWidget {
           color: context.udaan.outlineVariant,
         ),
         const SizedBox(height: 8),
-        Center(child: UdaanOtpPadlockHero(
-                copy: copy,
-                )),
+        Center(
+          child: UdaanOtpPadlockHero(
+            copy: copy,
+          ),
+        ),
         const SizedBox(height: 28),
-        Semantics(
-          header: true,
-          label: copy.verifyIdentityTitle,
-          child: ExcludeSemantics(
-            child: Text(
-              copy.verifyIdentityTitle,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.atkinsonHyperlegible(
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-                color: context.udaan.onBackground,
-              ),
+        ExcludeSemantics(
+          child: Text(
+            copy.verifyIdentityTitle,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.atkinsonHyperlegible(
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              color: context.udaan.onBackground,
             ),
           ),
         ),
@@ -167,6 +166,25 @@ class OtpVerifyIdentityBody extends StatelessWidget {
           loading: loading,
           onPressed: loading ? null : onVerify,
         ),
+        if (resendSecondsRemaining > 0) ...[
+          const SizedBox(height: 16),
+          Semantics(
+            liveRegion: true,
+            label:
+                '${copy.otpWaitPrompt}${copy.otpWaitTimer(resendSecondsRemaining)}',
+            child: ExcludeSemantics(
+              child: Text(
+                '${copy.otpWaitPrompt}${copy.otpWaitTimer(resendSecondsRemaining)}',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.atkinsonHyperlegible(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: context.udaan.primaryGlow,
+                ),
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
         UdaanOutlineButton(
           label: copy.otpResendLabel,
@@ -176,8 +194,9 @@ class OtpVerifyIdentityBody extends StatelessWidget {
         ),
         const SizedBox(height: 28),
         UdaanContactSupportPrompt(
-                copy: copy,
-                onContactSupport: onContactSupport),
+          copy: copy,
+          onContactSupport: onContactSupport,
+        ),
       ],
     );
   }

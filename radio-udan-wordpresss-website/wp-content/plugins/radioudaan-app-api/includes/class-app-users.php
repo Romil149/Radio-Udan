@@ -19,6 +19,7 @@ class RadioUdaan_App_Users {
 
 	const STATUS_PENDING = 'pending';
 	const STATUS_ACTIVE  = 'active';
+	const STATUS_PAUSED  = 'paused';
 	const STATUS_DELETED = 'deleted';
 
 	/**
@@ -560,6 +561,81 @@ class RadioUdaan_App_Users {
 	}
 
 	/**
+	 * Lookup for login/OTP — includes paused accounts (not deleted).
+	 *
+	 * @param string $identifier Email or E.164 phone.
+	 * @return object|null
+	 */
+	public static function find_by_identifier_for_auth( $identifier ) {
+		$identifier = trim( (string) $identifier );
+		if ( '' === $identifier ) {
+			return null;
+		}
+
+		$statuses = array(
+			self::STATUS_PENDING,
+			self::STATUS_ACTIVE,
+			self::STATUS_PAUSED,
+		);
+
+		if ( false !== strpos( $identifier, '@' ) ) {
+			$email = strtolower( sanitize_email( $identifier ) );
+			if ( ! is_email( $email ) ) {
+				return null;
+			}
+			return self::find_row_by_statuses( 'email', $email, $statuses );
+		}
+
+		$phone = self::sanitize_phone( $identifier );
+		if ( ! $phone ) {
+			return null;
+		}
+
+		return self::find_row_by_statuses( 'phone_e164', $phone, $statuses );
+	}
+
+	/**
+	 * @param string $phone_e164 E.164 phone.
+	 * @return object|null
+	 */
+	public static function find_by_phone_for_auth( $phone_e164 ) {
+		$phone = self::sanitize_phone( $phone_e164 );
+		if ( ! $phone ) {
+			return null;
+		}
+
+		return self::find_row_by_statuses(
+			'phone_e164',
+			$phone,
+			array(
+				self::STATUS_PENDING,
+				self::STATUS_ACTIVE,
+				self::STATUS_PAUSED,
+			)
+		);
+	}
+
+	/**
+	 * @return bool
+	 */
+	public static function is_paused( $user ) {
+		return (bool) ( $user && self::STATUS_PAUSED === $user->status );
+	}
+
+	/**
+	 * Standard WP_Error for paused accounts (login / OTP).
+	 *
+	 * @return WP_Error
+	 */
+	public static function account_paused_error() {
+		return new WP_Error(
+			'account_paused',
+			__( 'Your account has been paused. Please contact Radio Udaan support.', 'radioudaan-app-api' ),
+			array( 'status' => 403 )
+		);
+	}
+
+	/**
 	 * Remove abandoned pending signups so phone numbers are not squatted without OTP proof.
 	 *
 	 * @param string $phone_e164   E.164 phone.
@@ -667,6 +743,220 @@ class RadioUdaan_App_Users {
 	}
 
 	/**
+	 * @param string $status Status value.
+	 * @return int
+	 */
+	public static function count_by_status( $status ) {
+		self::maybe_create_table();
+
+		$status = sanitize_key( (string) $status );
+		if ( '' === $status ) {
+			return 0;
+		}
+
+		global $wpdb;
+
+		$table = self::table_name();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table} WHERE status = %s",
+				$status
+			)
+		);
+	}
+
+	/**
+	 * @return int
+	 */
+	public static function count_active_users() {
+		return self::count_by_status( self::STATUS_ACTIVE );
+	}
+
+	/**
+	 * @param int $days Lookback window in days.
+	 * @return int
+	 */
+	public static function count_logged_in_last_days( $days ) {
+		self::maybe_create_table();
+
+		$days = max( 1, (int) $days );
+		$since = gmdate( 'Y-m-d H:i:s', time() - ( $days * DAY_IN_SECONDS ) );
+
+		global $wpdb;
+
+		$table = self::table_name();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table} WHERE status = %s AND last_login_at IS NOT NULL AND last_login_at >= %s",
+				self::STATUS_ACTIVE,
+				$since
+			)
+		);
+	}
+
+	/**
+	 * @param array<string,mixed> $args Query args: page, per_page, status, search, orderby, order.
+	 * @return array{items:array<int,object>,page:int,per_page:int,total:int,total_pages:int}
+	 */
+	public static function list_users_paginated( array $args = array() ) {
+		self::maybe_create_table();
+
+		global $wpdb;
+
+		$page     = max( 1, (int) ( $args['page'] ?? 1 ) );
+		$per_page = max( 1, min( 500, (int) ( $args['per_page'] ?? 50 ) ) );
+		$offset   = ( $page - 1 ) * $per_page;
+		$status   = isset( $args['status'] ) ? sanitize_key( (string) $args['status'] ) : '';
+		$search   = isset( $args['search'] ) ? trim( (string) $args['search'] ) : '';
+		$orderby  = isset( $args['orderby'] ) ? sanitize_key( (string) $args['orderby'] ) : 'last_login_at';
+		$order    = isset( $args['order'] ) ? strtoupper( (string) $args['order'] ) : 'DESC';
+
+		$allowed_orderby = array(
+			'last_login_at' => 'last_login_at',
+			'created_at'    => 'created_at',
+			'display_name'  => 'display_name',
+			'email'         => 'email',
+			'status'        => 'status',
+		);
+		if ( ! isset( $allowed_orderby[ $orderby ] ) ) {
+			$orderby = 'last_login_at';
+		}
+		$order_sql = 'ASC' === $order ? 'ASC' : 'DESC';
+
+		$table  = self::table_name();
+		$where  = array( 'status != %s' );
+		$params = array( self::STATUS_DELETED );
+
+		if ( '' !== $status && self::STATUS_DELETED !== $status ) {
+			$where[]  = 'status = %s';
+			$params[] = $status;
+		}
+
+		if ( '' !== $search ) {
+			$like     = '%' . $wpdb->esc_like( $search ) . '%';
+			$where[]  = '(display_name LIKE %s OR email LIKE %s OR phone_e164 LIKE %s)';
+			$params[] = $like;
+			$params[] = $like;
+			$params[] = $like;
+		}
+
+		$where_sql = implode( ' AND ', $where );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$total = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table} WHERE {$where_sql}",
+				$params
+			)
+		);
+
+		$params[] = $per_page;
+		$params[] = $offset;
+
+		$order_col = $allowed_orderby[ $orderby ];
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$table} WHERE {$where_sql} ORDER BY {$order_col} {$order_sql}, created_at DESC LIMIT %d OFFSET %d",
+				$params
+			)
+		);
+
+		return array(
+			'items'       => is_array( $rows ) ? $rows : array(),
+			'page'        => $page,
+			'per_page'    => $per_page,
+			'total'       => $total,
+			'total_pages' => $per_page > 0 ? (int) ceil( $total / $per_page ) : 0,
+		);
+	}
+
+	/**
+	 * @param int $user_id User id.
+	 * @return bool
+	 */
+	public static function pause( $user_id ) {
+		return self::set_status( (int) $user_id, self::STATUS_PAUSED );
+	}
+
+	/**
+	 * @param int $user_id User id.
+	 * @return bool
+	 */
+	public static function resume( $user_id ) {
+		$user = self::get_by_id( $user_id );
+		if ( ! $user || self::STATUS_PAUSED !== $user->status ) {
+			return false;
+		}
+
+		return self::set_status( (int) $user_id, self::STATUS_ACTIVE );
+	}
+
+	/**
+	 * @param int    $user_id User id.
+	 * @param string $status  Target status.
+	 * @return bool
+	 */
+	public static function set_status( $user_id, $status ) {
+		self::maybe_create_table();
+
+		$user_id = (int) $user_id;
+		$status  = sanitize_key( (string) $status );
+
+		$allowed = array(
+			self::STATUS_PENDING,
+			self::STATUS_ACTIVE,
+			self::STATUS_PAUSED,
+			self::STATUS_DELETED,
+		);
+		if ( ! in_array( $status, $allowed, true ) ) {
+			return false;
+		}
+
+		$user = self::get_by_id( $user_id );
+		if ( ! $user || $status === $user->status ) {
+			return false;
+		}
+
+		if ( self::STATUS_PAUSED === $status && self::STATUS_ACTIVE !== $user->status ) {
+			return false;
+		}
+
+		if ( self::STATUS_ACTIVE === $status && ! in_array( $user->status, array( self::STATUS_PAUSED, self::STATUS_PENDING ), true ) ) {
+			return false;
+		}
+
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$updated = $wpdb->update(
+			self::table_name(),
+			array(
+				'status'     => $status,
+				'updated_at' => current_time( 'mysql', true ),
+			),
+			array( 'id' => $user_id ),
+			array( '%s', '%s' ),
+			array( '%d' )
+		);
+
+		if ( false === $updated ) {
+			return false;
+		}
+
+		if ( self::STATUS_PAUSED === $status ) {
+			RadioUdaan_App_Auth::revoke_all_tokens_for_user_id( $user_id );
+		}
+
+		return true;
+	}
+
+	/**
 	 * @param int $limit Max rows.
 	 * @return array<int,object>
 	 */
@@ -724,28 +1014,52 @@ class RadioUdaan_App_Users {
 	}
 
 	/**
+	 * Phone/email uniqueness — pending and active only (paused may re-register same identifiers).
+	 *
 	 * @param string $column Column name.
 	 * @param string $value  Value.
 	 * @return object|null
 	 */
 	private static function find_active_row( $column, $value ) {
+		return self::find_row_by_statuses(
+			$column,
+			$value,
+			array(
+				self::STATUS_PENDING,
+				self::STATUS_ACTIVE,
+			)
+		);
+	}
+
+	/**
+	 * @param string        $column   Column name.
+	 * @param string        $value    Value.
+	 * @param array<string> $statuses Allowed statuses.
+	 * @return object|null
+	 */
+	private static function find_row_by_statuses( $column, $value, array $statuses ) {
 		self::maybe_create_table();
 
 		if ( ! in_array( $column, array( 'phone_e164', 'email' ), true ) ) {
 			return null;
 		}
 
+		$statuses = array_values( array_filter( array_map( 'sanitize_key', $statuses ) ) );
+		if ( empty( $statuses ) ) {
+			return null;
+		}
+
 		global $wpdb;
 
-		$table = self::table_name();
+		$table        = self::table_name();
+		$placeholders = implode( ', ', array_fill( 0, count( $statuses ), '%s' ) );
+		$params       = array_merge( array( $value ), $statuses );
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT * FROM {$table} WHERE {$column} = %s AND status IN (%s, %s)",
-				$value,
-				self::STATUS_PENDING,
-				self::STATUS_ACTIVE
+				"SELECT * FROM {$table} WHERE {$column} = %s AND status IN ({$placeholders})",
+				$params
 			)
 		);
 

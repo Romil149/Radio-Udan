@@ -232,6 +232,17 @@ class RadioUdaan_App_Branding {
 	}
 
 	/**
+	 * @return bool True when branding.app_name and copy.app_name differ.
+	 */
+	public static function branding_copy_app_name_mismatch() {
+		$branding_name = self::get_app_name();
+		$copy          = self::get_public_copy();
+		$copy_name     = isset( $copy['app_name'] ) ? trim( (string) $copy['app_name'] ) : '';
+
+		return '' !== $copy_name && $branding_name !== $copy_name;
+	}
+
+	/**
 	 * Payload for GET /config → branding.
 	 *
 	 * @return array<string,mixed>

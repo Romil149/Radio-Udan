@@ -53,6 +53,10 @@ class RadioUdaan_Admin_Entry_Viewer {
 			'<strong>' . esc_html( $detail['event_title'] ) . '</strong> — ' .
 			esc_html( $detail['date'] ) . ' · ' . esc_html( $detail['source_label'] )
 		);
+
+		if ( ! empty( $detail['app_user'] ) ) {
+			self::render_app_user_card( $detail['app_user'] );
+		}
 		?>
 		<div class="ru-admin__panel">
 			<div class="ru-admin__panel-head">
@@ -93,6 +97,38 @@ class RadioUdaan_Admin_Entry_Viewer {
 		</p>
 		<?php
 		RadioUdaan_Admin_Layout::render_close();
+	}
+
+	/**
+	 * @param object $user App user row.
+	 */
+	private static function render_app_user_card( $user ) {
+		?>
+		<div class="ru-admin__panel ru-entry-app-user-card">
+			<div class="ru-admin__panel-head">
+				<h2><?php esc_html_e( 'Linked app user', 'radioudaan-app-api' ); ?></h2>
+			</div>
+			<div class="ru-admin__panel-body">
+				<p style="margin-top:0;">
+					<?php esc_html_e( 'This entry phone matches an app login account.', 'radioudaan-app-api' ); ?>
+				</p>
+				<ul class="ru-admin__meta-list">
+					<li><strong><?php esc_html_e( 'Name', 'radioudaan-app-api' ); ?>:</strong> <?php echo esc_html( $user->display_name ); ?></li>
+					<li><strong><?php esc_html_e( 'Email', 'radioudaan-app-api' ); ?>:</strong> <?php echo esc_html( $user->email ); ?></li>
+					<li><strong><?php esc_html_e( 'Mobile', 'radioudaan-app-api' ); ?>:</strong> <?php echo esc_html( RadioUdaan_Admin_App_Users::mask_phone( $user->phone_e164 ) ); ?></li>
+					<li><strong><?php esc_html_e( 'Status', 'radioudaan-app-api' ); ?>:</strong> <?php echo esc_html( $user->status ); ?></li>
+				</ul>
+				<p>
+					<a class="button button-primary ru-btn-large" href="<?php echo esc_url( RadioUdaan_Admin_App_User_Detail::view_url( (int) $user->id ) ); ?>">
+						<?php esc_html_e( 'View app user', 'radioudaan-app-api' ); ?>
+					</a>
+					<a class="button ru-btn-large" href="<?php echo esc_url( RadioUdaan_Admin_Notifications::notify_user_url( (int) $user->id ) ); ?>">
+						<?php esc_html_e( 'Send notification', 'radioudaan-app-api' ); ?>
+					</a>
+				</p>
+			</div>
+		</div>
+		<?php
 	}
 
 	/**
@@ -138,11 +174,17 @@ class RadioUdaan_Admin_Entry_Viewer {
 			}
 		}
 
+		$app_user = null;
+		if ( $phone ) {
+			$app_user = RadioUdaan_App_Users::find_by_phone( $phone );
+		}
+
 		return array(
 			'date'         => $entry->date_created,
 			'source_label' => RadioUdaan_Entry_Source::label_for( $source ),
 			'event_title'  => $event_title,
 			'phone'        => $phone ? $phone : '—',
+			'app_user'     => $app_user,
 			'fields'       => $fields,
 		);
 	}
@@ -176,13 +218,65 @@ class RadioUdaan_Admin_Entry_Viewer {
 	private static function format_value( $value ) {
 		if ( is_array( $value ) ) {
 			if ( isset( $value['file_url'] ) ) {
-				return '<a href="' . esc_url( $value['file_url'] ) . '" target="_blank" rel="noopener">' . esc_html__( 'Download file', 'radioudaan-app-api' ) . '</a>';
+				return self::file_download_link( $value['file_url'], $value );
 			}
 			if ( isset( $value['file']['file_url'] ) ) {
-				return '<a href="' . esc_url( $value['file']['file_url'] ) . '" target="_blank" rel="noopener">' . esc_html__( 'Download file', 'radioudaan-app-api' ) . '</a>';
+				return self::file_download_link( $value['file']['file_url'], $value['file'] );
+			}
+			if ( self::is_list_of_files( $value ) ) {
+				$links = array();
+				foreach ( $value as $item ) {
+					if ( is_array( $item ) ) {
+						$links[] = self::format_value( $item );
+					}
+				}
+				return implode( '<br />', array_filter( $links ) );
 			}
 			return esc_html( wp_json_encode( $value ) );
 		}
+		if ( is_string( $value ) && preg_match( '#^https?://#i', $value ) ) {
+			return self::file_download_link( $value, array() );
+		}
 		return esc_html( (string) $value );
+	}
+
+	/**
+	 * @param array<int,mixed> $value Value list.
+	 * @return bool
+	 */
+	private static function is_list_of_files( $value ) {
+		if ( ! isset( $value[0] ) || ! is_array( $value[0] ) ) {
+			return false;
+		}
+		return isset( $value[0]['file_url'] ) || isset( $value[0]['file']['file_url'] );
+	}
+
+	/**
+	 * @param string               $url  File URL.
+	 * @param array<string,mixed>  $meta Optional file metadata.
+	 * @return string
+	 */
+	private static function file_download_link( $url, $meta ) {
+		$url = esc_url( (string) $url );
+		if ( '' === $url ) {
+			return '—';
+		}
+
+		$label = __( 'Download file', 'radioudaan-app-api' );
+		if ( ! empty( $meta['file_name'] ) ) {
+			$label = sprintf(
+				/* translators: %s: file name */
+				__( 'Download %s', 'radioudaan-app-api' ),
+				(string) $meta['file_name']
+			);
+		} elseif ( ! empty( $meta['name'] ) ) {
+			$label = sprintf(
+				/* translators: %s: file name */
+				__( 'Download %s', 'radioudaan-app-api' ),
+				(string) $meta['name']
+			);
+		}
+
+		return '<a href="' . $url . '" target="_blank" rel="noopener" class="ru-file-download">' . esc_html( $label ) . '</a>';
 	}
 }

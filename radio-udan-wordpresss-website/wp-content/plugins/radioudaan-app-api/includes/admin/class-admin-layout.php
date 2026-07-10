@@ -28,10 +28,24 @@ class RadioUdaan_Admin_Layout {
 						</div>
 						<div>
 							<h1 class="ru-admin__title"><?php esc_html_e( 'Radio Udaan Mobile App', 'radioudaan-app-api' ); ?></h1>
-							<p class="ru-admin__subtitle"><?php esc_html_e( 'Manage events, registrations, event entries, and login settings', 'radioudaan-app-api' ); ?></p>
+							<p class="ru-admin__subtitle"><?php esc_html_e( 'Manage events, app users, donations, and login settings', 'radioudaan-app-api' ); ?></p>
 						</div>
 					</div>
 					<div class="ru-admin__header-actions">
+						<form method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>" class="ru-admin__global-search" role="search">
+							<input type="hidden" name="page" value="<?php echo esc_attr( isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : RadioUdaan_Admin_App_Hub::MENU_SLUG ); ?>" />
+							<label class="screen-reader-text" for="ru-global-search"><?php esc_html_e( 'Search app users and events', 'radioudaan-app-api' ); ?></label>
+							<input
+								type="search"
+								name="ru_global_search"
+								id="ru-global-search"
+								class="ru-admin__search-input"
+								value=""
+								placeholder="<?php esc_attr_e( 'Search users or events…', 'radioudaan-app-api' ); ?>"
+								autocomplete="off"
+							/>
+							<button type="submit" class="button"><?php esc_html_e( 'Search', 'radioudaan-app-api' ); ?></button>
+						</form>
 						<a href="<?php echo esc_url( RadioUdaan_Admin_Event_Editor::edit_url( 0 ) ); ?>" class="button ru-btn-large">
 							<span class="dashicons dashicons-plus-alt2" style="margin-top:3px;"></span>
 							<?php esc_html_e( 'Add new event', 'radioudaan-app-api' ); ?>
@@ -79,7 +93,13 @@ class RadioUdaan_Admin_Layout {
 		}
 
 		$detail = rawurldecode( $detail );
-		$class  = 'error' === $notice ? 'notice-error' : 'notice-success';
+		if ( 'error' === $notice ) {
+			$class = 'notice-error';
+		} elseif ( 'warning' === $notice ) {
+			$class = 'notice-warning';
+		} else {
+			$class = 'notice-success';
+		}
 		?>
 		<div class="ru-admin__notice notice <?php echo esc_attr( $class ); ?> is-dismissible" role="status" aria-live="polite">
 			<p class="ru-notice-text"><?php echo esc_html( $detail ); ?></p>
@@ -103,7 +123,7 @@ class RadioUdaan_Admin_Layout {
 				'icon'  => 'dashicons-calendar-alt',
 			),
 			'registrations'  => array(
-				'label' => __( 'Registrations', 'radioudaan-app-api' ),
+				'label' => __( 'App users', 'radioudaan-app-api' ),
 				'url'   => admin_url( 'admin.php?page=' . RadioUdaan_Admin_App_Hub::APP_USERS_SLUG ),
 				'icon'  => 'dashicons-groups',
 			),
@@ -116,6 +136,11 @@ class RadioUdaan_Admin_Layout {
 				'label' => __( 'Send notification', 'radioudaan-app-api' ),
 				'url'   => admin_url( 'admin.php?page=' . RadioUdaan_Admin_App_Hub::NOTIFICATIONS_SLUG ),
 				'icon'  => 'dashicons-bell',
+			),
+			'donations'      => array(
+				'label' => __( 'Donations', 'radioudaan-app-api' ),
+				'url'   => admin_url( 'admin.php?page=' . RadioUdaan_Admin_App_Hub::DONATIONS_SLUG ),
+				'icon'  => 'dashicons-money-alt',
 			),
 			'settings'       => array(
 				'label' => __( 'Settings', 'radioudaan-app-api' ),

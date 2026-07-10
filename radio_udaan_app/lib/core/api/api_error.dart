@@ -36,24 +36,35 @@ class ApiError implements Exception {
       );
     }
 
-    final raw = error.message ?? '';
-    final isBrowserTransportFailure = raw.contains('XMLHttpRequest') ||
-        raw.contains('connection errored') ||
-        error.type == DioExceptionType.connectionError;
-
-    if (isBrowserTransportFailure) {
+    // Never surface raw Dio timeout jargon (e.g. "took longer than 0:00:12").
+    if (_isTransientNetworkFailure(error)) {
       return ApiError(
         message: AppCopy.fallback.bootstrapOffline,
         statusCode: error.response?.statusCode,
       );
     }
 
+    final raw = error.message ?? '';
     return ApiError(
       message: raw.isNotEmpty
           ? raw
           : AppCopy.fallback.bootstrapOffline,
       statusCode: error.response?.statusCode,
     );
+  }
+
+  static bool _isTransientNetworkFailure(DioException error) {
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+      case DioExceptionType.connectionError:
+        return true;
+      default:
+        break;
+    }
+    final raw = error.message ?? '';
+    return raw.contains('XMLHttpRequest') || raw.contains('connection errored');
   }
 
   final String message;

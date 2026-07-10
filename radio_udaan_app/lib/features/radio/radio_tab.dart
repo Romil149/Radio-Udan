@@ -16,6 +16,7 @@ import '../../core/theme/udaan_colors.dart';
 import '../../core/theme/udaan_google_fonts.dart';
 import '../../core/models/radio_schedule.dart';
 import '../../core/widgets/main_tab_app_bar.dart';
+import '../auth/widgets/udaan_auth_widgets.dart';
 import 'azuracast_now_playing_provider.dart';
 import 'live_now_playing.dart';
 import '../favorites/app_favorites_provider.dart';
@@ -23,6 +24,8 @@ import 'radio_player_controller.dart';
 import 'radio_schedule_provider.dart';
 import 'radio_schedule_sheet.dart';
 import 'widgets/radio_volume_control.dart';
+
+enum _ShareSheetAction { share, copy }
 
 /// Live stream home (Stitch Live screen; content from GET /config → live_radio).
 class RadioTab extends ConsumerStatefulWidget {
@@ -73,12 +76,23 @@ class _RadioTabState extends ConsumerState<RadioTab> {
       return;
     }
 
+    if (!mounted) return;
+    final action = await _showRadioShareSheet(context, _copy);
+    if (!mounted || action == null) return;
+
+    if (action == _ShareSheetAction.copy) {
+      await Clipboard.setData(ClipboardData(text: message.trim()));
+      if (!mounted) return;
+      announceAndSnack(context, _copy.shareCopied);
+      return;
+    }
+
     try {
       final result =
           await SharePlus.instance.share(ShareParams(text: message.trim()));
       if (!mounted) return;
       if (result.status == ShareResultStatus.unavailable) {
-        await Clipboard.setData(ClipboardData(text: message));
+        await Clipboard.setData(ClipboardData(text: message.trim()));
         if (!mounted) return;
         announceAndSnack(context, _copy.shareCopied);
       }
@@ -86,6 +100,88 @@ class _RadioTabState extends ConsumerState<RadioTab> {
       if (!mounted) return;
       announceAndSnack(context, _copy.shareFailed);
     }
+  }
+
+  Future<_ShareSheetAction?> _showRadioShareSheet(
+    BuildContext context,
+    AppCopy copy,
+  ) {
+    return showModalBottomSheet<_ShareSheetAction>(
+      context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      showDragHandle: true,
+      isDismissible: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return UdaanModalSheet(
+          title: copy.radioShareLive,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                BrandTokens.screenPadding,
+                4,
+                BrandTokens.screenPadding,
+                16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: UdaanScreenHeader(
+                          title: copy.radioShareLive,
+                          style: GoogleFonts.atkinsonHyperlegible(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            color: sheetContext.udaan.onBackground,
+                          ),
+                        ),
+                      ),
+                      Semantics(
+                        button: true,
+                        label: copy.close,
+                        child: ExcludeSemantics(
+                          child: IconButton(
+                            onPressed: () =>
+                                Navigator.of(sheetContext).pop(),
+                            constraints: const BoxConstraints(
+                              minWidth: BrandTokens.a11yMinTapTarget,
+                              minHeight: BrandTokens.a11yMinTapTarget,
+                            ),
+                            icon: Icon(
+                              Icons.close,
+                              color: sheetContext.udaan.onBackground,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  UdaanPrimaryButton(
+                    label: copy.share,
+                    icon: Icons.share_outlined,
+                    onPressed: () => Navigator.of(sheetContext)
+                        .pop(_ShareSheetAction.share),
+                  ),
+                  const SizedBox(height: 12),
+                  UdaanOutlineButton(
+                    label: copy.copyValue,
+                    icon: Icons.copy,
+                    onPressed: () => Navigator.of(sheetContext)
+                        .pop(_ShareSheetAction.copy),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override

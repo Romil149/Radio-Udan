@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:radio_udaan_app/core/accessibility/udaan_semantics.dart';
 import 'package:radio_udaan_app/core/config/app_branding.dart';
@@ -42,19 +43,21 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: AccessibilityScope(
-          settings: const AppUserSettings(),
-          palette: UdaanPalette.fromBrand(BrandColors.defaults),
-          child: Builder(
-            builder: (context) => Scaffold(
-              body: registrationChoiceTile(
-                context: context,
-                label: 'Male',
-                selected: false,
-                isRadio: true,
-                groupLabel: 'Gender, required',
-                onTap: () {},
+      ProviderScope(
+        child: MaterialApp(
+          home: AccessibilityScope(
+            settings: const AppUserSettings(),
+            palette: UdaanPalette.fromBrand(BrandColors.defaults),
+            child: Builder(
+              builder: (context) => Scaffold(
+                body: registrationChoiceTile(
+                  context: context,
+                  label: 'Male',
+                  selected: false,
+                  isRadio: true,
+                  groupLabel: 'Gender, required',
+                  onTap: () {},
+                ),
               ),
             ),
           ),
@@ -63,7 +66,7 @@ void main() {
     );
 
     expect(
-      find.bySemanticsLabel('Gender, required, Male'),
+      find.bySemanticsLabel('Gender, required, Male, not selected'),
       findsOneWidget,
     );
   });

@@ -12,7 +12,7 @@ import '../auth/widgets/udaan_auth_widgets.dart';
 import 'whats_new_detail_screen.dart';
 import 'whats_new_providers.dart';
 
-/// Combined announcements + media coverage list for the About tab.
+/// Combined announcements + community news list for the About tab.
 class WhatsNewListScreen extends ConsumerWidget {
   const WhatsNewListScreen({super.key});
 

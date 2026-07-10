@@ -1,4 +1,123 @@
 
+### 2026-07-10 — Library YouTube loader stuck / pause UI wrong
+**Requested by**: User — video plays but loader always loading; pause always pause.
+**Agents**: Alex → Daniel; parent verified.
+**Root cause**: Listener set `_isPlaying=false` on iframe `unknown`/`cued`/`unStarted` while media continued; loader/`_startingPlayback` drifted.
+**What was done**: `_applyPlayerState` ignores unknown once playing; always clear loader on real playback; single Play/Pause toggle; post-load probe.
+**Verification**: dart analyze library_player_screen = 0 errors.
+**Status**: ⚠️ Local — not committed.
+
+### 2026-07-10 — What's New uses whats-new + latestcommunitynews
+**Requested by**: User — drop in-news; use latestcommunitynews + whats-new.
+**Agents**: Alex → Marcus/Daniel; parent verified php -l + dart analyze.
+**What was done**: Plugin list_updates + detail route + push; Flutter enum/API/detail UI; copy Community News.
+**Status**: ⚠️ Local — needs plugin deploy to staging + app build to ship.
+**Notes**: Staging currently still serves old in-news until plugin zip deployed.
+
+### 2026-07-10 — Hide About/More hero banners from SR
+**Requested by**: User — “About Radio Udaan” + “More Options” must not be spoken.
+**Agents**: Alex → implement.
+**What was done**: `MoreHeroCard` fully `ExcludeSemantics` (decorative; tab title + menu tiles remain).
+**Verification**: dart analyze touched files = 0 errors.
+**Status**: ⚠️ Local — not committed.
+
+### 2026-07-10 — Event registration keyboard Done + tap-outside
+**Requested by**: User — make keyboard close easy for blind users (align with Login).
+**Agents**: Alex → Daniel; parent verified.
+**What was done**: All text fields + subfields: onTapOutside dismiss; KeyboardAccessory Done+Next (single-line/subfields); Done-only for textarea.
+**Verification**: dart analyze = 0 errors.
+**Status**: ⚠️ Local — not committed.
+
+### 2026-07-10 — Choice checked/selected not audible (client report)
+**Requested by**: User/client — cannot hear if checkbox/radio selected.
+**Agents**: Alex → Maya; parent verified.
+**Root cause**: Only `Semantics.checked` set; state words not in label; custom onTap often silent on TalkBack (#155298).
+**What was done**: Label includes checked/selected / not…; announce new state on toggle; consent same. Copy keys a11y_*.
+**Verification**: dart analyze 0 errors; registration_form_a11y_test 2/2.
+**Status**: ⚠️ Local — not committed.
+
+### 2026-07-10 — Event registration: unlock prefilled name/email/phone
+**Requested by**: User — prefill but not locked; also check radios.
+**Agents**: Alex → Daniel; Maya radio check.
+**What was done**: Removed registration lock (readOnly/lock icon/cannot-edit hint); prefill kept. Radios/choice tiles already OK (checked, exclusive group, groupLabel, 56px). Decision logged.
+**Verification**: dart analyze event_registration_screen = 0 errors.
+**Status**: ⚠️ Local — not committed.
+
+### 2026-07-10 — SCREEN-07 Events fields vs guide (code audit)
+**Requested by**: User — check all Events fields vs guide/requirements.
+**Agents**: Alex → Maya (audit only).
+**What was done**: Field-type inventory + E1–E14. Critical: consent HTML silent (E1). HIGH: submit announce, upload client errors, event card Register verb. Text/choice/info mostly PASS. Doc SCREEN-07-events.md + canvas. No fixes.
+**Status**: ⚠️ Discussion — awaiting Q1–Q6 or fix scope.
+
+### 2026-07-10 — Library/API: auto-retry GET once + friendly timeout
+**Requested by**: User (timeout error + Retry — auto retry once).
+**Agents**: Alex → Marcus/Daniel; parent verified.
+**What was done**: Dio interceptor retries GET/HEAD once on transport timeout/connectionError; ApiError maps those to bootstrapOffline (no raw Dio text). POST/OTP never auto-retried.
+**Verification**: dart analyze api_client + api_error = 0 issues.
+**Status**: ⚠️ Local — not committed.
+
+### 2026-07-10 — Library search Clear button not in SR tree
+**Requested by**: User (Search Videos clear not readable).
+**Agents**: Alex → Maya/Daniel; parent verified.
+**Root cause**: Clear lived in `suffixIcon` inside `AccessibleTextFieldSemantics` → `ExcludeSemantics` (FIND-034 class).
+**What was done**: Clear moved outside field in Row; label `library_search_clear` = “Clear search”; 56×56.
+**Verification**: dart analyze = 0 issues.
+**Status**: ⚠️ Local — not committed.
+
+### 2026-07-10 — Radio schedule + Share Close (X) for SR dismiss
+**Requested by**: User — only fix missing cross on schedule and share popups.
+**Agents**: Alex → Daniel; parent verified + `close` copy key.
+**What was done**: Schedule header Close X; Share opens app sheet (Close / Share / Copy) before SharePlus. Copy key `close`. Other Screen 06 R-items untouched.
+**Verification**: dart analyze touched files = 0 issues.
+**Status**: ⚠️ Local — not committed.
+
+### 2026-07-10 — SCREEN-06 Live Radio line-by-line a11y audit
+**Requested by**: User — continue auditing.
+**Agents**: Alex → Maya (code audit, no edits).
+**What was done**: Full Radio tab + schedule sheet audit vs guide. Open **R1–R10** (HIGH: silent play/stop R1, error announce R2). FIND-043 still open as R3; FIND-044 fixed in code pending device. Created POPUP-06 doc; updated SCREEN-06 + canvas.
+**Status**: ⚠️ Discussion — awaiting Q1–Q6 or “fix Screen 06”.
+**Notes**: No Screen 05 in matrix; auth → Radio is next after OTP.
+
+### 2026-07-10 — Password show/hide ↔ screen-reader speak sync
+**Requested by**: User — show/hide not properly synced with password speak.
+**Agents**: Alex → Maya.
+**Root cause**: Boolean wiring was correct, but toggle gave no SR confirmation; Android obscure semantics can lag (#99763) so users heard stale character speech.
+**What was done**: `isPassword` on AccessibleTextFieldSemantics; on obscure flip announce “Password shown/hidden” (never the password); value null while hidden; wired on login/email/register/reset/change-password. Copy keys added.
+**Verification**: dart analyze touched files = 0 errors.
+**Status**: ⚠️ Code local — not committed with OTP fixes yet.
+
+### 2026-07-10 — Fix SCREEN-04 OTP O1–O8 + Screen 03 P1
+**Requested by**: User (@alex) — “Ok fix now”.
+**Agents**: Alex → Maya (a11y).
+**What was done**: Verifying/resending announces; single task heading in top bar; merged intro+phone; wait timer liveRegion (login+identity); trailing icon excluded; contact support combined label; phone login sending-code announce.
+**Verification**: `dart analyze` touched auth files = 0 errors.
+**Status**: ⚠️ Code complete local — not committed; device QA pending.
+**Notes**: Ask before commit/build bump +42. P2 intro Semantics on Screen 03 still optional.
+
+### 2026-07-09 — SCREEN-04 OTP verify line-by-line a11y audit
+**Requested by**: User (@alex) — next screen after 03.
+**Agents**: Alex → Maya.
+**What was done**: Full OTP verify audit (login + identity bodies). Open **O1–O8**; highest **O3** (verify loading silent). PIN Editing OK from +41. Appended to SCREEN-04-otp.md. Screen 03 parked. Canvas updated.
+**Status**: ⚠️ Discussion — awaiting fix vs continue to Radio.
+
+### 2026-07-09 — SCREEN-03 Phone login line-by-line a11y audit
+**Requested by**: User (@alex) — go to next screen after Login.
+**Agents**: Alex → Maya (a11y engineer).
+**What was done**: Full read of phone_login_screen + shared widgets. Open: **P1** (no Sending code announce), **P2** (intro plain Text). Build 41 phone/Editing/POPUP/logo inherited. Canvas + SCREEN-03-phone-login.md updated. No code fix yet.
+**Status**: ⚠️ Discussion — awaiting P1/P2.
+
+### 2026-07-09 — TestFlight upload fail build 41 (ASC list-apps 500)
+**Requested by**: User — CI error paste (Node 20 warning + altool 500).
+**What was done**: Chris diagnosed: IPA built OK; upload failed on Apple ASC `list-apps` HTTP 500 → altool error 19. Same workflow uploaded build 40 earlier same day. Node warning is noise. `gh` not authed here — user must re-run in Actions UI.
+**Status**: ⚠️ IPA on Artifacts; TestFlight not uploaded until re-run or Transporter.
+**Notes**: Harden later: `upload-testflight-build@v5` with `backend: appstore-api` or `--apple-id 1439057220`.
+
+### 2026-07-09 — Ship build 41 Login a11y + global Editing announce
+**Requested by**: User — commit to GitHub with +41 build.
+**What was done**: Pushed `ce59a9b` (app + a11y fixes) and `f49ff7d` (release-state hash). Build **2.0.0+41**.
+**Status**: ✅ Pushed to `main` — CI APK/TestFlight pending; device QA still needed.
+**Notes**: Unrelated WP plugin admin edits left uncommitted.
+
 ### 2026-07-09 — Standing rule: always best employee on the task
 **Requested by**: User (@alex) — always use the best employee; if no worker for the role, hire one with the best skills required.
 **What was done**: Logged in `decisions.md`, `project-knowledge.md`, and `.cursor/rules/specialist-agents.mdc` (BEST employee section + named roster).

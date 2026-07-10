@@ -18,7 +18,7 @@ import '../auth/widgets/udaan_auth_widgets.dart';
 import '../library/library_player_screen.dart';
 import 'whats_new_providers.dart';
 
-/// In-app detail for a single what's-new or in-news update.
+/// In-app detail for a single what's-new or community news update.
 class WhatsNewDetailScreen extends ConsumerWidget {
   const WhatsNewDetailScreen({
     required this.type,
@@ -46,22 +46,10 @@ class WhatsNewDetailScreen extends ConsumerWidget {
     final config = ref.watch(remoteConfigProvider);
     final apiBase = ref.watch(apiBaseUrlProvider);
 
-    if (type == WhatsNewUpdateType.inNews) {
-      final detail = ref.watch(whatsNewInNewsDetailProvider(postId));
-      return _scaffold(
-        context,
-        copy: copy,
-        child: detail.when(
-          data: (data) => _inNewsBody(context, copy, data),
-          loading: () => _loading(copy),
-          error: (e, _) => _error(context, copy, e, () {
-            ref.invalidate(whatsNewInNewsDetailProvider(postId));
-          }),
-        ),
-      );
-    }
+    final detail = type == WhatsNewUpdateType.communityNews
+        ? ref.watch(whatsNewCommunityNewsDetailProvider(postId))
+        : ref.watch(whatsNewAnnouncementDetailProvider(postId));
 
-    final detail = ref.watch(whatsNewAnnouncementDetailProvider(postId));
     return _scaffold(
       context,
       copy: copy,
@@ -76,7 +64,11 @@ class WhatsNewDetailScreen extends ConsumerWidget {
         ),
         loading: () => _loading(copy),
         error: (e, _) => _error(context, copy, e, () {
-          ref.invalidate(whatsNewAnnouncementDetailProvider(postId));
+          if (type == WhatsNewUpdateType.communityNews) {
+            ref.invalidate(whatsNewCommunityNewsDetailProvider(postId));
+          } else {
+            ref.invalidate(whatsNewAnnouncementDetailProvider(postId));
+          }
         }),
       ),
     );
@@ -240,96 +232,6 @@ class WhatsNewDetailScreen extends ConsumerWidget {
               }
               openExternalUrl(context, youtube, copy: copy);
             },
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _inNewsBody(
-    BuildContext context,
-    AppCopy copy,
-    WhatsNewInNewsDetail data,
-  ) {
-    final url = data.externalUrl?.trim() ?? '';
-    final dateRaw = data.publishedOn?.trim().isNotEmpty == true
-        ? data.publishedOn!
-        : (data.publishedAt ?? '');
-
-    return ListView(
-      padding: const EdgeInsets.all(BrandTokens.screenPadding),
-      children: [
-        if (data.kindLabel.isNotEmpty)
-          Text(
-            data.kindLabel,
-            style: GoogleFonts.atkinsonHyperlegible(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: context.udaan.primaryGlow,
-            ),
-          ),
-        const SizedBox(height: 12),
-        Semantics(
-          header: true,
-          label: data.title,
-          child: ExcludeSemantics(
-            child: Text(
-              data.title,
-              style: GoogleFonts.atkinsonHyperlegible(
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
-                color: context.udaan.onBackground,
-              ),
-            ),
-          ),
-        ),
-        if (dateRaw.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Semantics(
-            label: dateRaw,
-            child: ExcludeSemantics(
-              child: Text(
-                dateRaw,
-                style: GoogleFonts.atkinsonHyperlegible(
-                  fontSize: 15,
-                  color: context.udaan.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ),
-        ],
-        if (data.summary.isNotEmpty && data.summary != data.title) ...[
-          const SizedBox(height: 16),
-          Text(
-            data.summary,
-            style: GoogleFonts.atkinsonHyperlegible(
-              fontSize: 16,
-              height: 1.45,
-              color: context.udaan.onBackground,
-            ),
-          ),
-        ],
-        if (url.isNotEmpty) ...[
-          const SizedBox(height: 28),
-          UdaanPrimaryButton(
-            label: data.linkText?.trim().isNotEmpty == true
-                ? data.linkText!.trim()
-                : copy.whatsNewReadArticle,
-            icon: Icons.open_in_new,
-            onPressed: () => openExternalUrl(context, url, copy: copy),
-          ),
-          const SizedBox(height: 8),
-          Semantics(
-            label: copy.whatsNewReadArticleHint,
-            child: ExcludeSemantics(
-              child: Text(
-                copy.whatsNewReadArticleHint,
-                style: GoogleFonts.atkinsonHyperlegible(
-                  fontSize: 14,
-                  color: context.udaan.onSurfaceVariant,
-                ),
-              ),
-            ),
           ),
         ],
       ],

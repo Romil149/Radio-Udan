@@ -9,6 +9,10 @@ extension AppCopyStrings on AppCopy {
   String get aboutOptionsIntro => text('about_options_intro');
   String get aboutOptionsTitle => text('about_options_title');
   String get accessibilitySection => text('accessibility_section');
+  String get a11yChecked => text('a11y_checked');
+  String get a11yNotChecked => text('a11y_not_checked');
+  String get a11yNotSelected => text('a11y_not_selected');
+  String get a11ySelected => text('a11y_selected');
   String get accountDeleteFailed => text('account_delete_failed');
   String get accountDeletedSigningOut => text('account_deleted_signing_out');
   String get accountIcon => text('account_icon');
@@ -28,6 +32,8 @@ extension AppCopyStrings on AppCopy {
   String get keyboardNext => text('keyboard_next');
   String get callAccessibilityHelpline => text('call_accessibility_helpline');
   String get cancel => text('cancel');
+
+  String get close => text('close');
   String get changePasswordIntro => text('change_password_intro');
   String get changePasswordTitle => text('change_password_title');
   String get chooseFile => text('choose_file');
@@ -135,6 +141,7 @@ extension AppCopyStrings on AppCopy {
   String get libraryRecentUploadsEmpty => text('library_recent_uploads_empty');
   String get librarySaveVideo => text('library_save_video');
   String get librarySavedVideo => text('library_saved_video');
+  String get librarySearchClear => text('library_search_clear');
   String get librarySearchEmpty => text('library_search_empty');
   String get librarySearchHint => text('library_search_hint');
   String get librarySearchVideos => text('library_search_videos');
@@ -223,9 +230,11 @@ extension AppCopyStrings on AppCopy {
   String get otpResendLabel => text('otp_resend_label');
   String get otpSendCode => text('otp_send_code');
   String get otpWaitPrompt => text('otp_wait_prompt');
+  String get passwordHiddenAnnounce => text('password_hidden_announce');
   String get passwordLabel => text('password_label');
   String get passwordMismatch => text('password_mismatch');
   String get passwordRequired => text('password_required');
+  String get passwordShownAnnounce => text('password_shown_announce');
   String get phoneCountrySearchHint => text('phone_country_search_hint');
   String get phoneCountryPickerTitle => text('phone_country_picker_title');
   String get phoneCountryFavorites => text('phone_country_favorites');
@@ -427,6 +436,7 @@ extension AppCopyStrings on AppCopy {
   String get whatsNewDetailLoading => text('whats_new_detail_loading');
   String get whatsNewEmpty => text('whats_new_empty');
   String get whatsNewKindAnnouncement => text('whats_new_kind_announcement');
+  String get whatsNewKindCommunityNews => text('whats_new_kind_community_news');
   String get whatsNewKindInNews => text('whats_new_kind_in_news');
   String get whatsNewReadArticle => text('whats_new_read_article');
   String get whatsNewReadArticleHint => text('whats_new_read_article_hint');

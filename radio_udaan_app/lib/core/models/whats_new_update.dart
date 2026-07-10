@@ -1,8 +1,8 @@
-/// Combined what's-new + in-news items from `GET /library/updates`.
+/// Combined what's-new + community news items from `GET /library/updates`.
 
 enum WhatsNewUpdateType {
   whatsNew('whats-new'),
-  inNews('in-news');
+  communityNews('latestcommunitynews');
 
   const WhatsNewUpdateType(this.apiValue);
 
@@ -80,6 +80,7 @@ class WhatsNewListResponse {
   final int totalPages;
 }
 
+/// Shared detail shape for whats-new and latestcommunitynews.
 class WhatsNewAnnouncementDetail {
   const WhatsNewAnnouncementDetail({
     required this.id,
@@ -117,44 +118,6 @@ class WhatsNewAnnouncementDetail {
   final String? bodyHtml;
   final String? thumbnailUrl;
   final String? youtubeUrl;
-  final String? publishedAt;
-  final String? permalink;
-}
-
-class WhatsNewInNewsDetail {
-  const WhatsNewInNewsDetail({
-    required this.id,
-    required this.title,
-    required this.summary,
-    required this.kindLabel,
-    this.externalUrl,
-    this.linkText,
-    this.publishedOn,
-    this.publishedAt,
-    this.permalink,
-  });
-
-  factory WhatsNewInNewsDetail.fromJson(Map<String, dynamic> json) {
-    return WhatsNewInNewsDetail(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      title: json['title']?.toString() ?? '',
-      summary: json['summary']?.toString() ?? '',
-      kindLabel: json['kind_label']?.toString() ?? '',
-      externalUrl: json['external_url']?.toString(),
-      linkText: json['link_text']?.toString(),
-      publishedOn: json['published_on']?.toString(),
-      publishedAt: json['published_at']?.toString(),
-      permalink: json['permalink']?.toString(),
-    );
-  }
-
-  final int id;
-  final String title;
-  final String summary;
-  final String kindLabel;
-  final String? externalUrl;
-  final String? linkText;
-  final String? publishedOn;
   final String? publishedAt;
   final String? permalink;
 }

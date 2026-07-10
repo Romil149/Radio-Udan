@@ -179,6 +179,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   focusNode: _passwordFocus,
                   hint: _copy.loginPasswordHint,
                   obscureText: _obscurePassword,
+                  isPassword: true,
                   textInputAction: TextInputAction.done,
                   prefixIcon: Icons.lock_outline,
                   autofillHints: const [AutofillHints.password],

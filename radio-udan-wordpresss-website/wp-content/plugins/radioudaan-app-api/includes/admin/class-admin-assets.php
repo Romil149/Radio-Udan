@@ -50,6 +50,29 @@ class RadioUdaan_Admin_Assets {
 			true
 		);
 
+		$search_js_path = RADIOUDAAN_APP_API_PATH . 'assets/js/admin-search.js';
+		wp_enqueue_script(
+			'radioudaan-app-admin-search',
+			RADIOUDAAN_APP_API_URL . 'assets/js/admin-search.js',
+			array(),
+			is_readable( $search_js_path ) ? (string) filemtime( $search_js_path ) : RADIOUDAAN_APP_API_VERSION,
+			true
+		);
+
+		if (
+			false !== strpos( (string) $hook, RadioUdaan_Admin_App_Hub::HELP_SLUG )
+			|| false !== strpos( (string) $hook, RadioUdaan_Admin_App_Hub::API_SLUG )
+		) {
+			$help_js_path = RADIOUDAAN_APP_API_PATH . 'assets/js/admin-help.js';
+			wp_enqueue_script(
+				'radioudaan-app-admin-help',
+				RADIOUDAAN_APP_API_URL . 'assets/js/admin-help.js',
+				array(),
+				is_readable( $help_js_path ) ? (string) filemtime( $help_js_path ) : RADIOUDAAN_APP_API_VERSION,
+				true
+			);
+		}
+
 		if ( false !== strpos( (string) $hook, RadioUdaan_Admin_App_Hub::EVENTS_SLUG ) ) {
 			wp_localize_script(
 				'radioudaan-app-admin',
@@ -74,6 +97,34 @@ class RadioUdaan_Admin_Assets {
 				array( 'jquery' ),
 				RADIOUDAAN_APP_API_VERSION,
 				true
+			);
+		}
+
+		if (
+			false !== strpos( (string) $hook, RadioUdaan_Admin_App_Hub::APP_USERS_SLUG )
+			|| false !== strpos( (string) $hook, RadioUdaan_Admin_App_Hub::VIEW_USER_SLUG )
+		) {
+			$users_js_path = RADIOUDAAN_APP_API_PATH . 'assets/js/admin-users.js';
+			wp_enqueue_script(
+				'radioudaan-app-users',
+				RADIOUDAAN_APP_API_URL . 'assets/js/admin-users.js',
+				array( 'jquery' ),
+				is_readable( $users_js_path ) ? (string) filemtime( $users_js_path ) : RADIOUDAAN_APP_API_VERSION,
+				true
+			);
+			wp_localize_script(
+				'radioudaan-app-users',
+				'radioudaanUsersAdmin',
+				array(
+					'i18n' => array(
+						'confirmDelete' => __( 'Type DELETE to permanently remove the selected user(s). This revokes sessions and removes devices.', 'radioudaan-app-api' ),
+						'confirmPause'  => __( 'Type PAUSE to suspend the selected user(s). Active sessions will be revoked.', 'radioudaan-app-api' ),
+						'confirmBulk'   => __( 'Apply this bulk action to the selected users?', 'radioudaan-app-api' ),
+						'typeMismatch'  => __( 'Confirmation text did not match. Action cancelled.', 'radioudaan-app-api' ),
+						'selectUsers'   => __( 'Select at least one user.', 'radioudaan-app-api' ),
+						'selectAction'  => __( 'Choose a bulk action.', 'radioudaan-app-api' ),
+					),
+				)
 			);
 		}
 
@@ -124,6 +175,7 @@ class RadioUdaan_Admin_Assets {
 
 		if ( false !== strpos( (string) $hook, 'radioudaan-app-edit-event' )
 			|| false !== strpos( (string) $hook, 'radioudaan-app-view-entry' )
+			|| false !== strpos( (string) $hook, 'radioudaan-app-view-user' )
 			|| false !== strpos( (string) $hook, 'radioudaan-app-users' ) ) {
 			return true;
 		}

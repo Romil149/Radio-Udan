@@ -1,6 +1,6 @@
 <?php
 /**
- * Push + inbox when whats-new or in-news posts are first published.
+ * Push + inbox when whats-new or community news posts are first published.
  *
  * @package RadioUdaanAppApi
  */
@@ -35,15 +35,17 @@ class RadioUdaan_App_Updates_Notifications {
 
 		$allowed = array(
 			RadioUdaan_App_Library::CPT_WHATS_NEW,
-			RadioUdaan_App_Library::CPT_IN_NEWS,
+			RadioUdaan_App_Library::CPT_COMMUNITY_NEWS,
 		);
 		if ( ! in_array( $post->post_type, $allowed, true ) ) {
 			return;
 		}
 
-		$app_type = RadioUdaan_App_Library::CPT_IN_NEWS === $post->post_type ? 'in-news' : 'whats-new';
+		$app_type = RadioUdaan_App_Library::CPT_COMMUNITY_NEWS === $post->post_type
+			? 'latestcommunitynews'
+			: 'whats-new';
 		$title    = self::post_title( $post );
-		$summary  = self::post_summary( $post, $app_type );
+		$summary  = self::post_summary( $post );
 		$body     = wp_trim_words( wp_strip_all_tags( $summary ), 24, '…' );
 
 		$user_ids = RadioUdaan_App_Notifications::user_ids_with_devices();
@@ -91,14 +93,10 @@ class RadioUdaan_App_Updates_Notifications {
 	}
 
 	/**
-	 * @param WP_Post $post     Post.
-	 * @param string  $app_type whats-new|in-news.
+	 * @param WP_Post $post Post.
 	 * @return string
 	 */
-	private static function post_summary( WP_Post $post, $app_type ) {
-		if ( 'in-news' === $app_type ) {
-			return self::post_title( $post );
-		}
+	private static function post_summary( WP_Post $post ) {
 		if ( function_exists( 'get_field' ) ) {
 			$body = get_field( 'body', $post->ID );
 			if ( $body ) {

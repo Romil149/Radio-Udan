@@ -340,6 +340,7 @@ class UdaanLabeledField extends StatelessWidget {
     this.keyboardType,
     this.textInputAction,
     this.obscureText = false,
+    this.isPassword = false,
     this.autofillHints,
     this.prefixIcon,
     this.prefixText,
@@ -360,6 +361,9 @@ class UdaanLabeledField extends StatelessWidget {
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final bool obscureText;
+
+  /// Marks a togglable password field so obscure flips announce shown/hidden.
+  final bool isPassword;
   final bool readOnly;
   final bool required;
   final String? semanticsLabel;
@@ -409,6 +413,7 @@ class UdaanLabeledField extends StatelessWidget {
             semanticsLabel: _fieldSemanticsLabel,
             readOnly: readOnly,
             obscured: obscureText,
+            isPassword: isPassword,
             focusNode: focusNode,
             child: _fieldWithAccessory(context, palette),
           )
@@ -422,6 +427,7 @@ class UdaanLabeledField extends StatelessWidget {
                   semanticsLabel: _fieldSemanticsLabel,
                   readOnly: readOnly,
                   obscured: obscureText,
+                  isPassword: isPassword,
                   focusNode: focusNode,
                   child: _fieldWithAccessory(context, palette),
                 ),
@@ -813,17 +819,19 @@ class UdaanContactSupportPrompt extends StatelessWidget {
         alignment: WrapAlignment.center,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          Text(
-            '${copy.otpHavingTrouble} ',
-            style: udaanTextStyle(
-              context,
-              fontSize: 16,
-              color: palette.primaryGlow.withValues(alpha: 0.9),
+          ExcludeSemantics(
+            child: Text(
+              '${copy.otpHavingTrouble} ',
+              style: udaanTextStyle(
+                context,
+                fontSize: 16,
+                color: palette.primaryGlow.withValues(alpha: 0.9),
+              ),
             ),
           ),
           Semantics(
             button: true,
-            label: copy.contactSupport,
+            label: '${copy.otpHavingTrouble} ${copy.contactSupport}',
             child: ExcludeSemantics(
               child: TextButton(
                 onPressed: () {

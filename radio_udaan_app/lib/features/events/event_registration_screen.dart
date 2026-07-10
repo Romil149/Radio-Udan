@@ -13,6 +13,7 @@ import '../../core/storage/registration_draft_storage.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/accessibility_scope.dart';
 import '../../core/theme/udaan_text_styles.dart';
+import '../../core/utils/keyboard_dismiss.dart';
 import '../../core/widgets/accessible_html_content.dart';
 import '../../core/widgets/keyboard_accessory.dart';
 import '../auth/widgets/udaan_auth_widgets.dart';
@@ -97,7 +98,11 @@ class _EventRegistrationScreenState
   }
 
   FocusNode _focusNodeFor(FormFieldSchema field) {
-    return _fieldFocusNodes.putIfAbsent(field.key, FocusNode.new);
+    return _focusNodeForKey(field.key);
+  }
+
+  FocusNode _focusNodeForKey(String key) {
+    return _fieldFocusNodes.putIfAbsent(key, FocusNode.new);
   }
 
   void _syncTextController(FormFieldSchema field) {
@@ -323,12 +328,6 @@ class _EventRegistrationScreenState
     return field.required ? '$clean, required' : clean;
   }
 
-  bool _isAccountLockedField(FormFieldSchema field) {
-    final user = ref.read(authUserProvider);
-    if (user == null) return false;
-    return accountValueForField(field, user) != null;
-  }
-
   InputDecoration _fieldDecoration(
     BuildContext context,
     FormFieldSchema field,
@@ -401,29 +400,15 @@ class _EventRegistrationScreenState
     String? hintOverride,
   }) {
     final controller = _textControllerFor(field);
-    final isAccountLocked = _isAccountLockedField(field);
-    final palette = context.udaan;
-    // Numeric keypads have no OS action button, so attach a Done/Next bar.
-    final isNumeric = keyboardType == TextInputType.number ||
-        keyboardType == TextInputType.phone;
-    final focusNode = isAccountLocked ? null : _focusNodeFor(field);
+    final focusNode = _focusNodeFor(field);
+    final isMultiline = maxLines > 1;
 
     Widget input = TextFormField(
       controller: controller,
       focusNode: focusNode,
-      readOnly: isAccountLocked,
-      style: registrationFieldInputStyle(
-        context,
-        readOnly: isAccountLocked,
-      ),
+      style: registrationFieldInputStyle(context),
       decoration: _fieldDecoration(context, field).copyWith(
         hintText: hintOverride ?? field.placeholder,
-        suffixIcon: isAccountLocked
-            ? Icon(
-                Icons.lock_outline,
-                color: palette.onSurfaceVariant,
-              )
-            : null,
       ),
       keyboardType: keyboardType,
       maxLines: maxLines,
@@ -431,22 +416,23 @@ class _EventRegistrationScreenState
       // Single-line fields chain to the next field with "Next"; multiline
       // keeps the newline key.
       textInputAction:
-          maxLines > 1 ? TextInputAction.newline : TextInputAction.next,
-      onFieldSubmitted: maxLines > 1
+          isMultiline ? TextInputAction.newline : TextInputAction.next,
+      onFieldSubmitted: isMultiline
           ? null
           : (_) => FocusScope.of(context).nextFocus(),
-      onChanged: isAccountLocked ? null : (v) => _onTextFieldChanged(field, v),
+      onTapOutside: (_) => dismissKeyboard(context),
+      onChanged: (v) => _onTextFieldChanged(field, v),
     );
 
-    if (isNumeric && focusNode != null && !isAccountLocked) {
-      input = KeyboardAccessory(
-        focusNode: focusNode,
-        doneLabel: _copy.keyboardDone,
-        nextLabel: _copy.keyboardNext,
-        onNext: () => FocusScope.of(context).nextFocus(),
-        child: input,
-      );
-    }
+    // Always show Done so TalkBack/VoiceOver can dismiss the keyboard.
+    // Single-line also gets Next; multiline is Done-only (Return inserts newline).
+    input = KeyboardAccessory(
+      focusNode: focusNode,
+      doneLabel: _copy.keyboardDone,
+      nextLabel: isMultiline ? null : _copy.keyboardNext,
+      onNext: isMultiline ? null : () => FocusScope.of(context).nextFocus(),
+      child: input,
+    );
 
     return _fieldShell(
       context,
@@ -454,10 +440,7 @@ class _EventRegistrationScreenState
       AccessibleTextFieldSemantics(
         controller: controller,
         semanticsLabel: _fieldSemanticsLabel(field),
-        hint: isAccountLocked
-            ? _copy.registrationAccountLockedHint
-            : (hintOverride ?? field.placeholder),
-        readOnly: isAccountLocked,
+        hint: hintOverride ?? field.placeholder,
         focusNode: focusNode,
         child: input,
       ),
@@ -1422,8 +1405,14 @@ class _EventRegistrationScreenState
               semanticsLabel:
                   sub.required ? '${sub.label}, required' : sub.label,
               value: map[sub.key]?.toString(),
-              child: TextFormField(
+              child: KeyboardAccessory(
+                focusNode: _focusNodeForKey('${field.key}__${sub.key}'),
+                doneLabel: _copy.keyboardDone,
+                nextLabel: _copy.keyboardNext,
+                onNext: () => FocusScope.of(context).nextFocus(),
+                child: TextFormField(
                   initialValue: map[sub.key]?.toString() ?? '',
+                  focusNode: _focusNodeForKey('${field.key}__${sub.key}'),
                   style: registrationFieldInputStyle(context),
                   decoration: registrationFieldDecoration(
                     context,
@@ -1437,9 +1426,12 @@ class _EventRegistrationScreenState
                       : TextInputType.name,
                   textCapitalization: TextCapitalization.words,
                   textInputAction: TextInputAction.next,
-                  onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
+                  onFieldSubmitted: (_) =>
+                      FocusScope.of(context).nextFocus(),
+                  onTapOutside: (_) => dismissKeyboard(context),
                   onChanged: (v) => _setSubfieldValue(field, sub, v),
                 ),
+              ),
             ),
             const SizedBox(height: 12),
           ],
@@ -1452,14 +1444,27 @@ class _EventRegistrationScreenState
     final checked = _values[field.key] == true || _values[field.key] == '1';
     final consentLabel = registrationFieldDisplayLabel(field.label);
     final palette = context.udaan;
+    final stateWord =
+        checked ? _copy.a11yChecked : _copy.a11yNotChecked;
+    final semanticsLabel = field.required
+        ? '$consentLabel, required, $stateWord'
+        : '$consentLabel, $stateWord';
+
+    void handleActivate() {
+      final nextChecked = !checked;
+      _setFieldValue(field.key, nextChecked);
+      final newStateWord =
+          nextChecked ? _copy.a11yChecked : _copy.a11yNotChecked;
+      _announce('$consentLabel, $newStateWord');
+    }
 
     return _fieldShell(
       context,
       field,
       Semantics(
         checked: checked,
-        label: field.required ? '$consentLabel, required' : consentLabel,
-        onTap: () => _setFieldValue(field.key, !checked),
+        label: semanticsLabel,
+        onTap: handleActivate,
         child: ExcludeSemantics(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1467,7 +1472,7 @@ class _EventRegistrationScreenState
               Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () => _setFieldValue(field.key, !checked),
+                  onTap: handleActivate,
                   borderRadius: BorderRadius.circular(8),
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(

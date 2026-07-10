@@ -123,8 +123,14 @@ class RadioUdaan_App_Password_Auth {
 			return new WP_Error( 'credentials_required', __( 'Identifier and password are required.', 'radioudaan-app-api' ), array( 'status' => 400 ) );
 		}
 
-		$user = RadioUdaan_App_Users::find_by_identifier( $identifier );
-		if ( ! $user || 'active' !== $user->status ) {
+		$user = RadioUdaan_App_Users::find_by_identifier_for_auth( $identifier );
+		if ( ! $user ) {
+			return new WP_Error( 'invalid_credentials', __( 'Invalid email, mobile, or password.', 'radioudaan-app-api' ), array( 'status' => 401 ) );
+		}
+		if ( RadioUdaan_App_Users::is_paused( $user ) ) {
+			return RadioUdaan_App_Users::account_paused_error();
+		}
+		if ( 'active' !== $user->status ) {
 			return new WP_Error( 'invalid_credentials', __( 'Invalid email, mobile, or password.', 'radioudaan-app-api' ), array( 'status' => 401 ) );
 		}
 

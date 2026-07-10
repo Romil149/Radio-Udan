@@ -315,6 +315,26 @@ class RadioUdaan_Cpt_Ru_Event {
 		if ( isset( $_POST['ru_success_message'] ) ) {
 			update_post_meta( $post_id, self::META_SUCCESS_MESSAGE, sanitize_textarea_field( wp_unslash( $_POST['ru_success_message'] ) ) );
 		}
+		if ( isset( $_POST['ru_event_type'] ) ) {
+			update_post_meta(
+				$post_id,
+				self::META_EVENT_TYPE,
+				RadioUdaan_Event_Registry::normalize_event_type( wp_unslash( $_POST['ru_event_type'] ) )
+			);
+		}
+		if ( isset( $_POST['ru_event_start_at'] ) ) {
+			$start_raw = sanitize_text_field( wp_unslash( $_POST['ru_event_start_at'] ) );
+			if ( '' === $start_raw ) {
+				delete_post_meta( $post_id, self::META_EVENT_START_AT );
+			} else {
+				$ts = strtotime( $start_raw );
+				update_post_meta(
+					$post_id,
+					self::META_EVENT_START_AT,
+					$ts ? gmdate( 'c', $ts ) : ''
+				);
+			}
+		}
 		update_post_meta( $post_id, self::META_ALLOW_MULTIPLE_REGISTRATIONS, ! empty( $_POST['ru_allow_multiple_registrations'] ) );
 	}
 }

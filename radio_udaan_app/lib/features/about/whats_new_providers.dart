@@ -12,7 +12,7 @@ final whatsNewAnnouncementDetailProvider =
   return ref.read(radioudaanApiProvider).getWhatsNewDetail(id);
 });
 
-final whatsNewInNewsDetailProvider =
-    FutureProvider.family<WhatsNewInNewsDetail, int>((ref, id) async {
-  return ref.read(radioudaanApiProvider).getInNewsDetail(id);
+final whatsNewCommunityNewsDetailProvider =
+    FutureProvider.family<WhatsNewAnnouncementDetail, int>((ref, id) async {
+  return ref.read(radioudaanApiProvider).getCommunityNewsDetail(id);
 });

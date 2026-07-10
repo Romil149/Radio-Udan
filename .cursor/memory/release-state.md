@@ -3,10 +3,10 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+41** @ `ce59a9b` | pushed | 2026-07-09 | Login a11y L1–L6 + global Editing announce + country picker |
-| TestFlight iOS | **2.0.0+41** | CI pending | 2026-07-09 | Device QA: Editing announce, country sheet focus |
-| Staging WP plugin | partial | **yes** | 2026-07-08 | API smoke 19/19; redeploy full zip if `class-admin-donations.php` missing on server |
-| Staging API smoke | 19/19 | — | 2026-07-08 | Includes `/donate/*` routes + `info_hub.donate.razorpay` |
+| GitHub `main` | **2.0.0+42** (this push) | pushing | 2026-07-10 | A11y + Library player + What's New community + Events keyboard/unlock |
+| TestFlight iOS | **2.0.0+42** | CI after push | 2026-07-10 | Device QA: YouTube play/pause, Events fields, schedule Close |
+| Staging WP plugin | local zip needed | **no** (redeploy) | 2026-07-10 | Must deploy for `latestcommunitynews` What's New feed |
+| Staging API smoke | — | — | — | Re-run after plugin deploy |
 
 ## TestFlight build bump (mandatory — same commit)
 
@@ -20,5 +20,5 @@ Never push app code to `main` without bumping the build if the last build is alr
 ## Open deploy blockers
 
 1. **Razorpay keys** — WP Admin: enable Razorpay + paste test/live Key ID, Secret, Webhook secret before Pay Online works on device.
-2. **Plugin zip** — If donate admin fatal on server, upload `dist/radioudaan-app-api-staging.zip` (full folder replace).
-3. User device QA — Donate Pay Online (Android native + iOS Safari), 80G + PAN, What's New, TalkBack/VoiceOver.
+2. **Plugin zip** — Redeploy full App API plugin so What's New uses `whats-new` + `latestcommunitynews` (not in-news).
+3. User device QA — Library YouTube play/pause, Events registration keyboard/choices, Radio schedule Close, TalkBack/VoiceOver.

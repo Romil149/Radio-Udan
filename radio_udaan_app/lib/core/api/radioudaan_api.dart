@@ -306,11 +306,11 @@ class RadioUdaanApi {
     return WhatsNewAnnouncementDetail.fromJson(response.data ?? {});
   }
 
-  Future<WhatsNewInNewsDetail> getInNewsDetail(int id) async {
+  Future<WhatsNewAnnouncementDetail> getCommunityNewsDetail(int id) async {
     final response = await _dio.get<Map<String, dynamic>>(
-      '/library/updates/in-news/$id',
+      '/library/updates/latestcommunitynews/$id',
     );
-    return WhatsNewInNewsDetail.fromJson(response.data ?? {});
+    return WhatsNewAnnouncementDetail.fromJson(response.data ?? {});
   }
 
   Future<YoutubePlaylistListResponse> listFeaturedYoutubePlaylists() async {

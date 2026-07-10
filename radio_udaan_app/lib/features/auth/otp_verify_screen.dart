@@ -202,6 +202,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
       _error = null;
       _resending = true;
     });
+    _announce(_copy.resendingCodePleaseWait);
 
     try {
       final result = await ref.read(radioudaanApiProvider).requestOtp(
@@ -255,6 +256,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
       _error = null;
       _loading = true;
     });
+    _announce(_copy.verifyingCodePleaseWait);
 
     try {
       final result = await ref.read(radioudaanApiProvider).verifyOtp(
@@ -335,6 +337,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
             loading: _loading,
             resending: _resending,
             canResend: _canResend,
+            resendSecondsRemaining: _resendSecondsRemaining,
             devOtp: _devOtp,
             onBack: _goBack,
             onVerify: _verify,
