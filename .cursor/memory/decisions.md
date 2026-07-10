@@ -1,6 +1,12 @@
 # Architecture Decisions Log
 <!-- When a design choice is made, document it here so we don't re-debate it. -->
 
+### 2026-07-10 — FCM project must match Flutter Firebase project
+**Context**: Staging had FCM configured (`fcm_configured: true`) on project `radio-udaan-cbfdc` while the app uses `radio-udaan-72232`; zero devices registered; admin “send” only created inbox rows.
+**Decision**: Lock expected client project as `RadioUdaan_App_Fcm_Sender::EXPECTED_APP_PROJECT_ID = radio-udaan-72232`. Expose `fcm_project_matches_app` on `GET /health`; warn in admin Send + Settings when mismatched.
+**Reasoning**: FCM HTTP v1 tokens are project-scoped; cross-project sends fail/prune. Operators need a non-secret signal.
+**Consequences**: Changing the app Firebase project requires updating the PHP constant + client configs together.
+
 ### 2026-07-10 — About Us content via info_hub (like Donate)
 **Context**: About Us used Legal URLs → WP page HTML (`legal_pages.about`). User wants plugin fields editable like Donate.
 **Decision**: Structured `info_hub.about` (badge, headline, intro, body, accessibility_note, image). Admin: Settings → About tab. Remove Legal “About page” picker and omit `legal_pages.about` from GET `/config`. Keep public `about_url` for stores/web. App Copy keeps tile labels only.

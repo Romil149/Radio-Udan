@@ -18,10 +18,41 @@ class RadioUdaan_App_Fcm_Sender {
 	const ANDROID_CHANNEL = 'radioudaan_alerts';
 
 	/**
+	 * Firebase project ID baked into the Flutter app (google-services / firebase_options).
+	 * WP service account + FCM project ID must match this or tokens will never deliver.
+	 */
+	const EXPECTED_APP_PROJECT_ID = 'radio-udaan-72232';
+
+	/**
 	 * Clear cached OAuth access token (e.g. after credential rotation).
 	 */
 	public static function clear_oauth_cache() {
 		delete_transient( self::TOKEN_TRANSIENT );
+	}
+
+	/**
+	 * Whether the configured FCM project matches the mobile app Firebase project.
+	 *
+	 * @return bool
+	 */
+	public static function project_matches_app() {
+		$configured = self::resolve_configured_project_id();
+		return '' !== $configured && self::EXPECTED_APP_PROJECT_ID === $configured;
+	}
+
+	/**
+	 * Project ID used for FCM HTTP v1 sends (setting or service-account JSON).
+	 *
+	 * @return string
+	 */
+	public static function resolve_configured_project_id() {
+		$account = self::get_service_account();
+		if ( ! $account ) {
+			$from_setting = RadioUdaan_App_Settings::get_fcm_project_id();
+			return '' !== $from_setting ? $from_setting : '';
+		}
+
+		return self::resolve_project_id( $account );
 	}
 
 	/**

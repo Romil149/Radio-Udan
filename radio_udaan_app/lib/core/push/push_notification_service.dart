@@ -57,7 +57,7 @@ class PushNotificationService {
       return false;
     }
     if (!await ensureFirebase()) {
-      _diag.error('Firebase not initialized — cannot continue');
+      // ensureFirebase already logged the full exception to PushDiagnostics.
       return false;
     }
     try {
@@ -69,17 +69,35 @@ class PushNotificationService {
     return true;
   }
 
+  /// Returns true when a Firebase app is usable (existing or freshly initialized).
+  ///
+  /// Native `FirebaseApp.configure()` (if ever added) or a prior Dart init can
+  /// leave `Firebase.apps` non-empty — treat that as success. On failure, the
+  /// full exception is written to [PushDiagnostics] so Android devices show it.
   static Future<bool> ensureFirebase() async {
     if (kIsWeb) return false;
-    try {
-      if (Firebase.apps.isEmpty) {
-        await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        );
-      }
+    final diag = PushDiagnostics.instance;
+    if (Firebase.apps.isNotEmpty) {
       return true;
-    } catch (e) {
-      debugPrint('Firebase init skipped: $e');
+    }
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      return true;
+    } catch (e, st) {
+      // Race / double-init: another isolate or native configure may have won.
+      if (Firebase.apps.isNotEmpty) {
+        diag.warn('Firebase init threw but apps already exist — treating as OK: $e');
+        return true;
+      }
+      final detail = '$e';
+      final stackHint = st.toString().split('\n').take(3).join(' | ');
+      diag.error('Firebase init failed: $detail');
+      if (stackHint.isNotEmpty) {
+        diag.error('Firebase init stack: $stackHint');
+      }
+      debugPrint('Firebase init failed: $e\n$st');
       return false;
     }
   }
@@ -315,19 +333,31 @@ class PushNotificationService {
 
     final messaging = FirebaseMessaging.instance;
     final platform = Platform.isIOS ? 'ios' : 'android';
+    var sawApnsTokenMissing = false;
 
     for (var attempt = 0; attempt < attempts; attempt++) {
       _diag.log('Token attempt ${attempt + 1}/$attempts (platform=$platform)');
       try {
         if (Platform.isIOS) {
+          // First attempt waits longer — APNs often lags after permission grant
+          // when UIScene + FlutterImplicitEngineDelegate skip swizzling.
           final gotApns = await _waitForApnsToken(
             messaging,
-            maxAttempts: attempt == 0 ? 40 : 20,
+            maxAttempts: attempt == 0 ? 60 : 30,
           );
           _diag.log(
             gotApns ? 'APNs token received from Apple' : 'APNs token NOT ready',
             level: gotApns ? PushLogLevel.ok : PushLogLevel.warn,
           );
+          if (!gotApns) {
+            sawApnsTokenMissing = true;
+            // Do not call getToken until APNs is ready — it throws
+            // [firebase_messaging/apns-token-not-set] and looks like apiFailed.
+            if (attempt < attempts - 1) {
+              await Future<void>.delayed(Duration(seconds: 3 + attempt));
+            }
+            continue;
+          }
         }
 
         final token = await messaging.getToken().timeout(
@@ -364,15 +394,42 @@ class PushNotificationService {
         return PushRegistrationResult.success;
       } catch (e) {
         _diag.error('Attempt ${attempt + 1} failed: $e');
+        if (_isApnsTokenNotSetError(e)) {
+          sawApnsTokenMissing = true;
+          if (attempt < attempts - 1) {
+            await Future<void>.delayed(Duration(seconds: Platform.isIOS ? 3 : 2));
+            continue;
+          }
+          _diag.error(
+            'APNs token never became available — FCM getToken blocked',
+          );
+          return PushRegistrationResult.tokenUnavailable;
+        }
         if (attempt < attempts - 1) {
           await Future<void>.delayed(Duration(seconds: Platform.isIOS ? 3 : 2));
         } else {
+          // Exhausted retries: APNs issues are tokenUnavailable, not API failure.
+          if (sawApnsTokenMissing || _isApnsTokenNotSetError(e)) {
+            return PushRegistrationResult.tokenUnavailable;
+          }
           return PushRegistrationResult.apiFailed;
         }
       }
     }
-    _diag.error('All $attempts attempts exhausted — token unavailable');
+    _diag.error(
+      sawApnsTokenMissing
+          ? 'All $attempts attempts exhausted — APNs/FCM token unavailable'
+          : 'All $attempts attempts exhausted — token unavailable',
+    );
     return PushRegistrationResult.tokenUnavailable;
+  }
+
+  /// True for FlutterFire `[firebase_messaging/apns-token-not-set]` (and variants).
+  static bool _isApnsTokenNotSetError(Object error) {
+    final text = error.toString().toLowerCase();
+    return text.contains('apns-token-not-set') ||
+        text.contains('apns token not set') ||
+        text.contains('apns-token-not-ready');
   }
 
   Future<bool> registerIfSignedIn() async {

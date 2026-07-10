@@ -1,7 +1,8 @@
 # iOS push notification setup (Radio Udaan)
 
-Firebase project: **`radio-udan-2412a`**  
-iOS bundle ID: **`org.reactjs.native.example.Radio`** (App Store Connect app `1439057220`)
+Firebase project: **`radio-udaan-72232`** (must match WP FCM service account)  
+iOS bundle ID: **`org.reactjs.native.example.Radio`** (App Store Connect app `1439057220`)  
+Android package: **`com.radioudaan.radio_udaan_app`**
 
 This doc covers operator steps to enable APNs → FCM → app delivery. **Do not commit APNs keys, service account JSON, or `.p8` files to git.**
 
@@ -33,7 +34,7 @@ The App ID `org.reactjs.native.example.Radio` must have **Push Notifications** c
 
 ## 2. Firebase Console — upload APNs key
 
-1. Open [Firebase Console](https://console.firebase.google.com/) → project **`radio-udan-2412a`**.
+1. Open [Firebase Console](https://console.firebase.google.com/) → project **`radio-udaan-72232`**.
 2. **Project settings** (gear) → **Cloud Messaging** tab.
 3. Under **Apple app configuration**, select the iOS app (`org.reactjs.native.example.Radio`).
 4. **APNs Authentication Key** → Upload:
@@ -50,9 +51,9 @@ Alternative (not preferred): APNs certificates — auth keys do not expire yearl
 
 | Item | Location | Expected |
 |------|----------|----------|
-| Firebase plist | `radio_udaan_app/ios/Runner/GoogleService-Info.plist` | `PROJECT_ID` = `radio-udan-2412a`, `BUNDLE_ID` = `org.reactjs.native.example.Radio` |
-| Dart options | `radio_udaan_app/lib/firebase_options.dart` | `iosBundleId: 'org.reactjs.native.example.Radio'` |
-| Firebase init | `radio_udaan_app/ios/Runner/AppDelegate.swift` | `FirebaseApp.configure()` in `didFinishLaunchingWithOptions` |
+| Firebase plist | `radio_udaan_app/ios/Runner/GoogleService-Info.plist` | `PROJECT_ID` = `radio-udaan-72232`, `BUNDLE_ID` = `org.reactjs.native.example.Radio` |
+| Dart options | `radio_udaan_app/lib/firebase_options.dart` | `projectId: 'radio-udaan-72232'`, `iosBundleId: 'org.reactjs.native.example.Radio'` |
+| Firebase init | Dart `Firebase.initializeApp` via `push_notification_service.dart` | Native `FirebaseApp.configure()` not required with current FlutterFire |
 | Background mode | `radio_udaan_app/ios/Runner/Info.plist` | `UIBackgroundModes` includes `remote-notification` |
 | Client | `radio_udaan_app/lib/core/push/push_notification_service.dart` | Requests permission, registers FCM token with WP API |
 | iOS entitlements | `radio_udaan_app/ios/Runner/Runner.entitlements` | `aps-environment` = `production` (TestFlight/App Store); use `development` only for local debug profiles if needed |
@@ -68,6 +69,8 @@ Push delivery from campaigns/admin uses the **Firebase service account JSON** in
 - APNs key → Firebase ↔ Apple
 - Service account JSON → WordPress ↔ FCM HTTP v1
 
+**Critical:** WP `fcm_project_id` / service account must be from **`radio-udaan-72232`**, not an older project (e.g. `radio-udaan-cbfdc` or `radio-udan-2412a`). Check `GET /health` → `checks.fcm_project_matches_app`.
+
 See `.cursor/memory/decisions.md` (FCM HTTP v1) and `class-app-fcm-sender.php`.
 
 ---
@@ -79,17 +82,18 @@ Push is unreliable on the **iOS Simulator**; use a real device for QA.
 1. Build and run on device:  
    `cd radio_udaan_app && flutter run -d <device-id>`
 2. Sign in; accept notification permission when prompted.
-3. Confirm device registers: WP admin or API — user has a row in `ru_app_devices` with `platform=ios`.
-4. WP Admin → **Radio Udaan App** → **Send notification** → target that user or all devices.
-5. Expect notification when app is backgrounded; foreground shows via `flutter_local_notifications`.
+3. Confirm device registers: WP admin or API — user has a row in `ru_app_devices` with `platform=ios`. Staging health: `push_devices_registered` > 0.
+4. WP Admin → **Radio Udaan App** → **Send notification** → type **General** → target that user.
+5. Expect notification when app is backgrounded; iOS foreground uses system presentation options.
 
 **Troubleshooting**
 
 | Symptom | Check |
 |---------|--------|
-| No token in WP | APNs key uploaded in Firebase? Permission granted on device? |
-| Token but no delivery | Service account JSON in WP? Invalid tokens pruned in logs? |
-| Works on Android, not iOS | Almost always missing/wrong APNs key in Firebase |
+| No token in WP | APNs key uploaded in Firebase? Permission granted on device? Settings → Push diagnostics |
+| Token but no delivery | Service account JSON in WP from **same** project as app? Invalid tokens pruned in logs? |
+| Works on Android, not iOS | Almost always missing/wrong APNs key in Firebase Console for `radio-udaan-72232` |
+| `fcm_project_matches_app: false` | Replace WP service account with JSON from `radio-udaan-72232` |
 
 ---
 
@@ -108,6 +112,7 @@ Do not paste Key ID, Team ID, tokens, or `.p8` contents into issues, chat logs, 
 ## 7. Release checklist (App Store)
 
 - [ ] Push Notifications capability on App ID + provisioning profile
-- [ ] APNs auth key uploaded in Firebase for production
+- [ ] APNs auth key uploaded in Firebase for **`radio-udaan-72232`**
+- [ ] WP FCM service account from the same project (`fcm_project_matches_app: true`)
 - [ ] Test on TestFlight build (not just debug)
 - [ ] Privacy copy mentions optional notifications if required by App Review

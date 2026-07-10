@@ -87,4 +87,6 @@ All three header registration pages migrated to Forminator on local `radio` DB (
 - **Performance**: WP `GET /config` transient cache 5 min + `Cache-Control`; Flutter `ConfigCacheStorage` stale-while-revalidate; parallel `/config` + `/auth/me`; `cached_network_image` for logo; `RepaintBoundary` on tabs. See `.cursor/rules/performance.mdc`.
 - OTP provider keys and app signing keys must never be committed.
 - **FCM push (server)**: WordPress uses **FCM HTTP v1** via `class-app-fcm-sender.php` — Firebase **service account JSON** + OAuth2 (not legacy server key). Admin: Settings → Notifications → paste JSON; optional `RADIOUDAAN_FCM_SERVICE_ACCOUNT_JSON` or `_PATH` in `wp-config.php`. Sends on `RadioUdaan_App_Notifications::create()` when configured; respects per-user notification prefs by type.
+- **FCM project lock**: Flutter app + client configs use Firebase project **`radio-udaan-72232`**. WP FCM must use the same project (`EXPECTED_APP_PROJECT_ID`). Staging was observed on **`radio-udaan-cbfdc`** (BUG-023) — tokens will never deliver across projects. Health: `checks.fcm_project_matches_app`, `push_devices_registered`.
+- **Device registration**: `POST /devices/register` requires auth; Flutter registers after login (`syncForLoggedInUser`). Zero devices on staging = no push possible even when FCM OAuth works.
 

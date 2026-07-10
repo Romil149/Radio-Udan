@@ -785,8 +785,33 @@ class RadioUdaan_Admin_Settings_Page {
 				<div class="ru-admin__field">
 					<label for="fcm_project_id"><?php esc_html_e( 'FCM project ID', 'radioudaan-app-api' ); ?></label>
 					<input type="text" name="fcm_project_id" id="fcm_project_id" class="regular-text"
-						value="<?php echo esc_attr( $c['fcm_project_id'] ); ?>" />
-					<p class="description"><?php esc_html_e( 'Optional if your service account JSON already includes project_id.', 'radioudaan-app-api' ); ?></p>
+						value="<?php echo esc_attr( $c['fcm_project_id'] ); ?>"
+						placeholder="<?php echo esc_attr( RadioUdaan_App_Fcm_Sender::EXPECTED_APP_PROJECT_ID ); ?>" />
+					<p class="description">
+						<?php
+						echo esc_html(
+							sprintf(
+								/* translators: %s: expected Firebase project ID */
+								__( 'Must match the Flutter app Firebase project (%s). Optional if your service account JSON already includes the same project_id.', 'radioudaan-app-api' ),
+								RadioUdaan_App_Fcm_Sender::EXPECTED_APP_PROJECT_ID
+							)
+						);
+						?>
+					</p>
+					<?php if ( ! empty( $c['fcm_project_id'] ) && RadioUdaan_App_Fcm_Sender::EXPECTED_APP_PROJECT_ID !== $c['fcm_project_id'] ) : ?>
+						<p class="description" style="color:#b32d2e;">
+							<?php
+							echo esc_html(
+								sprintf(
+									/* translators: 1: configured project, 2: expected project */
+									__( 'Mismatch: configured %1$s ≠ app %2$s. Device tokens from the app will be rejected by FCM.', 'radioudaan-app-api' ),
+									$c['fcm_project_id'],
+									RadioUdaan_App_Fcm_Sender::EXPECTED_APP_PROJECT_ID
+								)
+							);
+							?>
+						</p>
+					<?php endif; ?>
 				</div>
 				<div class="ru-admin__field">
 					<label for="fcm_service_account_json"><?php esc_html_e( 'Firebase service account JSON', 'radioudaan-app-api' ); ?></label>

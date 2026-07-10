@@ -1,4 +1,18 @@
 
+### 2026-07-10 — Push diagnostics: iOS APNs + Android Firebase init
+**Requested by**: User — iPhone `apns-token-not-set`; Android `Firebase not initialized`.
+**Root cause**: iOS UIScene/`FlutterImplicitEngineDelegate` skips FlutterFire APNs swizzling; Android `ensureFirebase` hid real init errors.
+**What was done**: AppDelegate forwards APNs token to `Messaging.messaging().apnsToken`; Dart logs full Firebase init errors; map APNs errors → `tokenUnavailable`.
+**Status**: ⚠️ Local — needs build bump + push for TestFlight/APK. Still need Firebase **production** APNs key + WP FCM project `72232`.
+
+### 2026-07-10 — Full push notification audit (Android + iOS)
+**Requested by**: User — phones not receiving push.
+**Agents**: Senior mobile + WP push specialist.
+**Findings**: Staging `fcm_configured: true` but project **`radio-udaan-cbfdc`** ≠ app **`radio-udaan-72232`** (BUG-023); **`push_devices_registered: 0`**. Repo Flutter/iOS entitlements/FCM sender OK. Admin “sent” = inbox rows; push needs devices + matching project.
+**Code fixes**: Admin/settings mismatch warnings; health `expected_app_fcm_project` + `fcm_project_matches_app`; accurate “all users” label; `ios-push-setup.md` corrected.
+**Verification**: php -l PASS; verify-wp-plugin 7/7; dart analyze push PASS; staging smoke 19/19; health evidence above.
+**Status**: ⚠️ Blocked on operator — replace staging FCM SA with `radio-udaan-72232`, deploy plugin, register device on physical phone, confirm APNs key in Firebase.
+
 ### 2026-07-10 — Settings Save button not working (BUG-022)
 **Requested by**: User — Save on App API settings does nothing.
 **Agents**: WP admin UI specialist.
@@ -7,6 +21,15 @@
 **Files**: `class-admin-settings-tests.php`, `class-admin-pages.php`, `admin-settings.js`
 **Verification**: php -l PASS; node --check JS PASS.
 **Status**: ⚠️ Local — needs plugin deploy to staging/wp-admin.
+
+### 2026-07-10 — Push notification full audit (Android + iOS)
+**Requested by**: User — push not working on Android or iPhone.
+**Agents**: Alex → push specialist; parent verified live `/health`.
+**Evidence (staging)**: `fcm_configured: true`, `fcm_project_id: radio-udaan-cbfdc`, `push_devices_registered: 0`. App Firebase = `radio-udaan-72232`.
+**Root cause**: (1) WP FCM credentials are for wrong Firebase project vs app; (2) no devices registered.
+**Code**: Client/iOS entitlements/Android channel PASS. Local plugin warnings for project mismatch (not yet deployed).
+**Status**: ❌ Blocked on operator — paste `radio-udaan-72232` service account, confirm APNs in that project, physical device register, plugin deploy.
+**Notes**: Admin “sent” = inbox rows; does not prove FCM delivery.
 
 ### 2026-07-10 — Settings Save button broken (nested forms)
 **Requested by**: User — plugin settings Save not working.

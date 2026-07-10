@@ -20,9 +20,11 @@ class RadioUdaan_Admin_Notifications {
 			wp_die( esc_html__( 'Insufficient permissions.', 'radioudaan-app-api' ) );
 		}
 
-		$fcm_ready     = RadioUdaan_App_Fcm_Sender::is_configured();
-		$device_count  = RadioUdaan_App_Notifications::count_registered_devices();
-		$users_devices = RadioUdaan_App_Notifications::list_users_with_devices();
+		$fcm_ready           = RadioUdaan_App_Fcm_Sender::is_configured();
+		$fcm_project_id      = RadioUdaan_App_Fcm_Sender::resolve_configured_project_id();
+		$fcm_project_matches = RadioUdaan_App_Fcm_Sender::project_matches_app();
+		$device_count        = RadioUdaan_App_Notifications::count_registered_devices();
+		$users_devices       = RadioUdaan_App_Notifications::list_users_with_devices();
 		$sent          = isset( $_GET['sent'] ) ? sanitize_text_field( wp_unslash( $_GET['sent'] ) ) : '';
 		$created       = isset( $_GET['created'] ) ? (int) $_GET['created'] : 0;
 		$push_sent     = isset( $_GET['push_sent'] ) ? (int) $_GET['push_sent'] : 0;
@@ -117,6 +119,23 @@ class RadioUdaan_Admin_Notifications {
 				</p>
 			</div>
 			<?php
+		} elseif ( ! $fcm_project_matches ) {
+			?>
+			<div class="ru-admin__notice notice notice-error" role="alert">
+				<p class="ru-notice-text">
+					<?php
+					echo esc_html(
+						sprintf(
+							/* translators: 1: configured FCM project ID, 2: expected app Firebase project ID */
+							__( 'FCM project mismatch: server is %1$s but the mobile app uses %2$s. Paste the service account JSON from the same Firebase project as the app, or pushes will never reach devices.', 'radioudaan-app-api' ),
+							'' !== $fcm_project_id ? $fcm_project_id : __( '(empty)', 'radioudaan-app-api' ),
+							RadioUdaan_App_Fcm_Sender::EXPECTED_APP_PROJECT_ID
+						)
+					);
+					?>
+				</p>
+			</div>
+			<?php
 		}
 
 		?>
@@ -131,6 +150,19 @@ class RadioUdaan_Admin_Notifications {
 						<?php echo $fcm_ready ? esc_html__( 'Yes', 'radioudaan-app-api' ) : esc_html__( 'No — add service account in Settings → Notifications', 'radioudaan-app-api' ); ?>
 					</li>
 					<li>
+						<strong><?php esc_html_e( 'FCM project ID', 'radioudaan-app-api' ); ?>:</strong>
+						<?php echo '' !== $fcm_project_id ? esc_html( $fcm_project_id ) : esc_html__( '(not set)', 'radioudaan-app-api' ); ?>
+						<?php if ( $fcm_ready && $fcm_project_matches ) : ?>
+							— <?php esc_html_e( 'matches app', 'radioudaan-app-api' ); ?>
+						<?php elseif ( $fcm_ready ) : ?>
+							— <?php esc_html_e( 'does not match app', 'radioudaan-app-api' ); ?>
+						<?php endif; ?>
+					</li>
+					<li>
+						<strong><?php esc_html_e( 'App Firebase project', 'radioudaan-app-api' ); ?>:</strong>
+						<?php echo esc_html( RadioUdaan_App_Fcm_Sender::EXPECTED_APP_PROJECT_ID ); ?>
+					</li>
+					<li>
 						<strong><?php esc_html_e( 'Registered devices', 'radioudaan-app-api' ); ?>:</strong>
 						<?php echo (int) $device_count; ?>
 					</li>
@@ -141,7 +173,7 @@ class RadioUdaan_Admin_Notifications {
 				</ul>
 				<?php if ( 0 === $device_count ) : ?>
 					<p class="description">
-						<?php esc_html_e( 'No devices yet. Open the app on a phone, log in, and allow notifications — the device registers automatically.', 'radioudaan-app-api' ); ?>
+						<?php esc_html_e( 'No devices yet. Open the app on a phone, log in, and allow notifications — the device registers automatically. Use Settings → Push diagnostics in the app if registration fails.', 'radioudaan-app-api' ); ?>
 					</p>
 				<?php endif; ?>
 			</div>
@@ -157,7 +189,7 @@ class RadioUdaan_Admin_Notifications {
 				<div class="ru-admin__field">
 					<label for="notif_target"><strong><?php esc_html_e( 'Send to', 'radioudaan-app-api' ); ?></strong></label>
 					<select name="notif_target" id="notif_target" class="regular-text">
-						<option value="all" <?php selected( $prefill_user < 1 ); ?>><?php esc_html_e( 'All users with registered devices', 'radioudaan-app-api' ); ?></option>
+						<option value="all" <?php selected( $prefill_user < 1 ); ?>><?php esc_html_e( 'All active app users (inbox for all; push only where a device is registered)', 'radioudaan-app-api' ); ?></option>
 						<option value="user" <?php selected( $prefill_user > 0 ); ?>><?php esc_html_e( 'One app user', 'radioudaan-app-api' ); ?></option>
 					</select>
 				</div>
