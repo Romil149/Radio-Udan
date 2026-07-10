@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+50** | pushing | 2026-07-10 | Notification detail TalkBack fix + load more; iOS foreground push presentation; App Users soft-delete; FCM iOS/Android breakdown |
+| GitHub `main` | **2.0.0+50** @ `bf64868` | **yes** | 2026-07-10 | Notification detail TalkBack fix + load more; iOS foreground push presentation; App Users soft-delete; FCM iOS/Android breakdown |
 | TestFlight iOS | **2.0.0+50** | CI after push | 2026-07-10 | Use +50; skip +47/+48 if crash |
 | Staging WP plugin | local zip needed | **no** | 2026-07-10 | **Must redeploy** — App Users BUG-025/026 + FCM platform stats |
 | Staging API smoke | verify-wp 7/7 | local | 2026-07-10 | Copy catalog 447 keys |
