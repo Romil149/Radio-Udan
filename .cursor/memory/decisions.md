@@ -1,6 +1,11 @@
 # Architecture Decisions Log
 <!-- When a design choice is made, document it here so we don't re-debate it. -->
 
+### 2026-07-10 — iOS crash after +46: no early Firebase.configure
+**Context**: +47 removed UIScene (crash). +48 restored UIScene but added native `FirebaseApp.configure()` + SceneDelegate Messaging calls; user still saw crash “after build 46”.
+**Decision**: AppDelegate matches +46 launch contract — Dart owns Firebase init; cache APNs and apply only when `FirebaseApp.app() != nil`. Keep UIScene forever.
+**Consequences**: Ship +49; tell testers to ignore +47/+48 if still crashing.
+
 ### 2026-07-10 — iOS must keep UIScene (build 47 crash)
 **Context**: Build +47 removed `UIApplicationSceneManifest` and used classic `AppDelegate` to fix APNs; TestFlight reported “Radio Udaan Crashed” on open.
 **Decision**: Restore UIScene + `FlutterImplicitEngineDelegate` + `SceneDelegate` (Flutter 3.38+ requirement). Keep APNs token cache + re-apply after plugin registry / `sceneDidBecomeActive`. Do **not** remove the scene manifest again.

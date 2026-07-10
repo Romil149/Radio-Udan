@@ -49,11 +49,19 @@ class NotificationsListNotifier
   }
 
   Future<void> markRead(int id) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
+    if (id < 1) return;
 
-    final index = current.items.indexWhere((item) => item.id == id);
-    if (index < 0) return;
+    final current = state.valueOrNull;
+    final index = current?.items.indexWhere((item) => item.id == id) ?? -1;
+
+    if (current == null || index < 0) {
+      try {
+        await _ref.read(radioudaanApiProvider).markNotificationRead(id);
+        _ref.invalidate(notificationUnreadCountProvider);
+      } catch (_) {}
+      return;
+    }
+
     final item = current.items[index];
     if (item.isRead) return;
 

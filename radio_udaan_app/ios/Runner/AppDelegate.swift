@@ -4,22 +4,17 @@ import UserNotifications
 import FirebaseCore
 import FirebaseMessaging
 
-/// UIScene + FlutterImplicitEngineDelegate is required for Flutter 3.38+ launch.
-/// Removing the scene manifest (build 47) crashed at startup on device.
+/// Matches the last known-good launch path (build 46): UIScene + ImplicitEngine,
+/// Dart owns Firebase.initializeApp. Do not call FirebaseApp.configure() here —
+/// early native configure contributed to post-46 TestFlight crashes.
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
-  /// Cached so SceneDelegate / Dart can re-apply after Firebase Messaging is ready.
   static var cachedApnsToken: Data?
 
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // Native configure so Messaging can accept APNs before Dart Firebase.initializeApp.
-    if FirebaseApp.app() == nil {
-      FirebaseApp.configure()
-    }
-
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self
     }
@@ -29,9 +24,7 @@ import FirebaseMessaging
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
-    if let token = Self.cachedApnsToken {
-      Messaging.messaging().apnsToken = token
-    }
+    Self.applyCachedApnsTokenIfReady()
   }
 
   override func application(
@@ -39,7 +32,7 @@ import FirebaseMessaging
     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
   ) {
     Self.cachedApnsToken = deviceToken
-    Messaging.messaging().apnsToken = deviceToken
+    Self.applyCachedApnsTokenIfReady()
     super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
   }
 
@@ -49,5 +42,11 @@ import FirebaseMessaging
   ) {
     print("APNs registration failed: \(error.localizedDescription)")
     super.application(application, didFailToRegisterForRemoteNotificationsWithError: error)
+  }
+
+  /// Only touch Messaging after Firebase is configured (by Dart).
+  static func applyCachedApnsTokenIfReady() {
+    guard FirebaseApp.app() != nil, let token = cachedApnsToken else { return }
+    Messaging.messaging().apnsToken = token
   }
 }

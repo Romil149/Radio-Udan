@@ -53,8 +53,8 @@ Alternative (not preferred): APNs certificates — auth keys do not expire yearl
 |------|----------|----------|
 | Firebase plist | `radio_udaan_app/ios/Runner/GoogleService-Info.plist` | `PROJECT_ID` = `radio-udaan-72232`, `BUNDLE_ID` = `org.reactjs.native.example.Radio` |
 | Dart options | `radio_udaan_app/lib/firebase_options.dart` | `projectId: 'radio-udaan-72232'`, `iosBundleId: 'org.reactjs.native.example.Radio'` |
-| Firebase init | Native `FirebaseApp.configure()` in `AppDelegate` + Dart `ensureFirebase` | Native configure first so APNs token can be set on `Messaging` before Dart |
-| App lifecycle | **UIScene** + `FlutterImplicitEngineDelegate` + `SceneDelegate` | Required for Flutter 3.38+; removing scene manifest crashed launch (+47). APNs: cache token + re-apply in `didInitializeImplicitFlutterEngine` / `sceneDidBecomeActive` |
+| Firebase init | Dart `Firebase.initializeApp` only (no native `FirebaseApp.configure` at launch) | Early native configure after +46 caused TestFlight crashes; APNs token cached and applied once `FirebaseApp.app()` exists |
+| App lifecycle | **UIScene** + `FlutterImplicitEngineDelegate` + `SceneDelegate` | Required for Flutter 3.38+. Never remove scene manifest (+47 crash). |
 | Background mode | `radio_udaan_app/ios/Runner/Info.plist` | `UIBackgroundModes` includes `remote-notification` |
 | Client | `radio_udaan_app/lib/core/push/push_notification_service.dart` | On iOS, re-calls `requestPermission` even when already authorized to refresh APNs |
 | iOS entitlements | `radio_udaan_app/ios/Runner/Runner.entitlements` | `aps-environment` = `production` (TestFlight/App Store); use `development` only for local debug profiles if needed |

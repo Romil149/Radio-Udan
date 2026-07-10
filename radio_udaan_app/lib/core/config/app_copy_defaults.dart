@@ -203,6 +203,8 @@ const Map<String, String> appCopyDefaults = {
   'not_signed_in': 'Not signed in',
   'notification_read': 'Read',
   'notification_unread': 'Unread',
+  'notification_open_hint': 'Double tap to open',
+  'notification_view_update': 'View update',
   'notification_time_just_now': 'Just now',
   'notification_time_minute_ago': '1 minute ago',
   'notification_time_minutes_ago': '{count} minutes ago',

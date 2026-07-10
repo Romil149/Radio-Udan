@@ -6,7 +6,7 @@ import '../../../core/providers/app_providers.dart';
 import '../../../core/theme/brand_tokens.dart';
 import '../../../core/theme/udaan_colors.dart';
 
-/// Single notification row with clear read vs unread styling.
+/// Inbox row: title + short preview. Full body is on the detail screen.
 class NotificationListCard extends StatelessWidget {
   const NotificationListCard({
     required this.item,
@@ -23,17 +23,29 @@ class NotificationListCard extends StatelessWidget {
   final String when;
   final VoidCallback onTap;
 
+  static const int _previewMaxChars = 110;
+
+  String get _preview {
+    final body = item.body.trim();
+    if (body.length <= _previewMaxChars) return body;
+    return '${body.substring(0, _previewMaxChars).trimRight()}…';
+  }
+
   @override
   Widget build(BuildContext context) {
     final isUnread = !item.isRead;
-    final statusLabel = isUnread ? copy.notificationUnread : copy.notificationRead;
+    final statusLabel =
+        isUnread ? copy.notificationUnread : copy.notificationRead;
     final whenPart = when.isNotEmpty ? '$when. ' : '';
+    final preview = _preview;
+    final semanticsLabel =
+        '$statusLabel. $whenPart${item.title}. $preview. ${copy.notificationOpenHint}';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Semantics(
         button: true,
-        label: '$statusLabel. $whenPart${item.title}. ${item.body}',
+        label: semanticsLabel,
         child: Material(
           color: isUnread
               ? context.udaan.surfaceContainerHigh
@@ -43,6 +55,9 @@ class NotificationListCard extends StatelessWidget {
             onTap: onTap,
             borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
             child: Container(
+              constraints: const BoxConstraints(
+                minHeight: BrandTokens.a11yMinTapTarget,
+              ),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
                 border: Border.all(
@@ -66,7 +81,7 @@ class NotificationListCard extends StatelessWidget {
                   ),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
                       child: ExcludeSemantics(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,31 +138,41 @@ class NotificationListCard extends StatelessWidget {
                             const SizedBox(height: 8),
                             Text(
                               item.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.atkinsonHyperlegible(
                                 fontSize: 17,
-                                fontWeight:
-                                    isUnread ? FontWeight.w900 : FontWeight.w700,
+                                fontWeight: isUnread
+                                    ? FontWeight.w900
+                                    : FontWeight.w700,
                                 color: context.udaan.onBackground,
                               ),
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              item.body,
-                              style: GoogleFonts.atkinsonHyperlegible(
-                                fontSize: 15,
-                                fontWeight: isUnread
-                                    ? FontWeight.w600
-                                    : FontWeight.w500,
-                                color: isUnread
-                                    ? context.udaan.onBackground
-                                        .withValues(alpha: 0.92)
-                                    : context.udaan.onSurfaceVariant,
-                                height: 1.35,
+                            if (preview.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                preview,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.atkinsonHyperlegible(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                  color: context.udaan.onSurfaceVariant,
+                                  height: 1.35,
+                                ),
                               ),
-                            ),
+                            ],
                           ],
                         ),
                       ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: Icon(
+                      Icons.chevron_right,
+                      color: context.udaan.onSurfaceVariant,
+                      size: 28,
                     ),
                   ),
                 ],

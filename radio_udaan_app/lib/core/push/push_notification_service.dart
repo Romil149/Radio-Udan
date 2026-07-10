@@ -14,7 +14,7 @@ import '../../firebase_options.dart';
 import '../api/radioudaan_api.dart';
 import '../providers/app_providers.dart';
 import '../router/app_router.dart';
-import '../router/whats_new_deep_link.dart';
+import '../router/notification_open.dart';
 import 'push_diagnostics.dart';
 
 /// Android notification channel — must match WP FCM `channel_id`.
@@ -494,26 +494,36 @@ class PushNotificationService {
   }
 
   void _onRemoteMessageOpened(RemoteMessage message) {
-    _handleNotificationOpenData(message.data);
+    _handleNotificationOpenData(
+      message.data,
+      title: message.notification?.title,
+      body: message.notification?.body,
+    );
   }
 
   void _onLocalNotificationTap(NotificationResponse response) {
-    _scheduleOpenNotificationsInbox();
-  }
-
-  void _handleNotificationOpenData(Map<String, dynamic> data) {
-    if (isWhatsNewDetailPayload(data)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        openWhatsNewDetailFromData(data);
-      });
-      return;
-    }
-    _scheduleOpenNotificationsInbox();
-  }
-
-  void _scheduleOpenNotificationsInbox() {
+    final id = int.tryParse(response.payload ?? '') ?? 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      openNotificationsInbox();
+      openNotificationFromPush(
+        api: _api,
+        data: const {},
+        notificationId: id > 0 ? id : null,
+      );
+    });
+  }
+
+  void _handleNotificationOpenData(
+    Map<String, dynamic> data, {
+    String? title,
+    String? body,
+  }) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      openNotificationFromPush(
+        api: _api,
+        data: data,
+        title: title,
+        body: body,
+      );
     });
   }
 }

@@ -195,6 +195,8 @@ extension AppCopyStrings on AppCopy {
   String get notSignedIn => text('not_signed_in');
   String get notificationRead => text('notification_read');
   String get notificationUnread => text('notification_unread');
+  String get notificationOpenHint => text('notification_open_hint');
+  String get notificationViewUpdate => text('notification_view_update');
   String get notificationTimeJustNow => text('notification_time_just_now');
   String get notificationTimeMinuteAgo => text('notification_time_minute_ago');
   String get notificationTimeHourAgo => text('notification_time_hour_ago');

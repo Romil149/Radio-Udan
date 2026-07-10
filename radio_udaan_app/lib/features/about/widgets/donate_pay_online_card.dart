@@ -82,7 +82,7 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
   }
 
   bool get _usesPaymentLink {
-    if (kIsWeb) return true;
+    if (kIsWeb) return false; // Web preview uses general copy, not Safari handoff.
     try {
       return Platform.isIOS;
     } catch (_) {
@@ -372,25 +372,21 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
                 ),
               ),
             ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                for (final amount in presets)
-                  _AmountChip(
-                    amountRupees: amount,
-                    semanticsLabel: widget.copy.donateAmountChipSemantics
-                        .replaceAll('{amount}', '$amount'),
-                    selected: _selectedPreset == amount && customEmpty,
-                    onTap: () {
-                      setState(() {
-                        _selectedPreset = amount;
-                        _customAmountController.clear();
-                      });
-                    },
-                  ),
-              ],
+            const SizedBox(height: 12),
+            _AmountPresetGrid(
+              amounts: presets,
+              selectedAmount:
+                  customEmpty ? _selectedPreset : null,
+              chipSemantics: widget.copy.donateAmountChipSemantics,
+              enabled: !_loading,
+              onSelect: (amount) {
+                setState(() {
+                  _selectedPreset = amount;
+                  _customAmountController.clear();
+                  _errorMessage = null;
+                  _successMessage = null;
+                });
+              },
             ),
             const SizedBox(height: 16),
           ],
@@ -410,16 +406,41 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
             ),
           ),
           if (summary.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            // Visual summary only — not a liveRegion (avoids speaking on every keystroke).
+            const SizedBox(height: 14),
             ExcludeSemantics(
-              child: Text(
-                summary,
-                style: udaanGoogleFont(
-                  context,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: palette.primary,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: palette.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: palette.primaryGlow.withValues(alpha: 0.55),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.volunteer_activism_outlined,
+                      color: palette.primary,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        summary,
+                        style: udaanGoogleFont(
+                          context,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: palette.primary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -431,26 +452,57 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
               label: widget.copy.donate80gCheckbox,
               hint: widget.copy.donateForm10beNote,
               child: ExcludeSemantics(
-                child: CheckboxListTile(
-                  value: _want80g,
-                  onChanged: _loading
-                      ? null
-                      : (value) => setState(() => _want80g = value == true),
-                  contentPadding: EdgeInsets.zero,
-                  controlAffinity: ListTileControlAffinity.leading,
-                  title: Text(
-                    widget.copy.donate80gCheckbox,
-                    style: udaanGoogleFont(
-                      context,
-                      fontSize: 16,
-                      color: palette.onBackground,
+                child: Material(
+                  color: palette.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(12),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: _loading
+                        ? null
+                        : () => setState(() => _want80g = !_want80g),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: BrandTokens.a11yMinTapTarget,
+                            height: BrandTokens.a11yMinTapTarget,
+                            child: Checkbox(
+                              value: _want80g,
+                              onChanged: _loading
+                                  ? null
+                                  : (value) => setState(
+                                        () => _want80g = value == true,
+                                      ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 14),
+                              child: Text(
+                                widget.copy.donate80gCheckbox,
+                                style: udaanGoogleFont(
+                                  context,
+                                  fontSize: 16,
+                                  height: 1.35,
+                                  color: palette.onBackground,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
             if (_want80g) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               FormFieldAnchor(
                 anchorKey: _panAnchorKey,
                 child: UdaanLabeledField(
@@ -481,7 +533,6 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
                 ),
               ],
               const SizedBox(height: 10),
-              // Visual note only — spoken via 80G checkbox hint to avoid clutter.
               ExcludeSemantics(
                 child: Text(
                   widget.copy.donateForm10beNote,
@@ -497,56 +548,23 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
           ],
           if (_statusMessage != null) ...[
             const SizedBox(height: 14),
-            Semantics(
-              liveRegion: true,
-              label: _statusMessage!,
-              child: ExcludeSemantics(
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: palette.surfaceContainerHigh,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: palette.outlineVariant),
-                  ),
-                  child: Text(
-                    _statusMessage!,
-                    style: udaanGoogleFont(
-                      context,
-                      fontSize: 15,
-                      height: 1.4,
-                      color: palette.onBackground,
-                    ),
-                  ),
-                ),
-              ),
+            _StatusBanner(
+              message: _statusMessage!,
+              tone: _StatusTone.info,
             ),
           ],
           if (_errorMessage != null) ...[
             const SizedBox(height: 14),
-            Semantics(
-              liveRegion: true,
-              child: Text(
-                _errorMessage!,
-                style: udaanGoogleFont(
-                  context,
-                  fontSize: 15,
-                  color: palette.error,
-                ),
-              ),
+            _StatusBanner(
+              message: _errorMessage!,
+              tone: _StatusTone.error,
             ),
           ],
           if (_successMessage != null) ...[
             const SizedBox(height: 14),
-            Semantics(
-              liveRegion: true,
-              child: Text(
-                _successMessage!,
-                style: udaanGoogleFont(
-                  context,
-                  fontSize: 15,
-                  color: palette.primary,
-                ),
-              ),
+            _StatusBanner(
+              message: _successMessage!,
+              tone: _StatusTone.success,
             ),
           ],
           const SizedBox(height: 18),
@@ -562,55 +580,187 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
   }
 }
 
+enum _StatusTone { info, error, success }
+
+class _StatusBanner extends StatelessWidget {
+  const _StatusBanner({
+    required this.message,
+    required this.tone,
+  });
+
+  final String message;
+  final _StatusTone tone;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.udaan;
+    final Color accent;
+    final IconData icon;
+    switch (tone) {
+      case _StatusTone.error:
+        accent = palette.error;
+        icon = Icons.error_outline;
+      case _StatusTone.success:
+        accent = palette.primary;
+        icon = Icons.check_circle_outline;
+      case _StatusTone.info:
+        accent = palette.primaryGlow;
+        icon = Icons.info_outline;
+    }
+
+    return Semantics(
+      liveRegion: true,
+      label: message,
+      child: ExcludeSemantics(
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: accent.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: accent.withValues(alpha: 0.55)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: accent, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  message,
+                  style: udaanGoogleFont(
+                    context,
+                    fontSize: 15,
+                    height: 1.4,
+                    fontWeight: FontWeight.w600,
+                    color: accent,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AmountPresetGrid extends StatelessWidget {
+  const _AmountPresetGrid({
+    required this.amounts,
+    required this.selectedAmount,
+    required this.chipSemantics,
+    required this.onSelect,
+    required this.enabled,
+  });
+
+  final List<int> amounts;
+  final int? selectedAmount;
+  final String chipSemantics;
+  final ValueChanged<int> onSelect;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const gap = 10.0;
+        final tileWidth = (constraints.maxWidth - gap) / 2;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final amount in amounts)
+              SizedBox(
+                width: tileWidth,
+                child: _AmountChip(
+                  amountRupees: amount,
+                  semanticsLabel: chipSemantics.replaceAll(
+                    '{amount}',
+                    '$amount',
+                  ),
+                  selected: selectedAmount == amount,
+                  enabled: enabled,
+                  onTap: () => onSelect(amount),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _AmountChip extends StatelessWidget {
   const _AmountChip({
     required this.amountRupees,
     required this.semanticsLabel,
     required this.selected,
+    required this.enabled,
     required this.onTap,
   });
 
   final int amountRupees;
   final String semanticsLabel;
   final bool selected;
+  final bool enabled;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final palette = context.udaan;
     final visual = '₹$amountRupees';
+    final bg = selected
+        ? palette.primary
+        : palette.background;
+    final border = selected ? palette.primary : palette.primaryGlow;
+    final fg = selected ? palette.onPrimary : palette.onBackground;
+
     return Semantics(
       button: true,
       selected: selected,
+      enabled: enabled,
       label: semanticsLabel,
       child: ExcludeSemantics(
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Ink(
-            decoration: BoxDecoration(
-              color: selected ? palette.primary : palette.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: selected ? palette.primary : palette.outlineVariant,
-                width: selected ? 2 : 1,
-              ),
-            ),
+        child: Material(
+          color: bg,
+          borderRadius: BorderRadius.circular(14),
+          child: InkWell(
+            onTap: enabled ? onTap : null,
+            borderRadius: BorderRadius.circular(14),
             child: Container(
               constraints: const BoxConstraints(
-                minWidth: BrandTokens.a11yMinTapTarget,
                 minHeight: BrandTokens.a11yMinTapTarget,
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              alignment: Alignment.center,
-              child: Text(
-                visual,
-                style: udaanGoogleFont(
-                  context,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: selected ? palette.onPrimary : palette.onBackground,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: border,
+                  width: selected ? 2.5 : 1.5,
                 ),
+              ),
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (selected) ...[
+                    Icon(Icons.check_circle, size: 18, color: fg),
+                    const SizedBox(width: 6),
+                  ],
+                  Flexible(
+                    child: Text(
+                      visual,
+                      textAlign: TextAlign.center,
+                      style: udaanGoogleFont(
+                        context,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: fg,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

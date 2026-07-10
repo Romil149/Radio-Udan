@@ -1,4 +1,15 @@
 
+### 2026-07-10 — Ship +49: iOS launch safety + notifications detail + donate UI
+**Requested by**: User still sees crash after build 46; notifications/donate work pending.
+**Root cause**: +47 no UIScene; +48 early `FirebaseApp.configure` / Messaging before Dart init.
+**What was done**: +46-safe AppDelegate; APNs apply only when Firebase ready; notification detail + mark read; Pay Online chip UI; bump **2.0.0+49**.
+**Status**: Pushing.
+
+### 2026-07-10 — Notifications: detail screen + mark read on open
+**Requested by**: User — open inside notifications; mark read; top 20 fine.
+**What was done**: `NotificationDetailScreen`; list shows preview + chevron; mark read on detail open; push/local tap marks read and opens detail when possible.
+**Status**: ⚠️ Local — needs build bump to ship.
+
 ### 2026-07-10 — Fix iOS +47 launch crash (restore UIScene)
 **Requested by**: User — TestFlight +47 “Radio Udaan Crashed” on open.
 **Root cause**: +47 removed `UIApplicationSceneManifest` / used classic AppDelegate; Flutter 3.38+ requires UIScene + `FlutterImplicitEngineDelegate`.
