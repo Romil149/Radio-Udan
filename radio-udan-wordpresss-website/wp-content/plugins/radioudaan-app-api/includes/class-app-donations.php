@@ -106,28 +106,47 @@ class RadioUdaan_App_Donations {
 
 		$payment_link_url = '';
 		$payment_link_id  = '';
-		$link_notes       = array_merge(
-			$notes,
-			array(
-				'donation_id' => (string) $donation_id,
-				'order_id'    => $order_id,
-			)
-		);
-		$link = RadioUdaan_App_Razorpay_Client::create_payment_link(
-			$amount_paise,
-			array(
-				'name'    => $name,
-				'email'   => $email,
-				'contact' => $phone,
-			),
-			'donation_' . $donation_id,
-			$link_notes
-		);
-		if ( ! is_wp_error( $link ) ) {
-			$payment_link_url = isset( $link['short_url'] ) ? (string) $link['short_url'] : '';
-			$payment_link_id  = isset( $link['id'] ) ? (string) $link['id'] : '';
-			if ( '' !== $payment_link_id && $donation_id > 0 ) {
-				RadioUdaan_App_Donations_Db::update_payment_link_id( $donation_id, $payment_link_id );
+		// iOS / web use hosted Payment Link (Safari). Android uses native Checkout + order_id only.
+		$platform = sanitize_key( (string) $request->get_param( 'platform' ) );
+		if ( 'android' !== $platform ) {
+			$link_notes = array_merge(
+				$notes,
+				array(
+					'donation_id' => (string) $donation_id,
+					'order_id'    => $order_id,
+				)
+			);
+			$link = RadioUdaan_App_Razorpay_Client::create_payment_link(
+				$amount_paise,
+				array(
+					'name'    => $name,
+					'email'   => $email,
+					'contact' => $phone,
+				),
+				'donation_' . $donation_id,
+				$link_notes,
+				$order_id
+			);
+			if ( is_wp_error( $link ) ) {
+				RadioUdaan_App_Logger::log(
+					'donation_payment_link_failed',
+					array(
+						'donation_id' => $donation_id,
+						'code'        => $link->get_error_code(),
+					)
+				);
+				if ( 'ios' === $platform || 'web' === $platform ) {
+					return $link;
+				}
+			} else {
+				$payment_link_url = isset( $link['short_url'] ) ? (string) $link['short_url'] : '';
+				$payment_link_id  = isset( $link['id'] ) ? (string) $link['id'] : '';
+				if ( '' !== $payment_link_id && $donation_id > 0 ) {
+					RadioUdaan_App_Donations_Db::update_payment_link_id( $donation_id, $payment_link_id );
+				}
+				if ( ( 'ios' === $platform || 'web' === $platform ) && '' === $payment_link_url ) {
+					return new WP_Error( 'payment_link_failed', __( 'Could not start payment.', 'radioudaan-app-api' ), array( 'status' => 502 ) );
+				}
 			}
 		}
 

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
@@ -13,18 +14,14 @@ import '../../core/models/donation_order.dart';
 typedef DonationPaymentSuccess = void Function(DonationVerifyResult result);
 typedef DonationPaymentFailure = void Function(String message);
 
-/// Platform checkout: native Razorpay on Android, payment link on iOS.
+/// Platform checkout: native Razorpay on Android, Payment Link (Safari) on iOS.
 class DonateRazorpayService {
   DonateRazorpayService({
     required RadioUdaanApi api,
     required AppCopy copy,
   })  : _api = api,
         _copy = copy {
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      _razorpay = Razorpay();
-      _razorpay!.on(Razorpay.EVENT_PAYMENT_SUCCESS, _onAndroidSuccess);
-      _razorpay!.on(Razorpay.EVENT_PAYMENT_ERROR, _onAndroidError);
-    }
+    _ensureAndroidSdk();
   }
 
   final RadioUdaanApi _api;
@@ -36,10 +33,39 @@ class DonateRazorpayService {
 
   String? _pendingOrderId;
 
-  bool get usesPaymentLink =>
-      kIsWeb || defaultTargetPlatform == TargetPlatform.iOS;
+  /// iOS / web use hosted Payment Link. Android uses native Checkout SDK.
+  bool get usesPaymentLink {
+    if (kIsWeb) return true;
+    try {
+      return Platform.isIOS;
+    } catch (_) {
+      return defaultTargetPlatform == TargetPlatform.iOS;
+    }
+  }
+
+  String get checkoutPlatform {
+    if (kIsWeb) return 'web';
+    try {
+      if (Platform.isIOS) return 'ios';
+      if (Platform.isAndroid) return 'android';
+    } catch (_) {}
+    return defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android';
+  }
 
   String? get pendingOrderId => _pendingOrderId;
+
+  void _ensureAndroidSdk() {
+    if (kIsWeb) return;
+    try {
+      if (!Platform.isAndroid) return;
+    } catch (_) {
+      if (defaultTargetPlatform != TargetPlatform.android) return;
+    }
+    if (_razorpay != null) return;
+    _razorpay = Razorpay();
+    _razorpay!.on(Razorpay.EVENT_PAYMENT_SUCCESS, _onAndroidSuccess);
+    _razorpay!.on(Razorpay.EVENT_PAYMENT_ERROR, _onAndroidError);
+  }
 
   Future<DonationOrderResult> createOrder({
     required int amountPaise,
@@ -56,6 +82,7 @@ class DonateRazorpayService {
       name: name,
       email: email,
       phone: phone,
+      platform: checkoutPlatform,
     );
   }
 
@@ -68,9 +95,26 @@ class DonateRazorpayService {
         return;
       }
       final uri = Uri.tryParse(link);
-      if (uri == null || !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (uri == null) {
+        onFailure?.call(_copy.donateFailedMessage);
+        return;
+      }
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched) {
         onFailure?.call(_copy.donateFailedMessage);
       }
+      return;
+    }
+
+    // Android: native Razorpay Checkout (may show Custom Tab UI — that is the SDK).
+    _ensureAndroidSdk();
+    final sdk = _razorpay;
+    if (sdk == null) {
+      onFailure?.call(_copy.donateFailedMessage);
+      return;
+    }
+    if (order.keyId.trim().isEmpty || order.orderId.trim().isEmpty) {
+      onFailure?.call(_copy.donateFailedMessage);
       return;
     }
 
@@ -81,14 +125,20 @@ class DonateRazorpayService {
       'amount': order.amountPaise,
       'currency': order.currency,
       'name': checkoutName,
+      'description': 'Donation to Radio Udaan',
       'order_id': order.orderId,
       'prefill': {
-        'name': order.prefill.name,
-        'email': order.prefill.email,
-        'contact': order.prefill.contact,
+        if (order.prefill.name.isNotEmpty) 'name': order.prefill.name,
+        if (order.prefill.email.isNotEmpty) 'email': order.prefill.email,
+        if (order.prefill.contact.isNotEmpty) 'contact': order.prefill.contact,
       },
+      'theme': {'color': '#E87722'},
     };
-    _razorpay?.open(options);
+    try {
+      sdk.open(options);
+    } catch (_) {
+      onFailure?.call(_copy.donateFailedMessage);
+    }
   }
 
   Future<void> verifyPendingPayment() async {
@@ -162,8 +212,7 @@ class DonateRazorpayService {
 
   void dispose() {
     if (_razorpay != null) {
-      _razorpay!
-        ..clear();
+      _razorpay!.clear();
       _razorpay = null;
     }
   }

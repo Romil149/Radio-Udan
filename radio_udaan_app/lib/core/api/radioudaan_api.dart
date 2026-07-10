@@ -536,6 +536,7 @@ class RadioUdaanApi {
     String name = '',
     String email = '',
     String phone = '',
+    String platform = '',
   }) async {
     final response = await _dio.post<Map<String, dynamic>>(
       '/donate/orders',
@@ -546,6 +547,7 @@ class RadioUdaanApi {
         if (name.isNotEmpty) 'name': name,
         if (email.isNotEmpty) 'email': email,
         if (phone.isNotEmpty) 'phone': phone,
+        if (platform.isNotEmpty) 'platform': platform,
       },
     );
     return DonationOrderResult.fromJson(response.data ?? {});

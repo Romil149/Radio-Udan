@@ -47,6 +47,7 @@ class PushNotificationService {
   bool _initialized = false;
   bool _tokenRefreshListening = false;
   static bool _backgroundHandlerRegistered = false;
+  static Future<void>? _syncInFlight;
 
   PushDiagnostics get _diag => PushDiagnostics.instance;
 
@@ -105,6 +106,20 @@ class PushNotificationService {
   /// Background sync after login, cold start, or app resume. Never blocks UI.
   Future<void> syncForLoggedInUser() async {
     if (kIsWeb) return;
+    // Deduplicate overlapping bootstrap/shell/resume syncs (seen as double logs).
+    if (_syncInFlight != null) {
+      await _syncInFlight;
+      return;
+    }
+    _syncInFlight = _syncForLoggedInUserBody();
+    try {
+      await _syncInFlight;
+    } finally {
+      _syncInFlight = null;
+    }
+  }
+
+  Future<void> _syncForLoggedInUserBody() async {
     _diag.log('Background push sync started');
     if (!await _ensureMessagingCore()) return;
 
@@ -188,6 +203,11 @@ class PushNotificationService {
       _diag.log('Permission status: ${settings.authorizationStatus.name}');
       if (settings.authorizationStatus == AuthorizationStatus.notDetermined) {
         _diag.log('Permission not decided — showing system prompt');
+        await requestSystemPermission();
+      } else if (Platform.isIOS) {
+        // Already authorized: still call requestPermission so iOS re-registers
+        // for remote notifications (APNs token is often lost before Firebase ready).
+        _diag.log('iOS re-requesting permission to refresh APNs registration');
         await requestSystemPermission();
       } else if (Platform.isAndroid) {
         final androidStatus = await Permission.notification.status;

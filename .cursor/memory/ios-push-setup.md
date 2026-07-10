@@ -53,9 +53,10 @@ Alternative (not preferred): APNs certificates — auth keys do not expire yearl
 |------|----------|----------|
 | Firebase plist | `radio_udaan_app/ios/Runner/GoogleService-Info.plist` | `PROJECT_ID` = `radio-udaan-72232`, `BUNDLE_ID` = `org.reactjs.native.example.Radio` |
 | Dart options | `radio_udaan_app/lib/firebase_options.dart` | `projectId: 'radio-udaan-72232'`, `iosBundleId: 'org.reactjs.native.example.Radio'` |
-| Firebase init | Dart `Firebase.initializeApp` via `push_notification_service.dart` | Native `FirebaseApp.configure()` not required with current FlutterFire |
+| Firebase init | Native `FirebaseApp.configure()` in `AppDelegate` + Dart `ensureFirebase` | Native configure first so APNs token can be set on `Messaging` before Dart |
+| App lifecycle | Classic `FlutterAppDelegate` — **no UIScene** | `UIApplicationSceneManifest` / `FlutterImplicitEngineDelegate` broke `getAPNSToken` (stayed nil) |
 | Background mode | `radio_udaan_app/ios/Runner/Info.plist` | `UIBackgroundModes` includes `remote-notification` |
-| Client | `radio_udaan_app/lib/core/push/push_notification_service.dart` | Requests permission, registers FCM token with WP API |
+| Client | `radio_udaan_app/lib/core/push/push_notification_service.dart` | On iOS, re-calls `requestPermission` even when already authorized to refresh APNs |
 | iOS entitlements | `radio_udaan_app/ios/Runner/Runner.entitlements` | `aps-environment` = `production` (TestFlight/App Store); use `development` only for local debug profiles if needed |
 
 After changing `GoogleService-Info.plist`, run `flutterfire configure` only if regenerating from Firebase — otherwise hand-edit bundle/project IDs to match.

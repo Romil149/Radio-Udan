@@ -33,33 +33,54 @@ class RadioUdaan_App_Razorpay_Client {
 	/**
 	 * Hosted checkout link for iOS Safari flow.
 	 *
-	 * @param int                  $amount_paise Amount.
-	 * @param array<string,string> $customer     name, email, contact.
-	 * @param string               $reference_id Reference.
-	 * @param array<string,string> $notes        Notes.
+	 * @param int                  $amount_paise      Amount.
+	 * @param array<string,string> $customer          name, email, contact.
+	 * @param string               $reference_id      Reference.
+	 * @param array<string,string> $notes             Notes.
+	 * @param string               $callback_order_id Optional order id for deep-link return.
 	 * @return array<string,mixed>|WP_Error
 	 */
-	public static function create_payment_link( $amount_paise, array $customer, $reference_id, array $notes = array() ) {
+	public static function create_payment_link( $amount_paise, array $customer, $reference_id, array $notes = array(), $callback_order_id = '' ) {
+		$name    = sanitize_text_field( (string) ( $customer['name'] ?? '' ) );
+		$email   = sanitize_email( (string) ( $customer['email'] ?? '' ) );
+		$contact = sanitize_text_field( (string) ( $customer['contact'] ?? '' ) );
+
+		$customer_body = array();
+		if ( '' !== $name ) {
+			$customer_body['name'] = $name;
+		}
+		if ( '' !== $email ) {
+			$customer_body['email'] = $email;
+		}
+		if ( '' !== $contact ) {
+			$customer_body['contact'] = $contact;
+		}
+
+		// Never set notify.email=true without an email — Razorpay rejects the link.
+		$callback = 'radioudaan://donate/verify';
+		$order_id = sanitize_text_field( (string) $callback_order_id );
+		if ( '' !== $order_id ) {
+			$callback .= '?order_id=' . rawurlencode( $order_id );
+		}
+
 		$body = array(
-			'amount'         => (int) $amount_paise,
-			'currency'       => 'INR',
-			'accept_partial' => false,
-			'reference_id'   => substr( sanitize_text_field( (string) $reference_id ), 0, 40 ),
-			'description'    => __( 'Donation to Radio Udaan', 'radioudaan-app-api' ),
-			'customer'       => array(
-				'name'    => sanitize_text_field( (string) ( $customer['name'] ?? '' ) ),
-				'email'   => sanitize_email( (string) ( $customer['email'] ?? '' ) ),
-				'contact' => sanitize_text_field( (string) ( $customer['contact'] ?? '' ) ),
-			),
-			'notify'         => array(
+			'amount'          => (int) $amount_paise,
+			'currency'        => 'INR',
+			'accept_partial'  => false,
+			'reference_id'    => substr( sanitize_text_field( (string) $reference_id ), 0, 40 ),
+			'description'     => __( 'Donation to Radio Udaan', 'radioudaan-app-api' ),
+			'notify'          => array(
 				'sms'   => false,
-				'email' => true,
+				'email' => '' !== $email,
 			),
 			'reminder_enable' => false,
-			'callback_url'    => 'radioudaan://donate/verify',
+			'callback_url'    => $callback,
 			'callback_method' => 'get',
-			'notes'          => self::stringify_notes( $notes ),
+			'notes'           => self::stringify_notes( $notes ),
 		);
+		if ( ! empty( $customer_body ) ) {
+			$body['customer'] = $customer_body;
+		}
 		return self::request( 'POST', 'payment_links', $body );
 	}
 

@@ -1,6 +1,12 @@
 # Architecture Decisions Log
 <!-- When a design choice is made, document it here so we don't re-debate it. -->
 
+### 2026-07-10 — iOS push: classic AppDelegate (no UIScene)
+**Context**: Permission authorized but `getAPNSToken` stayed nil under `FlutterImplicitEngineDelegate` + SceneDelegate; AppDelegate APNs handoff alone (+44/+46) insufficient.
+**Decision**: Remove `UIApplicationSceneManifest`; use classic `FlutterAppDelegate` with `FirebaseApp.configure()`, `registerForRemoteNotifications`, and cached `Messaging.apnsToken`. Dart re-requests notification permission on iOS even when already authorized.
+**Reasoning**: Known FlutterFire break with UIScene/implicit engine; classic lifecycle restores APNs → FCM token path.
+**Consequences**: Do not re-add UIScene for iOS until FlutterFire documents a working APNs path; SceneDelegate.swift may remain in the Xcode project unused.
+
 ### 2026-07-10 — FCM project must match Flutter Firebase project
 **Context**: Staging had FCM configured (`fcm_configured: true`) on project `radio-udaan-cbfdc` while the app uses `radio-udaan-72232`; zero devices registered; admin “send” only created inbox rows.
 **Decision**: Lock expected client project as `RadioUdaan_App_Fcm_Sender::EXPECTED_APP_PROJECT_ID = radio-udaan-72232`. Expose `fcm_project_matches_app` on `GET /health`; warn in admin Send + Settings when mismatched.

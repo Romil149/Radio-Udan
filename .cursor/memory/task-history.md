@@ -1,4 +1,16 @@
 
+### 2026-07-10 — iOS APNs: revert UIScene (classic AppDelegate)
+**Requested by**: User — Android push OK; iOS forever `APNs token NOT ready` on +46.
+**Root cause**: `FlutterImplicitEngineDelegate` + `UIApplicationSceneManifest` prevents FlutterFire APNs swizzling; token never reaches `Messaging.getAPNSToken()`.
+**What was done**: Classic `FlutterAppDelegate`; remove scene manifest; `FirebaseApp.configure()` + cache/re-apply APNs token; iOS re-`requestPermission` when already authorized; debounce duplicate push sync; bump **2.0.0+47**.
+**Status**: ⚠️ Local — needs commit + TestFlight before device retest.
+
+### 2026-07-10 — Razorpay iOS Payment Link + Android native path
+**Requested by**: User — iOS donate not working; Android opens browser.
+**Findings**: Android browser-like UI is Razorpay native Custom Tab (expected). iOS Payment Link failed when `notify.email=true` with empty email; callback lacked `order_id`.
+**What was done**: WP payment link resilient notify + `callback_url?order_id=`; skip link for Android platform; Flutter passes `platform`; harden native open + deep link parse.
+**Status**: ⚠️ Local — needs plugin deploy + app build (+47).
+
 ### 2026-07-10 — CI fix: google-services 4.4.2 for Crashlytics 3
 **Requested by**: CI fail on +45 — Crashlytics plugin 3 requires Google-Services ≥4.4.1.
 **What was done**: Bump `com.google.gms.google-services` to 4.4.2; build **2.0.0+46**.

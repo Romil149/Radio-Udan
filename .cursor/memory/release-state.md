@@ -3,9 +3,9 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+46** @ `7c9dfe5` | **yes** | 2026-07-10 | Fix CI: google-services 4.4.2 for Crashlytics Gradle plugin 3 |
-| TestFlight iOS | **2.0.0+46** | CI after push | 2026-07-10 | +45 APK failed CI; +46 unblocks assembleRelease |
-| Staging WP plugin | local zip needed | **no** (redeploy) | 2026-07-10 | Still need `radio-udaan-72232` FCM SA + plugin deploy |
+| GitHub `main` | **2.0.0+47** (this commit) | pushing | 2026-07-10 | iOS classic AppDelegate (no UIScene) + APNs; Razorpay Payment Link fixes |
+| TestFlight iOS | **2.0.0+47** | CI after push | 2026-07-10 | Retest APNs token after install |
+| Staging WP plugin | local zip needed | **no** (redeploy) | 2026-07-10 | Razorpay Payment Link + FCM SA `72232` still need deploy |
 | Staging API smoke | 19/19 | yes (routes) | 2026-07-10 | Health previously `cbfdc` + 0 devices |
 
 ## TestFlight build bump (mandatory — same commit)
@@ -20,5 +20,6 @@ Never push app code to `main` without bumping the build if the last build is alr
 ## Open deploy blockers
 
 1. **WP FCM** — paste service account from Firebase **`radio-udaan-72232`** (not `cbfdc`); Test FCM; deploy plugin zip.
-2. **Device register** — install +46, allow notifications, confirm `push_devices_registered` ≥ 1.
+2. **Device register** — install **+47** (not +46), allow notifications, confirm diagnostics show APNs token + `push_devices_registered` ≥ 1.
 3. Firebase production APNs key — **done**.
+4. **iOS APNs** — +46 AppDelegate handoff insufficient under UIScene; +47 reverts to classic AppDelegate (no `UIApplicationSceneManifest`).
