@@ -3,10 +3,10 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+47** @ `a942271` | **yes** | 2026-07-10 | iOS classic AppDelegate (no UIScene) + APNs; Razorpay Payment Link fixes |
-| TestFlight iOS | **2.0.0+47** | CI after push | 2026-07-10 | Retest APNs token after install |
-| Staging WP plugin | local zip needed | **no** (redeploy) | 2026-07-10 | Razorpay Payment Link + FCM SA `72232` still need deploy |
-| Staging API smoke | 19/19 | yes (routes) | 2026-07-10 | Health previously `cbfdc` + 0 devices |
+| GitHub `main` | **2.0.0+48** (pushing) | pushing | 2026-07-10 | Fix +47 iOS launch crash (restore UIScene); donate auto-confirm + a11y |
+| TestFlight iOS | **2.0.0+48** | CI after push | 2026-07-10 | Do not use +47 (crashes). Retest launch + APNs + donate |
+| Staging WP plugin | local zip needed | **no** (redeploy) | 2026-07-10 | New donate copy keys + Razorpay Payment Link fixes |
+| Staging API smoke | 19/19 | yes | 2026-07-10 | |
 
 ## TestFlight build bump (mandatory — same commit)
 

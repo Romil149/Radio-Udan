@@ -1,6 +1,16 @@
 # Architecture Decisions Log
 <!-- When a design choice is made, document it here so we don't re-debate it. -->
 
+### 2026-07-10 — iOS must keep UIScene (build 47 crash)
+**Context**: Build +47 removed `UIApplicationSceneManifest` and used classic `AppDelegate` to fix APNs; TestFlight reported “Radio Udaan Crashed” on open.
+**Decision**: Restore UIScene + `FlutterImplicitEngineDelegate` + `SceneDelegate` (Flutter 3.38+ requirement). Keep APNs token cache + re-apply after plugin registry / `sceneDidBecomeActive`. Do **not** remove the scene manifest again.
+**Consequences**: APNs may still need Dart-side retries; launch stability takes priority over the classic-AppDelegate experiment.
+
+### 2026-07-10 — iOS donate: auto-confirm on resume (no manual button)
+**Context**: Payment Link opens Safari; deep-link return is unreliable; “I completed payment” confused users (esp. blind).
+**Decision**: Keep deep-link verify when it fires; primary path is **poll `/donate/verify` when the app resumes** after opening Safari. Remove the manual button from the Pay Online card.
+**Consequences**: Unpaid returns stay in “waiting” state without false failure; webhook still helps server capture.
+
 ### 2026-07-10 — iOS push: classic AppDelegate (no UIScene)
 **Context**: Permission authorized but `getAPNSToken` stayed nil under `FlutterImplicitEngineDelegate` + SceneDelegate; AppDelegate APNs handoff alone (+44/+46) insufficient.
 **Decision**: Remove `UIApplicationSceneManifest`; use classic `FlutterAppDelegate` with `FirebaseApp.configure()`, `registerForRemoteNotifications`, and cached `Messaging.apnsToken`. Dart re-requests notification permission on iOS even when already authorized.

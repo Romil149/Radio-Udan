@@ -1,4 +1,16 @@
 
+### 2026-07-10 — Fix iOS +47 launch crash (restore UIScene)
+**Requested by**: User — TestFlight +47 “Radio Udaan Crashed” on open.
+**Root cause**: +47 removed `UIApplicationSceneManifest` / used classic AppDelegate; Flutter 3.38+ requires UIScene + `FlutterImplicitEngineDelegate`.
+**What was done**: Restore scene manifest + ImplicitEngine; keep Firebase configure + APNs cache/re-apply in SceneDelegate; ship **2.0.0+48** with donate a11y/auto-confirm.
+**Status**: Pushing.
+
+### 2026-07-10 — Donate Pay Online: auto-confirm + quieter a11y
+**Requested by**: User — remove “I completed payment”; improve Razorpay UI/a11y (section announced everything).
+**Staging config check**: Razorpay **enabled** live key; presets 100/500/1000/5000; **80G on**; 80G PDF email **off**; UPI set; **QR image empty**.
+**What was done**: iOS auto-verify on app resume (poll `/donate/verify`); removed manual button; merged header semantics; clearer amount chips/summary; 80G checkbox single announcement; Form 10BE as hint; validation focus; verify-screen copy fix; new copy keys (app defaults + WP catalog).
+**Status**: ⚠️ Local — needs build bump + plugin deploy for new catalog strings on staging.
+
 ### 2026-07-10 — iOS APNs: revert UIScene (classic AppDelegate)
 **Requested by**: User — Android push OK; iOS forever `APNs token NOT ready` on +46.
 **Root cause**: `FlutterImplicitEngineDelegate` + `UIApplicationSceneManifest` prevents FlutterFire APNs swizzling; token never reaches `Messaging.getAPNSToken()`.

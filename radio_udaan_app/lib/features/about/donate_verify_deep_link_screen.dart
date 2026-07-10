@@ -9,6 +9,7 @@ import '../../core/theme/accessibility_scope.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_google_fonts.dart';
 import '../../core/widgets/brand_app_bar.dart';
+import '../auth/widgets/udaan_auth_widgets.dart';
 import 'donate_screen.dart';
 
 /// Verifies a Razorpay donation after Safari / deep-link return.
@@ -36,6 +37,7 @@ class _DonateVerifyDeepLinkScreenState
 
   Future<void> _verify() async {
     final copy = ref.read(appCopyProvider);
+    announce(context, copy.donateVerifying);
     try {
       final result = await ref.read(radioudaanApiProvider).verifyDonation(
             razorpayOrderId: widget.orderId,
@@ -95,13 +97,19 @@ class _DonateVerifyDeepLinkScreenState
               if (_loading) ...[
                 const Center(child: CircularProgressIndicator()),
                 const SizedBox(height: 16),
-                Text(
-                  copy.donateCheckPayment,
-                  textAlign: TextAlign.center,
-                  style: udaanGoogleFont(
-                    context,
-                    fontSize: 16,
-                    color: palette.onSurfaceVariant,
+                Semantics(
+                  liveRegion: true,
+                  label: copy.donateVerifying,
+                  child: ExcludeSemantics(
+                    child: Text(
+                      copy.donateVerifying,
+                      textAlign: TextAlign.center,
+                      style: udaanGoogleFont(
+                        context,
+                        fontSize: 16,
+                        color: palette.onSurfaceVariant,
+                      ),
+                    ),
                   ),
                 ),
               ] else if (_message != null) ...[
@@ -118,7 +126,8 @@ class _DonateVerifyDeepLinkScreenState
                 ),
               ],
               const Spacer(),
-              FilledButton(
+              UdaanPrimaryButton(
+                label: copy.donateBackToDonate,
                 onPressed: () {
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute<void>(
@@ -126,7 +135,6 @@ class _DonateVerifyDeepLinkScreenState
                     ),
                   );
                 },
-                child: Text(copy.donateUs),
               ),
               const SizedBox(height: 8),
               TextButton(

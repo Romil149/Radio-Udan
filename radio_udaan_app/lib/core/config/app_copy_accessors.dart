@@ -63,6 +63,11 @@ extension AppCopyStrings on AppCopy {
   String get donateUsSubtitle => text('donate_us_subtitle');
   String get donatePayOnlineTitle => text('donate_pay_online_title');
   String get donatePayOnlineSubtitle => text('donate_pay_online_subtitle');
+  String get donatePayOnlineSubtitleIos =>
+      text('donate_pay_online_subtitle_ios');
+  String get donateAmountHeading => text('donate_amount_heading');
+  String get donateAmountChipSemantics => text('donate_amount_chip_semantics');
+  String get donateSelectedSummary => text('donate_selected_summary');
   String get donateAmountCustomLabel => text('donate_amount_custom_label');
   String get donateNowButton => text('donate_now_button');
   String get donateSuccessTitle => text('donate_success_title');
@@ -73,7 +78,12 @@ extension AppCopyStrings on AppCopy {
   String get donatePanRequired => text('donate_pan_required');
   String get donateForm10beNote => text('donate_form_10be_note');
   String get donateOpeningPayment => text('donate_opening_payment');
+  String get donateOpeningWithAmount => text('donate_opening_with_amount');
   String get donateCheckPayment => text('donate_check_payment');
+  String get donateIosWaiting => text('donate_ios_waiting');
+  String get donateIosConfirming => text('donate_ios_confirming');
+  String get donateVerifying => text('donate_verifying');
+  String get donateBackToDonate => text('donate_back_to_donate');
   String get donateInvalidAmount => text('donate_invalid_amount');
   String get editProfileTitle => text('edit_profile_title');
   String get emailHint => text('email_hint');

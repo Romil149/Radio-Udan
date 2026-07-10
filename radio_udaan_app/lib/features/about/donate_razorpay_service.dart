@@ -141,23 +141,46 @@ class DonateRazorpayService {
     }
   }
 
+  /// Returns true when the pending order is confirmed paid.
+  /// Does not call [onFailure] when still unpaid (used for silent iOS resume polls).
+  Future<bool> tryConfirmPendingPayment() async {
+    final orderId = _pendingOrderId;
+    if (orderId == null || orderId.isEmpty) return false;
+    try {
+      final result = await _api.verifyDonation(razorpayOrderId: orderId);
+      if (result.success) {
+        _pendingOrderId = null;
+        onSuccess?.call(result);
+        return true;
+      }
+    } catch (_) {
+      // Network blip — caller may retry.
+    }
+    return false;
+  }
+
+  /// Polls Razorpay/WP until paid or attempts exhausted. Silent when still unpaid.
+  Future<bool> pollConfirmPendingPayment({
+    int attempts = 6,
+    Duration gap = const Duration(seconds: 2),
+  }) async {
+    for (var i = 0; i < attempts; i++) {
+      if (await tryConfirmPendingPayment()) return true;
+      if (i < attempts - 1) {
+        await Future<void>.delayed(gap);
+      }
+    }
+    return false;
+  }
+
   Future<void> verifyPendingPayment() async {
     final orderId = _pendingOrderId;
     if (orderId == null || orderId.isEmpty) {
       onFailure?.call(_copy.donateFailedMessage);
       return;
     }
-    try {
-      final result = await _api.verifyDonation(razorpayOrderId: orderId);
-      if (result.success) {
-        _pendingOrderId = null;
-        onSuccess?.call(result);
-      } else {
-        onFailure?.call(_copy.donateFailedMessage);
-      }
-    } on ApiError catch (error) {
-      onFailure?.call(error.message);
-    } catch (_) {
+    final ok = await pollConfirmPendingPayment(attempts: 3);
+    if (!ok) {
       onFailure?.call(_copy.donateFailedMessage);
     }
   }

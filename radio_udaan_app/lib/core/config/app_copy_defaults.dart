@@ -61,20 +61,33 @@ const Map<String, String> appCopyDefaults = {
   'donate_us': 'Donate Us',
   'donate_us_subtitle': 'Support our mission online, UPI, or bank transfer',
   'donate_pay_online_title': 'Pay Online',
-  'donate_pay_online_subtitle': 'Donate securely with UPI, card, or net banking',
-  'donate_amount_custom_label': 'Custom amount (₹)',
+  'donate_pay_online_subtitle':
+      'Donate securely with UPI, card, or net banking.',
+  'donate_pay_online_subtitle_ios':
+      'Opens Razorpay in Safari. After you pay, return here — we confirm automatically.',
+  'donate_amount_heading': 'Choose donation amount',
+  'donate_amount_chip_semantics': 'Donation amount {amount} rupees',
+  'donate_selected_summary': 'You will donate ₹{amount}',
+  'donate_amount_custom_label': 'Custom amount in rupees',
   'donate_now_button': 'Donate now',
   'donate_success_title': 'Thank you for your donation',
   'donate_success_message':
       'Your payment was successful. Thank you for supporting Radio Udaan.',
   'donate_failed_message': 'Payment could not be completed. Please try again.',
   'donate_80g_checkbox': 'I want an 80G tax exemption receipt',
-  'donate_pan_label': 'PAN (required for 80G receipt)',
+  'donate_pan_label': 'PAN',
   'donate_pan_required': 'Enter a valid PAN to receive your 80G receipt.',
   'donate_form_10be_note':
       'Form 10BE for income tax filing will be issued by the trust as per Income Tax rules.',
   'donate_opening_payment': 'Opening secure payment',
+  'donate_opening_with_amount':
+      'Donating {amount} rupees. Opening secure payment.',
   'donate_check_payment': 'I completed payment',
+  'donate_ios_waiting':
+      'Waiting to confirm your payment. Return here after paying in Safari.',
+  'donate_ios_confirming': 'Confirming your payment',
+  'donate_verifying': 'Verifying your payment',
+  'donate_back_to_donate': 'Back to Donate',
   'donate_invalid_amount': 'Enter a valid donation amount.',
   'edit_profile_title': 'Edit Profile',
   'email_hint': 'you@example.com',
