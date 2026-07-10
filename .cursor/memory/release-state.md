@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+43** | pushing | 2026-07-10 | About Us info_hub, YouTube optimistic loader, OS share, settings Save fix |
+| GitHub `main` | **2.0.0+43** @ `e11b6f1` | pushing | 2026-07-10 | About Us info_hub, YouTube optimistic loader, OS share, settings Save fix |
 | TestFlight iOS | **2.0.0+43** | CI after push | 2026-07-10 | Device QA: About Us, YouTube loader, share sheet |
 | Staging WP plugin | local zip needed | **no** (redeploy) | 2026-07-10 | Deploy for `info_hub.about` + settings Save (BUG-022) + community What's New |
 | Staging API smoke | 19/19 | yes (routes) | 2026-07-10 | Staging still missing `info_hub.about` until plugin zip |
