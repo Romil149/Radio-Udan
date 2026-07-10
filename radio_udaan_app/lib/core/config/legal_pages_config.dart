@@ -46,11 +46,16 @@ class LegalPagesConfig {
     return LegalPagesConfig(
       privacy: parse(json['privacy']),
       terms: parse(json['terms']),
+      // Kept for backward-compat with older staging configs; UI uses
+      // `info_hub.about` via [AboutUsScreen] instead.
       about: parse(json['about']),
     );
   }
 
   final LegalPageContent? privacy;
   final LegalPageContent? terms;
+
+  /// Unused by Flutter UI (About Us is `info_hub.about`). Parsed so old
+  /// staging payloads do not break config decoding.
   final LegalPageContent? about;
 }

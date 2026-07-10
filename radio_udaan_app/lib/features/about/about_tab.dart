@@ -2,15 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/config/legal_pages_config.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/udaan_colors.dart';
 import '../../core/utils/external_link.dart';
 import '../../core/widgets/main_tab_app_bar.dart';
 import '../more/help_contact_screen.dart';
-import '../more/legal_content_screen.dart';
 import '../more/widgets/more_hero_card.dart';
 import '../more/widgets/more_menu_tile.dart';
+import 'about_us_screen.dart';
 import 'contact_email_screen.dart';
 import 'contact_phone_screen.dart';
 import 'donate_screen.dart';
@@ -38,30 +37,6 @@ class AboutTab extends ConsumerWidget {
     );
   }
 
-  void _openLegalContent(
-    BuildContext context,
-    WidgetRef ref,
-    AppCopy copy, {
-    required String title,
-    required LegalPageContent? content,
-  }) {
-    if (content == null || !content.hasHtml) {
-      _announce(context, copy.linkUnavailable);
-      return;
-    }
-
-    final config = ref.read(remoteConfigProvider);
-    _push(
-      context,
-      LegalContentScreen(
-        title: title,
-        html: content.html,
-        apiBaseUrl: ref.read(apiBaseUrlProvider),
-        siteUrl: config?.siteUrl,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final copy = ref.watch(appCopyProvider);
@@ -83,20 +58,13 @@ class AboutTab extends ConsumerWidget {
               intro: copy.aboutOptionsIntro,
               backgroundIcon: Icons.info_outline,
             ),
-            if (config?.legalPages.about != null)
-              MoreMenuTile(
-                title: copy.aboutUs,
-                subtitle: copy.aboutUsSubtitle,
-                icon: Icons.info_outline,
-                iconBackground: context.udaan.secondary,
-                onTap: () => _openLegalContent(
-                  context,
-                  ref,
-                  copy,
-                  title: copy.aboutUs,
-                  content: config?.legalPages.about,
-                ),
-              ),
+            MoreMenuTile(
+              title: copy.aboutUs,
+              subtitle: copy.aboutUsSubtitle,
+              icon: Icons.info_outline,
+              iconBackground: context.udaan.secondary,
+              onTap: () => _push(context, const AboutUsScreen()),
+            ),
             MoreMenuTile(
               title: copy.aboutWhatsNew,
               subtitle: copy.aboutWhatsNewSubtitle,

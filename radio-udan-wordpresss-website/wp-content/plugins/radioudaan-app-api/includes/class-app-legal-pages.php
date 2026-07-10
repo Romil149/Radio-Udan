@@ -1,6 +1,7 @@
 <?php
 /**
- * In-app legal/about page bodies from selected WordPress pages (Elementor-aware).
+ * In-app legal page bodies (Privacy + Terms) from selected WordPress pages (Elementor-aware).
+ * About Us story content is managed via RadioUdaan_App_Info_Hub (info_hub.about), not legal_pages.
  *
  * @package RadioUdaanAppApi
  */
@@ -8,12 +9,13 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Resolves page HTML for GET /config → legal_pages.
+ * Resolves page HTML for GET /config → legal_pages (privacy + terms only).
  */
 class RadioUdaan_App_Legal_Pages {
 
 	const OPTION_PRIVACY_PAGE_ID = 'radioudaan_legal_privacy_page_id';
 	const OPTION_TERMS_PAGE_ID   = 'radioudaan_legal_terms_page_id';
+	/** Kept for BC; no longer exposed in GET /config → legal_pages. */
 	const OPTION_ABOUT_PAGE_ID   = 'radioudaan_legal_about_page_id';
 
 	/**
@@ -198,6 +200,7 @@ class RadioUdaan_App_Legal_Pages {
 
 	/**
 	 * Public config blob for GET /config.
+	 * About Us is not included — use info_hub.about instead.
 	 *
 	 * @return array<string,array<string,mixed>|null>
 	 */
@@ -205,7 +208,6 @@ class RadioUdaan_App_Legal_Pages {
 		return array(
 			'privacy' => self::get_page_payload( self::get_privacy_page_id() ),
 			'terms'   => self::get_page_payload( self::get_terms_page_id() ),
-			'about'   => self::get_page_payload( self::get_about_page_id() ),
 		);
 	}
 }

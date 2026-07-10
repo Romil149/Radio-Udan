@@ -29,7 +29,7 @@
 | R6 | MED | Route `namesRoute` + header same title → possible double speak |
 | R8 | LOW | Segment semantics may omit `category` shown in UI |
 
-**Also:** Share opens app-owned sheet with Close X + Share + Copy (OS SharePlus still has no app X after Share).
+**Also:** Share uses **native OS share sheet only** (no app Share/Copy popup) — dismiss via system Close/Cancel or VoiceOver scrub Z. Schedule Close X remains.
 
 **Strengths:** `BlockSemantics` / `UdaanModalSheet`; favorite announces on toggle; empty/error liveRegions present in sheet. Close X on schedule.
 

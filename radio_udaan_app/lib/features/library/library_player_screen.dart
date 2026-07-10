@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
@@ -29,6 +28,10 @@ const _libraryYoutubeParams = YoutubePlayerParams(
 
 const _playbackStartTimeout = Duration(seconds: 15);
 
+/// Brief grace before clearing the starting overlay without waiting on flaky
+/// iframe [PlayerState.playing] (Option A — optimistic / intent-based UI).
+const _optimisticReadyGrace = Duration(milliseconds: 1000);
+
 /// In-app YouTube playback with Udaan chrome (IFrame API — stream only, store compliant).
 class LibraryPlayerScreen extends ConsumerStatefulWidget {
   const LibraryPlayerScreen({required this.video, super.key});
@@ -46,10 +49,20 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
   StreamSubscription<YoutubePlayerValue>? _playerSubscription;
   StreamSubscription<YoutubeVideoState>? _videoStateSubscription;
   Timer? _playbackTimeoutTimer;
+  Timer? _optimisticReadyTimer;
   PlayerState? _lastAnnouncedPlayerState;
   bool _playerError = false;
+
+  /// Brief “starting” overlay only — never gated solely on iframe playing.
   bool _startingPlayback = false;
+
+  /// User intent + last command (Play → true, Pause → false). Soft iframe
+  /// confirms may reinforce; unknown/cued/unStarted must not clear this.
   bool _isPlaying = false;
+
+  /// True from Play until soft confirm, pause, end, failure, or reset.
+  /// Drives the 15s error path independently of the optimistic spinner clear.
+  bool _awaitingPlaybackConfirm = false;
 
   String? get _videoId {
     return YoutubePlayerController.convertUrlToId(widget.video.watchUrl) ??
@@ -63,17 +76,19 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
   @override
   void dispose() {
     _cancelPlaybackTimeout();
+    _cancelOptimisticReady();
     _playerSubscription?.cancel();
     _videoStateSubscription?.cancel();
     _controller?.close();
     super.dispose();
   }
 
+  /// Soft confirm from iframe probes — clears loader and cancels failure timeout.
   void _onPlaybackStarted({bool announce = true}) {
     _cancelPlaybackTimeout();
+    _cancelOptimisticReady();
+    _awaitingPlaybackConfirm = false;
     if (!mounted) return;
-    // Always clear the loader when real playback is detected — even if
-    // `_isPlaying` was already true from a flaky prior state event.
     setState(() {
       _startingPlayback = false;
       _isPlaying = true;
@@ -84,23 +99,40 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
     }
   }
 
+  /// Primary path: clear spinner after grace once controller exists + play requested.
+  void _scheduleOptimisticReady() {
+    _cancelOptimisticReady();
+    if (_controller == null) return;
+    _optimisticReadyTimer = Timer(_optimisticReadyGrace, () {
+      if (!mounted || !_startingPlayback || !_isPlaying) return;
+      if (_controller == null) return;
+      setState(() => _startingPlayback = false);
+    });
+  }
+
+  void _cancelOptimisticReady() {
+    _optimisticReadyTimer?.cancel();
+    _optimisticReadyTimer = null;
+  }
+
   bool _isAudiblePlaybackState(PlayerState state) {
     return state == PlayerState.playing || state == PlayerState.buffering;
   }
 
-  /// Single source of truth for iframe [PlayerState] → UI flags.
+  /// Iframe [PlayerState] → soft UI updates only.
   ///
-  /// Iframe often emits [PlayerState.unknown] / [PlayerState.cued] /
-  /// [PlayerState.unStarted] while audio continues — those must not flip
-  /// `_isPlaying` to false once playback has started.
+  /// unknown / cued / unStarted must not flip intent playing → false.
   void _applyPlayerState(PlayerState state) {
     switch (state) {
       case PlayerState.playing:
       case PlayerState.buffering:
-        _onPlaybackStarted();
+        _onPlaybackStarted(announce: false);
         break;
       case PlayerState.paused:
+        // During start, iframe often emits paused while still loading — ignore.
+        if (_awaitingPlaybackConfirm) break;
         _cancelPlaybackTimeout();
+        _cancelOptimisticReady();
         if (!mounted) return;
         setState(() {
           _startingPlayback = false;
@@ -113,6 +145,8 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
         break;
       case PlayerState.ended:
         _cancelPlaybackTimeout();
+        _cancelOptimisticReady();
+        _awaitingPlaybackConfirm = false;
         if (!mounted) return;
         setState(() {
           _startingPlayback = false;
@@ -123,35 +157,35 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
       case PlayerState.unknown:
       case PlayerState.unStarted:
       case PlayerState.cued:
-        // Keep `_isPlaying` as-is; poll / position / timeout resolve starting.
+        // Keep intent; optimistic clear + soft probes + timeout own the loader.
         break;
     }
   }
-
 
   Future<void> _pollUntilPlaybackStarts(YoutubePlayerController controller) async {
     const pollInterval = Duration(milliseconds: 400);
     final deadline = DateTime.now().add(_playbackStartTimeout);
 
-    while (mounted && _startingPlayback && DateTime.now().isBefore(deadline)) {
+    while (mounted && _awaitingPlaybackConfirm && DateTime.now().isBefore(deadline)) {
       try {
         final state = await controller.playerState;
         if (_isAudiblePlaybackState(state)) {
-          _onPlaybackStarted();
+          _onPlaybackStarted(announce: false);
           return;
         }
-        if (state == PlayerState.paused || state == PlayerState.ended) {
+        if (state == PlayerState.ended) {
           _applyPlayerState(state);
           return;
         }
+        // Spurious paused during start — keep polling for soft confirm.
         final elapsed = await controller.currentTime;
         if (elapsed > 0.1) {
-          _onPlaybackStarted();
+          _onPlaybackStarted(announce: false);
           return;
         }
         final loaded = await controller.videoLoadedFraction;
         if (loaded > 0.05 && elapsed > 0) {
-          _onPlaybackStarted();
+          _onPlaybackStarted(announce: false);
           return;
         }
       } catch (_) {
@@ -161,19 +195,19 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
     }
   }
 
-  /// One-shot probe shortly after load — catches playback when state events lag.
+  /// Soft probe after load — secondary to optimistic clear.
   Future<void> _probePlaybackAfterLoad(YoutubePlayerController controller) async {
     await Future<void>.delayed(const Duration(milliseconds: 350));
-    if (!mounted || !_startingPlayback) return;
+    if (!mounted || !_awaitingPlaybackConfirm) return;
     try {
       final state = await controller.playerState;
       if (_isAudiblePlaybackState(state)) {
-        _onPlaybackStarted();
+        _onPlaybackStarted(announce: false);
         return;
       }
       final elapsed = await controller.currentTime;
       if (elapsed > 0.1) {
-        _onPlaybackStarted();
+        _onPlaybackStarted(announce: false);
       }
     } catch (_) {
       // Iframe may still be initializing.
@@ -188,18 +222,21 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
   void _startPlaybackTimeout() {
     _cancelPlaybackTimeout();
     _playbackTimeoutTimer = Timer(_playbackStartTimeout, () {
-      if (!mounted || !_startingPlayback) return;
+      if (!mounted || !_awaitingPlaybackConfirm) return;
       _handlePlayerFailure();
     });
   }
 
   void _handlePlayerFailure() {
     _cancelPlaybackTimeout();
+    _cancelOptimisticReady();
+    _awaitingPlaybackConfirm = false;
     if (!mounted) return;
-    if (_playerError && !_startingPlayback) return;
+    if (_playerError && !_startingPlayback && !_isPlaying) return;
     setState(() {
       _playerError = true;
       _startingPlayback = false;
+      _isPlaying = false;
     });
     announce(context, _copy.libraryEmbedError);
   }
@@ -218,7 +255,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
 
     _videoStateSubscription = controller.videoStateStream.listen((state) {
       if (state.position.inMilliseconds > 100) {
-        _onPlaybackStarted();
+        _onPlaybackStarted(announce: false);
       }
     });
   }
@@ -240,12 +277,18 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
 
   Future<void> _startPlayback() async {
     final videoId = _videoId;
-    if (videoId == null || _startingPlayback) return;
+    if (videoId == null || _startingPlayback || _isPlaying) return;
 
     setState(() {
       _startingPlayback = true;
+      _isPlaying = true;
       _playerError = false;
+      _awaitingPlaybackConfirm = true;
     });
+    if (_lastAnnouncedPlayerState != PlayerState.playing) {
+      _lastAnnouncedPlayerState = PlayerState.playing;
+      _announce('${_copy.libraryPlayVideo}. ${widget.video.title}');
+    }
     _startPlaybackTimeout();
 
     try {
@@ -259,11 +302,13 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
         _controller = created;
         _bindPlayerListener(created);
         if (mounted) setState(() {});
+        _scheduleOptimisticReady();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
           unawaited(_loadAndPlay(created, videoId));
         });
       } else {
+        _scheduleOptimisticReady();
         unawaited(_pollUntilPlaybackStarts(controller));
         unawaited(controller.playVideo());
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -280,6 +325,8 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
     final controller = _controller;
     if (controller == null) return;
     _cancelPlaybackTimeout();
+    _cancelOptimisticReady();
+    _awaitingPlaybackConfirm = false;
     if (!mounted) return;
     setState(() {
       _startingPlayback = false;
@@ -337,6 +384,8 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
 
   void _resetPlayer() {
     _cancelPlaybackTimeout();
+    _cancelOptimisticReady();
+    _awaitingPlaybackConfirm = false;
     _playerSubscription?.cancel();
     _videoStateSubscription?.cancel();
     _controller?.close();

@@ -35,6 +35,12 @@
 			// Browsers omit controls inside display:none / [hidden] ancestors from POST.
 			$form.addClass('is-submitting');
 			$('.ru-settings-panel').removeAttr('hidden');
+			// Search filter uses jQuery .hide() (inline display:none) — clear those too.
+			$form
+				.find(
+					'.ru-settings-panel__card, .ru-admin__field, .ru-admin__toggle, .ru-page-intro, .ru-copy-group, .ru-copy-field'
+				)
+				.show();
 
 			var activeTab = $('.ru-settings-tabs__btn.is-active').data('tab');
 			if (activeTab) {
@@ -332,6 +338,47 @@
 		});
 	}
 
+	function initAboutUsImagePicker() {
+		var frame;
+
+		function openAboutUsImageFrame() {
+			if (typeof wp === 'undefined' || !wp.media) {
+				window.alert('Media library is not available. Refresh the page and try again.');
+				return;
+			}
+			if (frame) {
+				frame.open();
+				return;
+			}
+			frame = wp.media({
+				title: 'Choose About Us image',
+				button: { text: 'Use this image' },
+				multiple: false
+			});
+			frame.on('select', function () {
+				var attachment = frame.state().get('selection').first().toJSON();
+				$('#about_us_image_attachment_id').val(attachment.id);
+				$('#ru-about-us-image-preview').html(
+					'<img src="' + attachment.url + '" alt="" style="max-width:220px;border-radius:8px;" />'
+				);
+				$('#ru-remove-about-us-image').show();
+			});
+			frame.open();
+		}
+
+		$(document).on('click', '#ru-pick-about-us-image', function (e) {
+			e.preventDefault();
+			openAboutUsImageFrame();
+		});
+
+		$(document).on('click', '#ru-remove-about-us-image', function (e) {
+			e.preventDefault();
+			$('#about_us_image_attachment_id').val('0');
+			$('#ru-about-us-image-preview').empty();
+			$(this).hide();
+		});
+	}
+
 	function initLiveHeroPicker() {
 		var frame;
 		$('#ru-pick-live-hero').on('click', function (e) {
@@ -375,6 +422,7 @@
 		initPreview();
 		initLogoPicker();
 		initDonateQrPicker();
+		initAboutUsImagePicker();
 		initLiveHeroPicker();
 		initColorHex();
 	});

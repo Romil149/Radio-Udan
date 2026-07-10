@@ -475,7 +475,6 @@ class RadioUdaan_Admin_Settings_Page {
 				$legal_pages = array(
 					'legal_privacy_page_id' => array( __( 'Privacy policy page', 'radioudaan-app-api' ), (int) $c['legal_privacy_page_id'] ),
 					'legal_terms_page_id'   => array( __( 'Terms page', 'radioudaan-app-api' ), (int) $c['legal_terms_page_id'] ),
-					'legal_about_page_id'   => array( __( 'About page', 'radioudaan-app-api' ), (int) $c['legal_about_page_id'] ),
 				);
 				$page_choices = isset( $c['page_choices'] ) && is_array( $c['page_choices'] ) ? $c['page_choices'] : array();
 				foreach ( $legal_pages as $name => $meta ) :
@@ -557,7 +556,7 @@ class RadioUdaan_Admin_Settings_Page {
 			<?php
 			RadioUdaan_Admin_Layout::render_page_intro(
 				'<strong>' . esc_html__( 'About tab content', 'radioudaan-app-api' ) . '</strong> — ' .
-				esc_html__( 'Configure donate screen copy, UPI/bank details, and Razorpay here. Completed donations, receipts, and exports are on the Donations page.', 'radioudaan-app-api' ) .
+				esc_html__( 'Configure About Us story/vision and Donate screen copy, UPI/bank details, and Razorpay here. Completed donations, receipts, and exports are on the Donations page.', 'radioudaan-app-api' ) .
 				' <a href="' . esc_url( admin_url( 'admin.php?page=' . RadioUdaan_Admin_App_Hub::DONATIONS_SLUG ) ) . '">' .
 				esc_html__( 'Open Donations', 'radioudaan-app-api' ) . '</a>'
 			);
@@ -565,6 +564,54 @@ class RadioUdaan_Admin_Settings_Page {
 			<p class="description" style="margin-top:0;">
 				<?php esc_html_e( 'Sent via GET /config → info_hub for the mobile app About tab.', 'radioudaan-app-api' ); ?>
 			</p>
+			<div class="ru-settings-panel__card">
+				<h3><?php esc_html_e( 'About Us', 'radioudaan-app-api' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'Shown when users open About → About Us. Edit here; sent via GET /config → info_hub.about.', 'radioudaan-app-api' ); ?></p>
+				<?php
+				$about_us_fields_before_image = array(
+					'about_us_badge'    => array( __( 'Badge label', 'radioudaan-app-api' ), 'text', $c['about_us_badge'] ?? '' ),
+					'about_us_headline' => array( __( 'Headline', 'radioudaan-app-api' ), 'text', $c['about_us_headline'] ?? '' ),
+					'about_us_intro'    => array( __( 'Introduction', 'radioudaan-app-api' ), 'textarea', $c['about_us_intro'] ?? '' ),
+				);
+				$about_us_fields_after_image = array(
+					'about_us_body'               => array( __( 'Body (main story)', 'radioudaan-app-api' ), 'textarea', $c['about_us_body'] ?? '' ),
+					'about_us_accessibility_note' => array( __( 'Accessibility note', 'radioudaan-app-api' ), 'textarea', $c['about_us_accessibility_note'] ?? '' ),
+				);
+				$about_us_image_id = (int) ( $c['about_us_image_attachment_id'] ?? 0 );
+				foreach ( $about_us_fields_before_image as $name => $meta ) :
+					?>
+					<div class="ru-admin__field">
+						<label for="<?php echo esc_attr( $name ); ?>"><?php echo esc_html( $meta[0] ); ?></label>
+						<?php if ( 'textarea' === $meta[1] ) : ?>
+							<textarea name="<?php echo esc_attr( $name ); ?>" id="<?php echo esc_attr( $name ); ?>" class="large-text" rows="4"><?php echo esc_textarea( (string) $meta[2] ); ?></textarea>
+						<?php else : ?>
+							<input type="text" name="<?php echo esc_attr( $name ); ?>" id="<?php echo esc_attr( $name ); ?>" class="large-text" value="<?php echo esc_attr( (string) $meta[2] ); ?>" />
+						<?php endif; ?>
+					</div>
+				<?php endforeach; ?>
+				<div class="ru-admin__field">
+					<label><?php esc_html_e( 'Hero image (optional)', 'radioudaan-app-api' ); ?></label>
+					<input type="hidden" name="about_us_image_attachment_id" id="about_us_image_attachment_id" value="<?php echo $about_us_image_id; ?>" />
+					<div id="ru-about-us-image-preview" class="ru-admin__logo-preview">
+						<?php if ( ! empty( $c['about_us_image_url'] ) ) : ?>
+							<img src="<?php echo esc_url( $c['about_us_image_url'] ); ?>" alt="" style="max-width:220px;border-radius:8px;" />
+						<?php endif; ?>
+					</div>
+					<p>
+						<button type="button" class="button button-secondary" id="ru-pick-about-us-image"><?php esc_html_e( 'Choose from uploads', 'radioudaan-app-api' ); ?></button>
+						<button type="button" class="button" id="ru-remove-about-us-image" <?php echo $about_us_image_id ? '' : 'style="display:none;"'; ?>><?php esc_html_e( 'Remove', 'radioudaan-app-api' ); ?></button>
+					</p>
+					<p class="description"><?php esc_html_e( 'Optional image shown on the About Us screen.', 'radioudaan-app-api' ); ?></p>
+				</div>
+				<?php
+				foreach ( $about_us_fields_after_image as $name => $meta ) :
+					?>
+					<div class="ru-admin__field">
+						<label for="<?php echo esc_attr( $name ); ?>"><?php echo esc_html( $meta[0] ); ?></label>
+						<textarea name="<?php echo esc_attr( $name ); ?>" id="<?php echo esc_attr( $name ); ?>" class="large-text" rows="6"><?php echo esc_textarea( (string) $meta[2] ); ?></textarea>
+					</div>
+				<?php endforeach; ?>
+			</div>
 			<div class="ru-settings-panel__card">
 				<h3><?php esc_html_e( 'Donate', 'radioudaan-app-api' ); ?></h3>
 				<p class="description"><?php esc_html_e( 'Shown when users open About → Donate Us. Choose a UPI QR image from your Media Library uploads.', 'radioudaan-app-api' ); ?></p>

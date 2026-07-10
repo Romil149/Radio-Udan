@@ -1,6 +1,6 @@
 <?php
 /**
- * About tab content: donate block + social links for GET /config.
+ * About tab content: About Us + donate block + social links for GET /config.
  *
  * @package RadioUdaanAppApi
  */
@@ -8,9 +8,16 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * WordPress-managed donate + social payload for the mobile About tab.
+ * WordPress-managed About Us, donate + social payload for the mobile About tab.
  */
 class RadioUdaan_App_Info_Hub {
+
+	const OPTION_ABOUT_US_BADGE              = 'radioudaan_about_us_badge';
+	const OPTION_ABOUT_US_HEADLINE           = 'radioudaan_about_us_headline';
+	const OPTION_ABOUT_US_INTRO              = 'radioudaan_about_us_intro';
+	const OPTION_ABOUT_US_BODY               = 'radioudaan_about_us_body';
+	const OPTION_ABOUT_US_ACCESSIBILITY_NOTE = 'radioudaan_about_us_accessibility_note';
+	const OPTION_ABOUT_US_IMAGE_ATTACHMENT_ID = 'radioudaan_about_us_image_attachment_id';
 
 	const OPTION_DONATE_BADGE              = 'radioudaan_donate_badge';
 	const OPTION_DONATE_HEADLINE           = 'radioudaan_donate_headline';
@@ -35,10 +42,20 @@ class RadioUdaan_App_Info_Hub {
 	 * @return array<string,mixed>
 	 */
 	public static function get_config_payload() {
-		$qr_id  = (int) get_option( self::OPTION_DONATE_QR_ATTACHMENT_ID, 0 );
-		$qr_url = $qr_id > 0 ? wp_get_attachment_image_url( $qr_id, 'large' ) : '';
+		$about_image_id  = (int) get_option( self::OPTION_ABOUT_US_IMAGE_ATTACHMENT_ID, 0 );
+		$about_image_url = $about_image_id > 0 ? wp_get_attachment_image_url( $about_image_id, 'large' ) : '';
+		$qr_id           = (int) get_option( self::OPTION_DONATE_QR_ATTACHMENT_ID, 0 );
+		$qr_url          = $qr_id > 0 ? wp_get_attachment_image_url( $qr_id, 'large' ) : '';
 
 		return array(
+			'about'   => array(
+				'badge'              => self::get_string( self::OPTION_ABOUT_US_BADGE, '' ),
+				'headline'           => self::get_string( self::OPTION_ABOUT_US_HEADLINE, '' ),
+				'intro'              => self::get_text( self::OPTION_ABOUT_US_INTRO, '' ),
+				'body'               => self::get_text( self::OPTION_ABOUT_US_BODY, '' ),
+				'accessibility_note' => self::get_text( self::OPTION_ABOUT_US_ACCESSIBILITY_NOTE, '' ),
+				'image_url'          => $about_image_url ? esc_url_raw( $about_image_url ) : '',
+			),
 			'donate'  => array(
 				'badge'              => self::get_string( self::OPTION_DONATE_BADGE, __( 'Support Radio Udaan', 'radioudaan-app-api' ) ),
 				'headline'           => self::get_string( self::OPTION_DONATE_HEADLINE, __( 'Help Make Radio Udaan Sustainable', 'radioudaan-app-api' ) ),

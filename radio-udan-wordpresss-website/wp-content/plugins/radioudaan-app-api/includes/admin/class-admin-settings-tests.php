@@ -13,6 +13,13 @@ defined( 'ABSPATH' ) || exit;
 class RadioUdaan_Admin_Settings_Tests {
 
 	/**
+	 * Deferred standalone test forms (must not nest inside the main settings form).
+	 *
+	 * @var array<int,array{action:string,label:string,tab:string,form_id:string}>
+	 */
+	private static $deferred_forms = array();
+
+	/**
 	 * Register hooks.
 	 */
 	public static function init() {
@@ -100,20 +107,57 @@ class RadioUdaan_Admin_Settings_Tests {
 	}
 
 	/**
-	 * Render a test button that posts to admin-post.php.
+	 * Render a test submit control associated with a deferred standalone form.
+	 *
+	 * Nested <form> inside the main settings form is invalid HTML: browsers ignore the
+	 * inner start tag then treat </form> as closing the outer form, which orphans the
+	 * Save button (appears to do nothing).
 	 *
 	 * @param string $action Nonce action slug.
 	 * @param string $label  Button label.
 	 * @param string $tab    Settings tab slug.
 	 */
 	public static function render_test_button( $action, $label, $tab ) {
+		$form_id = 'ru-settings-test-' . sanitize_html_class( $action );
+		self::$deferred_forms[] = array(
+			'action'  => (string) $action,
+			'label'   => (string) $label,
+			'tab'     => (string) $tab,
+			'form_id' => $form_id,
+		);
 		?>
-		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="ru-settings-test-form" style="margin-top:12px;">
-			<?php wp_nonce_field( $action ); ?>
-			<input type="hidden" name="action" value="<?php echo esc_attr( $action ); ?>" />
-			<input type="hidden" name="radioudaan_active_tab" value="<?php echo esc_attr( $tab ); ?>" />
-			<button type="submit" class="button button-secondary"><?php echo esc_html( $label ); ?></button>
-		</form>
+		<p class="ru-settings-test-actions" style="margin-top:12px;">
+			<button type="submit" class="button button-secondary" form="<?php echo esc_attr( $form_id ); ?>">
+				<?php echo esc_html( $label ); ?>
+			</button>
+		</p>
 		<?php
+	}
+
+	/**
+	 * Print standalone test forms after the main settings </form>.
+	 */
+	public static function render_deferred_forms() {
+		if ( empty( self::$deferred_forms ) ) {
+			return;
+		}
+
+		foreach ( self::$deferred_forms as $item ) {
+			?>
+			<form
+				method="post"
+				action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"
+				id="<?php echo esc_attr( $item['form_id'] ); ?>"
+				class="ru-settings-test-form"
+				hidden
+			>
+				<?php wp_nonce_field( $item['action'] ); ?>
+				<input type="hidden" name="action" value="<?php echo esc_attr( $item['action'] ); ?>" />
+				<input type="hidden" name="radioudaan_active_tab" value="<?php echo esc_attr( $item['tab'] ); ?>" />
+			</form>
+			<?php
+		}
+
+		self::$deferred_forms = array();
 	}
 }

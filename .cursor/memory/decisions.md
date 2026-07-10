@@ -1,6 +1,11 @@
 # Architecture Decisions Log
 <!-- When a design choice is made, document it here so we don't re-debate it. -->
 
+### 2026-07-10 — About Us content via info_hub (like Donate)
+**Context**: About Us used Legal URLs → WP page HTML (`legal_pages.about`). User wants plugin fields editable like Donate.
+**Decision**: Structured `info_hub.about` (badge, headline, intro, body, accessibility_note, image). Admin: Settings → About tab. Remove Legal “About page” picker and omit `legal_pages.about` from GET `/config`. Keep public `about_url` for stores/web. App Copy keeps tile labels only.
+**Consequences**: Staging needs plugin deploy before content appears; empty fields until admin fills them.
+
 ### 2026-07-10 — What's New: latestcommunitynews instead of in-news
 **Context**: About What's New was merging `whats-new` + `radio-udaan-in-news`. User wants `whats-new` + `latestcommunitynews` only.
 **Decision**: Feed and push use those two CPTs; API type `latestcommunitynews`; detail HTML body like announcements; remove in-news from feed/routes.

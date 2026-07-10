@@ -310,13 +310,21 @@ class RadioUdaan_Admin_Pages {
 		$play_store_ov = trim( (string) get_option( RadioUdaan_App_Settings::OPTION_PLAY_STORE_URL, '' ) );
 		$legal_privacy_page_id = (int) get_option( RadioUdaan_App_Legal_Pages::OPTION_PRIVACY_PAGE_ID, 0 );
 		$legal_terms_page_id   = (int) get_option( RadioUdaan_App_Legal_Pages::OPTION_TERMS_PAGE_ID, 0 );
-		$legal_about_page_id   = (int) get_option( RadioUdaan_App_Legal_Pages::OPTION_ABOUT_PAGE_ID, 0 );
 		$force_update_enabled  = RadioUdaan_App_Version_Policy::is_force_update_enabled();
 		$min_android_build     = RadioUdaan_App_Version_Policy::get_min_android_build();
 		$min_ios_build         = RadioUdaan_App_Version_Policy::get_min_ios_build();
 		$page_choices          = RadioUdaan_Event_Meta_Ui::get_page_choices();
 		$support_helpline = RadioUdaan_App_Settings::get_support_helpline_phone();
 		$support_email    = RadioUdaan_App_Settings::get_support_email();
+		$about_us_badge              = (string) get_option( RadioUdaan_App_Info_Hub::OPTION_ABOUT_US_BADGE, '' );
+		$about_us_headline           = (string) get_option( RadioUdaan_App_Info_Hub::OPTION_ABOUT_US_HEADLINE, '' );
+		$about_us_intro              = (string) get_option( RadioUdaan_App_Info_Hub::OPTION_ABOUT_US_INTRO, '' );
+		$about_us_body               = (string) get_option( RadioUdaan_App_Info_Hub::OPTION_ABOUT_US_BODY, '' );
+		$about_us_accessibility_note = (string) get_option( RadioUdaan_App_Info_Hub::OPTION_ABOUT_US_ACCESSIBILITY_NOTE, '' );
+		$about_us_image_attachment_id = (int) get_option( RadioUdaan_App_Info_Hub::OPTION_ABOUT_US_IMAGE_ATTACHMENT_ID, 0 );
+		$about_us_image_url          = $about_us_image_attachment_id > 0
+			? wp_get_attachment_image_url( $about_us_image_attachment_id, 'medium' )
+			: '';
 		$donate_badge              = (string) get_option( RadioUdaan_App_Info_Hub::OPTION_DONATE_BADGE, '' );
 		$donate_headline           = (string) get_option( RadioUdaan_App_Info_Hub::OPTION_DONATE_HEADLINE, '' );
 		$donate_intro              = (string) get_option( RadioUdaan_App_Info_Hub::OPTION_DONATE_INTRO, '' );
@@ -404,7 +412,6 @@ class RadioUdaan_Admin_Pages {
 					'contact_ov'    => $contact_ov,
 					'legal_privacy_page_id' => $legal_privacy_page_id,
 					'legal_terms_page_id'   => $legal_terms_page_id,
-					'legal_about_page_id'   => $legal_about_page_id,
 					'page_choices'          => $page_choices,
 					'privacy_url'   => $privacy_url,
 					'terms_url'     => $terms_url,
@@ -419,6 +426,13 @@ class RadioUdaan_Admin_Pages {
 					'min_ios_build'        => $min_ios_build,
 					'support_helpline' => $support_helpline,
 					'support_email'    => $support_email,
+					'about_us_badge'              => $about_us_badge,
+					'about_us_headline'           => $about_us_headline,
+					'about_us_intro'              => $about_us_intro,
+					'about_us_body'               => $about_us_body,
+					'about_us_accessibility_note' => $about_us_accessibility_note,
+					'about_us_image_attachment_id' => $about_us_image_attachment_id,
+					'about_us_image_url'          => $about_us_image_url,
 					'donate_badge'              => $donate_badge,
 					'donate_headline'           => $donate_headline,
 					'donate_intro'              => $donate_intro,
@@ -488,6 +502,8 @@ class RadioUdaan_Admin_Pages {
 			?>
 		</form>
 		<?php
+		// Standalone test forms — must stay outside the main settings form (no nested <form>).
+		RadioUdaan_Admin_Settings_Tests::render_deferred_forms();
 		RadioUdaan_Admin_Layout::render_close();
 	}
 

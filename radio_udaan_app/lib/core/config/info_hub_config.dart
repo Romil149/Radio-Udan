@@ -1,6 +1,7 @@
 /// About tab payload from `GET /config` → `info_hub`.
 class InfoHubConfig {
   const InfoHubConfig({
+    this.about = const AboutUsConfig(),
     this.donate = const DonateConfig(),
     this.social = const [],
   });
@@ -18,6 +19,9 @@ class InfoHubConfig {
       }
     }
     return InfoHubConfig(
+      about: AboutUsConfig.fromJson(
+        json['about'] as Map<String, dynamic>?,
+      ),
       donate: DonateConfig.fromJson(
         json['donate'] as Map<String, dynamic>?,
       ),
@@ -25,8 +29,48 @@ class InfoHubConfig {
     );
   }
 
+  final AboutUsConfig about;
   final DonateConfig donate;
   final List<SocialLinkConfig> social;
+}
+
+/// About Us content from `info_hub.about`.
+class AboutUsConfig {
+  const AboutUsConfig({
+    this.badge = '',
+    this.headline = '',
+    this.intro = '',
+    this.body = '',
+    this.accessibilityNote = '',
+    this.imageUrl = '',
+  });
+
+  factory AboutUsConfig.fromJson(Map<String, dynamic>? json) {
+    if (json == null || json.isEmpty) return const AboutUsConfig();
+    return AboutUsConfig(
+      badge: json['badge']?.toString() ?? '',
+      headline: json['headline']?.toString() ?? '',
+      intro: json['intro']?.toString() ?? '',
+      body: json['body']?.toString() ?? '',
+      accessibilityNote: json['accessibility_note']?.toString() ?? '',
+      imageUrl: json['image_url']?.toString() ?? '',
+    );
+  }
+
+  final String badge;
+  final String headline;
+  final String intro;
+  final String body;
+  final String accessibilityNote;
+  final String imageUrl;
+
+  bool get hasContent =>
+      badge.trim().isNotEmpty ||
+      headline.trim().isNotEmpty ||
+      intro.trim().isNotEmpty ||
+      body.trim().isNotEmpty ||
+      accessibilityNote.trim().isNotEmpty ||
+      imageUrl.trim().isNotEmpty;
 }
 
 class DonateConfig {

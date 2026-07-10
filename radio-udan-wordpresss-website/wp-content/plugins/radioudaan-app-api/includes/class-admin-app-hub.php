@@ -409,7 +409,6 @@ class RadioUdaan_Admin_App_Hub {
 		$page_fields = array(
 			'legal_privacy_page_id' => RadioUdaan_App_Legal_Pages::OPTION_PRIVACY_PAGE_ID,
 			'legal_terms_page_id'   => RadioUdaan_App_Legal_Pages::OPTION_TERMS_PAGE_ID,
-			'legal_about_page_id'   => RadioUdaan_App_Legal_Pages::OPTION_ABOUT_PAGE_ID,
 		);
 		foreach ( $page_fields as $post_key => $option_key ) {
 			if ( isset( $_POST[ $post_key ] ) ) {
@@ -429,6 +428,11 @@ class RadioUdaan_Admin_App_Hub {
 		}
 
 		$info_text_fields = array(
+			'about_us_badge'              => RadioUdaan_App_Info_Hub::OPTION_ABOUT_US_BADGE,
+			'about_us_headline'           => RadioUdaan_App_Info_Hub::OPTION_ABOUT_US_HEADLINE,
+			'about_us_intro'              => RadioUdaan_App_Info_Hub::OPTION_ABOUT_US_INTRO,
+			'about_us_body'               => RadioUdaan_App_Info_Hub::OPTION_ABOUT_US_BODY,
+			'about_us_accessibility_note' => RadioUdaan_App_Info_Hub::OPTION_ABOUT_US_ACCESSIBILITY_NOTE,
 			'donate_badge'              => RadioUdaan_App_Info_Hub::OPTION_DONATE_BADGE,
 			'donate_headline'           => RadioUdaan_App_Info_Hub::OPTION_DONATE_HEADLINE,
 			'donate_intro'              => RadioUdaan_App_Info_Hub::OPTION_DONATE_INTRO,
@@ -442,16 +446,30 @@ class RadioUdaan_Admin_App_Hub {
 			'donate_micr'               => RadioUdaan_App_Info_Hub::OPTION_DONATE_MICR,
 			'donate_bank_address'       => RadioUdaan_App_Info_Hub::OPTION_DONATE_BANK_ADDRESS,
 		);
+		$info_textarea_keys = array(
+			'about_us_intro',
+			'about_us_body',
+			'about_us_accessibility_note',
+			'donate_intro',
+			'donate_accessibility_note',
+			'donate_bank_address',
+		);
 		foreach ( $info_text_fields as $post_key => $option_key ) {
 			if ( ! isset( $_POST[ $post_key ] ) ) {
 				continue;
 			}
 			$raw = wp_unslash( $_POST[ $post_key ] );
-			if ( in_array( $post_key, array( 'donate_intro', 'donate_accessibility_note', 'donate_bank_address' ), true ) ) {
+			if ( in_array( $post_key, $info_textarea_keys, true ) ) {
 				update_option( $option_key, sanitize_textarea_field( $raw ) );
 			} else {
 				update_option( $option_key, sanitize_text_field( $raw ) );
 			}
+		}
+		if ( isset( $_POST['about_us_image_attachment_id'] ) ) {
+			update_option(
+				RadioUdaan_App_Info_Hub::OPTION_ABOUT_US_IMAGE_ATTACHMENT_ID,
+				max( 0, (int) $_POST['about_us_image_attachment_id'] )
+			);
 		}
 		if ( isset( $_POST['donate_qr_attachment_id'] ) ) {
 			update_option(

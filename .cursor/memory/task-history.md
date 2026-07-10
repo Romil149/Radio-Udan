@@ -1,11 +1,41 @@
 
-### 2026-07-10 — Library YouTube loader stuck / pause UI wrong
-**Requested by**: User — video plays but loader always loading; pause always pause.
-**Agents**: Alex → Daniel; parent verified.
-**Root cause**: Listener set `_isPlaying=false` on iframe `unknown`/`cued`/`unStarted` while media continued; loader/`_startingPlayback` drifted.
-**What was done**: `_applyPlayerState` ignores unknown once playing; always clear loader on real playback; single Play/Pause toggle; post-load probe.
-**Verification**: dart analyze library_player_screen = 0 errors.
-**Status**: ⚠️ Local — not committed.
+### 2026-07-10 — Settings Save button not working (BUG-022)
+**Requested by**: User — Save on App API settings does nothing.
+**Agents**: WP admin UI specialist.
+**Root cause**: Nested `<form>` for FCM/MSG91 test buttons inside main settings form; HTML5 parser ignores inner `<form>` then closes outer form on `</form>`, orphaning Save.
+**What was done**: Deferred standalone test forms + `form=` attribute on buttons; reveal search-hidden fields on submit (BUG-015 hardening). About Us picker unchanged.
+**Files**: `class-admin-settings-tests.php`, `class-admin-pages.php`, `admin-settings.js`
+**Verification**: php -l PASS; node --check JS PASS.
+**Status**: ⚠️ Local — needs plugin deploy to staging/wp-admin.
+
+### 2026-07-10 — Settings Save button broken (nested forms)
+**Requested by**: User — plugin settings Save not working.
+**Root cause**: Nested Test FCM/MSG91 `<form>` inside main settings form closed the outer form early; Save was outside any form.
+**What was done**: Deferred standalone test forms after main `</form>`; buttons use HTML5 `form=`; submit also shows search-hidden fields.
+**Verification**: php -l PASS; verify-wp-plugin 7/7; node --check admin-settings.js PASS.
+**Status**: ⚠️ Local — needs plugin deploy to staging.
+
+### 2026-07-10 — About Us from plugin (info_hub.about)
+**Requested by**: User — About Us story/vision editable like Donate; remove legal page picker.
+**Agents**: Alex → WP + Flutter specialists; parent verified.
+**What was done**: WP About Us fields + media on Settings → About tab; `info_hub.about` in config; legal about omitted; Flutter `AboutUsScreen` + always-visible tile.
+**Verification**: php -l PASS; verify-wp-plugin 7/7; dart analyze 0 errors; staging smoke 19/19 (staging API still old plugin — no `info_hub.about` until deploy).
+**Status**: ⚠️ Local — needs plugin deploy + app build.
+
+### 2026-07-10 — YouTube loader Option A (optimistic / intent-based)
+**Requested by**: User — spinner still stuck while video plays (iOS + Android); chose Option A.
+**Agents**: Alex → Daniel ([YT-LOADER-A](8533e2d0-d4ff-439a-891f-fd16d70b0a2a)); parent verified.
+**Root cause**: Spinner gated on flaky iframe `PlayerState.playing`; probes alone insufficient.
+**What was done**: `_isPlaying` = user intent; `_startingPlayback` clears after ~1s grace once controller exists; soft confirm cancels 15s timeout; ignore unknown/cued/unStarted; ignore spurious paused during start.
+**Verification**: `dart analyze lib/features/library/library_player_screen.dart` — 0 errors.
+**Status**: ⚠️ Local — not committed / not in +42.
+
+### 2026-07-10 — Share: remove custom popup; use OS share only
+**Requested by**: User — don’t want Share/Copy app sheet; device default share has dismiss.
+**Agents**: Alex → verify + revert custom sheet.
+**What was done**: `_shareApp` calls `SharePlus` directly again. Radio schedule Close X kept.
+**Verification**: dart analyze radio_tab = 0 issues.
+**Status**: ⚠️ Local — not in +42 push yet (post-push fix).
 
 ### 2026-07-10 — What's New uses whats-new + latestcommunitynews
 **Requested by**: User — drop in-news; use latestcommunitynews + whats-new.
