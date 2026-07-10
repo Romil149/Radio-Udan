@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+49** @  | **yes** | 2026-07-10 | iOS launch: restore +46-safe AppDelegate (no early Firebase.configure); notifications detail; donate UI |
+| GitHub `main` | **2.0.0+49** @ `7f1e3b5` | **yes** | 2026-07-10 | iOS launch: restore +46-safe AppDelegate (no early Firebase.configure); notifications detail; donate UI |
 | TestFlight iOS | **2.0.0+49** | CI after push | 2026-07-10 | Skip +47/+48 if they crash. Confirm build number in TestFlight |
 | Staging WP plugin | local zip needed | **no** | 2026-07-10 | Donate copy + notification copy keys |
 | Staging API smoke | 19/19 | yes | 2026-07-10 | |
