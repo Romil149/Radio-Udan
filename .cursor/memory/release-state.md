@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+45** | pushing | 2026-07-10 | Android: Crashlytics Gradle + ProGuard so Firebase init works with Razorpay |
+| GitHub `main` | **2.0.0+45** @ `08c9fe7` | **yes** | 2026-07-10 | Android: Crashlytics Gradle + ProGuard so Firebase init works with Razorpay |
 | TestFlight iOS | **2.0.0+45** | CI after push | 2026-07-10 | Same client as +44 iOS APNs fix + Android Crashlytics fix |
 | Staging WP plugin | local zip needed | **no** (redeploy) | 2026-07-10 | Still need `radio-udaan-72232` FCM SA + plugin deploy |
 | Staging API smoke | 19/19 | yes (routes) | 2026-07-10 | Health previously `cbfdc` + 0 devices |
