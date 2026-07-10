@@ -96,28 +96,23 @@ class RadioUdaan_Admin_App_Users {
 			<?php endif; ?>
 		</form>
 
-		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" id="ru-app-users-bulk-form" class="ru-admin__panel">
-			<?php wp_nonce_field( 'radioudaan_app_users_bulk' ); ?>
-			<input type="hidden" name="action" value="<?php echo esc_attr( RadioUdaan_Admin_App_User_Actions::ACTION_BULK ); ?>" />
-			<?php if ( '' !== $search ) : ?>
-				<input type="hidden" name="s" value="<?php echo esc_attr( $search ); ?>" />
-			<?php endif; ?>
-			<?php if ( '' !== $status ) : ?>
-				<input type="hidden" name="status" value="<?php echo esc_attr( $status ); ?>" />
-			<?php endif; ?>
-			<?php if ( $page > 1 ) : ?>
-				<input type="hidden" name="paged" value="<?php echo (int) $page; ?>" />
-			<?php endif; ?>
-
+		<?php
+		/*
+		 * Bulk form must NOT wrap row-action forms — nested <form> is invalid HTML;
+		 * browsers ignore inner form tags so Pause/Delete submit the bulk form instead.
+		 * Row checkboxes associate via the HTML form="" attribute.
+		 */
+		?>
+		<div class="ru-admin__panel">
 			<div class="ru-admin__panel-head">
 				<h2><?php esc_html_e( 'App users', 'radioudaan-app-api' ); ?></h2>
 				<nav class="ru-filter-tabs" aria-label="<?php esc_attr_e( 'Filter by status', 'radioudaan-app-api' ); ?>">
 					<?php
 					$tab_statuses = array(
-						''       => __( 'All', 'radioudaan-app-api' ),
-						'active' => __( 'Active', 'radioudaan-app-api' ),
+						''        => __( 'All', 'radioudaan-app-api' ),
+						'active'  => __( 'Active', 'radioudaan-app-api' ),
 						'pending' => __( 'Pending', 'radioudaan-app-api' ),
-						'paused' => __( 'Paused', 'radioudaan-app-api' ),
+						'paused'  => __( 'Paused', 'radioudaan-app-api' ),
 					);
 					foreach ( $tab_statuses as $tab_key => $tab_label ) :
 						$tab_args = array();
@@ -139,7 +134,18 @@ class RadioUdaan_Admin_App_Users {
 				</nav>
 			</div>
 
-			<div class="ru-admin__bulk-bar">
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" id="ru-app-users-bulk-form" class="ru-admin__bulk-bar">
+				<?php wp_nonce_field( 'radioudaan_app_users_bulk' ); ?>
+				<input type="hidden" name="action" value="<?php echo esc_attr( RadioUdaan_Admin_App_User_Actions::ACTION_BULK ); ?>" />
+				<?php if ( '' !== $search ) : ?>
+					<input type="hidden" name="s" value="<?php echo esc_attr( $search ); ?>" />
+				<?php endif; ?>
+				<?php if ( '' !== $status ) : ?>
+					<input type="hidden" name="status" value="<?php echo esc_attr( $status ); ?>" />
+				<?php endif; ?>
+				<?php if ( $page > 1 ) : ?>
+					<input type="hidden" name="paged" value="<?php echo (int) $page; ?>" />
+				<?php endif; ?>
 				<label class="ru-admin__bulk-select">
 					<input type="checkbox" id="ru-app-users-select-all" />
 					<?php esc_html_e( 'Select all on page', 'radioudaan-app-api' ); ?>
@@ -163,7 +169,7 @@ class RadioUdaan_Admin_App_Users {
 					);
 					?>
 				</span>
-			</div>
+			</form>
 
 			<div class="ru-admin__panel-body" style="padding:0;">
 				<?php if ( empty( $result['items'] ) ) : ?>
@@ -190,7 +196,13 @@ class RadioUdaan_Admin_App_Users {
 						<?php foreach ( $result['items'] as $user ) : ?>
 							<tr>
 								<td class="ru-admin__col-check">
-									<input type="checkbox" name="user_ids[]" value="<?php echo (int) $user->id; ?>" class="ru-app-user-checkbox" />
+									<input
+										type="checkbox"
+										form="ru-app-users-bulk-form"
+										name="user_ids[]"
+										value="<?php echo (int) $user->id; ?>"
+										class="ru-app-user-checkbox"
+									/>
 								</td>
 								<td>
 									<strong>
@@ -232,7 +244,7 @@ class RadioUdaan_Admin_App_Users {
 					?>
 				</div>
 			<?php endif; ?>
-		</form>
+		</div>
 		<?php
 		RadioUdaan_Admin_Layout::render_close();
 	}

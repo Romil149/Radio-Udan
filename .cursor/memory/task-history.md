@@ -1,4 +1,39 @@
 
+### 2026-07-10 — iOS push: inbox yes, banner no
+**Requested by**: User — Android push works; iOS sees tab inbox only; diagnostics show APNs+FCM+register success.
+**Findings**: Inbox ≠ push (DB first). Staging FCM project match OK, 4 devices. Client registration healthy. Top cause: Firebase APNs Auth Key for iOS app on `radio-udaan-72232`.
+**What was done**: Per-platform push stats + last_error in admin/FCM logs; iOS foreground presentation set earlier in client.
+**Status**: ⚠️ Operator must verify APNs key in Firebase Console; redeploy plugin for admin breakdown.
+
+### 2026-07-10 — Notifications detail broken on real device (TalkBack)
+**Requested by**: User — “not done” on device; title + own page.
+**Root cause**: List card `Semantics(button)` had **no `onTap`** — SR double-tap often did nothing; detail top bar reused list title; only page 1 loaded.
+**What was done**: Semantics.onTap on cards; detail top bar “Notification” + title heading; load more; copy keys.
+**Status**: ⚠️ Local — needs hot restart / new device build (not in TestFlight yet as separate bump).
+
+### 2026-07-10 — Full plugin functional audit (App Users + admin handlers)
+**Requested by**: User — audit carefully; delete failed with UNIQUE email; check each function.
+**Findings**:
+- BUG-025 nested forms (Pause/Delete) — fixed
+- BUG-026 soft-delete `email=''` UNIQUE collision — fixed (tombstones + migrate 2.3)
+- FAIL: paused phone/email could re-register — fixed (`phone_taken`/`email_taken` include paused)
+- FAIL: event save could rewrite non-event posts — fixed (post_type guard)
+- FAIL: settings FCM error message lied about other settings — fixed (honest copy + cache invalidate)
+- PASS: pause/resume/bulk nonces+caps; nested forms gone; auth blocks paused/deleted; tombstones don't block signup
+**Status**: ⚠️ Local — **deploy full plugin** to staging before retesting Delete on user 126.
+
+### 2026-07-10 — Fix soft-delete UNIQUE email collision (BUG-026)
+**Requested by**: User — `Duplicate entry '' for key 'email'` on delete user 126.
+**Root cause**: `soft_delete` set `email`/`phone_e164` to `''`; UNIQUE index allows only one empty value.
+**What was done**: Tombstone values per id; column migration 2.3 repairs existing deleted rows; nested-form fix (BUG-025) already in place.
+**Status**: ⚠️ Local — deploy full plugin to staging, then retry Delete.
+
+### 2026-07-10 — Fix App Users Pause/Delete (nested forms) + enterprise admin audit
+**Requested by**: User — App Users actions do nothing; want enterprise-level plugin improvements.
+**Root cause**: Pause/Delete/Resume forms nested inside bulk `<form>` (same class of bug as BUG-022).
+**What was done**: Un-nest bulk vs row forms (`form=` on checkboxes); enterprise audit + 30-day roadmap delivered in chat.
+**Status**: ⚠️ Local plugin fix — deploy to staging to verify. Roadmap not implemented yet.
+
 ### 2026-07-10 — Ship +49: iOS launch safety + notifications detail + donate UI
 **Requested by**: User still sees crash after build 46; notifications/donate work pending.
 **Root cause**: +47 no UIScene; +48 early `FirebaseApp.configure` / Messaging before Dart init.

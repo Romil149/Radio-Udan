@@ -67,7 +67,29 @@ class PushNotificationService {
     } catch (e) {
       _diag.warn('FCM auto-init failed: $e');
     }
+    // iOS foreground banners need this even if [initialize] times out on FLN.
+    // Token registration must not succeed while presentation options stay unset.
+    if (Platform.isIOS) {
+      await _ensureIosForegroundPresentation();
+    }
     return true;
+  }
+
+  /// Persists FCM foreground presentation flags (NSUserDefaults via FlutterFire).
+  ///
+  /// Background/killed delivery is unaffected — APNs still shows `aps.alert`.
+  /// These flags only control banners while the app is in the foreground.
+  Future<void> _ensureIosForegroundPresentation() async {
+    try {
+      await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      _diag.ok('iOS foreground presentation options set (alert/badge/sound)');
+    } catch (e) {
+      _diag.warn('iOS foreground presentation options failed: $e');
+    }
   }
 
   /// Returns true when a Firebase app is usable (existing or freshly initialized).
@@ -238,7 +260,12 @@ class PushNotificationService {
     }
 
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const ios = DarwinInitializationSettings();
+    // FCM owns the system permission prompt — do not re-prompt via FLN.
+    const ios = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
     await _localNotifications.initialize(
       const InitializationSettings(android: android, iOS: ios),
       onDidReceiveNotificationResponse: _onLocalNotificationTap,
@@ -259,12 +286,7 @@ class PushNotificationService {
     }
 
     if (Platform.isIOS) {
-      await FirebaseMessaging.instance
-          .setForegroundNotificationPresentationOptions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+      await _ensureIosForegroundPresentation();
     }
 
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
@@ -470,15 +492,23 @@ class PushNotificationService {
 
   Future<void> _onForegroundMessage(RemoteMessage message) async {
     final notification = message.notification;
-    if (notification == null) return;
 
-    // iOS shows the banner via setForegroundNotificationPresentationOptions.
-    if (Platform.isIOS) return;
+    // iOS + notification payload: FlutterFire presents via
+    // setForegroundNotificationPresentationOptions (set in _ensureMessagingCore).
+    // Do not also show FLN — that duplicates the banner.
+    if (Platform.isIOS && notification != null) return;
+
+    // Android foreground never auto-displays FCM notification messages.
+    // iOS data-only (no notification block) also needs a local banner.
+    final title = notification?.title ?? message.data['title'];
+    final body = notification?.body ?? message.data['body'];
+    if (title == null && body == null) return;
 
     await _localNotifications.show(
-      notification.hashCode,
-      notification.title,
-      notification.body,
+      notification?.hashCode ??
+          Object.hash(title, body, message.messageId).hashCode,
+      title,
+      body,
       const NotificationDetails(
         android: AndroidNotificationDetails(
           kPushAndroidChannelId,
@@ -487,7 +517,13 @@ class PushNotificationService {
           priority: Priority.high,
           icon: '@mipmap/ic_launcher',
         ),
-        iOS: DarwinNotificationDetails(),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          presentBanner: true,
+          presentList: true,
+        ),
       ),
       payload: message.data['notification_id'],
     );

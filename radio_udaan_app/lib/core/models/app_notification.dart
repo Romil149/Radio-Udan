@@ -80,15 +80,20 @@ class NotificationListResult {
   final int totalPages;
   final int unreadCount;
 
+  bool get hasMorePages => page < totalPages;
+
   NotificationListResult copyWith({
     List<AppNotification>? items,
+    int? page,
+    int? total,
+    int? totalPages,
     int? unreadCount,
   }) {
     return NotificationListResult(
       items: items ?? this.items,
-      page: page,
-      total: total,
-      totalPages: totalPages,
+      page: page ?? this.page,
+      total: total ?? this.total,
+      totalPages: totalPages ?? this.totalPages,
       unreadCount: unreadCount ?? this.unreadCount,
     );
   }

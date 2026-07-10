@@ -249,6 +249,10 @@ class RadioUdaan_Admin_Event_Editor {
 		);
 
 		if ( $event_id ) {
+			$existing = get_post( $event_id );
+			if ( ! $existing || RadioUdaan_Cpt_Ru_Event::POST_TYPE !== $existing->post_type ) {
+				wp_die( esc_html__( 'Invalid event.', 'radioudaan-app-api' ) );
+			}
 			$postarr['ID'] = $event_id;
 			$result        = wp_update_post( $postarr, true );
 		} else {

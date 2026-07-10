@@ -42,26 +42,27 @@ class MoreMenuTile extends StatelessWidget {
       child: Semantics(
         button: true,
         enabled: onTap != null,
+        onTap: onTap,
         label: semanticsLabel ??
             (subtitle != null && subtitle!.isNotEmpty
                 ? '$title. $subtitle'
                 : title),
-        child: Material(
-          color: palette.surfaceContainer,
-          borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-          child: InkWell(
-            onTap: onTap,
+        child: ExcludeSemantics(
+          child: Material(
+            color: palette.surfaceContainer,
             borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-            child: Container(
-              constraints: const BoxConstraints(minHeight: 72),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-                border: Border.all(
-                  color: borderColor ?? palette.outlineVariant,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 72),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+                  border: Border.all(
+                    color: borderColor ?? palette.outlineVariant,
+                  ),
                 ),
-              ),
-              child: ExcludeSemantics(
                 child: Row(
                   children: [
                     Container(

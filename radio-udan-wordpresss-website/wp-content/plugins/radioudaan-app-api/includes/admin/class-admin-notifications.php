@@ -29,6 +29,11 @@ class RadioUdaan_Admin_Notifications {
 		$created       = isset( $_GET['created'] ) ? (int) $_GET['created'] : 0;
 		$push_sent     = isset( $_GET['push_sent'] ) ? (int) $_GET['push_sent'] : 0;
 		$push_failed   = isset( $_GET['push_failed'] ) ? (int) $_GET['push_failed'] : 0;
+		$ios_sent      = isset( $_GET['ios_sent'] ) ? (int) $_GET['ios_sent'] : 0;
+		$ios_failed    = isset( $_GET['ios_failed'] ) ? (int) $_GET['ios_failed'] : 0;
+		$android_sent  = isset( $_GET['android_sent'] ) ? (int) $_GET['android_sent'] : 0;
+		$android_failed = isset( $_GET['android_failed'] ) ? (int) $_GET['android_failed'] : 0;
+		$last_error    = isset( $_GET['last_error'] ) ? sanitize_text_field( wp_unslash( $_GET['last_error'] ) ) : '';
 		$fcm_skipped   = isset( $_GET['fcm_skipped'] ) ? (int) $_GET['fcm_skipped'] : 0;
 		$prefill_user  = isset( $_GET['user_id'] ) ? (int) $_GET['user_id'] : 0;
 		$broadcast_log = self::list_broadcast_history( 15 );
@@ -99,9 +104,33 @@ class RadioUdaan_Admin_Notifications {
 						<?php
 						echo esc_html(
 							sprintf(
-								/* translators: %d: failed push count */
-								__( '%d push delivery attempt(s) failed. Stale tokens are removed automatically.', 'radioudaan-app-api' ),
-								$push_failed
+								/* translators: 1: failed count, 2: iOS sent, 3: iOS failed, 4: Android sent, 5: Android failed */
+								__( '%1$d push attempt(s) failed (iOS ok %2$d / fail %3$d · Android ok %4$d / fail %5$d). If iOS fails while Android works, upload the APNs Auth Key in Firebase project radio-udaan-72232 for this iOS app.', 'radioudaan-app-api' ),
+								$push_failed,
+								$ios_sent,
+								$ios_failed,
+								$android_sent,
+								$android_failed
+							)
+						);
+						?>
+					</p>
+					<?php if ( '' !== $last_error ) : ?>
+						<p class="ru-notice-text"><code><?php echo esc_html( $last_error ); ?></code></p>
+					<?php endif; ?>
+				</div>
+				<?php
+			} elseif ( $ios_sent > 0 || $android_sent > 0 ) {
+				?>
+				<div class="ru-admin__notice notice notice-info is-dismissible" role="status">
+					<p class="ru-notice-text">
+						<?php
+						echo esc_html(
+							sprintf(
+								/* translators: 1: iOS delivered, 2: Android delivered */
+								__( 'Platform breakdown — iOS: %1$d · Android: %2$d.', 'radioudaan-app-api' ),
+								$ios_sent,
+								$android_sent
 							)
 						);
 						?>
@@ -424,12 +453,17 @@ class RadioUdaan_Admin_Notifications {
 
 		$redirect = add_query_arg(
 			array(
-				'page'        => RadioUdaan_Admin_App_Hub::NOTIFICATIONS_SLUG,
-				'sent'        => '1',
-				'created'     => (int) $result['created'],
-				'push_sent'   => (int) $result['push_sent'],
-				'push_failed' => (int) $result['push_failed'],
-				'fcm_skipped' => ! empty( $result['fcm_skipped'] ) ? 1 : 0,
+				'page'           => RadioUdaan_Admin_App_Hub::NOTIFICATIONS_SLUG,
+				'sent'           => '1',
+				'created'        => (int) $result['created'],
+				'push_sent'      => (int) $result['push_sent'],
+				'push_failed'    => (int) $result['push_failed'],
+				'ios_sent'       => isset( $result['ios_sent'] ) ? (int) $result['ios_sent'] : 0,
+				'ios_failed'     => isset( $result['ios_failed'] ) ? (int) $result['ios_failed'] : 0,
+				'android_sent'   => isset( $result['android_sent'] ) ? (int) $result['android_sent'] : 0,
+				'android_failed' => isset( $result['android_failed'] ) ? (int) $result['android_failed'] : 0,
+				'last_error'     => isset( $result['last_error'] ) ? substr( (string) $result['last_error'], 0, 180 ) : '',
+				'fcm_skipped'    => ! empty( $result['fcm_skipped'] ) ? 1 : 0,
 			),
 			admin_url( 'admin.php' )
 		);

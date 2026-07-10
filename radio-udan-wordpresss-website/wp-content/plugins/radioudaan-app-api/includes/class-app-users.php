@@ -15,7 +15,7 @@ class RadioUdaan_App_Users {
 	const DB_VERSION_OPTION    = 'radioudaan_app_users_db_version';
 	const DB_VERSION           = '2.0';
 	const COLUMN_VERSION_OPTION = 'radioudaan_app_users_column_version';
-	const COLUMN_VERSION        = '2.2';
+	const COLUMN_VERSION        = '2.3';
 
 	const STATUS_PENDING = 'pending';
 	const STATUS_ACTIVE  = 'active';
@@ -256,6 +256,20 @@ class RadioUdaan_App_Users {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.DirectQuery
 			$wpdb->query( "ALTER TABLE {$table} ADD COLUMN notification_prefs longtext NULL AFTER avatar_attachment_id" );
 		}
+
+		// Soft-delete used to clear email/phone to '' — UNIQUE indexes then reject a second delete.
+		// Tombstone identifiers free the real values for re-registration and stay unique per row.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$table}
+				SET email = CONCAT('deleted+', id, '@ru.invalid'),
+					phone_e164 = CONCAT('del:', id)
+				WHERE status = %s
+					AND (email = '' OR phone_e164 = '' OR email IS NULL OR phone_e164 IS NULL)",
+				self::STATUS_DELETED
+			)
+		);
 
 		update_option( self::COLUMN_VERSION_OPTION, self::COLUMN_VERSION );
 	}
@@ -661,7 +675,21 @@ class RadioUdaan_App_Users {
 	 * @return bool
 	 */
 	public static function phone_taken( $phone_e164 ) {
-		return (bool) self::find_by_phone( $phone_e164 );
+		$phone = self::sanitize_phone( $phone_e164 );
+		if ( '' === $phone ) {
+			return false;
+		}
+
+		// Include paused — otherwise a paused account can be duplicated at signup.
+		return (bool) self::find_row_by_statuses(
+			'phone_e164',
+			$phone,
+			array(
+				self::STATUS_PENDING,
+				self::STATUS_ACTIVE,
+				self::STATUS_PAUSED,
+			)
+		);
 	}
 
 	/**
@@ -673,40 +701,84 @@ class RadioUdaan_App_Users {
 			return false;
 		}
 
-		return (bool) self::find_by_email( $email );
+		$email = strtolower( sanitize_email( $email ) );
+		if ( ! is_email( $email ) ) {
+			return false;
+		}
+
+		return (bool) self::find_row_by_statuses(
+			'email',
+			$email,
+			array(
+				self::STATUS_PENDING,
+				self::STATUS_ACTIVE,
+				self::STATUS_PAUSED,
+			)
+		);
 	}
 
 	/**
 	 * Soft-delete: free phone/email for reuse and revoke sessions externally.
 	 *
+	 * Uses unique tombstone values (not empty strings). Staging/production may have
+	 * UNIQUE indexes on email/phone — clearing to '' fails after the first delete.
+	 *
 	 * @param int $user_id User id.
 	 * @return bool
 	 */
 	public static function soft_delete( $user_id ) {
-		self::maybe_create_table();
+		self::maybe_migrate_columns();
+
+		$user_id = (int) $user_id;
+		if ( $user_id < 1 ) {
+			return false;
+		}
+
+		$user = self::get_by_id( $user_id );
+		if ( ! $user || self::STATUS_DELETED === $user->status ) {
+			return false;
+		}
 
 		global $wpdb;
 
 		$now = current_time( 'mysql', true );
 
+		// Unique per-id placeholders — keep UNIQUE indexes happy; real values free for signup.
+		$tombstone_email = 'deleted+' . $user_id . '@ru.invalid';
+		$tombstone_phone = 'del:' . $user_id;
+
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$updated = $wpdb->update(
 			self::table_name(),
 			array(
-				'status'         => self::STATUS_DELETED,
-				'phone_e164'     => '',
-				'email'          => '',
-				'password_hash'  => '',
-				'phone_verified' => 0,
-				'email_verified' => 0,
-				'updated_at'     => $now,
+				'status'                => self::STATUS_DELETED,
+				'display_name'          => 'Deleted user',
+				'phone_e164'            => $tombstone_phone,
+				'email'                 => $tombstone_email,
+				'password_hash'         => '',
+				'avatar_attachment_id'  => 0,
+				'notification_prefs'    => '',
+				'phone_verified'        => 0,
+				'email_verified'        => 0,
+				'updated_at'            => $now,
 			),
-			array( 'id' => (int) $user_id ),
-			array( '%s', '%s', '%s', '%s', '%d', '%d', '%s' ),
+			array( 'id' => $user_id ),
+			array( '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%s' ),
 			array( '%d' )
 		);
 
-		return (bool) $updated;
+		if ( false === $updated ) {
+			RadioUdaan_App_Logger::log(
+				'app_user_soft_delete_failed',
+				array(
+					'user_id' => $user_id,
+					// Do not log email/phone or raw DB error text (may include values).
+				)
+			);
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -1014,7 +1086,8 @@ class RadioUdaan_App_Users {
 	}
 
 	/**
-	 * Phone/email uniqueness — pending and active only (paused may re-register same identifiers).
+	 * Phone/email uniqueness for signup — pending, active, and paused.
+	 * Deleted rows use tombstones and are excluded.
 	 *
 	 * @param string $column Column name.
 	 * @param string $value  Value.

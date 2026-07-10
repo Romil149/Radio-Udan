@@ -67,7 +67,7 @@ class _NotificationDetailScreenState
               ),
               child: UdaanAuthTopBar(
                 copy: copy,
-                title: copy.notificationsTitle,
+                title: copy.notificationDetailTitle,
                 onBack: () => Navigator.of(context).pop(),
               ),
             ),

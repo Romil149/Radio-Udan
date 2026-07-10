@@ -183,7 +183,8 @@ class RadioUdaan_App_Fcm_Sender {
 			'fcm_send_failed',
 			$message_text,
 			array(
-				'status' => $code,
+				'status'     => $code,
+				'error_code' => $error_status,
 			)
 		);
 	}
@@ -194,14 +195,19 @@ class RadioUdaan_App_Fcm_Sender {
 	 * @param string               $body    Body.
 	 * @param string               $type    Notification type slug.
 	 * @param array<string,mixed>  $data    Payload.
-	 * @return array{sent:int,failed:int,pruned:int}
+	 * @return array{sent:int,failed:int,pruned:int,skipped:bool,ios_sent:int,ios_failed:int,android_sent:int,android_failed:int,last_error:string}
 	 */
 	public static function send_to_user_devices( $user_id, $title, $body, $type = 'general', array $data = array() ) {
 		$result = array(
-			'sent'    => 0,
-			'failed'  => 0,
-			'pruned'  => 0,
-			'skipped' => false,
+			'sent'           => 0,
+			'failed'         => 0,
+			'pruned'         => 0,
+			'skipped'        => false,
+			'ios_sent'       => 0,
+			'ios_failed'     => 0,
+			'android_sent'   => 0,
+			'android_failed' => 0,
+			'last_error'     => '',
 		);
 
 		if ( ! self::is_configured() ) {
@@ -229,17 +235,38 @@ class RadioUdaan_App_Fcm_Sender {
 
 			$device_platform = isset( $row['platform'] ) ? (string) $row['platform'] : '';
 			$send             = self::send_to_token( $token, $title, $body, $payload, $device_platform );
+			$is_ios           = RadioUdaan_App_Notifications::PLATFORM_IOS === $device_platform;
+			$is_android       = RadioUdaan_App_Notifications::PLATFORM_ANDROID === $device_platform;
+
 			if ( true === $send ) {
 				++$result['sent'];
+				if ( $is_ios ) {
+					++$result['ios_sent'];
+				} elseif ( $is_android ) {
+					++$result['android_sent'];
+				}
 				continue;
 			}
 
 			++$result['failed'];
+			if ( $is_ios ) {
+				++$result['ios_failed'];
+			} elseif ( $is_android ) {
+				++$result['android_failed'];
+			}
 
-			if ( is_wp_error( $send ) && 'fcm_token_invalid' === $send->get_error_code() ) {
-				$device_id = isset( $row['id'] ) ? (int) $row['id'] : 0;
-				if ( $device_id > 0 && RadioUdaan_App_Notifications::delete_device( $device_id ) ) {
-					++$result['pruned'];
+			if ( is_wp_error( $send ) ) {
+				$result['last_error'] = $send->get_error_message();
+				$error_data           = $send->get_error_data();
+				if ( is_array( $error_data ) && ! empty( $error_data['error_code'] ) ) {
+					$result['last_error'] = $error_data['error_code'] . ': ' . $result['last_error'];
+				}
+
+				if ( 'fcm_token_invalid' === $send->get_error_code() ) {
+					$device_id = isset( $row['id'] ) ? (int) $row['id'] : 0;
+					if ( $device_id > 0 && RadioUdaan_App_Notifications::delete_device( $device_id ) ) {
+						++$result['pruned'];
+					}
 				}
 			}
 		}

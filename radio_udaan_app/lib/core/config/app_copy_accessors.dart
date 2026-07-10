@@ -197,6 +197,7 @@ extension AppCopyStrings on AppCopy {
   String get notificationUnread => text('notification_unread');
   String get notificationOpenHint => text('notification_open_hint');
   String get notificationViewUpdate => text('notification_view_update');
+  String get notificationDetailTitle => text('notification_detail_title');
   String get notificationTimeJustNow => text('notification_time_just_now');
   String get notificationTimeMinuteAgo => text('notification_time_minute_ago');
   String get notificationTimeHourAgo => text('notification_time_hour_ago');
@@ -215,6 +216,8 @@ extension AppCopyStrings on AppCopy {
   String get notificationsFilterAll => text('notifications_filter_all');
   String get notificationsFilterUnread => text('notifications_filter_unread');
   String get notificationsLoading => text('notifications_loading');
+  String get notificationsLoadMore => text('notifications_load_more');
+  String get notificationsLoadingMore => text('notifications_loading_more');
   String get notificationsSection => text('notifications_section');
   String get pushRegisterDevice => text('push_register_device');
   String get pushRegisterDeviceHint => text('push_register_device_hint');

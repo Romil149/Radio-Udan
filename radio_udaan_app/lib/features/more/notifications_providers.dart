@@ -12,6 +12,10 @@ final notificationsMarkingAllProvider = StateProvider.autoDispose<bool>(
   (ref) => false,
 );
 
+final notificationsLoadingMoreProvider = StateProvider.autoDispose<bool>(
+  (ref) => false,
+);
+
 /// Unread notification count for badges on More tab and menu.
 final notificationUnreadCountProvider = FutureProvider<int>((ref) async {
   final token = ref.watch(authTokenProvider);
@@ -46,6 +50,42 @@ class NotificationsListNotifier
     state = await AsyncValue.guard(
       () => _ref.read(radioudaanApiProvider).listNotifications(),
     );
+  }
+
+  /// Fetches the next page and appends when `page < totalPages`.
+  Future<void> loadMore() async {
+    final current = state.valueOrNull;
+    if (current == null || !current.hasMorePages) return;
+    if (_ref.read(notificationsLoadingMoreProvider)) return;
+
+    _ref.read(notificationsLoadingMoreProvider.notifier).state = true;
+    try {
+      final next = await _ref.read(radioudaanApiProvider).listNotifications(
+            page: current.page + 1,
+          );
+      final seen = <int>{};
+      final merged = <AppNotification>[];
+      for (final item in [...current.items, ...next.items]) {
+        if (item.id > 0 && !seen.add(item.id)) continue;
+        merged.add(item);
+      }
+      if (!mounted) return;
+      state = AsyncValue.data(
+        current.copyWith(
+          items: merged,
+          page: next.page,
+          total: next.total,
+          totalPages: next.totalPages,
+          unreadCount: next.unreadCount,
+        ),
+      );
+    } catch (_) {
+      // Keep current page; user can retry Load more.
+    } finally {
+      if (mounted) {
+        _ref.read(notificationsLoadingMoreProvider.notifier).state = false;
+      }
+    }
   }
 
   Future<void> markRead(int id) async {

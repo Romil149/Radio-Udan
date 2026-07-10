@@ -58,11 +58,16 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     _announce(_copy.notificationsMarkedAll);
   }
 
+  Future<void> _loadMore() async {
+    await ref.read(notificationsListProvider.notifier).loadMore();
+  }
+
   @override
   Widget build(BuildContext context) {
     final copy = ref.watch(appCopyProvider);
     final notifications = ref.watch(notificationsListProvider);
     final markingAll = ref.watch(notificationsMarkingAllProvider);
+    final loadingMore = ref.watch(notificationsLoadingMoreProvider);
     final unreadCount = notifications.valueOrNull?.unreadCount ?? 0;
 
     return Scaffold(
@@ -105,6 +110,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                     Semantics(
                       button: true,
                       label: _copy.notificationsMarkAllRead,
+                      onTap: markingAll ? null : _markAllRead,
                       child: ExcludeSemantics(
                         child: TextButton(
                           onPressed: markingAll ? null : _markAllRead,
@@ -163,10 +169,21 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                         ],
                       );
                     }
+                    final showLoadMore = _filter == _NotificationFilter.all &&
+                        result.hasMorePages;
+                    final itemCount =
+                        items.length + (showLoadMore ? 1 : 0);
                     return ListView.builder(
                       padding: const EdgeInsets.all(BrandTokens.screenPadding),
-                      itemCount: items.length,
+                      itemCount: itemCount,
                       itemBuilder: (context, index) {
+                        if (showLoadMore && index == items.length) {
+                          return _loadMoreFooter(
+                            copy: copy,
+                            loading: loadingMore,
+                            onLoadMore: _loadMore,
+                          );
+                        }
                         final item = items[index];
                         return NotificationListCard(
                           item: item,
@@ -225,11 +242,61 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     );
   }
 
+  Widget _loadMoreFooter({
+    required AppCopy copy,
+    required bool loading,
+    required VoidCallback onLoadMore,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Semantics(
+        button: true,
+        enabled: !loading,
+        label: loading
+            ? copy.notificationsLoadingMore
+            : copy.notificationsLoadMore,
+        onTap: loading ? null : onLoadMore,
+        liveRegion: loading,
+        child: ExcludeSemantics(
+          child: Center(
+            child: loading
+                ? SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: context.udaan.primary,
+                    ),
+                  )
+                : TextButton(
+                    onPressed: onLoadMore,
+                    style: TextButton.styleFrom(
+                      foregroundColor: context.udaan.primaryGlow,
+                      minimumSize: const Size(
+                        BrandTokens.minTapTarget,
+                        BrandTokens.minTapTarget,
+                      ),
+                    ),
+                    child: Text(
+                      copy.notificationsLoadMore,
+                      style: GoogleFonts.atkinsonHyperlegible(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _filterChip(String label, bool selected, VoidCallback onTap) {
     return Semantics(
       button: true,
       selected: selected,
       label: label,
+      onTap: onTap,
       child: ExcludeSemantics(
         child: FilterChip(
           label: Text(label),

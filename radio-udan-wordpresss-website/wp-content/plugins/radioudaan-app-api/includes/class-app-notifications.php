@@ -413,15 +413,20 @@ class RadioUdaan_App_Notifications {
 	 * @param string               $body     Body.
 	 * @param string               $type     Type slug.
 	 * @param array<string,mixed>  $data     Payload.
-	 * @return array{created:int,push_sent:int,push_failed:int}
+	 * @return array{created:int,push_sent:int,push_failed:int,push_pruned:int,fcm_skipped:bool,ios_sent:int,ios_failed:int,android_sent:int,android_failed:int,last_error:string}
 	 */
 	public static function create_for_users( array $user_ids, $title, $body, $type = 'general', array $data = array() ) {
 		$result = array(
-			'created'     => 0,
-			'push_sent'   => 0,
-			'push_failed' => 0,
-			'push_pruned' => 0,
-			'fcm_skipped' => ! RadioUdaan_App_Fcm_Sender::is_configured(),
+			'created'        => 0,
+			'push_sent'      => 0,
+			'push_failed'    => 0,
+			'push_pruned'    => 0,
+			'fcm_skipped'    => ! RadioUdaan_App_Fcm_Sender::is_configured(),
+			'ios_sent'       => 0,
+			'ios_failed'     => 0,
+			'android_sent'   => 0,
+			'android_failed' => 0,
+			'last_error'     => '',
 		);
 
 		foreach ( array_unique( array_map( 'intval', $user_ids ) ) as $user_id ) {
@@ -437,9 +442,16 @@ class RadioUdaan_App_Notifications {
 			++$result['created'];
 
 			$push = isset( $created['push'] ) && is_array( $created['push'] ) ? $created['push'] : array();
-			$result['push_sent']   += isset( $push['sent'] ) ? (int) $push['sent'] : 0;
-			$result['push_failed'] += isset( $push['failed'] ) ? (int) $push['failed'] : 0;
-			$result['push_pruned'] += isset( $push['pruned'] ) ? (int) $push['pruned'] : 0;
+			$result['push_sent']      += isset( $push['sent'] ) ? (int) $push['sent'] : 0;
+			$result['push_failed']    += isset( $push['failed'] ) ? (int) $push['failed'] : 0;
+			$result['push_pruned']    += isset( $push['pruned'] ) ? (int) $push['pruned'] : 0;
+			$result['ios_sent']       += isset( $push['ios_sent'] ) ? (int) $push['ios_sent'] : 0;
+			$result['ios_failed']     += isset( $push['ios_failed'] ) ? (int) $push['ios_failed'] : 0;
+			$result['android_sent']   += isset( $push['android_sent'] ) ? (int) $push['android_sent'] : 0;
+			$result['android_failed'] += isset( $push['android_failed'] ) ? (int) $push['android_failed'] : 0;
+			if ( ! empty( $push['last_error'] ) ) {
+				$result['last_error'] = (string) $push['last_error'];
+			}
 			if ( ! empty( $push['skipped'] ) ) {
 				$result['fcm_skipped'] = true;
 			}
@@ -715,6 +727,11 @@ class RadioUdaan_App_Notifications {
 					'sent'            => (int) $result['sent'],
 					'failed'          => (int) $result['failed'],
 					'pruned'          => (int) $result['pruned'],
+					'ios_sent'        => isset( $result['ios_sent'] ) ? (int) $result['ios_sent'] : 0,
+					'ios_failed'      => isset( $result['ios_failed'] ) ? (int) $result['ios_failed'] : 0,
+					'android_sent'    => isset( $result['android_sent'] ) ? (int) $result['android_sent'] : 0,
+					'android_failed'  => isset( $result['android_failed'] ) ? (int) $result['android_failed'] : 0,
+					'last_error'      => isset( $result['last_error'] ) ? (string) $result['last_error'] : '',
 				)
 			);
 		}

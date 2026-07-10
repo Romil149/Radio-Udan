@@ -41,48 +41,52 @@ class NotificationListCard extends StatelessWidget {
     final semanticsLabel =
         '$statusLabel. $whenPart${item.title}. $preview. ${copy.notificationOpenHint}';
 
+    // TalkBack/VoiceOver activate Semantics.onTap — InkWell alone is often ignored
+    // when wrapped in a custom Semantics(button) without an action.
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Semantics(
         button: true,
         label: semanticsLabel,
-        child: Material(
-          color: isUnread
-              ? context.udaan.surfaceContainerHigh
-              : context.udaan.surfaceContainer,
-          borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-          child: InkWell(
-            onTap: onTap,
+        onTap: onTap,
+        child: ExcludeSemantics(
+          child: Material(
+            color: isUnread
+                ? context.udaan.surfaceContainerHigh
+                : context.udaan.surfaceContainer,
             borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-            child: Container(
-              constraints: const BoxConstraints(
-                minHeight: BrandTokens.a11yMinTapTarget,
-              ),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-                border: Border.all(
-                  color: isUnread
-                      ? context.udaan.primaryGlow.withValues(alpha: 0.75)
-                      : context.udaan.outlineVariant,
-                  width: isUnread ? 1.5 : 1,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+              child: Container(
+                constraints: const BoxConstraints(
+                  minHeight: BrandTokens.a11yMinTapTarget,
                 ),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(
-                    width: 4,
-                    decoration: BoxDecoration(
-                      color: isUnread ? accent : accent.withValues(alpha: 0.35),
-                      borderRadius: const BorderRadius.horizontal(
-                        left: Radius.circular(BrandTokens.cardRadius),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+                  border: Border.all(
+                    color: isUnread
+                        ? context.udaan.primaryGlow.withValues(alpha: 0.75)
+                        : context.udaan.outlineVariant,
+                    width: isUnread ? 1.5 : 1,
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      width: 4,
+                      decoration: BoxDecoration(
+                        color:
+                            isUnread ? accent : accent.withValues(alpha: 0.35),
+                        borderRadius: const BorderRadius.horizontal(
+                          left: Radius.circular(BrandTokens.cardRadius),
+                        ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
-                      child: ExcludeSemantics(
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -166,16 +170,16 @@ class NotificationListCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: Icon(
-                      Icons.chevron_right,
-                      color: context.udaan.onSurfaceVariant,
-                      size: 28,
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: Icon(
+                        Icons.chevron_right,
+                        color: context.udaan.onSurfaceVariant,
+                        size: 28,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

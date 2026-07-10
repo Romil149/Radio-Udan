@@ -564,13 +564,15 @@ class RadioUdaan_Admin_App_Hub {
 			if ( '' !== $json ) {
 				$account = RadioUdaan_App_Fcm_Sender::parse_service_account_json( $json );
 				if ( ! $account ) {
+					// Options above this block were already saved — be honest and refresh config cache.
+					RadioUdaan_App_Config::invalidate_cache();
 					wp_safe_redirect(
 						add_query_arg(
 							array(
 								'page'              => self::SETTINGS_SLUG,
 								'radioudaan_notice' => 'error',
 								'radioudaan_detail' => rawurlencode(
-									__( 'Invalid Firebase service account JSON. Other settings were not saved.', 'radioudaan-app-api' )
+									__( 'Invalid Firebase service account JSON — it was not updated. Other settings were saved.', 'radioudaan-app-api' )
 								),
 								'tab'               => isset( $_POST['radioudaan_active_tab'] )
 									? sanitize_key( wp_unslash( $_POST['radioudaan_active_tab'] ) )
