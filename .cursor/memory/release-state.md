@@ -3,8 +3,8 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+45** @ `08c9fe7` | **yes** | 2026-07-10 | Android: Crashlytics Gradle + ProGuard so Firebase init works with Razorpay |
-| TestFlight iOS | **2.0.0+45** | CI after push | 2026-07-10 | Same client as +44 iOS APNs fix + Android Crashlytics fix |
+| GitHub `main` | **2.0.0+46** | pushing | 2026-07-10 | Fix CI: google-services 4.4.2 for Crashlytics Gradle plugin 3 |
+| TestFlight iOS | **2.0.0+46** | CI after push | 2026-07-10 | +45 APK failed CI; +46 unblocks assembleRelease |
 | Staging WP plugin | local zip needed | **no** (redeploy) | 2026-07-10 | Still need `radio-udaan-72232` FCM SA + plugin deploy |
 | Staging API smoke | 19/19 | yes (routes) | 2026-07-10 | Health previously `cbfdc` + 0 devices |
 
@@ -20,5 +20,5 @@ Never push app code to `main` without bumping the build if the last build is alr
 ## Open deploy blockers
 
 1. **WP FCM** — paste service account from Firebase **`radio-udaan-72232`** (not `cbfdc`); Test FCM; deploy plugin zip.
-2. **Device register** — install +45, allow notifications, confirm `push_devices_registered` ≥ 1.
+2. **Device register** — install +46, allow notifications, confirm `push_devices_registered` ≥ 1.
 3. Firebase production APNs key — **done**.

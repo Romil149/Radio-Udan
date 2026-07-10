@@ -1,4 +1,9 @@
 
+### 2026-07-10 — CI fix: google-services 4.4.2 for Crashlytics 3
+**Requested by**: CI fail on +45 — Crashlytics plugin 3 requires Google-Services ≥4.4.1.
+**What was done**: Bump `com.google.gms.google-services` to 4.4.2; build **2.0.0+46**.
+**Status**: Pushing.
+
 ### 2026-07-10 — Android Firebase init: Crashlytics component missing (Razorpay)
 **Requested by**: User — +44 Android diagnostics: `FirebaseCrashlytics component is not present` (stack via `com.razorpay`).
 **Root cause**: `firebase_crashlytics` in pubspec but Crashlytics Gradle plugin missing; R8 release strip broke Crashlytics registrar; Razorpay touches Crashlytics during Firebase init.
