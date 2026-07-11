@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -350,136 +351,152 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
         borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
         border: Border.all(color: palette.outlineVariant),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // One spoken header (title + short how-to) — avoids reading every line.
-          Semantics(
-            header: true,
-            label: _headerSemanticsLabel,
-            child: ExcludeSemantics(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    widget.copy.donatePayOnlineTitle,
-                    style: udaanGoogleFont(
-                      context,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: palette.onBackground,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _sectionSubtitle,
-                    style: udaanGoogleFont(
-                      context,
-                      fontSize: 15,
-                      height: 1.45,
-                      color: palette.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          if (presets.isNotEmpty) ...[
+      // Scope OrdinalSortKeys to this card so page headline/intro stay first.
+      child: Semantics(
+        container: true,
+        explicitChildNodes: true,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // One spoken header (title + short how-to) — avoids reading every line.
             Semantics(
+              sortKey: const OrdinalSortKey(1.0),
               header: true,
-              label: widget.copy.donateAmountHeading,
+              label: _headerSemanticsLabel,
               child: ExcludeSemantics(
-                child: Text(
-                  widget.copy.donateAmountHeading,
-                  style: udaanGoogleFont(
-                    context,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: palette.onBackground,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _AmountPresetGrid(
-              amounts: presets,
-              selectedAmount:
-                  customEmpty ? _selectedPreset : null,
-              chipSemantics: widget.copy.donateAmountChipSemantics,
-              enabled: !_loading,
-              onSelect: _selectPreset,
-            ),
-            const SizedBox(height: 16),
-          ],
-          FormFieldAnchor(
-            anchorKey: _amountAnchorKey,
-            child: UdaanLabeledField(
-              label: widget.copy.donateAmountCustomLabel,
-              hint: widget.copy.donateAmountCustomHint,
-              controller: _customAmountController,
-              focusNode: _customAmountFocus,
-              keyboardDoneLabel: widget.copy.keyboardDone,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-              ],
-              onSubmitted: (_) => _donate(),
-            ),
-          ),
-          // Visual-only summary — amount is spoken on chip select and Donate button.
-          if (summary.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            ExcludeSemantics(
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: palette.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: palette.primaryGlow.withValues(alpha: 0.55),
-                  ),
-                ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Icon(
-                      Icons.volunteer_activism_outlined,
-                      color: palette.primary,
-                      size: 22,
+                    Text(
+                      widget.copy.donatePayOnlineTitle,
+                      style: udaanGoogleFont(
+                        context,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: palette.onBackground,
+                      ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        summary,
-                        style: udaanGoogleFont(
-                          context,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: palette.primary,
-                        ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _sectionSubtitle,
+                      style: udaanGoogleFont(
+                        context,
+                        fontSize: 15,
+                        height: 1.45,
+                        color: palette.onSurfaceVariant,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-          ],
-          if (widget.razorpay.eightyGEnabled) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+            if (presets.isNotEmpty) ...[
+              Semantics(
+                sortKey: const OrdinalSortKey(2.0),
+                header: true,
+                label: widget.copy.donateAmountHeading,
+                child: ExcludeSemantics(
+                  child: Text(
+                    widget.copy.donateAmountHeading,
+                    style: udaanGoogleFont(
+                      context,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: palette.onBackground,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Semantics(
+                sortKey: const OrdinalSortKey(3.0),
+                container: true,
+                explicitChildNodes: true,
+                child: _AmountPresetGrid(
+                  amounts: presets,
+                  selectedAmount:
+                      customEmpty ? _selectedPreset : null,
+                  chipSemantics: widget.copy.donateAmountChipSemantics,
+                  enabled: !_loading,
+                  onSelect: _selectPreset,
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            // No autofocus — sortKey keeps field after header/chips for VO/TB.
             Semantics(
-              checked: _want80g,
-              label: widget.copy.donate80gCheckbox,
-              hint: widget.copy.donate80gHint,
-              enabled: !_loading,
-              onTap: _loading
-                  ? null
-                  : () => setState(() => _want80g = !_want80g),
-              child: ExcludeSemantics(
+              sortKey: const OrdinalSortKey(4.0),
+              child: FormFieldAnchor(
+                anchorKey: _amountAnchorKey,
+                child: UdaanLabeledField(
+                  label: widget.copy.donateAmountCustomLabel,
+                  hint: widget.copy.donateAmountCustomHint,
+                  controller: _customAmountController,
+                  focusNode: _customAmountFocus,
+                  keyboardDoneLabel: widget.copy.keyboardDone,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                  ],
+                  onSubmitted: (_) => _donate(),
+                ),
+              ),
+            ),
+            // Visual-only summary — amount is spoken on chip select and Donate button.
+            if (summary.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              ExcludeSemantics(
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: palette.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: palette.primaryGlow.withValues(alpha: 0.55),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.volunteer_activism_outlined,
+                        color: palette.primary,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          summary,
+                          style: udaanGoogleFont(
+                            context,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: palette.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            if (widget.razorpay.eightyGEnabled) ...[
+              const SizedBox(height: 16),
+              Semantics(
+                sortKey: const OrdinalSortKey(5.0),
+                checked: _want80g,
+                label: widget.copy.donate80gCheckbox,
+                hint: widget.copy.donate80gHint,
+                enabled: !_loading,
+                excludeSemantics: true,
+                onTap: _loading
+                    ? null
+                    : () => setState(() => _want80g = !_want80g),
                 child: Material(
                   color: palette.surfaceContainerHigh,
                   borderRadius: BorderRadius.circular(12),
@@ -528,30 +545,35 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
                   ),
                 ),
               ),
-            ),
-            if (_want80g) ...[
-              const SizedBox(height: 12),
-              FormFieldAnchor(
-                anchorKey: _panAnchorKey,
-                child: UdaanLabeledField(
-                  label: widget.copy.donatePanLabel,
-                  controller: _panController,
-                  focusNode: _panFocus,
-                  required: true,
-                  textInputAction: TextInputAction.next,
-                  keyboardType: TextInputType.visiblePassword,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
-                    LengthLimitingTextInputFormatter(10),
-                  ],
-                ),
-              ),
-              if (accountEmailHidden) ...[
+              if (_want80g) ...[
                 const SizedBox(height: 12),
                 Semantics(
-                  label: widget.copy.donateEmailFromAccount,
-                  value: session!.email!.trim(),
-                  child: ExcludeSemantics(
+                  sortKey: const OrdinalSortKey(6.0),
+                  child: FormFieldAnchor(
+                    anchorKey: _panAnchorKey,
+                    child: UdaanLabeledField(
+                      label: widget.copy.donatePanLabel,
+                      controller: _panController,
+                      focusNode: _panFocus,
+                      required: true,
+                      textInputAction: TextInputAction.next,
+                      keyboardType: TextInputType.visiblePassword,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'[A-Za-z0-9]'),
+                        ),
+                        LengthLimitingTextInputFormatter(10),
+                      ],
+                    ),
+                  ),
+                ),
+                if (accountEmailHidden) ...[
+                  const SizedBox(height: 12),
+                  Semantics(
+                    sortKey: const OrdinalSortKey(7.0),
+                    label: widget.copy.donateEmailFromAccount,
+                    value: session!.email!.trim(),
+                    excludeSemantics: true,
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
@@ -600,25 +622,28 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
                       ),
                     ),
                   ),
-                ),
-              ] else ...[
-                const SizedBox(height: 12),
-                FormFieldAnchor(
-                  anchorKey: _emailAnchorKey,
-                  child: UdaanLabeledField(
-                    label: widget.copy.emailLabel,
-                    controller: _emailController,
-                    focusNode: _emailFocus,
-                    required: widget.razorpay.eightyGPdfEmailEnabled,
-                    keyboardType: TextInputType.emailAddress,
-                    hint: widget.copy.emailHint,
+                ] else ...[
+                  const SizedBox(height: 12),
+                  Semantics(
+                    sortKey: const OrdinalSortKey(7.0),
+                    child: FormFieldAnchor(
+                      anchorKey: _emailAnchorKey,
+                      child: UdaanLabeledField(
+                        label: widget.copy.emailLabel,
+                        controller: _emailController,
+                        focusNode: _emailFocus,
+                        required: widget.razorpay.eightyGPdfEmailEnabled,
+                        keyboardType: TextInputType.emailAddress,
+                        hint: widget.copy.emailHint,
+                      ),
+                    ),
                   ),
-                ),
-              ],
-              const SizedBox(height: 10),
-              Semantics(
-                label: widget.copy.donateForm10beNote,
-                child: ExcludeSemantics(
+                ],
+                const SizedBox(height: 10),
+                Semantics(
+                  sortKey: const OrdinalSortKey(8.0),
+                  label: widget.copy.donateForm10beNote,
+                  excludeSemantics: true,
                   child: Text(
                     widget.copy.donateForm10beNote,
                     style: udaanGoogleFont(
@@ -629,39 +654,51 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
                     ),
                   ),
                 ),
+              ],
+            ],
+            if (_statusMessage != null) ...[
+              const SizedBox(height: 14),
+              Semantics(
+                sortKey: const OrdinalSortKey(9.0),
+                child: _StatusBanner(
+                  message: _statusMessage!,
+                  tone: _StatusTone.info,
+                ),
               ),
             ],
-          ],
-          if (_statusMessage != null) ...[
-            const SizedBox(height: 14),
-            _StatusBanner(
-              message: _statusMessage!,
-              tone: _StatusTone.info,
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 14),
+              Semantics(
+                sortKey: const OrdinalSortKey(9.1),
+                child: _StatusBanner(
+                  message: _errorMessage!,
+                  tone: _StatusTone.error,
+                ),
+              ),
+            ],
+            if (_successMessage != null) ...[
+              const SizedBox(height: 14),
+              Semantics(
+                sortKey: const OrdinalSortKey(9.2),
+                child: _StatusBanner(
+                  message: _successMessage!,
+                  tone: _StatusTone.success,
+                ),
+              ),
+            ],
+            const SizedBox(height: 18),
+            Semantics(
+              sortKey: const OrdinalSortKey(10.0),
+              child: UdaanPrimaryButton(
+                label: widget.copy.donateNowButton,
+                icon: Icons.payments_outlined,
+                loading: _loading,
+                semanticsLabel: _donateButtonSemantics,
+                onPressed: _loading ? null : _donate,
+              ),
             ),
           ],
-          if (_errorMessage != null) ...[
-            const SizedBox(height: 14),
-            _StatusBanner(
-              message: _errorMessage!,
-              tone: _StatusTone.error,
-            ),
-          ],
-          if (_successMessage != null) ...[
-            const SizedBox(height: 14),
-            _StatusBanner(
-              message: _successMessage!,
-              tone: _StatusTone.success,
-            ),
-          ],
-          const SizedBox(height: 18),
-          UdaanPrimaryButton(
-            label: widget.copy.donateNowButton,
-            icon: Icons.payments_outlined,
-            loading: _loading,
-            semanticsLabel: _donateButtonSemantics,
-            onPressed: _loading ? null : _donate,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -815,48 +852,47 @@ class _AmountChip extends StatelessWidget {
       selected: selected,
       enabled: enabled,
       label: semanticsLabel,
+      excludeSemantics: true,
       onTap: enabled ? onTap : null,
-      child: ExcludeSemantics(
-        child: Material(
-          color: bg,
+      child: Material(
+        color: bg,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: enabled ? onTap : null,
           borderRadius: BorderRadius.circular(14),
-          child: InkWell(
-            onTap: enabled ? onTap : null,
-            borderRadius: BorderRadius.circular(14),
-            child: Container(
-              constraints: const BoxConstraints(
-                minHeight: BrandTokens.a11yMinTapTarget,
+          child: Container(
+            constraints: const BoxConstraints(
+              minHeight: BrandTokens.a11yMinTapTarget,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: border,
+                width: selected ? 2.5 : 1.5,
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: border,
-                  width: selected ? 2.5 : 1.5,
-                ),
-              ),
-              alignment: Alignment.center,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (selected) ...[
-                    Icon(Icons.check_circle, size: 18, color: fg),
-                    const SizedBox(width: 6),
-                  ],
-                  Flexible(
-                    child: Text(
-                      visual,
-                      textAlign: TextAlign.center,
-                      style: udaanGoogleFont(
-                        context,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: fg,
-                      ),
+            ),
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (selected) ...[
+                  Icon(Icons.check_circle, size: 18, color: fg),
+                  const SizedBox(width: 6),
+                ],
+                Flexible(
+                  child: Text(
+                    visual,
+                    textAlign: TextAlign.center,
+                    style: udaanGoogleFont(
+                      context,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: fg,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

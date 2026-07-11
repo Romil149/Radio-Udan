@@ -2,6 +2,12 @@
 # Task History
 <!-- Log of completed work. Helps new sessions understand what's already done. -->
 
+### 2026-07-11 — Donate Pay Online focus order (VO/TalkBack)
+**Requested by**: User — first focus was text fields; want Pay Online → donations heading → amount chips → custom amount field.
+**Fix**: Scoped `OrdinalSortKey` 1→4 (+ rest 5+) inside `DonatePayOnlineCard`; no autofocus. Page headline/intro stay above the card.
+**File**: `donate_pay_online_card.dart`. Bump **+65**.
+**Status**: Shipping
+
 ### 2026-07-11 — Library search Clear missed by VoiceOver/TalkBack
 **Requested by**: User — cross after search missed by blind users.
 **Root cause**: Clear only as right sibling; `ExcludeSemantics` widget pattern; VO jumped to results. Field had no Actions entry for Clear.
