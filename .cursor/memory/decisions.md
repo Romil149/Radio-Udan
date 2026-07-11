@@ -1,10 +1,15 @@
 # Architecture Decisions Log
 <!-- When a design choice is made, document it here so we don't re-debate it. -->
 
+### 2026-07-11 — Notifications: More inbox top 20; no admin Open in app
+**Context**: User wants Notifications under User profile (top 20 → detail title/message) and removal of WP “Open in app” compose option.
+**Decision**: Restore More-tab inbox (single page, `perPage: 20`). Detail shows title + body only. Admin compose always sends empty `action_data` (message-only); Open-in-app UI removed.
+**Consequences**: Redeploy plugin for staging admin UI; ship app build for More tile + list. Legacy notifications with `route` still hydrate for push tap but no Open CTA on detail.
+
 ### 2026-07-11 — Notifications: detail first, then Open destination
 **Context**: Push worked but admin sends had no deep link; users saw one row and taps felt dead.
 **Decision**: Tap (list or push) always opens **NotificationDetailScreen**; optional admin `route` shows Open → Radio/Events/What's New/HTTPS. Push hydrates via `GET /notifications/{id}`. Unread filter is server-side with pagination.
-**Consequences**: Deploy plugin for compose + GET route; app build for Flutter changes.
+**Consequences**: Superseded in part by 2026-07-11 More inbox + no Open-in-app decision (Open CTA removed from detail).
 
 ### 2026-07-11 — iOS share uses native large-detent sheet (not share_plus alone)
 **Context**: `share_plus` presents `UIActivityViewController` at medium detent (half sheet, no Close X). Dragging to full shows Close X.

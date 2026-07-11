@@ -8,7 +8,6 @@ import '../../core/providers/app_settings_provider.dart';
 import '../../core/push/push_notification_service.dart';
 import '../../core/theme/accessibility_scope.dart';
 import '../../core/utils/keyboard_dismiss.dart';
-import '../more/notifications_providers.dart';
 import '../about/about_tab.dart';
 import '../events/events_tab.dart';
 import '../library/library_tab.dart';
@@ -74,8 +73,6 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen>
     final copy = ref.watch(appCopyProvider);
     ref.watch(appSettingsProvider);
     final index = ref.watch(mainShellTabIndexProvider);
-    final unreadAsync = ref.watch(notificationUnreadCountProvider);
-    final unreadCount = unreadAsync.value ?? 0;
     final tabs = [
       (label: copy.tabRadio, icon: Icons.radio, selected: Icons.radio),
       (
@@ -123,43 +120,13 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen>
           destinations: [
             for (var i = 0; i < tabs.length; i++)
               NavigationDestination(
-                icon: _TabIcon(
-                  icon: tabs[i].icon,
-                  badgeCount: i == MainShellScreen.moreTabIndex ? unreadCount : 0,
-                ),
-                selectedIcon: _TabIcon(
-                  icon: tabs[i].selected,
-                  badgeCount: i == MainShellScreen.moreTabIndex ? unreadCount : 0,
-                ),
-                label: i == MainShellScreen.moreTabIndex && unreadCount > 0
-                    ? '${tabs[i].label} (${unreadCount > 9 ? '9+' : unreadCount})'
-                    : tabs[i].label,
+                icon: Icon(tabs[i].icon),
+                selectedIcon: Icon(tabs[i].selected),
+                label: tabs[i].label,
                 tooltip: '',
               ),
           ],
         ),
-    );
-  }
-}
-
-class _TabIcon extends StatelessWidget {
-  const _TabIcon({required this.icon, required this.badgeCount});
-
-  final IconData icon;
-  final int badgeCount;
-
-  @override
-  Widget build(BuildContext context) {
-    if (badgeCount <= 0) return Icon(icon);
-    final palette = context.udaan;
-    final label = badgeCount > 9 ? '9+' : '$badgeCount';
-    return ExcludeSemantics(
-      child: Badge(
-        label: Text(label),
-        backgroundColor: palette.primary,
-        textColor: palette.onPrimary,
-        child: Icon(icon),
-      ),
     );
   }
 }

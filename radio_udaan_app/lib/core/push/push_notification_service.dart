@@ -10,11 +10,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../../features/more/notifications_screen.dart';
 import '../../firebase_options.dart';
+import '../../features/more/notifications_providers.dart';
 import '../api/radioudaan_api.dart';
 import '../providers/app_providers.dart';
-import '../router/app_router.dart';
 import '../router/notification_open.dart';
 import 'push_diagnostics.dart';
 
@@ -497,13 +496,19 @@ class PushNotificationService {
     // iOS + notification payload: FlutterFire presents via
     // setForegroundNotificationPresentationOptions (set in _ensureMessagingCore).
     // Do not also show FLN — that duplicates the banner.
-    if (Platform.isIOS && notification != null) return;
+    if (Platform.isIOS && notification != null) {
+      refreshNotificationInboxFromNav();
+      return;
+    }
 
     // Android foreground never auto-displays FCM notification messages.
     // iOS data-only (no notification block) also needs a local banner.
     final title = notification?.title ?? message.data['title'];
     final body = notification?.body ?? message.data['body'];
-    if (title == null && body == null) return;
+    if (title == null && body == null) {
+      refreshNotificationInboxFromNav();
+      return;
+    }
 
     await _localNotifications.show(
       notification?.hashCode ??
@@ -528,6 +533,7 @@ class PushNotificationService {
       ),
       payload: _encodePushPayload(message.data),
     );
+    refreshNotificationInboxFromNav();
   }
 
   static String _encodePushPayload(Map<String, dynamic> data) {
@@ -584,17 +590,6 @@ class PushNotificationService {
       );
     });
   }
-}
-
-/// Opens the in-app notifications screen (from push tap or local notification).
-void openNotificationsInbox() {
-  final context = rootNavigatorKey.currentContext;
-  if (context == null) return;
-  Navigator.of(context).push(
-    MaterialPageRoute<void>(
-      builder: (_) => const NotificationsScreen(),
-    ),
-  );
 }
 
 final pushNotificationServiceProvider = Provider<PushNotificationService>((ref) {

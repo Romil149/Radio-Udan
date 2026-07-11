@@ -36,10 +36,11 @@ class NotificationListCard extends StatelessWidget {
     final isUnread = !item.isRead;
     final statusLabel =
         isUnread ? copy.notificationUnread : copy.notificationRead;
+    final typeLabel = copy.notificationTypeLabel(item.type);
     final whenPart = when.isNotEmpty ? '$when. ' : '';
     final preview = _preview;
     final semanticsLabel =
-        '$statusLabel. $whenPart${item.title}. $preview. ${copy.notificationOpenHint}';
+        '$statusLabel. $typeLabel. $whenPart${item.title}. $preview. ${copy.notificationOpenHint}';
 
     // TalkBack/VoiceOver activate Semantics.onTap — InkWell alone is often ignored
     // when wrapped in a custom Semantics(button) without an action.
@@ -117,7 +118,16 @@ class NotificationListCard extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                if (isUnread)
+                                Text(
+                                  typeLabel,
+                                  style: GoogleFonts.atkinsonHyperlegible(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: accent,
+                                  ),
+                                ),
+                                if (isUnread) ...[
+                                  const SizedBox(width: 8),
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 8,
@@ -137,6 +147,7 @@ class NotificationListCard extends StatelessWidget {
                                       ),
                                     ),
                                   ),
+                                ],
                               ],
                             ),
                             const SizedBox(height: 8),

@@ -19,9 +19,9 @@ import '../../core/router/app_router.dart';
 import '../../core/widgets/main_tab_app_bar.dart';
 import 'edit_profile_screen.dart';
 import 'legal_content_screen.dart';
+import 'notifications_providers.dart';
 import 'notifications_screen.dart';
 import 'settings_screen.dart';
-import 'notifications_providers.dart';
 import 'widgets/more_hero_card.dart';
 import 'widgets/more_menu_tile.dart';
 
@@ -77,7 +77,6 @@ class MoreTab extends ConsumerWidget {
     final token = ref.watch(authTokenProvider);
     final config = ref.watch(remoteConfigProvider);
     final isSignedIn = token != null && token.isNotEmpty;
-    final unreadCount = ref.watch(notificationUnreadCountProvider).value ?? 0;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -98,31 +97,27 @@ class MoreTab extends ConsumerWidget {
                 iconBackground: context.udaan.primary,
                 onTap: () => _push(context, const EditProfileScreen()),
               ),
-              MoreMenuTile(
-                title: copy.notificationsTitle,
-                subtitle: unreadCount > 0
-                    ? copy.unreadNotificationsBadge(unreadCount)
-                    : copy.notificationsSubtitle,
-                icon: Icons.notifications_outlined,
-                iconBackground: context.udaan.secondary,
-                trailing: unreadCount > 0
-                    ? ExcludeSemantics(
-                        child: Badge(
-                          label: Text(
-                            unreadCount > 9 ? '9+' : '$unreadCount',
-                          ),
-                          backgroundColor: context.udaan.primary,
-                          child: Icon(Icons.chevron_right),
-                        ),
-                      )
-                    : null,
-                onTap: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const NotificationsScreen(),
-                    ),
+              Builder(
+                builder: (context) {
+                  final unreadAsync = ref.watch(notificationUnreadCountProvider);
+                  final unread = unreadAsync.valueOrNull ?? 0;
+                  final subtitle = unread > 0
+                      ? copy.notificationsUnreadSubtitle(unread)
+                      : copy.notificationsSubtitle;
+                  final semanticsExtra = unread > 0
+                      ? copy.unreadNotificationsBadge(unread)
+                      : null;
+                  return MoreMenuTile(
+                    title: copy.notificationsTitle,
+                    subtitle: subtitle,
+                    semanticsLabel: semanticsExtra == null
+                        ? null
+                        : '${copy.notificationsTitle}. $semanticsExtra',
+                    icon: Icons.notifications_outlined,
+                    iconBackground: context.udaan.surfaceContainerHigh,
+                    iconColor: context.udaan.primaryGlow,
+                    onTap: () => _push(context, const NotificationsScreen()),
                   );
-                  ref.invalidate(notificationUnreadCountProvider);
                 },
               ),
               MoreMenuTile(

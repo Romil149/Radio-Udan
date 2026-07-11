@@ -2,6 +2,33 @@
 # Task History
 <!-- Log of completed work. Helps new sessions understand what's already done. -->
 
+### 2026-07-11 — Notifications inbox a11y/UX improvements
+**Requested by**: User — implement unread More subtitle, summary announce, All/Unread, Refresh, push→refresh, showing latest 20, type speech, empty→Settings, fix accents.
+**Agents**: Alex → Marcus (copy) + Daniel/Maya (Flutter) → verify
+**What was done**: More “N unread”; list summary announce; filter chips; Refresh button; push/open refresh; showing-latest banner; type labels+accents; empty→Settings; 12 new copy keys (WP+Flutter).
+**Status**: ✅ Local verified — not committed; staging copy still 459 until plugin redeploy (new keys local-only)
+
+### 2026-07-11 — Restore More Notifications inbox + remove admin Open in app
+**Requested by**: User — Notifications under User profile (top 20 → detail title/message); remove Open in app from WP compose.
+**Agents**: Alex → Marcus (WP) + Daniel/Maya (Flutter) → Elena (verify)
+**What was done**:
+- More tab: Notifications tile after User profile → `NotificationsScreen` (top 20 via `GET /notifications`)
+- Detail: title + message only (Open CTA removed)
+- WP admin: removed Open in app dropdown + what's-new/URL fields; sends pass empty `action_data`
+**Files**: `more_tab.dart`, `notifications_screen.dart`, `notifications_providers.dart`, `notification_detail_screen.dart`, `class-admin-notifications.php`
+**Status**: ✅ Local verified (analyze 0 / verify-wp 7/7 / smoke 19/19) — not committed/pushed; plugin zip not redeployed
+
+### 2026-07-11 — Remove Notifications inbox screen entirely
+**Requested by**: User — remove notifications screen after menu tile removal.
+**What was done**: Deleted `notifications_screen.dart` + `notifications_providers.dart`; push taps open detail only; removed More-tab unread badge.
+**Kept**: `notification_detail_screen.dart` for push tap content + Open destination.
+**Status**: ✅ Local — not pushed
+
+### 2026-07-11 — Remove Notifications row from More tab
+**Requested by**: User — remove Notifications / Alerts and updates menu tile.
+**What was done**: Removed `MoreMenuTile` for inbox from `more_tab.dart`. Push tap → detail/inbox still works via `notification_open.dart`.
+**Status**: ✅ Local — not pushed
+
 ### 2026-07-11 — Build bump +55 for TestFlight
 **Requested by**: User — push with updated build number.
 **What was done**: `pubspec.yaml` 2.0.0+54 → **2.0.0+55**; release-state updated.

@@ -4,6 +4,7 @@ import '../../core/models/app_notification.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/router/app_router.dart';
 
+/// Top-20 in-app notification inbox (single page, no load-more).
 final notificationsListProvider = StateNotifierProvider.autoDispose<
     NotificationsListNotifier, AsyncValue<NotificationListResult>>((ref) {
   return NotificationsListNotifier(ref);
@@ -13,18 +14,11 @@ final notificationsMarkingAllProvider = StateProvider.autoDispose<bool>(
   (ref) => false,
 );
 
-final notificationsLoadingMoreProvider = StateProvider.autoDispose<bool>(
-  (ref) => false,
-);
-
-/// Unread notification count for badges on More tab and menu.
-final notificationUnreadCountProvider = FutureProvider<int>((ref) async {
+/// Unread count for More tile; works even if inbox never opened.
+final notificationUnreadCountProvider =
+    FutureProvider.autoDispose<int>((ref) async {
   final token = ref.watch(authTokenProvider);
   if (token == null || token.isEmpty) return 0;
-
-  final listState = ref.watch(notificationsListProvider);
-  final cached = listState.valueOrNull;
-  if (cached != null) return cached.unreadCount;
 
   try {
     final result = await ref
@@ -45,6 +39,8 @@ class NotificationsListNotifier
   final Ref _ref;
   bool _unreadOnly = false;
 
+  static const int _perPage = 20;
+
   bool get unreadOnly => _unreadOnly;
 
   Future<void> refresh({bool? unreadOnly}) async {
@@ -56,6 +52,7 @@ class NotificationsListNotifier
     }
     state = await AsyncValue.guard(
       () => _ref.read(radioudaanApiProvider).listNotifications(
+            perPage: _perPage,
             unreadOnly: _unreadOnly,
           ),
     );
@@ -66,43 +63,6 @@ class NotificationsListNotifier
     if (_unreadOnly == unreadOnly) return;
     _unreadOnly = unreadOnly;
     await refresh();
-  }
-
-  /// Fetches the next page and appends when `page < totalPages`.
-  Future<void> loadMore() async {
-    final current = state.valueOrNull;
-    if (current == null || !current.hasMorePages) return;
-    if (_ref.read(notificationsLoadingMoreProvider)) return;
-
-    _ref.read(notificationsLoadingMoreProvider.notifier).state = true;
-    try {
-      final next = await _ref.read(radioudaanApiProvider).listNotifications(
-            page: current.page + 1,
-            unreadOnly: _unreadOnly,
-          );
-      final seen = <int>{};
-      final merged = <AppNotification>[];
-      for (final item in [...current.items, ...next.items]) {
-        if (item.id > 0 && !seen.add(item.id)) continue;
-        merged.add(item);
-      }
-      if (!mounted) return;
-      state = AsyncValue.data(
-        current.copyWith(
-          items: merged,
-          page: next.page,
-          total: next.total,
-          totalPages: next.totalPages,
-          unreadCount: next.unreadCount,
-        ),
-      );
-    } catch (_) {
-      // Keep current page; user can retry Load more.
-    } finally {
-      if (mounted) {
-        _ref.read(notificationsLoadingMoreProvider.notifier).state = false;
-      }
-    }
   }
 
   Future<void> markRead(int id) async {
@@ -168,16 +128,17 @@ class NotificationsListNotifier
   }
 }
 
-void invalidateNotificationBadges(WidgetRef ref) {
-  ref.invalidate(notificationUnreadCountProvider);
-  ref.read(notificationsListProvider.notifier).refresh();
-}
-
-/// Refresh inbox + badge from push handlers without a [WidgetRef].
+/// Refresh inbox + unread badge from push handlers without a [WidgetRef].
 void refreshNotificationInboxFromNav() {
   final context = rootNavigatorKey.currentContext;
   if (context == null || !context.mounted) return;
   final container = ProviderScope.containerOf(context);
   container.invalidate(notificationUnreadCountProvider);
-  container.read(notificationsListProvider.notifier).refresh();
+  if (container.exists(notificationsListProvider)) {
+    try {
+      container.read(notificationsListProvider.notifier).refresh();
+    } catch (_) {
+      // Provider disposed between exists and read — ignore.
+    }
+  }
 }

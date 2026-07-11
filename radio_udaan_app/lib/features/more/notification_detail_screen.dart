@@ -5,14 +5,13 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/models/app_notification.dart';
 import '../../core/providers/app_providers.dart';
-import '../../core/router/notification_destination.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
 import '../auth/widgets/udaan_auth_widgets.dart';
 import 'notification_time_formatter.dart';
 import 'notifications_providers.dart';
 
-/// Full-screen notification: marks as read on open.
+/// Full-screen notification: title + message; marks as read on open.
 class NotificationDetailScreen extends ConsumerStatefulWidget {
   const NotificationDetailScreen({
     required this.notification,
@@ -38,7 +37,21 @@ class _NotificationDetailScreenState
     final copy = ref.read(appCopyProvider);
     final item = widget.notification;
     if (!item.isRead && item.id > 0) {
-      await ref.read(notificationsListProvider.notifier).markRead(item.id);
+      // Prefer list notifier (optimistic + API) when inbox is mounted;
+      // otherwise mark via API and refresh unread badge.
+      try {
+        if (ProviderScope.containerOf(context).exists(notificationsListProvider)) {
+          await ref.read(notificationsListProvider.notifier).markRead(item.id);
+        } else {
+          await ref.read(radioudaanApiProvider).markNotificationRead(item.id);
+          ref.invalidate(notificationUnreadCountProvider);
+        }
+      } catch (_) {
+        try {
+          await ref.read(radioudaanApiProvider).markNotificationRead(item.id);
+        } catch (_) {}
+        ref.invalidate(notificationUnreadCountProvider);
+      }
     }
     if (!mounted) return;
     announce(
@@ -47,18 +60,12 @@ class _NotificationDetailScreenState
     );
   }
 
-  Future<void> _openDestination() async {
-    await openNotificationDestination(context, ref, widget.notification.data);
-  }
-
   @override
   Widget build(BuildContext context) {
     final copy = ref.watch(appCopyProvider);
     final palette = context.udaan;
     final item = widget.notification;
     final when = formatNotificationRelativeTime(item.createdAt, copy);
-    final hasDestination = hasNotificationDestination(item.data);
-    final openLabel = notificationDestinationButtonLabel(copy, item.data);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -118,14 +125,6 @@ class _NotificationDetailScreenState
                         height: 1.45,
                       ),
                     ),
-                    if (hasDestination) ...[
-                      const SizedBox(height: 28),
-                      UdaanPrimaryButton(
-                        label: openLabel,
-                        icon: Icons.open_in_new,
-                        onPressed: _openDestination,
-                      ),
-                    ],
                   ],
                 ),
               ),

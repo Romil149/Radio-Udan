@@ -230,6 +230,42 @@ extension AppCopyStrings on AppCopy {
   String get notificationsLoading => text('notifications_loading');
   String get notificationsLoadMore => text('notifications_load_more');
   String get notificationsLoadingMore => text('notifications_loading_more');
+  String get notificationsRefresh => text('notifications_refresh');
+  String get notificationsRefreshed => text('notifications_refreshed');
+  String notificationsSummary(int shown, int unread) => text('notifications_summary')
+      .replaceAll('{shown}', '$shown')
+      .replaceAll('{unread}', '$unread');
+  String notificationsSummaryOne(int unread) =>
+      text('notifications_summary_one').replaceAll('{unread}', '$unread');
+  String notificationsShowingLatest(int count) =>
+      text('notifications_showing_latest').replaceAll('{count}', '$count');
+  String get notificationsManageSettings => text('notifications_manage_settings');
+  String notificationsUnreadSubtitle(int count) => count == 1
+      ? text('notifications_unread_subtitle_one')
+      : text('notifications_unread_subtitle_many')
+          .replaceAll('{count}', '$count');
+  String get notificationTypeGeneral => text('notification_type_general');
+  String get notificationTypeEvents => text('notification_type_events');
+  String get notificationTypeLiveBroadcast =>
+      text('notification_type_live_broadcast');
+  String get notificationTypePromotions => text('notification_type_promotions');
+  String notificationTypeLabel(String type) {
+    switch (type) {
+      case 'events':
+      case 'event':
+        return notificationTypeEvents;
+      case 'live_broadcast':
+      case 'live':
+      case 'radio':
+        return notificationTypeLiveBroadcast;
+      case 'promotions':
+        return notificationTypePromotions;
+      case 'general':
+      default:
+        return notificationTypeGeneral;
+    }
+  }
+
   String get notificationsSection => text('notifications_section');
   String get pushRegisterDevice => text('push_register_device');
   String get pushRegisterDeviceHint => text('push_register_device_hint');

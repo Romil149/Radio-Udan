@@ -12,10 +12,12 @@ import '../auth/widgets/udaan_auth_widgets.dart';
 import 'notification_detail_screen.dart';
 import 'notification_time_formatter.dart';
 import 'notifications_providers.dart';
+import 'settings_screen.dart';
 import 'widgets/notification_list_card.dart';
 
 enum _NotificationFilter { all, unread }
 
+/// In-app notification inbox: top 20 from `GET /notifications`.
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
@@ -28,14 +30,21 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   AppCopy get _copy => ref.read(appCopyProvider);
 
   _NotificationFilter _filter = _NotificationFilter.all;
+  String? _lastAnnouncedSignature;
+  String? _lastAnnouncedError;
 
   Color _accentForType(String type) {
     switch (type) {
+      case 'events':
+      case 'event':
+        return context.udaan.secondary;
+      case 'live_broadcast':
       case 'live':
       case 'radio':
         return context.udaan.primary;
-      case 'event':
-        return context.udaan.secondary;
+      case 'promotions':
+        return context.udaan.primaryGlow;
+      case 'general':
       default:
         return context.udaan.onSurfaceVariant;
     }
@@ -52,14 +61,68 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     });
   }
 
+  String _summaryMessage({
+    required AppCopy copy,
+    required int shown,
+    required int unread,
+    required int total,
+    required bool unreadOnly,
+  }) {
+    if (shown == 0) {
+      return unreadOnly
+          ? copy.notificationsUnreadEmpty
+          : copy.notificationsEmpty;
+    }
+    final base = shown == 1
+        ? copy.notificationsSummaryOne(unread)
+        : copy.notificationsSummary(shown, unread);
+    if (total > shown) {
+      return '$base. ${copy.notificationsShowingLatest(shown)}';
+    }
+    return base;
+  }
+
+  void _maybeAnnounceSummary({
+    required AppCopy copy,
+    required int shown,
+    required int unread,
+    required int total,
+  }) {
+    final unreadOnly = _filter == _NotificationFilter.unread;
+    // Signature omits unread so mark-read optimistic updates do not re-announce.
+    final signature = '${_filter.name}|$shown|$total';
+    if (_lastAnnouncedSignature == signature) return;
+    _lastAnnouncedSignature = signature;
+    _announce(
+      _summaryMessage(
+        copy: copy,
+        shown: shown,
+        unread: unread,
+        total: total,
+        unreadOnly: unreadOnly,
+      ),
+    );
+  }
+
   Future<void> _markAllRead() async {
     await ref.read(notificationsListProvider.notifier).markAllRead();
     if (!mounted) return;
     _announce(_copy.notificationsMarkedAll);
   }
 
-  Future<void> _loadMore() async {
-    await ref.read(notificationsListProvider.notifier).loadMore();
+  Future<void> _refreshInbox({bool announceSuccess = false}) async {
+    await ref.read(notificationsListProvider.notifier).refresh();
+    if (!mounted) return;
+    final next = ref.read(notificationsListProvider);
+    if (announceSuccess && next.hasValue) {
+      _announce(_copy.notificationsRefreshed);
+    }
+  }
+
+  void _openSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
+    );
   }
 
   @override
@@ -67,8 +130,28 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final copy = ref.watch(appCopyProvider);
     final notifications = ref.watch(notificationsListProvider);
     final markingAll = ref.watch(notificationsMarkingAllProvider);
-    final loadingMore = ref.watch(notificationsLoadingMoreProvider);
     final unreadCount = notifications.valueOrNull?.unreadCount ?? 0;
+
+    ref.listen(notificationsListProvider, (prev, next) {
+      next.whenOrNull(
+        data: (result) {
+          _lastAnnouncedError = null;
+          _maybeAnnounceSummary(
+            copy: copy,
+            shown: result.items.length,
+            unread: result.unreadCount,
+            total: result.total,
+          );
+        },
+        error: (e, _) {
+          final message = parseApiError(e).message;
+          if (_lastAnnouncedError != message) {
+            _lastAnnouncedError = message;
+            _announce(message);
+          }
+        },
+      );
+    });
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -82,7 +165,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               ),
               child: UdaanAuthTopBar(
                 copy: copy,
-                title: _copy.notificationsTitle,
+                title: copy.notificationsTitle,
                 onBack: () => Navigator.of(context).pop(),
               ),
             ),
@@ -90,78 +173,119 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               padding: const EdgeInsets.symmetric(
                 horizontal: BrandTokens.screenPadding,
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _filterChip(
-                    _copy.notificationsFilterAll,
-                    _filter == _NotificationFilter.all,
-                    () {
-                      setState(() => _filter = _NotificationFilter.all);
-                      ref
-                          .read(notificationsListProvider.notifier)
-                          .setUnreadFilter(false);
-                    },
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      _filterChip(
+                        copy.notificationsFilterAll,
+                        _filter == _NotificationFilter.all,
+                        () {
+                          setState(() {
+                            _filter = _NotificationFilter.all;
+                            _lastAnnouncedSignature = null;
+                          });
+                          ref
+                              .read(notificationsListProvider.notifier)
+                              .setUnreadFilter(false);
+                        },
+                      ),
+                      _filterChip(
+                        unreadCount > 0
+                            ? copy.notificationsFilterUnreadCount(unreadCount)
+                            : copy.notificationsFilterUnread,
+                        _filter == _NotificationFilter.unread,
+                        () {
+                          setState(() {
+                            _filter = _NotificationFilter.unread;
+                            _lastAnnouncedSignature = null;
+                          });
+                          ref
+                              .read(notificationsListProvider.notifier)
+                              .setUnreadFilter(true);
+                        },
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  _filterChip(
-                    unreadCount > 0
-                        ? _copy.notificationsFilterUnreadCount(unreadCount)
-                        : _copy.notificationsFilterUnread,
-                    _filter == _NotificationFilter.unread,
-                    () {
-                      setState(() => _filter = _NotificationFilter.unread);
-                      ref
-                          .read(notificationsListProvider.notifier)
-                          .setUnreadFilter(true);
-                    },
-                  ),
-                  const Spacer(),
-                  if (unreadCount > 0)
-                    Semantics(
-                      button: true,
-                      label: _copy.notificationsMarkAllRead,
-                      onTap: markingAll ? null : _markAllRead,
-                      child: ExcludeSemantics(
-                        child: TextButton(
-                          onPressed: markingAll ? null : _markAllRead,
-                          style: TextButton.styleFrom(
-                            foregroundColor: context.udaan.primaryGlow,
-                            minimumSize: const Size(
-                              BrandTokens.minTapTarget,
-                              BrandTokens.minTapTarget,
+                  Row(
+                    children: [
+                      Semantics(
+                        button: true,
+                        label: copy.notificationsRefresh,
+                        onTap: () => _refreshInbox(announceSuccess: true),
+                        child: ExcludeSemantics(
+                          child: TextButton(
+                            onPressed: () =>
+                                _refreshInbox(announceSuccess: true),
+                            style: TextButton.styleFrom(
+                              foregroundColor: context.udaan.primaryGlow,
+                              minimumSize: const Size(
+                                BrandTokens.a11yMinTapTarget,
+                                BrandTokens.a11yMinTapTarget,
+                              ),
+                            ),
+                            child: Text(
+                              copy.notificationsRefresh,
+                              style: GoogleFonts.atkinsonHyperlegible(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
+                              ),
                             ),
                           ),
-                          child: markingAll
-                              ? SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: context.udaan.primary,
-                                  ),
-                                )
-                              : Text(
-                                  _copy.notificationsMarkAllRead,
-                                  style: GoogleFonts.atkinsonHyperlegible(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 14,
-                                  ),
-                                ),
                         ),
                       ),
-                    ),
+                      if (unreadCount > 0)
+                        Semantics(
+                          button: true,
+                          label: copy.notificationsMarkAllRead,
+                          onTap: markingAll ? null : _markAllRead,
+                          child: ExcludeSemantics(
+                            child: TextButton(
+                              onPressed: markingAll ? null : _markAllRead,
+                              style: TextButton.styleFrom(
+                                foregroundColor: context.udaan.primaryGlow,
+                                minimumSize: const Size(
+                                  BrandTokens.a11yMinTapTarget,
+                                  BrandTokens.a11yMinTapTarget,
+                                ),
+                              ),
+                              child: markingAll
+                                  ? SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: context.udaan.primary,
+                                      ),
+                                    )
+                                  : Text(
+                                      copy.notificationsMarkAllRead,
+                                      style: GoogleFonts.atkinsonHyperlegible(
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Expanded(
               child: RefreshIndicator(
                 color: context.udaan.primary,
-                onRefresh: () =>
-                    ref.read(notificationsListProvider.notifier).refresh(),
+                onRefresh: () => _refreshInbox(),
                 child: notifications.when(
                   data: (result) {
                     final items = result.items;
+                    final truncated = result.total > items.length;
                     if (items.isEmpty) {
                       return ListView(
                         children: [
@@ -170,28 +294,40 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                             child: EmptyState(
                               icon: Icons.notifications_none_outlined,
                               message: _filter == _NotificationFilter.unread
-                                  ? _copy.notificationsUnreadEmpty
-                                  : _copy.notificationsEmpty,
+                                  ? copy.notificationsUnreadEmpty
+                                  : copy.notificationsEmpty,
+                              actionLabel: copy.notificationsManageSettings,
+                              onAction: _openSettings,
                             ),
                           ),
                         ],
                       );
                     }
-                    final showLoadMore = result.hasMorePages;
-                    final itemCount =
-                        items.length + (showLoadMore ? 1 : 0);
                     return ListView.builder(
                       padding: const EdgeInsets.all(BrandTokens.screenPadding),
-                      itemCount: itemCount,
+                      itemCount: items.length + (truncated ? 1 : 0),
                       itemBuilder: (context, index) {
-                        if (showLoadMore && index == items.length) {
-                          return _loadMoreFooter(
-                            copy: copy,
-                            loading: loadingMore,
-                            onLoadMore: _loadMore,
+                        if (truncated && index == 0) {
+                          final banner =
+                              copy.notificationsShowingLatest(items.length);
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Semantics(
+                              label: banner,
+                              child: ExcludeSemantics(
+                                child: Text(
+                                  banner,
+                                  style: GoogleFonts.atkinsonHyperlegible(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: context.udaan.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                            ),
                           );
                         }
-                        final item = items[index];
+                        final item = items[truncated ? index - 1 : index];
                         return NotificationListCard(
                           item: item,
                           copy: copy,
@@ -200,14 +336,19 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                             item.createdAt,
                             copy,
                           ),
-                          onTap: () {
-                            Navigator.of(context).push(
+                          onTap: () async {
+                            ref
+                                .read(notificationsListProvider.notifier)
+                                .markRead(item.id);
+                            await Navigator.of(context).push(
                               MaterialPageRoute<void>(
                                 builder: (_) => NotificationDetailScreen(
                                   notification: item,
                                 ),
                               ),
                             );
+                            if (!mounted) return;
+                            ref.invalidate(notificationUnreadCountProvider);
                           },
                         );
                       },
@@ -215,7 +356,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   },
                   loading: () => Center(
                     child: Semantics(
-                      label: _copy.notificationsLoading,
+                      label: copy.notificationsLoading,
                       liveRegion: true,
                       child: CircularProgressIndicator(
                         color: context.udaan.primary,
@@ -231,10 +372,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                           child: EmptyState(
                             message: message,
                             icon: Icons.error_outline,
-                            actionLabel: _copy.retry,
-                            onAction: () => ref
-                                .read(notificationsListProvider.notifier)
-                                .refresh(),
+                            actionLabel: copy.retry,
+                            onAction: () => _refreshInbox(),
                           ),
                         ),
                       ],
@@ -249,60 +388,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     );
   }
 
-  Widget _loadMoreFooter({
-    required AppCopy copy,
-    required bool loading,
-    required VoidCallback onLoadMore,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Semantics(
-        button: true,
-        enabled: !loading,
-        label: loading
-            ? copy.notificationsLoadingMore
-            : copy.notificationsLoadMore,
-        onTap: loading ? null : onLoadMore,
-        liveRegion: loading,
-        child: ExcludeSemantics(
-          child: Center(
-            child: loading
-                ? SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: context.udaan.primary,
-                    ),
-                  )
-                : TextButton(
-                    onPressed: onLoadMore,
-                    style: TextButton.styleFrom(
-                      foregroundColor: context.udaan.primaryGlow,
-                      minimumSize: const Size(
-                        BrandTokens.minTapTarget,
-                        BrandTokens.minTapTarget,
-                      ),
-                    ),
-                    child: Text(
-                      copy.notificationsLoadMore,
-                      style: GoogleFonts.atkinsonHyperlegible(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _filterChip(String label, bool selected, VoidCallback onTap) {
+    final selectedHint = selected ? ', selected' : ', not selected';
     return Semantics(
       button: true,
       selected: selected,
-      label: label,
+      label: '$label$selectedHint',
       onTap: onTap,
       child: ExcludeSemantics(
         child: FilterChip(
@@ -312,8 +403,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           selectedColor: context.udaan.primary,
           labelStyle: GoogleFonts.atkinsonHyperlegible(
             fontWeight: FontWeight.w700,
-            color: selected ? context.udaan.onPrimary : context.udaan.onBackground,
+            color: selected
+                ? context.udaan.onPrimary
+                : context.udaan.onBackground,
           ),
+          materialTapTargetSize: MaterialTapTargetSize.padded,
+          visualDensity: VisualDensity.standard,
         ),
       ),
     );
