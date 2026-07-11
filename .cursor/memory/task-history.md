@@ -2,9 +2,13 @@
 # Task History
 <!-- Log of completed work. Helps new sessions understand what's already done. -->
 
+### 2026-07-11 — Donate TalkBack: remove summary live region from swipe order
+**Requested by**: User — swiping past custom amount heard duplicate "you will donate X" + different earcon.
+**What was done**: `donate_pay_online_card.dart` — summary strip wrapped in `ExcludeSemantics` only (visual kept); removed `liveRegion` focus stop. Amount still announced on chip select + Donate button.
+**Files**: `donate_pay_online_card.dart`, `pubspec.yaml` (+53)
+**Status**: ✅ Shipped — build **2.0.0+53**
 
 ### 2026-07-11 — Enterprise notifications inbox + plugin deep links
-**Requested by**: User — notifications not clickable / no internals; only 1 visible on iOS+Android; enterprise handling.
 **Root cause**: Admin sends had no `route` in data; push tap with id-only local payload skipped detail; unread filter was client-only (load-more hidden).
 **What was done**:
 - Plugin: compose **Open in app** (radio/events/what's new/url); `GET /notifications/{id}`; `?unread=1`; admin inbox totals

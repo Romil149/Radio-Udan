@@ -428,46 +428,43 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
               onSubmitted: (_) => _donate(),
             ),
           ),
+          // Visual-only summary — amount is spoken on chip select and Donate button.
           if (summary.isNotEmpty) ...[
             const SizedBox(height: 14),
-            Semantics(
-              liveRegion: true,
-              label: summary,
-              child: ExcludeSemantics(
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
+            ExcludeSemantics(
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: palette.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: palette.primaryGlow.withValues(alpha: 0.55),
                   ),
-                  decoration: BoxDecoration(
-                    color: palette.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: palette.primaryGlow.withValues(alpha: 0.55),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.volunteer_activism_outlined,
+                      color: palette.primary,
+                      size: 22,
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.volunteer_activism_outlined,
-                        color: palette.primary,
-                        size: 22,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          summary,
-                          style: udaanGoogleFont(
-                            context,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: palette.primary,
-                          ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        summary,
+                        style: udaanGoogleFont(
+                          context,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: palette.primary,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
