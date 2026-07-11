@@ -9,7 +9,6 @@ import '../../core/models/app_user_settings.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/providers/app_settings_provider.dart';
 import '../../core/push/push_notification_service.dart';
-import 'push_diagnostics_screen.dart';
 import '../../core/theme/accessibility_scope.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_text_styles.dart';
@@ -444,24 +443,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             color: context.udaan.onSurfaceMuted,
                             height: 1.35,
                           ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Semantics(
-                      button: true,
-                      label: 'Open push diagnostics',
-                      child: ExcludeSemantics(
-                        child: TextButton.icon(
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => const PushDiagnosticsScreen(),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.bug_report_outlined, size: 20),
-                          label: const Text('Push diagnostics'),
                         ),
                       ),
                     ),

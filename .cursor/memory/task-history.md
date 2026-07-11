@@ -2,6 +2,11 @@
 # Task History
 <!-- Log of completed work. Helps new sessions understand what's already done. -->
 
+### 2026-07-11 — Remove Push diagnostics from Settings
+**Requested by**: User — remove Push Diagnostics from settings completely.
+**What was done**: Removed Settings entry; deleted `push_diagnostics_screen.dart`. Internal `PushDiagnostics` logger kept for push service.
+**Status**: Bump **+63**
+
 ### 2026-07-11 — Notifications: remove Showing + Refresh
 **Requested by**: User — remove Showing N and Refresh; ask what else can go.
 **What was done**: Stripped status line, Refresh button, pull-to-refresh, empty→Settings. Screen is back + list only.
