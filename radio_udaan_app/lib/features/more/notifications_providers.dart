@@ -57,26 +57,27 @@ class NotificationsListNotifier
           );
       if (!mounted) return;
 
-      if (previous != null && _sameIdsInOrder(previous.items, next.items)) {
-        // Reuse previous items list instance so ListView children are not
-        // torn down under VoiceOver focus when nothing changed.
-        if (previous.unreadCount != next.unreadCount ||
-            previous.total != next.total ||
-            previous.page != next.page ||
-            previous.totalPages != next.totalPages) {
-          state = AsyncValue.data(
-            previous.copyWith(
-              unreadCount: next.unreadCount,
-              total: next.total,
-              page: next.page,
-              totalPages: next.totalPages,
-            ),
-          );
-        }
-        // else: identical — leave state untouched
-      } else {
+      // Never update total/unread while keeping a shorter items list —
+      // "Showing N" must match visible rows.
+      if (previous == null ||
+          previous.items.length != next.items.length ||
+          !_sameIdsInOrder(previous.items, next.items)) {
         state = AsyncValue.data(next);
+      } else if (previous.unreadCount != next.unreadCount ||
+          previous.total != next.total ||
+          previous.page != next.page ||
+          previous.totalPages != next.totalPages) {
+        // Same items in order: reuse list instance (VO-stable) but sync counts.
+        state = AsyncValue.data(
+          previous.copyWith(
+            unreadCount: next.unreadCount,
+            total: next.total,
+            page: next.page,
+            totalPages: next.totalPages,
+          ),
+        );
       }
+      // else: identical — leave state untouched
       _ref.invalidate(notificationUnreadCountProvider);
     } catch (e, st) {
       if (!mounted) return;

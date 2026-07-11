@@ -373,35 +373,37 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         ],
       );
     }
-    return ListView.builder(
+    // Explicit children (≤20): unique keys even if API ids collide → no
+    // ListView duplicate-ValueKey collapse / VoiceOver crash.
+    return ListView(
       padding: const EdgeInsets.all(BrandTokens.screenPadding),
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final item = items[index];
-        return NotificationListCard(
-          key: ValueKey(item.id),
-          item: item,
-          copy: copy,
-          accent: _accentForType(item.type),
-          when: formatNotificationRelativeTime(
-            item.createdAt,
-            copy,
-          ),
-          onTap: () {
-            // Push first so mark-read hang never blocks navigation.
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => NotificationDetailScreen(
-                  notification: item,
+      children: [
+        for (var i = 0; i < items.length; i++)
+          NotificationListCard(
+            key: ValueKey('notif-${items[i].id}-$i'),
+            item: items[i],
+            copy: copy,
+            accent: _accentForType(items[i].type),
+            when: formatNotificationRelativeTime(
+              items[i].createdAt,
+              copy,
+            ),
+            onTap: () {
+              final item = items[i];
+              // Push first so mark-read hang never blocks navigation.
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => NotificationDetailScreen(
+                    notification: item,
+                  ),
                 ),
-              ),
-            );
-            unawaited(
-              ref.read(notificationsListProvider.notifier).markRead(item.id),
-            );
-          },
-        );
-      },
+              );
+              unawaited(
+                ref.read(notificationsListProvider.notifier).markRead(item.id),
+              );
+            },
+          ),
+      ],
     );
   }
 

@@ -14,7 +14,8 @@ class AppNotification {
   factory AppNotification.fromJson(Map<String, dynamic> json) {
     final rawData = json['data'];
     return AppNotification(
-      id: (json['id'] as num?)?.toInt() ?? 0,
+      // String-safe: API may send id as string; `as num?` would yield 0 for all.
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       type: json['type']?.toString() ?? 'general',
       title: json['title']?.toString() ?? '',
       body: json['body']?.toString() ?? '',

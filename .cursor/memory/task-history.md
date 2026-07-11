@@ -2,6 +2,12 @@
 # Task History
 <!-- Log of completed work. Helps new sessions understand what's already done. -->
 
+### 2026-07-11 — Video: Showing 18 but one row + VO Refresh crash
+**Evidence**: User WhatsApp video — Notifications shows "Showing 18", one row (`rvgrwff`), empty space, Refresh → crash dialog.
+**Root cause**: Duplicate ListView keys when notification `id` failed strict `as num` cast (all became 0) → Flutter collapsed to one child; VO crash on broken tree.
+**Fix**: string-safe id parse; unique `notif-{id}-{index}` keys; explicit ListView children; soft-refresh length guard; bump **+60**.
+**Status**: Pushing
+
 ### 2026-07-11 — Inbox tap dead + VO Refresh crash + count clarity
 **Requested by**: User — cannot tap rows; VO Refresh crashes; only sees one notification.
 **Root cause**: ExcludeSemantics wrapping InkWell blocked taps; Refresh announce + list rebuild under VO focus; count banner only when truncated.
