@@ -190,36 +190,46 @@ class RadioUdaan_App_Notifications {
 	}
 
 	/**
-	 * @param int $user_id  User id.
-	 * @param int $page     Page.
-	 * @param int $per_page Per page.
+	 * @param int  $user_id      User id.
+	 * @param int  $page         Page.
+	 * @param int  $per_page     Per page.
+	 * @param bool $unread_only  When true, only unread rows (for inbox filter).
 	 * @return array
 	 */
-	public static function list_for_user( $user_id, $page = 1, $per_page = 20 ) {
+	public static function list_for_user( $user_id, $page = 1, $per_page = 20, $unread_only = false ) {
 		self::maybe_create_tables();
 
 		global $wpdb;
 
-		$page     = max( 1, (int) $page );
-		$per_page = max( 1, min( 50, (int) $per_page ) );
-		$offset   = ( $page - 1 ) * $per_page;
-		$table    = self::notifications_table();
+		$page         = max( 1, (int) $page );
+		$per_page     = max( 1, min( 50, (int) $per_page ) );
+		$offset       = ( $page - 1 ) * $per_page;
+		$table        = self::notifications_table();
+		$unread_only  = (bool) $unread_only;
+		$where        = 'user_id = %d';
+		$where_params = array( (int) $user_id );
+
+		if ( $unread_only ) {
+			$where .= ' AND read_at IS NULL';
+		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$total = (int) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$table} WHERE user_id = %d",
-				(int) $user_id
+				"SELECT COUNT(*) FROM {$table} WHERE {$where}",
+				$where_params
 			)
 		);
+
+		$list_params   = $where_params;
+		$list_params[] = $per_page;
+		$list_params[] = $offset;
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT * FROM {$table} WHERE user_id = %d ORDER BY created_at DESC, id DESC LIMIT %d OFFSET %d",
-				(int) $user_id,
-				$per_page,
-				$offset
+				"SELECT * FROM {$table} WHERE {$where} ORDER BY created_at DESC, id DESC LIMIT %d OFFSET %d",
+				$list_params
 			)
 		);
 
@@ -235,7 +245,81 @@ class RadioUdaan_App_Notifications {
 			'total'        => $total,
 			'unread_count' => self::count_unread_for_user( $user_id ),
 			'total_pages'  => $per_page > 0 ? (int) ceil( $total / $per_page ) : 0,
+			'unread_only'  => $unread_only,
 		);
+	}
+
+	/**
+	 * Fetch one inbox row for the authenticated user (push tap hydration).
+	 *
+	 * @param int $user_id User id.
+	 * @param int $id      Notification id.
+	 * @return array|WP_Error
+	 */
+	public static function get_for_user( $user_id, $id ) {
+		self::maybe_create_tables();
+
+		global $wpdb;
+
+		$table = self::notifications_table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$table} WHERE id = %d AND user_id = %d",
+				(int) $id,
+				(int) $user_id
+			)
+		);
+
+		if ( ! $row ) {
+			return new WP_Error( 'not_found', __( 'Notification not found.', 'radioudaan-app-api' ), array( 'status' => 404 ) );
+		}
+
+		return self::format_notification( $row );
+	}
+
+	/**
+	 * Build sanitized action payload from admin compose fields.
+	 *
+	 * @param string $open_in_app none|radio|events|whats_new|url.
+	 * @param array  $fields      Raw POST fields (post_id, post_type, open_url).
+	 * @return array<string,mixed>
+	 */
+	public static function build_admin_action_data( $open_in_app, array $fields = array() ) {
+		$data   = array( 'source' => 'wp_admin' );
+		$open   = sanitize_key( (string) $open_in_app );
+		$fields = is_array( $fields ) ? $fields : array();
+
+		switch ( $open ) {
+			case 'radio':
+				$data['route'] = 'radio';
+				break;
+			case 'events':
+				$data['route'] = 'events';
+				break;
+			case 'whats_new':
+				$post_id = isset( $fields['post_id'] ) ? (int) $fields['post_id'] : 0;
+				if ( $post_id > 0 ) {
+					$post_type = isset( $fields['post_type'] ) ? sanitize_key( (string) $fields['post_type'] ) : 'whats-new';
+					if ( ! in_array( $post_type, array( 'whats-new', 'latestcommunitynews' ), true ) ) {
+						$post_type = 'whats-new';
+					}
+					$data['route']     = 'whats_new_detail';
+					$data['post_id']   = $post_id;
+					$data['post_type'] = $post_type;
+				}
+				break;
+			case 'url':
+				$url = isset( $fields['open_url'] ) ? esc_url_raw( (string) $fields['open_url'] ) : '';
+				if ( '' !== $url && 0 === strpos( $url, 'https://' ) ) {
+					$data['route'] = 'url';
+					$data['url']   = $url;
+				}
+				break;
+		}
+
+		return $data;
 	}
 
 	/**

@@ -1,6 +1,11 @@
 # Architecture Decisions Log
 <!-- When a design choice is made, document it here so we don't re-debate it. -->
 
+### 2026-07-11 — Notifications: detail first, then Open destination
+**Context**: Push worked but admin sends had no deep link; users saw one row and taps felt dead.
+**Decision**: Tap (list or push) always opens **NotificationDetailScreen**; optional admin `route` shows Open → Radio/Events/What's New/HTTPS. Push hydrates via `GET /notifications/{id}`. Unread filter is server-side with pagination.
+**Consequences**: Deploy plugin for compose + GET route; app build for Flutter changes.
+
 ### 2026-07-11 — iOS share uses native large-detent sheet (not share_plus alone)
 **Context**: `share_plus` presents `UIActivityViewController` at medium detent (half sheet, no Close X). Dragging to full shows Close X.
 **Decision**: MethodChannel `radioudaan/share` + `ShareLargeSheet` sets `sheetPresentationController.detents = [.large()]`. Flutter Radio share uses this on iOS; Android keeps `share_plus`.

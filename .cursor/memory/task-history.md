@@ -2,6 +2,15 @@
 # Task History
 <!-- Log of completed work. Helps new sessions understand what's already done. -->
 
+
+### 2026-07-11 — Enterprise notifications inbox + plugin deep links
+**Requested by**: User — notifications not clickable / no internals; only 1 visible on iOS+Android; enterprise handling.
+**Root cause**: Admin sends had no `route` in data; push tap with id-only local payload skipped detail; unread filter was client-only (load-more hidden).
+**What was done**:
+- Plugin: compose **Open in app** (radio/events/what's new/url); `GET /notifications/{id}`; `?unread=1`; admin inbox totals
+- Flutter: detail always opens; **Open** CTA via `notification_destination.dart`; push hydrates GET by id; server unread pagination; JSON local tap payload
+**Status**: ⚠️ Local — deploy plugin zip + app build (+52 if shipping); device test 3 sends + tap + Open
+
 ### 2026-07-11 — Library search Clear (X) not recognized by TalkBack/VoiceOver
 **Requested by**: User — cross button for library not seen/recognized by blind users.
 **Root cause**: Clear control used `Semantics(button, label)` without `onTap` while wrapping `IconButton` in `ExcludeSemantics` — same class of bug as notification cards; SR often skips or cannot activate.

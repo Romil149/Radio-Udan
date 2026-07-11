@@ -146,7 +146,16 @@ class RadioUdaan_Admin_App_User_Detail {
 			<aside class="ru-admin__grid-side">
 				<div class="ru-admin__panel">
 					<div class="ru-admin__panel-head">
-						<h2><?php esc_html_e( 'In-app notifications', 'radioudaan-app-api' ); ?></h2>
+						<h2>
+							<?php
+							printf(
+								/* translators: 1: total notifications, 2: unread count */
+								esc_html__( 'In-app notifications (%1$d total, %2$d unread)', 'radioudaan-app-api' ),
+								(int) $notifications['total'],
+								(int) $notifications['unread_count']
+							);
+							?>
+						</h2>
 					</div>
 					<div class="ru-admin__panel-body">
 						<?php if ( empty( $notifications['items'] ) ) : ?>

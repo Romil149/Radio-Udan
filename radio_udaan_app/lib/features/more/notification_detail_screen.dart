@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/models/app_notification.dart';
 import '../../core/providers/app_providers.dart';
-import '../../core/router/whats_new_deep_link.dart';
+import '../../core/router/notification_destination.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
 import '../auth/widgets/udaan_auth_widgets.dart';
@@ -47,13 +47,18 @@ class _NotificationDetailScreenState
     );
   }
 
+  Future<void> _openDestination() async {
+    await openNotificationDestination(context, ref, widget.notification.data);
+  }
+
   @override
   Widget build(BuildContext context) {
     final copy = ref.watch(appCopyProvider);
     final palette = context.udaan;
     final item = widget.notification;
     final when = formatNotificationRelativeTime(item.createdAt, copy);
-    final hasWhatsNew = isWhatsNewDetailPayload(item.data);
+    final hasDestination = hasNotificationDestination(item.data);
+    final openLabel = notificationDestinationButtonLabel(copy, item.data);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -113,12 +118,12 @@ class _NotificationDetailScreenState
                         height: 1.45,
                       ),
                     ),
-                    if (hasWhatsNew) ...[
+                    if (hasDestination) ...[
                       const SizedBox(height: 28),
                       UdaanPrimaryButton(
-                        label: copy.notificationViewUpdate,
+                        label: openLabel,
                         icon: Icons.open_in_new,
-                        onPressed: () => openWhatsNewDetailFromData(item.data),
+                        onPressed: _openDestination,
                       ),
                     ],
                   ],

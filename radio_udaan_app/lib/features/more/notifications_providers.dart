@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/app_notification.dart';
 import '../../core/providers/app_providers.dart';
+import '../../core/router/app_router.dart';
 
 final notificationsListProvider = StateNotifierProvider.autoDispose<
     NotificationsListNotifier, AsyncValue<NotificationListResult>>((ref) {
@@ -42,14 +43,29 @@ class NotificationsListNotifier
   }
 
   final Ref _ref;
+  bool _unreadOnly = false;
 
-  Future<void> refresh() async {
+  bool get unreadOnly => _unreadOnly;
+
+  Future<void> refresh({bool? unreadOnly}) async {
+    if (unreadOnly != null) {
+      _unreadOnly = unreadOnly;
+    }
     if (!state.hasValue) {
       state = const AsyncValue.loading();
     }
     state = await AsyncValue.guard(
-      () => _ref.read(radioudaanApiProvider).listNotifications(),
+      () => _ref.read(radioudaanApiProvider).listNotifications(
+            unreadOnly: _unreadOnly,
+          ),
     );
+    _ref.invalidate(notificationUnreadCountProvider);
+  }
+
+  Future<void> setUnreadFilter(bool unreadOnly) async {
+    if (_unreadOnly == unreadOnly) return;
+    _unreadOnly = unreadOnly;
+    await refresh();
   }
 
   /// Fetches the next page and appends when `page < totalPages`.
@@ -62,6 +78,7 @@ class NotificationsListNotifier
     try {
       final next = await _ref.read(radioudaanApiProvider).listNotifications(
             page: current.page + 1,
+            unreadOnly: _unreadOnly,
           );
       final seen = <int>{};
       final merged = <AppNotification>[];
@@ -139,6 +156,9 @@ class NotificationsListNotifier
 
     try {
       await _ref.read(radioudaanApiProvider).markAllNotificationsRead();
+      if (_unreadOnly) {
+        await refresh();
+      }
     } catch (_) {
       state = AsyncValue.data(previous);
       _ref.invalidate(notificationUnreadCountProvider);
@@ -151,4 +171,13 @@ class NotificationsListNotifier
 void invalidateNotificationBadges(WidgetRef ref) {
   ref.invalidate(notificationUnreadCountProvider);
   ref.read(notificationsListProvider.notifier).refresh();
+}
+
+/// Refresh inbox + badge from push handlers without a [WidgetRef].
+void refreshNotificationInboxFromNav() {
+  final context = rootNavigatorKey.currentContext;
+  if (context == null || !context.mounted) return;
+  final container = ProviderScope.containerOf(context);
+  container.invalidate(notificationUnreadCountProvider);
+  container.read(notificationsListProvider.notifier).refresh();
 }

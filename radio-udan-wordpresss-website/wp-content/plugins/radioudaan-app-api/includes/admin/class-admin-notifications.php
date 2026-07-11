@@ -259,6 +259,48 @@ class RadioUdaan_Admin_Notifications {
 					<label for="notif_body"><strong><?php esc_html_e( 'Message', 'radioudaan-app-api' ); ?></strong></label>
 					<textarea name="notif_body" id="notif_body" class="large-text" rows="4" maxlength="1000" required></textarea>
 				</div>
+				<div class="ru-admin__field">
+					<label for="notif_open_in_app"><strong><?php esc_html_e( 'Open in app (optional)', 'radioudaan-app-api' ); ?></strong></label>
+					<select name="notif_open_in_app" id="notif_open_in_app" class="regular-text">
+						<option value="none"><?php esc_html_e( 'None — message only', 'radioudaan-app-api' ); ?></option>
+						<option value="radio"><?php esc_html_e( 'Live Radio tab', 'radioudaan-app-api' ); ?></option>
+						<option value="events"><?php esc_html_e( 'Events tab', 'radioudaan-app-api' ); ?></option>
+						<option value="whats_new"><?php esc_html_e( "What's New / community post", 'radioudaan-app-api' ); ?></option>
+						<option value="url"><?php esc_html_e( 'External HTTPS link', 'radioudaan-app-api' ); ?></option>
+					</select>
+					<p class="description"><?php esc_html_e( 'Adds an Open button on the notification detail screen in the app.', 'radioudaan-app-api' ); ?></p>
+				</div>
+				<div class="ru-admin__field" id="ru-notif-whats-new-wrap" style="display:none;">
+					<label for="notif_post_id"><strong><?php esc_html_e( 'WordPress post ID', 'radioudaan-app-api' ); ?></strong></label>
+					<input type="number" name="notif_post_id" id="notif_post_id" class="small-text" min="1" step="1" />
+					<label for="notif_post_type" style="margin-top:8px;display:block;"><strong><?php esc_html_e( 'Post type', 'radioudaan-app-api' ); ?></strong></label>
+					<select name="notif_post_type" id="notif_post_type" class="regular-text">
+						<option value="whats-new"><?php esc_html_e( "What's New", 'radioudaan-app-api' ); ?></option>
+						<option value="latestcommunitynews"><?php esc_html_e( 'Community News', 'radioudaan-app-api' ); ?></option>
+					</select>
+				</div>
+				<div class="ru-admin__field" id="ru-notif-url-wrap" style="display:none;">
+					<label for="notif_open_url"><strong><?php esc_html_e( 'HTTPS URL', 'radioudaan-app-api' ); ?></strong></label>
+					<input type="url" name="notif_open_url" id="notif_open_url" class="large-text" placeholder="https://example.com/page" />
+				</div>
+				<?php
+				$prefill_inbox = array( 'total' => 0, 'unread_count' => 0 );
+				if ( $prefill_user > 0 ) {
+					$prefill_inbox = RadioUdaan_App_Notifications::list_for_user( $prefill_user, 1, 1 );
+				}
+				?>
+				<p class="description" id="ru-notif-user-inbox-meta" style="<?php echo $prefill_user > 0 ? '' : 'display:none;'; ?>">
+					<?php
+					if ( $prefill_user > 0 ) {
+						printf(
+							/* translators: 1: total inbox count, 2: unread count */
+							esc_html__( 'This user has %1$d notification(s) in inbox (%2$d unread). New sends are appended — history is not replaced.', 'radioudaan-app-api' ),
+							(int) $prefill_inbox['total'],
+							(int) $prefill_inbox['unread_count']
+						);
+					}
+					?>
+				</p>
 				<div class="ru-admin__panel ru-notif-preview-panel" style="margin-top:16px;">
 					<div class="ru-admin__panel-head">
 						<h3><?php esc_html_e( 'Preview before send', 'radioudaan-app-api' ); ?></h3>
@@ -310,6 +352,19 @@ class RadioUdaan_Admin_Notifications {
 			titleInput.addEventListener('input', syncPreview);
 			bodyInput.addEventListener('input', syncPreview);
 			syncPreview();
+
+			var openInApp = document.getElementById('notif_open_in_app');
+			var whatsNewWrap = document.getElementById('ru-notif-whats-new-wrap');
+			var urlWrap = document.getElementById('ru-notif-url-wrap');
+			if (openInApp && whatsNewWrap && urlWrap) {
+				function syncOpenInApp() {
+					var value = openInApp.value;
+					whatsNewWrap.style.display = value === 'whats_new' ? 'block' : 'none';
+					urlWrap.style.display = value === 'url' ? 'block' : 'none';
+				}
+				openInApp.addEventListener('change', syncOpenInApp);
+				syncOpenInApp();
+			}
 		})();
 		</script>
 
@@ -403,14 +458,22 @@ class RadioUdaan_Admin_Notifications {
 			wp_die( esc_html__( 'No app users to notify.', 'radioudaan-app-api' ) );
 		}
 
+		$open_in_app = isset( $_POST['notif_open_in_app'] ) ? sanitize_key( wp_unslash( $_POST['notif_open_in_app'] ) ) : 'none';
+		$action_data = RadioUdaan_App_Notifications::build_admin_action_data(
+			$open_in_app,
+			array(
+				'post_id'   => isset( $_POST['notif_post_id'] ) ? (int) $_POST['notif_post_id'] : 0,
+				'post_type' => isset( $_POST['notif_post_type'] ) ? sanitize_key( wp_unslash( $_POST['notif_post_type'] ) ) : 'whats-new',
+				'open_url'  => isset( $_POST['notif_open_url'] ) ? esc_url_raw( wp_unslash( $_POST['notif_open_url'] ) ) : '',
+			)
+		);
+
 		$result = RadioUdaan_App_Notifications::create_for_users(
 			$user_ids,
 			$title,
 			$body,
 			$type,
-			array(
-				'source' => 'wp_admin',
-			)
+			$action_data
 		);
 
 		RadioUdaan_App_Logger::log(

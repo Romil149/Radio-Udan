@@ -158,6 +158,10 @@ final class RadioUdaan_App_Api {
 						'default'           => 20,
 						'sanitize_callback' => 'absint',
 					),
+					'unread'   => array(
+						'default'           => false,
+						'sanitize_callback' => 'rest_sanitize_boolean',
+					),
 				),
 			)
 		);
@@ -166,12 +170,24 @@ final class RadioUdaan_App_Api {
 			'radioudaan/v1',
 			'/notifications/(?P<id>\d+)',
 			array(
-				'methods'             => 'PATCH',
-				'callback'            => array( $this, 'mark_notification_read' ),
-				'permission_callback' => array( 'RadioUdaan_App_Auth', 'require_auth' ),
-				'args'                => array(
-					'id' => array(
-						'validate_callback' => array( $this, 'validate_positive_int' ),
+				array(
+					'methods'             => 'GET',
+					'callback'            => array( $this, 'get_notification' ),
+					'permission_callback' => array( 'RadioUdaan_App_Auth', 'require_auth' ),
+					'args'                => array(
+						'id' => array(
+							'validate_callback' => array( $this, 'validate_positive_int' ),
+						),
+					),
+				),
+				array(
+					'methods'             => 'PATCH',
+					'callback'            => array( $this, 'mark_notification_read' ),
+					'permission_callback' => array( 'RadioUdaan_App_Auth', 'require_auth' ),
+					'args'                => array(
+						'id' => array(
+							'validate_callback' => array( $this, 'validate_positive_int' ),
+						),
 					),
 				),
 			)
@@ -814,10 +830,34 @@ final class RadioUdaan_App_Api {
 		$result = RadioUdaan_App_Notifications::list_for_user(
 			$user_id,
 			(int) $request->get_param( 'page' ),
-			(int) $request->get_param( 'per_page' )
+			(int) $request->get_param( 'per_page' ),
+			rest_sanitize_boolean( $request->get_param( 'unread' ) )
 		);
 
 		return new WP_REST_Response( $result, 200 );
+	}
+
+	/**
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function get_notification( WP_REST_Request $request ) {
+		$user_id = RadioUdaan_App_Auth::get_user_id_from_request( $request );
+		if ( ! $user_id ) {
+			return new WP_Error( 'unauthorized', __( 'Authentication required.', 'radioudaan-app-api' ), array( 'status' => 401 ) );
+		}
+
+		$result = RadioUdaan_App_Notifications::get_for_user( $user_id, (int) $request['id'] );
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		return new WP_REST_Response(
+			array(
+				'notification' => $result,
+			),
+			200
+		);
 	}
 
 	/**

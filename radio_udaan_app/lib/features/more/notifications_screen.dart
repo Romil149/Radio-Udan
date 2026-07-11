@@ -95,7 +95,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   _filterChip(
                     _copy.notificationsFilterAll,
                     _filter == _NotificationFilter.all,
-                    () => setState(() => _filter = _NotificationFilter.all),
+                    () {
+                      setState(() => _filter = _NotificationFilter.all);
+                      ref
+                          .read(notificationsListProvider.notifier)
+                          .setUnreadFilter(false);
+                    },
                   ),
                   const SizedBox(width: 8),
                   _filterChip(
@@ -103,7 +108,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                         ? _copy.notificationsFilterUnreadCount(unreadCount)
                         : _copy.notificationsFilterUnread,
                     _filter == _NotificationFilter.unread,
-                    () => setState(() => _filter = _NotificationFilter.unread),
+                    () {
+                      setState(() => _filter = _NotificationFilter.unread);
+                      ref
+                          .read(notificationsListProvider.notifier)
+                          .setUnreadFilter(true);
+                    },
                   ),
                   const Spacer(),
                   if (unreadCount > 0)
@@ -151,9 +161,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                     ref.read(notificationsListProvider.notifier).refresh(),
                 child: notifications.when(
                   data: (result) {
-                    final items = _filter == _NotificationFilter.unread
-                        ? result.items.where((n) => !n.isRead).toList()
-                        : result.items;
+                    final items = result.items;
                     if (items.isEmpty) {
                       return ListView(
                         children: [
@@ -169,8 +177,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                         ],
                       );
                     }
-                    final showLoadMore = _filter == _NotificationFilter.all &&
-                        result.hasMorePages;
+                    final showLoadMore = result.hasMorePages;
                     final itemCount =
                         items.length + (showLoadMore ? 1 : 0);
                     return ListView.builder(

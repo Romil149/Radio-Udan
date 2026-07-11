@@ -3,11 +3,11 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+51** @ `0d2c0a8` | **yes** | 2026-07-11 | iOS large share sheet; Library Clear a11y; Pay Online TalkBack; iOS Razorpay no callback_url |
-| TestFlight iOS | **2.0.0+51** | CI after push | 2026-07-11 | Use +51; skip +47/+48 if crash |
-| Staging WP plugin | **zip ready** `dist/radioudaan-app-api-staging.zip` | **no** | 2026-07-11 | Deploy for Payment Link + copy keys + App Users + FCM stats |
-| Staging API smoke | 19/19 | local | 2026-07-11 | verify-wp 7/7; copy catalog 455 local |
-| Staging copy keys | 447 | staging | 2026-07-11 | ≥300 gate PASS; redeploy for new keys |
+| GitHub `main` | **2.0.0+52** (pending push) | **pushing** | 2026-07-11 | Enterprise notifications: detail + Open destination; GET by id; unread filter; admin compose routes |
+| TestFlight iOS | **2.0.0+52** | CI after push | 2026-07-11 | Use +52; deploy plugin for GET /notifications/{id} + compose Open in app |
+| Staging WP plugin | **zip ready** `dist/radioudaan-app-api-staging.zip` | **no** | 2026-07-11 | Deploy for notifications API + compose + copy keys |
+| Staging API smoke | 19/19 | local | 2026-07-11 | verify-wp 7/7; copy catalog 459 local |
+| Staging copy keys | 455 | staging | 2026-07-11 | ≥300 gate PASS; redeploy for notification Open copy keys |
 
 ## TestFlight build bump (mandatory — same commit)
 
@@ -20,6 +20,5 @@ Never push app code to `main` without bumping the build if the last build is alr
 
 ## Open deploy blockers
 
-1. **Deploy full App API plugin zip to staging** — Payment Link (no callback_url) + App Users + FCM stats + new copy keys.
-2. **Firebase APNs key** — **DONE 2026-07-11** Key `UKUT4P22CH`; user confirmed iOS push banner works.
-3. **Device register** — TestFlight **+51**; confirm share sheet + Library Clear on device.
+1. **Deploy full App API plugin zip to staging** — notifications GET by id, unread filter, admin Open in app, copy keys.
+2. **Device test** — TestFlight **+52**; send 3 admin notifications; tap detail + Open destination.

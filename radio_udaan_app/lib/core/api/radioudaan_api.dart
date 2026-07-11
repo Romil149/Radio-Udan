@@ -441,12 +441,26 @@ class RadioUdaanApi {
   Future<NotificationListResult> listNotifications({
     int page = 1,
     int perPage = 20,
+    bool unreadOnly = false,
   }) async {
     final response = await _dio.get<Map<String, dynamic>>(
       '/notifications',
-      queryParameters: {'page': page, 'per_page': perPage},
+      queryParameters: {
+        'page': page,
+        'per_page': perPage,
+        if (unreadOnly) 'unread': true,
+      },
     );
     return NotificationListResult.fromJson(response.data ?? {});
+  }
+
+  Future<AppNotification> getNotification(int id) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/notifications/$id',
+    );
+    final notification =
+        response.data?['notification'] as Map<String, dynamic>? ?? response.data;
+    return AppNotification.fromJson(notification ?? {});
   }
 
   Future<AppNotification> markNotificationRead(int id) async {

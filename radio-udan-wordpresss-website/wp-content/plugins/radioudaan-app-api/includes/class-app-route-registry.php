@@ -128,13 +128,13 @@ class RadioUdaan_App_Route_Registry {
 			array(
 				'methods'     => 'GET',
 				'path'        => '/notifications',
-				'description' => __( 'In-app notification inbox', 'radioudaan-app-api' ),
+				'description' => __( 'In-app notification inbox (page, per_page, unread)', 'radioudaan-app-api' ),
 				'auth'        => true,
 			),
 			array(
-				'methods'     => 'PATCH',
+				'methods'     => 'GET, PATCH',
 				'path'        => '/notifications/{id}',
-				'description' => __( 'Mark one notification read', 'radioudaan-app-api' ),
+				'description' => __( 'Get one notification or mark read', 'radioudaan-app-api' ),
 				'auth'        => true,
 			),
 			array(

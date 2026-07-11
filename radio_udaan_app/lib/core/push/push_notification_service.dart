@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -525,8 +526,28 @@ class PushNotificationService {
           presentList: true,
         ),
       ),
-      payload: message.data['notification_id'],
+      payload: _encodePushPayload(message.data),
     );
+  }
+
+  static String _encodePushPayload(Map<String, dynamic> data) {
+    if (data.isEmpty) return '';
+    return jsonEncode(data);
+  }
+
+  static Map<String, dynamic> _decodePushPayload(String? payload) {
+    final raw = payload?.trim() ?? '';
+    if (raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) return decoded;
+      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+    } catch (_) {}
+    final id = int.tryParse(raw);
+    if (id != null && id > 0) {
+      return {'notification_id': '$id'};
+    }
+    return {};
   }
 
   void _onRemoteMessageOpened(RemoteMessage message) {
@@ -538,11 +559,12 @@ class PushNotificationService {
   }
 
   void _onLocalNotificationTap(NotificationResponse response) {
-    final id = int.tryParse(response.payload ?? '') ?? 0;
+    final data = _decodePushPayload(response.payload);
+    final id = int.tryParse(data['notification_id']?.toString() ?? '') ?? 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       openNotificationFromPush(
         api: _api,
-        data: const {},
+        data: data,
         notificationId: id > 0 ? id : null,
       );
     });
