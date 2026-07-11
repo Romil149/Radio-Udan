@@ -296,6 +296,7 @@ class PushNotificationService {
 
     // Do not block token registration on cold-start deep link lookup.
     unawaited(_loadInitialMessageWhenReady());
+    unawaited(_loadLocalNotificationLaunchDetails());
   }
 
   Future<void> _loadInitialMessageWhenReady() async {
@@ -304,12 +305,30 @@ class PushNotificationService {
           .getInitialMessage()
           .timeout(_startupTimeout, onTimeout: () => null);
       if (initial != null) {
-        _handleNotificationOpenData(initial.data);
+        _handleNotificationOpenData(
+          initial.data,
+          title: initial.notification?.title,
+          body: initial.notification?.body,
+        );
       }
     } on TimeoutException {
       debugPrint('getInitialMessage timed out');
     } catch (e) {
       debugPrint('getInitialMessage failed: $e');
+    }
+  }
+
+  /// Android foreground path: user may launch the app from a local banner.
+  Future<void> _loadLocalNotificationLaunchDetails() async {
+    try {
+      final details =
+          await _localNotifications.getNotificationAppLaunchDetails();
+      if (details == null || !details.didNotificationLaunchApp) return;
+      final response = details.notificationResponse;
+      if (response == null) return;
+      _onLocalNotificationTap(response);
+    } catch (e) {
+      debugPrint('getNotificationAppLaunchDetails failed: $e');
     }
   }
 
@@ -510,6 +529,14 @@ class PushNotificationService {
       return;
     }
 
+    final payloadData = Map<String, dynamic>.from(message.data);
+    if (title != null && title.toString().trim().isNotEmpty) {
+      payloadData.putIfAbsent('title', () => title.toString());
+    }
+    if (body != null && body.toString().trim().isNotEmpty) {
+      payloadData.putIfAbsent('body', () => body.toString());
+    }
+
     await _localNotifications.show(
       notification?.hashCode ??
           Object.hash(title, body, message.messageId).hashCode,
@@ -531,7 +558,7 @@ class PushNotificationService {
           presentList: true,
         ),
       ),
-      payload: _encodePushPayload(message.data),
+      payload: _encodePushPayload(payloadData),
     );
     refreshNotificationInboxFromNav();
   }
@@ -559,19 +586,25 @@ class PushNotificationService {
   void _onRemoteMessageOpened(RemoteMessage message) {
     _handleNotificationOpenData(
       message.data,
-      title: message.notification?.title,
-      body: message.notification?.body,
+      title: message.notification?.title ?? message.data['title']?.toString(),
+      body: message.notification?.body ?? message.data['body']?.toString(),
     );
   }
 
   void _onLocalNotificationTap(NotificationResponse response) {
     final data = _decodePushPayload(response.payload);
     final id = int.tryParse(data['notification_id']?.toString() ?? '') ?? 0;
+    final title = data['title']?.toString();
+    final body = data['body']?.toString();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      openNotificationFromPush(
-        api: _api,
-        data: data,
-        notificationId: id > 0 ? id : null,
+      unawaited(
+        openNotificationFromPush(
+          api: _api,
+          data: data,
+          title: title,
+          body: body,
+          notificationId: id > 0 ? id : null,
+        ),
       );
     });
   }
@@ -581,12 +614,17 @@ class PushNotificationService {
     String? title,
     String? body,
   }) {
+    final resolvedTitle =
+        title ?? data['title']?.toString();
+    final resolvedBody = body ?? data['body']?.toString();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      openNotificationFromPush(
-        api: _api,
-        data: data,
-        title: title,
-        body: body,
+      unawaited(
+        openNotificationFromPush(
+          api: _api,
+          data: data,
+          title: resolvedTitle,
+          body: resolvedBody,
+        ),
       );
     });
   }

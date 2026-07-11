@@ -2,15 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 
 /// Shared VoiceOver / TalkBack helpers for Radio Udaan.
+///
+/// Never throws — `View.of` / directionality can fail mid-rebuild or when
+/// VoiceOver focus races a list refresh.
 void announce(BuildContext context, String message) {
   if (message.trim().isEmpty) return;
   WidgetsBinding.instance.addPostFrameCallback((_) {
     if (!context.mounted) return;
-    SemanticsService.sendAnnouncement(
-      View.of(context),
-      message.trim(),
-      Directionality.of(context),
-    );
+    try {
+      final view = View.maybeOf(context);
+      if (view == null) return;
+      SemanticsService.sendAnnouncement(
+        view,
+        message.trim(),
+        Directionality.maybeOf(context) ?? TextDirection.ltr,
+      );
+    } catch (_) {
+      // Ignore — announcement must never crash the app.
+    }
   });
 }
 
@@ -178,11 +187,20 @@ class UdaanAccessibleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canPress = enabled && onPressed != null;
+    if (canPress) {
+      return Semantics(
+        button: true,
+        label: label,
+        enabled: true,
+        onTap: onPressed,
+        child: ExcludeSemantics(child: child),
+      );
+    }
+    // Omit onTap when disabled — Semantics(onTap: null) can confuse VoiceOver.
     return Semantics(
       button: true,
       label: label,
-      enabled: canPress,
-      onTap: canPress ? onPressed : null,
+      enabled: false,
       child: ExcludeSemantics(child: child),
     );
   }

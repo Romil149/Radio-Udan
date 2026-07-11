@@ -790,6 +790,10 @@ class RadioUdaan_App_Notifications {
 			$data,
 			array(
 				'notification_id' => (string) $notification_id,
+				// Mirror alert copy into data so iOS taps keep title/body when
+				// the APNs notification block is stripped from RemoteMessage.
+				'title'           => (string) $title,
+				'body'            => (string) $body,
 			)
 		);
 

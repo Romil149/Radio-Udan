@@ -2,6 +2,12 @@
 # Task History
 <!-- Log of completed work. Helps new sessions understand what's already done. -->
 
+### 2026-07-11 — Notification panel → detail + VoiceOver Refresh crash
+**Requested by**: User — panel tap must open detail; VO swipe after Refresh crashes.
+**Root cause**: Cold-start open returned when navigator null; VO crash from FilterChip/ExcludeSemantics + listen-in-build + competing announces.
+**What was done**: Navigator retry opener; FLN launch details; FCM data title/body; safe announce; listenManual; filter toggles; single delayed refresh announce; bump **+58**.
+**Status**: Pushing for TestFlight
+
 ### 2026-07-11 — Fix +56 IPA: prefersPageSizing iOS 17 availability
 **Requested by**: User — CI `flutter build ipa` failed on ShareLargeSheet.swift:52.
 **Root cause**: `prefersPageSizing` is iOS 17+ but was gated as iOS 16.

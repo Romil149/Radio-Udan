@@ -119,6 +119,13 @@ class RadioUdaan_App_Fcm_Sender {
 		);
 
 		$string_data = self::normalize_data_payload( $data );
+		// Always include title/body in data for cold-start / data-only opens.
+		if ( ! isset( $string_data['title'] ) || '' === $string_data['title'] ) {
+			$string_data['title'] = (string) $title;
+		}
+		if ( ! isset( $string_data['body'] ) || '' === $string_data['body'] ) {
+			$string_data['body'] = (string) $body;
+		}
 		if ( ! empty( $string_data ) ) {
 			$message['data'] = $string_data;
 		}
