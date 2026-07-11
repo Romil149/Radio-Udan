@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+56** @ `50ee7eb` | **pushing** | 2026-07-11 | More Notifications inbox + a11y; remove admin Open in app |
+| GitHub `main` | **2.0.0+56** @ `50ee7eb` | **yes** | 2026-07-11 | More Notifications inbox + a11y; remove admin Open in app |
 | TestFlight iOS | **2.0.0+56** | CI after push | 2026-07-11 | Fresh build for TestFlight |
 | Staging WP plugin | **zip ready** `dist/radioudaan-app-api-staging.zip` | **no** | 2026-07-11 | Redeploy for Open-in-app removal + new inbox copy keys |
 | Staging API smoke | 19/19 | local | 2026-07-11 | verify-wp 7/7; copy keys **459** staging (local catalog 471) |
