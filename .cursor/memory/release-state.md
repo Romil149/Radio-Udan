@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+63** (pushing) | **pending** | 2026-07-11 | Remove Push diagnostics from Settings |
+| GitHub `main` | **2.0.0+63** @ `f68a5cd` | **yes** | 2026-07-11 | Remove Push diagnostics from Settings |
 | TestFlight iOS | **2.0.0+63** | CI after push | 2026-07-11 | Settings no longer has Push diagnostics |
 | Staging WP plugin | **needs redeploy** | **no** | 2026-07-11 | |
 | Staging copy keys | 459 | staging | 2026-07-11 | |
