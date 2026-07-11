@@ -2,6 +2,12 @@
 # Task History
 <!-- Log of completed work. Helps new sessions understand what's already done. -->
 
+### 2026-07-11 — Inbox tap dead + VO Refresh crash + count clarity
+**Requested by**: User — cannot tap rows; VO Refresh crashes; only sees one notification.
+**Root cause**: ExcludeSemantics wrapping InkWell blocked taps; Refresh announce + list rebuild under VO focus; count banner only when truncated.
+**Fix**: Semantics.excludeSemantics property; push-before-markRead; no refresh announce; reuse items when ids unchanged; always “Showing n”; bump **+59**.
+**Status**: Pushing
+
 ### 2026-07-11 — Notification panel → detail + VoiceOver Refresh crash
 **Requested by**: User — panel tap must open detail; VO swipe after Refresh crashes.
 **Root cause**: Cold-start open returned when navigator null; VO crash from FilterChip/ExcludeSemantics + listen-in-build + competing announces.

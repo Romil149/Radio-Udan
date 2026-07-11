@@ -47,16 +47,58 @@ class NotificationsListNotifier
     if (unreadOnly != null) {
       _unreadOnly = unreadOnly;
     }
-    if (!state.hasValue) {
-      state = const AsyncValue.loading();
-    }
-    state = await AsyncValue.guard(
-      () => _ref.read(radioudaanApiProvider).listNotifications(
+    // Soft refresh: keep existing items visible — never flash loading.
+    final previous = state.valueOrNull;
+
+    try {
+      final next = await _ref.read(radioudaanApiProvider).listNotifications(
             perPage: _perPage,
             unreadOnly: _unreadOnly,
-          ),
-    );
-    _ref.invalidate(notificationUnreadCountProvider);
+          );
+      if (!mounted) return;
+
+      if (previous != null && _sameIdsInOrder(previous.items, next.items)) {
+        // Reuse previous items list instance so ListView children are not
+        // torn down under VoiceOver focus when nothing changed.
+        if (previous.unreadCount != next.unreadCount ||
+            previous.total != next.total ||
+            previous.page != next.page ||
+            previous.totalPages != next.totalPages) {
+          state = AsyncValue.data(
+            previous.copyWith(
+              unreadCount: next.unreadCount,
+              total: next.total,
+              page: next.page,
+              totalPages: next.totalPages,
+            ),
+          );
+        }
+        // else: identical — leave state untouched
+      } else {
+        state = AsyncValue.data(next);
+      }
+      _ref.invalidate(notificationUnreadCountProvider);
+    } catch (e, st) {
+      if (!mounted) return;
+      if (previous != null) {
+        // Keep showing previous list on soft-refresh failure.
+        state = AsyncValue.data(previous);
+      } else {
+        state = AsyncValue.error(e, st);
+      }
+    }
+  }
+
+  static bool _sameIdsInOrder(
+    List<AppNotification> a,
+    List<AppNotification> b,
+  ) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].id != b[i].id) return false;
+    }
+    return true;
   }
 
   Future<void> setUnreadFilter(bool unreadOnly) async {

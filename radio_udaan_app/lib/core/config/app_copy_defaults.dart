@@ -241,6 +241,7 @@ const Map<String, String> appCopyDefaults = {
   'notifications_summary': '{shown} notifications, {unread} unread',
   'notifications_summary_one': '1 notification, {unread} unread',
   'notifications_showing_latest': 'Showing latest {count}',
+  'notifications_showing_count': 'Showing {count}',
   'notifications_manage_settings': 'Manage notification settings',
   'notifications_unread_subtitle_one': '1 unread',
   'notifications_unread_subtitle_many': '{count} unread',

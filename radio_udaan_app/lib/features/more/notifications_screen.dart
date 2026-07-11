@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -34,9 +36,6 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   String? _lastAnnouncedSignature;
   String? _lastAnnouncedError;
 
-  /// When true, skip summary announce (Refresh already spoke once).
-  bool _skipNextSummaryAnnounce = false;
-
   @override
   void initState() {
     super.initState();
@@ -45,12 +44,6 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       next.whenOrNull(
         data: (result) {
           _lastAnnouncedError = null;
-          if (_skipNextSummaryAnnounce) {
-            _skipNextSummaryAnnounce = false;
-            _lastAnnouncedSignature =
-                '${_filter.name}|${result.items.length}|${result.total}';
-            return;
-          }
           _maybeAnnounceSummary(
             copy: ref.read(appCopyProvider),
             shown: result.items.length,
@@ -140,31 +133,23 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     _announce(_copy.notificationsMarkedAll);
   }
 
-  Future<void> _refreshInbox({bool announceSuccess = false}) async {
-    if (announceSuccess) {
-      // One announcement after refresh — suppress competing summary.
-      _skipNextSummaryAnnounce = true;
-    }
+  /// Soft refresh only — no VoiceOver announcement (avoids crash under focus).
+  Future<void> _refreshInbox() async {
     await ref.read(notificationsListProvider.notifier).refresh();
-    if (!mounted) return;
-    if (!announceSuccess) return;
-
-    final next = ref.read(notificationsListProvider);
-    if (!next.hasValue) {
-      _skipNextSummaryAnnounce = false;
-      return;
-    }
-
-    // Single delayed announcement so VO focus can settle before speaking.
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-    if (!mounted) return;
-    _announce(_copy.notificationsRefreshed);
   }
 
   void _openSettings() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
     );
+  }
+
+  String _showingStatusLine(AppCopy copy, NotificationListResult result) {
+    final shown = result.items.length;
+    if (result.total > shown) {
+      return copy.notificationsShowingLatest(shown);
+    }
+    return copy.notificationsShowingCount(shown);
   }
 
   @override
@@ -233,83 +218,73 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                       ),
                     ],
                   ),
+                  if (cached != null && cached.items.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Semantics(
+                      label: _showingStatusLine(copy, cached),
+                      child: Text(
+                        _showingStatusLine(copy, cached),
+                        style: GoogleFonts.atkinsonHyperlegible(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: context.udaan.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
                   Row(
                     children: [
-                      Semantics(
-                        button: true,
-                        label: copy.notificationsRefresh,
-                        onTap: () => _refreshInbox(announceSuccess: true),
-                        child: ExcludeSemantics(
-                          child: TextButton(
-                            onPressed: () =>
-                                _refreshInbox(announceSuccess: true),
-                            style: TextButton.styleFrom(
-                              foregroundColor: context.udaan.primaryGlow,
-                              minimumSize: const Size(
-                                BrandTokens.a11yMinTapTarget,
-                                BrandTokens.a11yMinTapTarget,
-                              ),
-                            ),
-                            child: Text(
-                              copy.notificationsRefresh,
-                              style: GoogleFonts.atkinsonHyperlegible(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 14,
-                              ),
-                            ),
+                      TextButton(
+                        onPressed: _refreshInbox,
+                        style: TextButton.styleFrom(
+                          foregroundColor: context.udaan.primaryGlow,
+                          minimumSize: const Size(
+                            BrandTokens.a11yMinTapTarget,
+                            BrandTokens.a11yMinTapTarget,
+                          ),
+                        ),
+                        child: Text(
+                          copy.notificationsRefresh,
+                          style: GoogleFonts.atkinsonHyperlegible(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
                           ),
                         ),
                       ),
                       if (unreadCount > 0)
                         markingAll
-                            ? Semantics(
-                                button: true,
-                                enabled: false,
-                                label: copy.notificationsMarkAllRead,
-                                child: ExcludeSemantics(
-                                  child: TextButton(
-                                    onPressed: null,
-                                    style: TextButton.styleFrom(
-                                      foregroundColor:
-                                          context.udaan.primaryGlow,
-                                      minimumSize: const Size(
-                                        BrandTokens.a11yMinTapTarget,
-                                        BrandTokens.a11yMinTapTarget,
-                                      ),
-                                    ),
-                                    child: SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: context.udaan.primary,
-                                      ),
-                                    ),
+                            ? TextButton(
+                                onPressed: null,
+                                style: TextButton.styleFrom(
+                                  foregroundColor: context.udaan.primaryGlow,
+                                  minimumSize: const Size(
+                                    BrandTokens.a11yMinTapTarget,
+                                    BrandTokens.a11yMinTapTarget,
+                                  ),
+                                ),
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: context.udaan.primary,
                                   ),
                                 ),
                               )
-                            : Semantics(
-                                button: true,
-                                label: copy.notificationsMarkAllRead,
-                                onTap: _markAllRead,
-                                child: ExcludeSemantics(
-                                  child: TextButton(
-                                    onPressed: _markAllRead,
-                                    style: TextButton.styleFrom(
-                                      foregroundColor:
-                                          context.udaan.primaryGlow,
-                                      minimumSize: const Size(
-                                        BrandTokens.a11yMinTapTarget,
-                                        BrandTokens.a11yMinTapTarget,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      copy.notificationsMarkAllRead,
-                                      style: GoogleFonts.atkinsonHyperlegible(
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 14,
-                                      ),
-                                    ),
+                            : TextButton(
+                                onPressed: _markAllRead,
+                                style: TextButton.styleFrom(
+                                  foregroundColor: context.udaan.primaryGlow,
+                                  minimumSize: const Size(
+                                    BrandTokens.a11yMinTapTarget,
+                                    BrandTokens.a11yMinTapTarget,
+                                  ),
+                                ),
+                                child: Text(
+                                  copy.notificationsMarkAllRead,
+                                  style: GoogleFonts.atkinsonHyperlegible(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 14,
                                   ),
                                 ),
                               ),
@@ -322,7 +297,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             Expanded(
               child: RefreshIndicator(
                 color: context.udaan.primary,
-                onRefresh: () => _refreshInbox(),
+                onRefresh: _refreshInbox,
                 child: _buildInboxBody(
                   copy: copy,
                   notifications: notifications,
@@ -367,7 +342,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 message: message,
                 icon: Icons.error_outline,
                 actionLabel: copy.retry,
-                onAction: () => _refreshInbox(),
+                onAction: _refreshInbox,
               ),
             ),
           ],
@@ -381,7 +356,6 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     required NotificationListResult result,
   }) {
     final items = result.items;
-    final truncated = result.total > items.length;
     if (items.isEmpty) {
       return ListView(
         children: [
@@ -401,28 +375,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     }
     return ListView.builder(
       padding: const EdgeInsets.all(BrandTokens.screenPadding),
-      itemCount: items.length + (truncated ? 1 : 0),
+      itemCount: items.length,
       itemBuilder: (context, index) {
-        if (truncated && index == 0) {
-          final banner = copy.notificationsShowingLatest(items.length);
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Semantics(
-              label: banner,
-              child: ExcludeSemantics(
-                child: Text(
-                  banner,
-                  style: GoogleFonts.atkinsonHyperlegible(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: context.udaan.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-        final item = items[truncated ? index - 1 : index];
+        final item = items[index];
         return NotificationListCard(
           key: ValueKey(item.id),
           item: item,
@@ -432,17 +387,18 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             item.createdAt,
             copy,
           ),
-          onTap: () async {
-            ref.read(notificationsListProvider.notifier).markRead(item.id);
-            await Navigator.of(context).push(
+          onTap: () {
+            // Push first so mark-read hang never blocks navigation.
+            Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => NotificationDetailScreen(
                   notification: item,
                 ),
               ),
             );
-            if (!mounted) return;
-            ref.invalidate(notificationUnreadCountProvider);
+            unawaited(
+              ref.read(notificationsListProvider.notifier).markRead(item.id),
+            );
           },
         );
       },
@@ -456,39 +412,39 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       button: true,
       selected: selected,
       label: '$label$selectedHint',
+      excludeSemantics: true,
       onTap: onTap,
-      child: ExcludeSemantics(
-        child: Material(
-          color: selected
-              ? context.udaan.primary
-              : context.udaan.surfaceContainerHigh,
+      container: true,
+      child: Material(
+        color: selected
+            ? context.udaan.primary
+            : context.udaan.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(20),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              constraints: const BoxConstraints(
-                minHeight: BrandTokens.a11yMinTapTarget,
-                minWidth: BrandTokens.a11yMinTapTarget,
+          child: Container(
+            constraints: const BoxConstraints(
+              minHeight: BrandTokens.a11yMinTapTarget,
+              minWidth: BrandTokens.a11yMinTapTarget,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: selected
+                    ? context.udaan.primaryGlow
+                    : context.udaan.outlineVariant,
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: selected
-                      ? context.udaan.primaryGlow
-                      : context.udaan.outlineVariant,
-                ),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                label,
-                style: GoogleFonts.atkinsonHyperlegible(
-                  fontWeight: FontWeight.w700,
-                  color: selected
-                      ? context.udaan.onPrimary
-                      : context.udaan.onBackground,
-                ),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: GoogleFonts.atkinsonHyperlegible(
+                fontWeight: FontWeight.w700,
+                color: selected
+                    ? context.udaan.onPrimary
+                    : context.udaan.onBackground,
               ),
             ),
           ),

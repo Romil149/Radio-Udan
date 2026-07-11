@@ -239,6 +239,8 @@ extension AppCopyStrings on AppCopy {
       text('notifications_summary_one').replaceAll('{unread}', '$unread');
   String notificationsShowingLatest(int count) =>
       text('notifications_showing_latest').replaceAll('{count}', '$count');
+  String notificationsShowingCount(int count) =>
+      text('notifications_showing_count').replaceAll('{count}', '$count');
   String get notificationsManageSettings => text('notifications_manage_settings');
   String notificationsUnreadSubtitle(int count) => count == 1
       ? text('notifications_unread_subtitle_one')
