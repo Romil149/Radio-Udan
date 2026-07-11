@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+51** (pending push) | **pushing** | 2026-07-11 | iOS large share sheet; Library Clear a11y; Pay Online TalkBack; iOS Razorpay no callback_url |
+| GitHub `main` | **2.0.0+51** @ `0d2c0a8` | **yes** | 2026-07-11 | iOS large share sheet; Library Clear a11y; Pay Online TalkBack; iOS Razorpay no callback_url |
 | TestFlight iOS | **2.0.0+51** | CI after push | 2026-07-11 | Use +51; skip +47/+48 if crash |
 | Staging WP plugin | **zip ready** `dist/radioudaan-app-api-staging.zip` | **no** | 2026-07-11 | Deploy for Payment Link + copy keys + App Users + FCM stats |
 | Staging API smoke | 19/19 | local | 2026-07-11 | verify-wp 7/7; copy catalog 455 local |
