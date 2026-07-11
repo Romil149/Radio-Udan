@@ -49,7 +49,7 @@ final class ShareHostViewController: UIViewController {
       sheet.detents = [.large()]
       sheet.selectedDetentIdentifier = .large
       sheet.prefersGrabberVisible = false
-      if #available(iOS 16.0, *) {
+      if #available(iOS 17.0, *) {
         sheet.prefersPageSizing = false
       }
     }

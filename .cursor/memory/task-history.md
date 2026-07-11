@@ -2,6 +2,12 @@
 # Task History
 <!-- Log of completed work. Helps new sessions understand what's already done. -->
 
+### 2026-07-11 — Fix +56 IPA: prefersPageSizing iOS 17 availability
+**Requested by**: User — CI `flutter build ipa` failed on ShareLargeSheet.swift:52.
+**Root cause**: `prefersPageSizing` is iOS 17+ but was gated as iOS 16.
+**What was done**: `#available(iOS 17.0, *)`; bump **2.0.0+57**.
+**Status**: Pushing to main for CI rebuild
+
 ### 2026-07-11 — Notifications inbox a11y/UX improvements
 **Requested by**: User — implement unread More subtitle, summary announce, All/Unread, Refresh, push→refresh, showing latest 20, type speech, empty→Settings, fix accents.
 **Agents**: Alex → Marcus (copy) + Daniel/Maya (Flutter) → verify

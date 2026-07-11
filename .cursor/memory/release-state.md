@@ -3,8 +3,8 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+56** @ `50ee7eb` | **yes** | 2026-07-11 | More Notifications inbox + a11y; remove admin Open in app |
-| TestFlight iOS | **2.0.0+56** | CI after push | 2026-07-11 | Fresh build for TestFlight |
+| GitHub `main` | **2.0.0+57** (pushing) | **pending** | 2026-07-11 | Fix ShareLargeSheet `prefersPageSizing` iOS 17 guard |
+| TestFlight iOS | **2.0.0+57** | CI after push | 2026-07-11 | Rebuild after +56 Swift compile failure |
 | Staging WP plugin | **zip ready** `dist/radioudaan-app-api-staging.zip` | **no** | 2026-07-11 | Redeploy for Open-in-app removal + new inbox copy keys |
 | Staging API smoke | 19/19 | local | 2026-07-11 | verify-wp 7/7; copy keys **459** staging (local catalog 471) |
 | Staging copy keys | 459 | staging | 2026-07-11 | ≥300 gate PASS; redeploy for new keys |
@@ -21,4 +21,4 @@ Never push app code to `main` without bumping the build if the last build is alr
 ## Open deploy blockers
 
 1. **Deploy App API plugin zip to staging** — Open-in-app removed + 12 new inbox copy keys (local catalog 471; staging still 459).
-2. **Device test on +56** — More “N unread” → All/Unread → Refresh → summary announce → empty→Settings; push while inbox open.
+2. **Device test on +57** — More inbox a11y flow after TestFlight lands; confirm share sheet still full screen.
