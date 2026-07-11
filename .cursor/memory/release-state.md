@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+61** (pushing) | **pending** | 2026-07-11 | Notifications simplified: list-only, no detail page |
+| GitHub `main` | **2.0.0+61** @ `b67dcf9` | **yes** | 2026-07-11 | Notifications simplified: list-only, no detail page |
 | TestFlight iOS | **2.0.0+61** | CI after push | 2026-07-11 | Simple inbox: title + full message; push opens list |
 | Staging WP plugin | **needs redeploy** | **no** | 2026-07-11 | |
 | Staging copy keys | 459 | staging | 2026-07-11 | |
