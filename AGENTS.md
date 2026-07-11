@@ -29,10 +29,14 @@ You work on **Radio Udaan**: Flutter app + WordPress App API. The user delegates
 
 | Environment | API base |
 |-------------|----------|
+| **Production** | `https://radioudaan.com/wp-json/radioudaan/v1` |
 | **Staging** | `https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1` |
 | **Local dev** | `https://radio/wp-json/radioudaan/v1` |
 
-Staging site: https://nexusfleck.com/radioudaan/
+CI release builds (APK / TestFlight on push to `main`) bake **production**. Staging remains on nexusfleck for optional QA builds via `workflow_dispatch` (`api_base_url` override).
+
+Staging site: https://nexusfleck.com/radioudaan/  
+Production site: https://radioudaan.com/
 
 ## Cursor Cloud specific instructions
 
@@ -64,9 +68,10 @@ Must exit **0** before telling the user staging is ready for QA.
 
 Do **not** rely on local `flutter build apk`. Use GitHub Actions:
 
-- Workflow: **Build staging APK** (`.github/workflows/build-staging-apk.yml`)
+- Workflow: **Build staging APK** (`.github/workflows/build-staging-apk.yml`) — filename kept; bakes **production** by default
 - Trigger: push to `main` or manual **Run workflow**
-- Artifact: `app-release.apk` with staging API baked in
+- Artifact: `app-release.apk` with production API baked in
+- Optional QA: set `api_base_url` to staging via workflow_dispatch
 
 ### iOS IPA → TestFlight (GitHub Actions)
 

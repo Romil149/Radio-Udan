@@ -1,4 +1,5 @@
-# Cloud orchestrator: run all checks + staging APK in one manual click.
+# Cloud orchestrator: run all checks + production APK in one manual click.
+# Staging API smoke stays on nexusfleck; APK bake defaults to production.
 name: Cloud — Full staging pipeline
 
 on:
@@ -42,7 +43,7 @@ jobs:
     continue-on-error: true # Report but don't block APK if staging WP not ready yet
 
   build-apk:
-    name: 4/4 Build staging APK
+    name: 4/4 Build production APK
     needs: [analyze, php-lint]
     runs-on: ubuntu-latest
     defaults:
@@ -76,10 +77,10 @@ jobs:
 
       - name: Build release APK
         env:
-          STAGING_API_BASE_URL: https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1
+          PRODUCTION_API_BASE_URL: https://radioudaan.com/wp-json/radioudaan/v1
         run: |
           flutter build apk --release \
-            --dart-define=API_BASE_URL=${STAGING_API_BASE_URL}
+            --dart-define=API_BASE_URL=${PRODUCTION_API_BASE_URL}
 
       - uses: actions/upload-artifact@v4
         with:

@@ -23,6 +23,7 @@ require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-export.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-notifications.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-global-search.php';
 require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-settings-tests.php';
+require_once RADIOUDAAN_APP_API_PATH . 'includes/admin/class-admin-secrets-transfer.php';
 
 /**
  * Top-level WordPress admin for the Radio Udaan mobile app.
@@ -49,6 +50,7 @@ class RadioUdaan_Admin_App_Hub {
 	const API_SLUG           = 'radioudaan-app-api';
 	const NOTIFICATIONS_SLUG = 'radioudaan-app-notifications';
 	const DONATIONS_SLUG     = 'radioudaan-app-donations';
+	const SECRETS_TRANSFER_SLUG = 'radioudaan-app-secrets-transfer';
 
 	/**
 	 * Register admin UI.
@@ -59,6 +61,7 @@ class RadioUdaan_Admin_App_Hub {
 		RadioUdaan_Admin_App_User_Actions::init();
 		RadioUdaan_Admin_Global_Search::init();
 		RadioUdaan_Admin_Settings_Tests::init();
+		RadioUdaan_Admin_Secrets_Transfer::init();
 		RadioUdaan_App_Youtube_Library::init_admin();
 
 		add_action( 'admin_menu', array( __CLASS__, 'register_menus' ), 9 );
@@ -144,6 +147,15 @@ class RadioUdaan_Admin_App_Hub {
 			'manage_options',
 			self::SETTINGS_SLUG,
 			array( 'RadioUdaan_Admin_Pages', 'render_settings' )
+		);
+
+		add_submenu_page(
+			self::MENU_SLUG,
+			__( 'Transfer secrets', 'radioudaan-app-api' ),
+			__( 'Transfer secrets', 'radioudaan-app-api' ),
+			'manage_options',
+			self::SECRETS_TRANSFER_SLUG,
+			array( 'RadioUdaan_Admin_Secrets_Transfer', 'render_page' )
 		);
 
 		add_submenu_page(

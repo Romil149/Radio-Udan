@@ -147,6 +147,11 @@ class RadioUdaan_Admin_Layout {
 				'url'   => admin_url( 'admin.php?page=' . RadioUdaan_Admin_App_Hub::SETTINGS_SLUG ),
 				'icon'  => 'dashicons-admin-settings',
 			),
+			'secrets-transfer' => array(
+				'label' => __( 'Transfer secrets', 'radioudaan-app-api' ),
+				'url'   => admin_url( 'admin.php?page=' . RadioUdaan_Admin_App_Hub::SECRETS_TRANSFER_SLUG ),
+				'icon'  => 'dashicons-shield',
+			),
 			'help'           => array(
 				'label' => __( 'Help', 'radioudaan-app-api' ),
 				'url'   => admin_url( 'admin.php?page=' . RadioUdaan_Admin_App_Hub::HELP_SLUG ),

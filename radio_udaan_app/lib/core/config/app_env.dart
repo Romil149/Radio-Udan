@@ -6,19 +6,17 @@ class AppEnv {
 
   static const String _apiBaseFromEnv = String.fromEnvironment('API_BASE_URL');
 
-  static const String stagingApiBaseUrl =
-      'https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1';
+  static const String productionApiBaseUrl =
+      'https://radioudaan.com/wp-json/radioudaan/v1';
 
-  static const String localApiBaseUrl =
-      'https://radio/wp-json/radioudaan/v1';
 
   /// Bootstrap URL for the first `GET /config` (must reach a live API).
   ///
-  /// Flutter web cannot resolve the local `https://radio` hostname unless
-  /// `/etc/hosts` is configured, so web builds default to staging.
+  /// Precedence: `--dart-define=API_BASE_URL=...` wins; Flutter web defaults to
+  /// production (site is live); device/debug without defines uses local.
   static String get bootstrapApiBaseUrl {
     if (_apiBaseFromEnv.isNotEmpty) return _apiBaseFromEnv;
-    if (kIsWeb) return stagingApiBaseUrl;
+    if (kIsWeb) return productionApiBaseUrl;
     return localApiBaseUrl;
   }
 

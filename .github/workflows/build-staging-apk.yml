@@ -1,10 +1,16 @@
 # Build Radio Udaan Android APK in the cloud (no local Android SDK required).
 # Download the APK from Actions → workflow run → Artifacts.
-# Manual re-run: Actions → Build staging APK → Run workflow.
+# Manual re-run: Actions → Build staging APK → Run workflow (defaults to production API).
+# Optional QA: set api_base_url to staging (STAGING_API_BASE_URL) via workflow_dispatch.
 name: Build staging APK
 
 on:
   workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: 'API base URL baked into the build (default: production)'
+        required: false
+        default: 'https://radioudaan.com/wp-json/radioudaan/v1'
   push:
     branches: [main, master, staging]
     paths:
@@ -15,11 +21,12 @@ permissions:
   contents: write
 
 env:
+  PRODUCTION_API_BASE_URL: https://radioudaan.com/wp-json/radioudaan/v1
   STAGING_API_BASE_URL: https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1
 
 jobs:
   build-android:
-    name: Android release APK (staging API)
+    name: Android release APK (production API)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -64,28 +71,39 @@ jobs:
       - name: Analyze (fail fast)
         run: dart analyze lib
 
+      - name: Resolve API base URL
+        id: api
+        run: |
+          # Push to main: production. workflow_dispatch: inputs.api_base_url if set, else production.
+          URL="${{ github.event.inputs.api_base_url }}"
+          if [ -z "$URL" ]; then
+            URL="${{ env.PRODUCTION_API_BASE_URL }}"
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Baking API_BASE_URL=$URL"
+
       - name: Build release APK
         run: |
           flutter build apk --release \
-            --dart-define=API_BASE_URL=${{ env.STAGING_API_BASE_URL }}
+            --dart-define=API_BASE_URL=${{ steps.api.outputs.url }}
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: radio-udan-staging-${{ github.sha }}
+          name: radio-udan-production-${{ github.sha }}
           path: radio_udaan_app/build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
           if-no-files-found: error
 
-      - name: Publish downloadable staging release
+      - name: Publish downloadable production release
         if: github.ref == 'refs/heads/main'
         uses: ncipollo/release-action@v1
         with:
-          tag: staging-apk
-          name: Radio Udaan Staging APK
+          tag: release-apk
+          name: Radio Udaan Production APK
           body: |
-            Latest staging test build (commit ${{ github.sha }}).
-            API baked in: ${{ env.STAGING_API_BASE_URL }}
+            Latest production build (commit ${{ github.sha }}).
+            API baked in: ${{ steps.api.outputs.url }}
             Uninstall any older APK on your phone before installing this one.
           artifacts: radio_udaan_app/build/app/outputs/flutter-apk/app-release.apk
           artifactContentType: application/vnd.android.package-archive
@@ -99,4 +117,4 @@ jobs:
         run: |
           APK="build/app/outputs/flutter-apk/app-release.apk"
           ls -lh "$APK"
-          echo "API_BASE_URL=${{ env.STAGING_API_BASE_URL }}"
+          echo "API_BASE_URL=${{ steps.api.outputs.url }}"

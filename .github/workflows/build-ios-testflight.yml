@@ -14,9 +14,9 @@ on:
   workflow_dispatch:
     inputs:
       api_base_url:
-        description: 'API base URL baked into the build'
+        description: 'API base URL baked into the build (default: production)'
         required: false
-        default: 'https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1'
+        default: 'https://radioudaan.com/wp-json/radioudaan/v1'
       upload_testflight:
         description: 'Upload to TestFlight when API secrets are configured'
         required: false
@@ -32,6 +32,7 @@ permissions:
   contents: read
 
 env:
+  PRODUCTION_API_BASE_URL: https://radioudaan.com/wp-json/radioudaan/v1
   STAGING_API_BASE_URL: https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1
   IOS_BUNDLE_ID: org.reactjs.native.example.Radio
 
@@ -151,7 +152,8 @@ jobs:
 
       - name: Build release IPA
         env:
-          API_BASE_URL: ${{ github.event.inputs.api_base_url || env.STAGING_API_BASE_URL }}
+          # Push to main: production. workflow_dispatch: inputs.api_base_url if set, else production.
+          API_BASE_URL: ${{ github.event.inputs.api_base_url || env.PRODUCTION_API_BASE_URL }}
         run: |
           flutter build ipa --release \
             --dart-define=API_BASE_URL="$API_BASE_URL" \
@@ -187,7 +189,7 @@ jobs:
         run: |
           ls -lh build/ios/ipa/
           echo "Bundle ID: ${{ env.IOS_BUNDLE_ID }}"
-          echo "API_BASE_URL=${{ github.event.inputs.api_base_url || env.STAGING_API_BASE_URL }}"
+          echo "API_BASE_URL=${{ github.event.inputs.api_base_url || env.PRODUCTION_API_BASE_URL }}"
           if [ "${{ steps.testflight_api.outputs.ready }}" = "true" ]; then
             echo "TestFlight upload: attempted (check App Store Connect → TestFlight)."
           else

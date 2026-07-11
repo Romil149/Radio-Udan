@@ -1,6 +1,11 @@
 # Architecture Decisions Log
 <!-- When a design choice is made, document it here so we don't re-debate it. -->
 
+### 2026-07-11 — Release CI bakes production API
+**Context**: Production site + plugin live at radioudaan.com; secrets imported; user asked to publish the app.
+**Decision**: Default GitHub Actions iOS/Android release builds use `https://radioudaan.com/wp-json/radioudaan/v1`. Staging URL kept for optional `workflow_dispatch` QA. `AppEnv.productionApiBaseUrl` added; web bootstrap defaults to production.
+**Consequences**: TestFlight/+APK after this ship hit live WP. Do not ship staging-baked binaries as “production”.
+
 ### 2026-07-11 — Notifications: list-only (no detail page)
 **Context**: Detail page + filters caused tap failures and VoiceOver crashes; user asked to keep it simple.
 **Decision**: Remove `NotificationDetailScreen`. Inbox is a scrollable list (≤20) with title + full message per row. Push/system notification opens the list, not a detail page. No All/Unread filters or Mark all. Keep Refresh + showing count.

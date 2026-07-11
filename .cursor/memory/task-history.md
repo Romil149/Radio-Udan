@@ -2,6 +2,18 @@
 # Task History
 <!-- Log of completed work. Helps new sessions understand what's already done. -->
 
+### 2026-07-11 — Production cutover: bake radioudaan.com into release builds
+**Requested by**: User — secrets imported; go ahead and publish.
+**What was done**: CI iOS/APK + AppEnv → production API; bump **+66**; ship Transfer secrets plugin; prod smoke 19/19.
+**Status**: Shipping
+
+### 2026-07-11 — SECRETS-TRANSFER: Export/Import admin tool
+**Requested by**: Alex → Marcus (staging → production key move)
+**What was done**: Added `RadioUdaan_Admin_Secrets_Transfer` under Radio Udaan App → Transfer secrets. Export JSON (optional redact + copy overrides); import with group checkboxes + staging→prod URL rewrite; invalidates config cache. Operator doc: `.cursor/memory/secrets-transfer-checklist.md`.
+**Files**: `includes/admin/class-admin-secrets-transfer.php`, hub + layout nav wire-up.
+**Verify**: `php -l` clean; `verify-wp-plugin.sh` 7/7 PASS. Not deployed to staging/prod yet.
+**Status**: ✅ Complete (local plugin)
+
 ### 2026-07-11 — Donate Pay Online focus order (VO/TalkBack)
 **Requested by**: User — first focus was text fields; want Pay Online → donations heading → amount chips → custom amount field.
 **Fix**: Scoped `OrdinalSortKey` 1→4 (+ rest 5+) inside `DonatePayOnlineCard`; no autofocus. Page headline/intro stay above the card.
