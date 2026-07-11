@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+66** (shipping) | pending push | 2026-07-11 | Production API baked into CI |
+| GitHub `main` | **2.0.0+66** @ `f132462` | pending push | 2026-07-11 | Production API baked into CI |
 | TestFlight iOS | **2.0.0+66** | CI after push | 2026-07-11 | Points at radioudaan.com |
 | Android APK | **2.0.0+66** | CI after push | 2026-07-11 | Production API; tag `release-apk` |
 | Staging WP plugin | live (nexusfleck) | yes | 2026-07-11 | FCM `radio-udaan-72232` |
