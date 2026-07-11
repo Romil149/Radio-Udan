@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+60** (pushing) | **pending** | 2026-07-11 | Fix Showing-18-but-one-row (duplicate keys / id parse) |
+| GitHub `main` | **2.0.0+60** @ `14892d8` | **yes** | 2026-07-11 | Fix Showing-18-but-one-row (duplicate keys / id parse) |
 | TestFlight iOS | **2.0.0+60** | CI after push | 2026-07-11 | Retest: scroll list shows all rows; VO Refresh no crash |
 | Staging WP plugin | **needs redeploy** | **no** | 2026-07-11 | |
 | Staging copy keys | 459 | staging | 2026-07-11 | |
