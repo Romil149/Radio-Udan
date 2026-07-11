@@ -2,6 +2,12 @@
 # Task History
 <!-- Log of completed work. Helps new sessions understand what's already done. -->
 
+### 2026-07-11 — Notifications: remove Showing + Refresh
+**Requested by**: User — remove Showing N and Refresh; ask what else can go.
+**What was done**: Stripped status line, Refresh button, pull-to-refresh, empty→Settings. Screen is back + list only.
+**Also removable later (optional)**: unread dot/highlight; More-tab unread subtitle; relative time (“2 min ago”).
+**Status**: Bump **+62**
+
 ### 2026-07-11 — Notifications simplified: list-only (no detail page)
 **Requested by**: User — remove internal page; keep simple; remove extras.
 **Decision**: Inbox shows title + full message on each row. No detail screen, no All/Unread, no Mark all. Push opens Notifications list. Refresh kept.
