@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+58** (pushing) | **pending** | 2026-07-11 | Panel tap → detail retry; VoiceOver Refresh crash fix; FCM data title/body |
+| GitHub `main` | **2.0.0+58** @ `2d05611` | **yes** | 2026-07-11 | Panel tap → detail retry; VoiceOver Refresh crash fix; FCM data title/body |
 | TestFlight iOS | **2.0.0+58** | CI after push | 2026-07-11 | Retest notification panel + VO Refresh swipe |
 | Staging WP plugin | **needs redeploy** | **no** | 2026-07-11 | FCM data title/body + Open-in-app removal + copy keys |
 | Staging API smoke | 19/19 | local | 2026-07-11 | verify-wp 7/7 |
