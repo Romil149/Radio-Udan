@@ -9,6 +9,11 @@ class AppEnv {
   static const String productionApiBaseUrl =
       'https://radioudaan.com/wp-json/radioudaan/v1';
 
+  static const String stagingApiBaseUrl =
+      'https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1';
+
+  static const String localApiBaseUrl =
+      'https://radio/wp-json/radioudaan/v1';
 
   /// Bootstrap URL for the first `GET /config` (must reach a live API).
   ///
