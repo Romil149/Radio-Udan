@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+59** (pushing) | **pending** | 2026-07-11 | Fix inbox tap, VO Refresh crash, showing-count label |
+| GitHub `main` | **2.0.0+59** @ `9dac2a1` | **yes** | 2026-07-11 | Fix inbox tap, VO Refresh crash, showing-count label |
 | TestFlight iOS | **2.0.0+59** | CI after push | 2026-07-11 | Retest: tap row → detail; VO All→Unread→Refresh→swipe |
 | Staging WP plugin | **needs redeploy** | **no** | 2026-07-11 | copy key notifications_showing_count + prior FCM/Open-in-app |
 | Staging API smoke | 19/19 | local | 2026-07-11 | |
