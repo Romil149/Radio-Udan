@@ -1,8 +1,98 @@
 import Flutter
 import UIKit
 
-/// Presents `UIActivityViewController` with a large sheet detent so iOS shows
-/// the full share UI (Close X) instead of the default medium half-sheet.
+/// Full-screen host that presents `UIActivityViewController`.
+///
+/// Setting `sheet.detents = [.large()]` on `UIActivityViewController` alone is
+/// ignored on current iOS — the system share sheet stays medium/half. Presenting
+/// from a full-screen host with `.fullScreen` on the activity forces full height.
+final class ShareHostViewController: UIViewController {
+  private let shareText: String
+  private let onFinished: (String) -> Void
+  private var didPresentActivity = false
+
+  init(text: String, onFinished: @escaping (String) -> Void) {
+    self.shareText = text
+    self.onFinished = onFinished
+    super.init(nibName: nil, bundle: nil)
+    modalPresentationStyle = .fullScreen
+    modalTransitionStyle = .coverVertical
+  }
+
+  @available(*, unavailable)
+  required init?(coder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    view.backgroundColor = .black
+  }
+
+  override func viewDidAppear(_ animated: Bool) {
+    super.viewDidAppear(animated)
+    guard !didPresentActivity else { return }
+    didPresentActivity = true
+    presentShareSheet()
+  }
+
+  private func presentShareSheet() {
+    let activity = UIActivityViewController(
+      activityItems: [shareText],
+      applicationActivities: nil
+    )
+
+    // Force full coverage — pageSheet/medium is what caused the half sheet.
+    activity.modalPresentationStyle = .fullScreen
+
+    if #available(iOS 15.0, *), let sheet = activity.sheetPresentationController {
+      sheet.detents = [.large()]
+      sheet.selectedDetentIdentifier = .large
+      sheet.prefersGrabberVisible = false
+      if #available(iOS 16.0, *) {
+        sheet.prefersPageSizing = false
+      }
+    }
+
+    if let popover = activity.popoverPresentationController {
+      popover.sourceView = view
+      popover.sourceRect = CGRect(
+        x: view.bounds.midX,
+        y: view.bounds.midY,
+        width: 1,
+        height: 1
+      )
+      popover.permittedArrowDirections = []
+    }
+
+    activity.completionWithItemsHandler = { [weak self] _, completed, _, error in
+      let status: String
+      if error != nil {
+        status = "unavailable"
+      } else if completed {
+        status = "success"
+      } else {
+        status = "dismissed"
+      }
+      DispatchQueue.main.async {
+        self?.onFinished(status)
+        self?.dismiss(animated: true)
+      }
+    }
+
+    present(activity, animated: true) { [weak activity] in
+      guard #available(iOS 15.0, *), let activity else { return }
+      if let sheet = activity.sheetPresentationController {
+        sheet.animateChanges {
+          sheet.detents = [.large()]
+          sheet.selectedDetentIdentifier = .large
+        }
+      }
+    }
+  }
+}
+
+/// Presents the system share UI full screen on iPhone.
 enum ShareLargeSheet {
   static func present(
     text: String,
@@ -20,31 +110,6 @@ enum ShareLargeSheet {
         return
       }
 
-      let activity = UIActivityViewController(
-        activityItems: [text],
-        applicationActivities: nil
-      )
-
-      // Prefer full / large sheet (iOS 15+). Only large so the sheet opens expanded.
-      if #available(iOS 15.0, *) {
-        if let sheet = activity.sheetPresentationController {
-          sheet.detents = [.large()]
-          sheet.selectedDetentIdentifier = .large
-          sheet.prefersGrabberVisible = true
-        }
-      }
-
-      if let popover = activity.popoverPresentationController {
-        popover.sourceView = presenter.view
-        popover.sourceRect = CGRect(
-          x: presenter.view.bounds.midX,
-          y: presenter.view.bounds.midY,
-          width: 1,
-          height: 1
-        )
-        popover.permittedArrowDirections = []
-      }
-
       var settled = false
       let finish: (String) -> Void = { status in
         guard !settled else { return }
@@ -52,26 +117,8 @@ enum ShareLargeSheet {
         result(["status": status])
       }
 
-      activity.completionWithItemsHandler = { _, completed, _, error in
-        if error != nil {
-          finish("unavailable")
-        } else if completed {
-          finish("success")
-        } else {
-          finish("dismissed")
-        }
-      }
-
-      presenter.present(activity, animated: true) {
-        // Some iOS versions attach sheetPresentationController only after present.
-        if #available(iOS 15.0, *) {
-          if let sheet = activity.sheetPresentationController {
-            sheet.detents = [.large()]
-            sheet.selectedDetentIdentifier = .large
-            sheet.prefersGrabberVisible = true
-          }
-        }
-      }
+      let host = ShareHostViewController(text: text, onFinished: finish)
+      presenter.present(host, animated: true)
     }
   }
 
