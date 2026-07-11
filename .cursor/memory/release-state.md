@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+53** | **yes** (after push) | 2026-07-11 | Donate a11y: summary strip excluded from TalkBack swipe order |
+| GitHub `main` | **2.0.0+53** @ `fd0193b` | **yes** | 2026-07-11 | Donate a11y: summary strip excluded from TalkBack swipe order |
 | TestFlight iOS | **2.0.0+53** | CI after push | 2026-07-11 | Donate TalkBack fix |
 | Staging WP plugin | **zip ready** `dist/radioudaan-app-api-staging.zip` | **no** | 2026-07-11 | Deploy for notifications API + compose + copy keys |
 | Staging API smoke | 19/19 | local | 2026-07-11 | verify-wp 7/7; copy catalog 459 local |
