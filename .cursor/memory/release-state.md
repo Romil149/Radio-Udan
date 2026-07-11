@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+52** (pending push) | **pushing** | 2026-07-11 | Enterprise notifications: detail + Open destination; GET by id; unread filter; admin compose routes |
+| GitHub `main` | **2.0.0+52** @ `fb9f465` | **yes** | 2026-07-11 | Enterprise notifications: detail + Open destination; GET by id; unread filter; admin compose routes |
 | TestFlight iOS | **2.0.0+52** | CI after push | 2026-07-11 | Use +52; deploy plugin for GET /notifications/{id} + compose Open in app |
 | Staging WP plugin | **zip ready** `dist/radioudaan-app-api-staging.zip` | **no** | 2026-07-11 | Deploy for notifications API + compose + copy keys |
 | Staging API smoke | 19/19 | local | 2026-07-11 | verify-wp 7/7; copy catalog 459 local |
