@@ -3,8 +3,8 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+54** @ `7957eb1` | **yes** | 2026-07-11 | iOS share: fullScreen host (system ignores large detent on activity VC) |
-| TestFlight iOS | **2.0.0+54** | CI after push | 2026-07-11 | Share opens full screen on iPhone |
+| GitHub `main` | **2.0.0+55** | **yes** (after push) | 2026-07-11 | Build bump; includes iOS full-screen share host (+54) |
+| TestFlight iOS | **2.0.0+55** | CI after push | 2026-07-11 | Fresh build for TestFlight |
 | Staging WP plugin | **zip ready** `dist/radioudaan-app-api-staging.zip` | **no** | 2026-07-11 | Deploy for notifications API + compose + copy keys |
 | Staging API smoke | 19/19 | local | 2026-07-11 | verify-wp 7/7; copy catalog 459 local |
 | Staging copy keys | 455 | staging | 2026-07-11 | ≥300 gate PASS; redeploy for notification Open copy keys |

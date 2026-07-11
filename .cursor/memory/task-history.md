@@ -2,11 +2,16 @@
 # Task History
 <!-- Log of completed work. Helps new sessions understand what's already done. -->
 
+### 2026-07-11 — Build bump +55 for TestFlight
+**Requested by**: User — push with updated build number.
+**What was done**: `pubspec.yaml` 2.0.0+54 → **2.0.0+55**; release-state updated.
+**Status**: ✅ Pushing to `main` for CI / TestFlight
+
 ### 2026-07-11 — iOS share sheet still half; force full screen host
 **Requested by**: User — large detent alone still opens half; need full.
-**What was done**: Wrap `UIActivityViewController` in `ShareHostViewController`; iPhone uses `modalPresentationStyle = .fullScreen` (detents on activity VC are ignored by system).
+**What was done**: Full-screen host presents `UIActivityViewController` with `.fullScreen` (detents on activity VC ignored by system).
 **Files**: `ShareLargeSheet.swift`, `pubspec.yaml` (+54)
-**Status**: ⚠️ Local — push +54 for TestFlight
+**Status**: ✅ Shipped in +54; re-shipped as **+55**
 
 ### 2026-07-11 — Donate TalkBack: remove summary live region from swipe order
 **Requested by**: User — swiping past custom amount heard duplicate "you will donate X" + different earcon.
