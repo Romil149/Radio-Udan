@@ -69,14 +69,21 @@ extension AppCopyStrings on AppCopy {
   String get donateAmountChipSemantics => text('donate_amount_chip_semantics');
   String get donateSelectedSummary => text('donate_selected_summary');
   String get donateAmountCustomLabel => text('donate_amount_custom_label');
+  String get donateAmountCustomHint => text('donate_amount_custom_hint');
   String get donateNowButton => text('donate_now_button');
+  String get donateNowWithAmount => text('donate_now_with_amount');
+  String get donateNowLoading => text('donate_now_loading');
   String get donateSuccessTitle => text('donate_success_title');
   String get donateSuccessMessage => text('donate_success_message');
   String get donateFailedMessage => text('donate_failed_message');
   String get donate80gCheckbox => text('donate_80g_checkbox');
+  String get donate80gHint => text('donate_80g_hint');
   String get donatePanLabel => text('donate_pan_label');
   String get donatePanRequired => text('donate_pan_required');
   String get donateForm10beNote => text('donate_form_10be_note');
+  String get donateEmailFromAccount => text('donate_email_from_account');
+  String get donateCustomAmountSelected =>
+      text('donate_custom_amount_selected');
   String get donateOpeningPayment => text('donate_opening_payment');
   String get donateOpeningWithAmount => text('donate_opening_with_amount');
   String get donateCheckPayment => text('donate_check_payment');
@@ -152,6 +159,7 @@ extension AppCopyStrings on AppCopy {
   String get librarySaveVideo => text('library_save_video');
   String get librarySavedVideo => text('library_saved_video');
   String get librarySearchClear => text('library_search_clear');
+  String get librarySearchCleared => text('library_search_cleared');
   String get librarySearchEmpty => text('library_search_empty');
   String get librarySearchHint => text('library_search_hint');
   String get librarySearchVideos => text('library_search_videos');

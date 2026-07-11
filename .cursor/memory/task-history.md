@@ -1,4 +1,31 @@
 
+# Task History
+<!-- Log of completed work. Helps new sessions understand what's already done. -->
+
+### 2026-07-11 — Library search Clear (X) not recognized by TalkBack/VoiceOver
+**Requested by**: User — cross button for library not seen/recognized by blind users.
+**Root cause**: Clear control used `Semantics(button, label)` without `onTap` while wrapping `IconButton` in `ExcludeSemantics` — same class of bug as notification cards; SR often skips or cannot activate.
+**What was done**: Switched to `UdaanAccessibleButton` (label + onTap); announce “Search cleared”; added `library_search_clear` / `library_search_cleared` to WP copy catalog (was missing from catalog; app defaults already had clear).
+**Files**: `library_search_field.dart`, `app_copy_defaults.dart`, `app_copy_accessors.dart`, `class-app-copy-catalog.php`
+**Status**: ⚠️ Local — device retest with TalkBack/VoiceOver after rebuild; plugin deploy for new copy keys.
+
+### 2026-07-11 — iOS share sheet prefers large / full detent
+**Requested by**: User — system share opens half sheet without Close X; full drag shows X.
+**What was done**: Native `ShareLargeSheet` + MethodChannel `radioudaan/share` presents `UIActivityViewController` with `detents = [.large()]`; Dart `shareSystemText` uses channel on iOS, `share_plus` elsewhere; Radio tab wired.
+**Files**: `ios/Runner/ShareLargeSheet.swift`, `AppDelegate.swift`, `project.pbxproj`, `lib/core/share/system_share.dart`, `lib/features/radio/radio_tab.dart`
+**Status**: ⚠️ Local only — needs device rebuild to confirm full sheet + Close X. Not in TestFlight (+50).
+
+### 2026-07-11 — Pay Online guided TalkBack/VoiceOver journey
+**Requested by**: User — clear donation speech script (intro → amounts → custom → summary → donate with amount).
+**What was done**: Guided copy; spoken summary liveRegion; chip/80G Semantics.onTap; donate button includes amount; account email read-only; Form 10BE spoken when expanded; loading label.
+**Status**: ⚠️ Local — needs app build + plugin deploy for new copy keys on staging.
+
+### 2026-07-11 — iOS donate: remove invalid Razorpay callback_url (option A)
+**Requested by**: User — Donate now → loader → “Payment could not be completed”; no Safari. Chose fix A.
+**Root cause**: Staging Payment Link rejected `radioudaan://` callback_url.
+**What was done**: Omit callback_url; verify captures paid links without payment_id; iOS poll 15×2s; zip `dist/radioudaan-app-api-staging.zip`.
+**Status**: ⚠️ **Must deploy plugin zip to staging** before iPhone retest. App poll change needs build only for longer wait (optional).
+
 ### 2026-07-10 — iOS push: inbox yes, banner no
 **Requested by**: User — Android push works; iOS sees tab inbox only; diagnostics show APNs+FCM+register success.
 **Findings**: Inbox ≠ push (DB first). Staging FCM project match OK, 4 devices. Client registration healthy. Top cause: Firebase APNs Auth Key for iOS app on `radio-udaan-72232`.

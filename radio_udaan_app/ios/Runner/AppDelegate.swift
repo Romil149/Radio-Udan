@@ -24,7 +24,37 @@ import FirebaseMessaging
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    Self.registerShareChannel(messenger: engineBridge.applicationRegistrar.messenger())
     Self.applyCachedApnsTokenIfReady()
+  }
+
+  /// iOS system share with large sheet detent (full sheet + Close X).
+  private static func registerShareChannel(messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(
+      name: "radioudaan/share",
+      binaryMessenger: messenger
+    )
+    channel.setMethodCallHandler { call, result in
+      guard call.method == "shareText" else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      guard
+        let args = call.arguments as? [String: Any],
+        let text = args["text"] as? String,
+        !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      else {
+        result(
+          FlutterError(
+            code: "BAD_ARGS",
+            message: "shareText requires non-empty text",
+            details: nil
+          )
+        )
+        return
+      }
+      ShareLargeSheet.present(text: text, result: result)
+    }
   }
 
   override func application(

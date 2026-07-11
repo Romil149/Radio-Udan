@@ -57,12 +57,8 @@ class RadioUdaan_App_Razorpay_Client {
 		}
 
 		// Never set notify.email=true without an email — Razorpay rejects the link.
-		$callback = 'radioudaan://donate/verify';
-		$order_id = sanitize_text_field( (string) $callback_order_id );
-		if ( '' !== $order_id ) {
-			$callback .= '?order_id=' . rawurlencode( $order_id );
-		}
-
+		// Do NOT send callback_url with a custom scheme (radioudaan://…) — Razorpay
+		// requires https and rejects the Payment Link. iOS confirms via app-resume polling.
 		$body = array(
 			'amount'          => (int) $amount_paise,
 			'currency'        => 'INR',
@@ -74,8 +70,6 @@ class RadioUdaan_App_Razorpay_Client {
 				'email' => '' !== $email,
 			),
 			'reminder_enable' => false,
-			'callback_url'    => $callback,
-			'callback_method' => 'get',
 			'notes'           => self::stringify_notes( $notes ),
 		);
 		if ( ! empty( $customer_body ) ) {

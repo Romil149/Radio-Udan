@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../core/accessibility/udaan_semantics.dart';
 import '../../core/config/app_store_share.dart';
 import '../../core/providers/app_providers.dart';
+import '../../core/share/system_share.dart';
 import '../../core/theme/accessibility_scope.dart';
 import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
@@ -73,13 +73,11 @@ class _RadioTabState extends ConsumerState<RadioTab> {
       return;
     }
 
-    // Native OS share sheet only (iOS UIActivityViewController /
-    // Android system share) — no custom Share/Copy popup.
+    // Native OS share sheet only — iOS uses large-detent UIActivityViewController.
     try {
-      final result =
-          await SharePlus.instance.share(ShareParams(text: message.trim()));
+      final status = await shareSystemText(message.trim());
       if (!mounted) return;
-      if (result.status == ShareResultStatus.unavailable) {
+      if (status == SystemShareStatus.unavailable) {
         await Clipboard.setData(ClipboardData(text: message.trim()));
         if (!mounted) return;
         announceAndSnack(context, _copy.shareCopied);

@@ -411,6 +411,7 @@ class UdaanLabeledField extends StatelessWidget {
           AccessibleTextFieldSemantics(
             controller: controller,
             semanticsLabel: _fieldSemanticsLabel,
+            hint: hint,
             readOnly: readOnly,
             obscured: obscureText,
             isPassword: isPassword,
@@ -425,6 +426,7 @@ class UdaanLabeledField extends StatelessWidget {
                 child: AccessibleTextFieldSemantics(
                   controller: controller,
                   semanticsLabel: _fieldSemanticsLabel,
+                  hint: hint,
                   readOnly: readOnly,
                   obscured: obscureText,
                   isPassword: isPassword,
@@ -534,6 +536,7 @@ class UdaanPrimaryButton extends StatelessWidget {
     required this.onPressed,
     this.icon,
     this.loading = false,
+    this.semanticsLabel,
     super.key,
   });
 
@@ -542,21 +545,28 @@ class UdaanPrimaryButton extends StatelessWidget {
   final IconData? icon;
   final bool loading;
 
+  /// Spoken label override (e.g. include amount). Falls back to [label].
+  final String? semanticsLabel;
+
   @override
   Widget build(BuildContext context) {
     final palette = context.udaan;
+    final spoken = (semanticsLabel != null && semanticsLabel!.isNotEmpty)
+        ? semanticsLabel!
+        : label;
+    void activate() {
+      dismissKeyboard(context);
+      onPressed?.call();
+    }
+
     return Semantics(
       button: true,
-      label: label,
+      label: spoken,
       enabled: onPressed != null && !loading,
+      onTap: (onPressed != null && !loading) ? activate : null,
       child: ExcludeSemantics(
         child: FilledButton(
-          onPressed: loading
-              ? null
-              : () {
-                  dismissKeyboard(context);
-                  onPressed?.call();
-                },
+          onPressed: loading ? null : activate,
           style: FilledButton.styleFrom(
             backgroundColor: palette.primary,
             foregroundColor: palette.onPrimary,

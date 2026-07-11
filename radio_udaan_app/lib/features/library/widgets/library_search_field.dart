@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/accessibility/accessible_text_field_semantics.dart';
+import '../../../core/accessibility/udaan_semantics.dart';
 import '../../../core/theme/brand_tokens.dart';
 import '../../../core/utils/keyboard_dismiss.dart';
 import '../../../core/theme/udaan_colors.dart';
@@ -49,6 +50,8 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
   void _clearSearch() {
     widget.controller.clear();
     ref.read(librarySearchQueryProvider.notifier).state = '';
+    // Confirm clear for TalkBack/VoiceOver after leaving the text field.
+    announce(context, _copy.librarySearchCleared);
   }
 
   @override
@@ -126,23 +129,25 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
               ),
               if (hasText) ...[
                 const SizedBox(width: 4),
-                SizedBox(
-                  width: BrandTokens.a11yMinTapTarget,
-                  height: BrandTokens.a11yMinTapTarget,
-                  child: Semantics(
-                    button: true,
-                    label: _copy.librarySearchClear,
-                    child: ExcludeSemantics(
-                      child: IconButton(
-                        onPressed: _clearSearch,
-                        constraints: const BoxConstraints(
-                          minWidth: BrandTokens.a11yMinTapTarget,
-                          minHeight: BrandTokens.a11yMinTapTarget,
-                        ),
-                        icon: Icon(
-                          Icons.clear,
-                          color: context.udaan.primaryGlow,
-                        ),
+                // Outside the text-field ExcludeSemantics so SR can find it;
+                // UdaanAccessibleButton supplies onTap (label-only Semantics
+                // is often skipped / not activatable by TalkBack/VoiceOver).
+                UdaanAccessibleButton(
+                  label: _copy.librarySearchClear,
+                  onPressed: _clearSearch,
+                  child: SizedBox(
+                    width: BrandTokens.a11yMinTapTarget,
+                    height: BrandTokens.a11yMinTapTarget,
+                    child: IconButton(
+                      onPressed: _clearSearch,
+                      tooltip: _copy.librarySearchClear,
+                      constraints: const BoxConstraints(
+                        minWidth: BrandTokens.a11yMinTapTarget,
+                        minHeight: BrandTokens.a11yMinTapTarget,
+                      ),
+                      icon: Icon(
+                        Icons.clear,
+                        color: context.udaan.primaryGlow,
                       ),
                     ),
                   ),

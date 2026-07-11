@@ -1,6 +1,16 @@
 # Architecture Decisions Log
 <!-- When a design choice is made, document it here so we don't re-debate it. -->
 
+### 2026-07-11 — iOS share uses native large-detent sheet (not share_plus alone)
+**Context**: `share_plus` presents `UIActivityViewController` at medium detent (half sheet, no Close X). Dragging to full shows Close X.
+**Decision**: MethodChannel `radioudaan/share` + `ShareLargeSheet` sets `sheetPresentationController.detents = [.large()]`. Flutter Radio share uses this on iOS; Android keeps `share_plus`.
+**Consequences**: Needs native rebuild; Close X is still system chrome (device-dependent). Custom Close+Share sheet remains optional if large detent is insufficient for a11y.
+
+### 2026-07-11 — iOS Payment Link: no custom-scheme callback_url
+**Context**: Staging `POST /donate/orders` with `platform=ios` failed: `callback_url: URL should be sent in callback_url field.` Razorpay rejects `radioudaan://…`.
+**Decision**: Option A — omit `callback_url` / `callback_method` on Payment Links; iOS confirms via app-resume poll of `/donate/verify`. Capture when link status is `paid` even if `payment_id` is temporarily empty.
+**Consequences**: User must return to the app after Safari payment; webhook still recommended for reliability.
+
 ### 2026-07-10 — iOS crash after +46: no early Firebase.configure
 **Context**: +47 removed UIScene (crash). +48 restored UIScene but added native `FirebaseApp.configure()` + SceneDelegate Messaging calls; user still saw crash “after build 46”.
 **Decision**: AppDelegate matches +46 launch contract — Dart owns Firebase init; cache APNs and apply only when `FirebaseApp.app() != nil`. Keep UIScene forever.

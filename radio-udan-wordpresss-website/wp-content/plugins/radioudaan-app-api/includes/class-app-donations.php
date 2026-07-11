@@ -240,15 +240,21 @@ class RadioUdaan_App_Donations {
 						$first = $link['payments'][0];
 						if ( is_array( $first ) && ! empty( $first['payment_id'] ) ) {
 							$payment_id = (string) $first['payment_id'];
+						} elseif ( is_array( $first ) && ! empty( $first['id'] ) ) {
+							$payment_id = (string) $first['id'];
 						} elseif ( is_string( $first ) ) {
 							$payment_id = $first;
 						}
+					}
+					// Payment Link can be paid before payment_id is present in the payload.
+					if ( '' === $payment_id ) {
+						$payment_id = 'plink:' . sanitize_text_field( (string) $donation->payment_link_id );
 					}
 				}
 			}
 		}
 
-		if ( ! $verified || '' === $payment_id ) {
+		if ( ! $verified ) {
 			return new WP_REST_Response(
 				array(
 					'success' => false,

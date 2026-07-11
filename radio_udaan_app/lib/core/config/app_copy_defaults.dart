@@ -62,23 +62,33 @@ const Map<String, String> appCopyDefaults = {
   'donate_us_subtitle': 'Support our mission online, UPI, or bank transfer',
   'donate_pay_online_title': 'Pay Online',
   'donate_pay_online_subtitle':
-      'Donate securely with UPI, card, or net banking.',
+      'Choose a donation amount, then donate securely. You can pick a suggested amount or type your own.',
   'donate_pay_online_subtitle_ios':
-      'Opens Razorpay in Safari. After you pay, return here — we confirm automatically.',
-  'donate_amount_heading': 'Choose donation amount',
-  'donate_amount_chip_semantics': 'Donation amount {amount} rupees',
-  'donate_selected_summary': 'You will donate ₹{amount}',
+      'Choose a donation amount, then donate securely. You can pick a suggested amount or type your own. Opens Razorpay in Safari. After you pay, return here — we confirm automatically.',
+  'donate_amount_heading':
+      'Donation amounts. Pick one, or use the custom amount field below.',
+  'donate_amount_chip_semantics': '{amount} rupees',
+  'donate_selected_summary': 'You will donate {amount} rupees',
   'donate_amount_custom_label': 'Custom amount in rupees',
+  'donate_amount_custom_hint':
+      'Optional. Type here to donate a different amount.',
   'donate_now_button': 'Donate now',
+  'donate_now_with_amount':
+      'Donate now. You will donate {amount} rupees.',
+  'donate_now_loading': 'Donating, please wait',
   'donate_success_title': 'Thank you for your donation',
   'donate_success_message':
       'Your payment was successful. Thank you for supporting Radio Udaan.',
   'donate_failed_message': 'Payment could not be completed. Please try again.',
   'donate_80g_checkbox': 'I want an 80G tax exemption receipt',
+  'donate_80g_hint': 'Includes Form 10BE tax receipt.',
   'donate_pan_label': 'PAN',
   'donate_pan_required': 'Enter a valid PAN to receive your 80G receipt.',
   'donate_form_10be_note':
       'Form 10BE for income tax filing will be issued by the trust as per Income Tax rules.',
+  'donate_email_from_account': 'Email, from your account, cannot edit',
+  'donate_custom_amount_selected':
+      'Custom amount {amount} rupees selected.',
   'donate_opening_payment': 'Opening secure payment',
   'donate_opening_with_amount':
       'Donating {amount} rupees. Opening secure payment.',
@@ -160,6 +170,7 @@ const Map<String, String> appCopyDefaults = {
   'library_save_video': 'Save',
   'library_saved_video': 'Saved',
   'library_search_clear': 'Clear search',
+  'library_search_cleared': 'Search cleared',
   'library_search_empty': 'No videos match your search.',
   'library_search_hint': 'Type keywords...',
   'library_search_videos': 'Search Videos',

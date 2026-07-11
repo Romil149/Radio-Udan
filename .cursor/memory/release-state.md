@@ -3,11 +3,11 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+50** @ `bf64868` | **yes** | 2026-07-10 | Notification detail TalkBack fix + load more; iOS foreground push presentation; App Users soft-delete; FCM iOS/Android breakdown |
-| TestFlight iOS | **2.0.0+50** | CI after push | 2026-07-10 | Use +50; skip +47/+48 if crash |
-| Staging WP plugin | local zip needed | **no** | 2026-07-10 | **Must redeploy** — App Users BUG-025/026 + FCM platform stats |
-| Staging API smoke | verify-wp 7/7 | local | 2026-07-10 | Copy catalog 447 keys |
-| Staging copy keys | 444+ | staging | 2026-07-10 | ≥300 gate PASS |
+| GitHub `main` | **2.0.0+51** (pending push) | **pushing** | 2026-07-11 | iOS large share sheet; Library Clear a11y; Pay Online TalkBack; iOS Razorpay no callback_url |
+| TestFlight iOS | **2.0.0+51** | CI after push | 2026-07-11 | Use +51; skip +47/+48 if crash |
+| Staging WP plugin | **zip ready** `dist/radioudaan-app-api-staging.zip` | **no** | 2026-07-11 | Deploy for Payment Link + copy keys + App Users + FCM stats |
+| Staging API smoke | 19/19 | local | 2026-07-11 | verify-wp 7/7; copy catalog 455 local |
+| Staging copy keys | 447 | staging | 2026-07-11 | ≥300 gate PASS; redeploy for new keys |
 
 ## TestFlight build bump (mandatory — same commit)
 
@@ -20,6 +20,6 @@ Never push app code to `main` without bumping the build if the last build is alr
 
 ## Open deploy blockers
 
-1. **Deploy full App API plugin zip to staging** — App Users Pause/Delete + soft-delete tombstones + FCM iOS/Android stats.
-2. **Firebase APNs key** — keys show in Console but send returns `THIRD_PARTY_AUTH_ERROR`; verify Key `2LBVNRUSS7` is a real **APNs** key (not App Store Connect API) or create a new APNs key and re-upload.
-3. **Device register** — TestFlight **+50**; confirm APNs + FCM + server accept in diagnostics.
+1. **Deploy full App API plugin zip to staging** — Payment Link (no callback_url) + App Users + FCM stats + new copy keys.
+2. **Firebase APNs key** — **DONE 2026-07-11** Key `UKUT4P22CH`; user confirmed iOS push banner works.
+3. **Device register** — TestFlight **+51**; confirm share sheet + Library Clear on device.

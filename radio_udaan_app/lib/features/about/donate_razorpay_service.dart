@@ -161,7 +161,7 @@ class DonateRazorpayService {
 
   /// Polls Razorpay/WP until paid or attempts exhausted. Silent when still unpaid.
   Future<bool> pollConfirmPendingPayment({
-    int attempts = 6,
+    int attempts = 15,
     Duration gap = const Duration(seconds: 2),
   }) async {
     for (var i = 0; i < attempts; i++) {

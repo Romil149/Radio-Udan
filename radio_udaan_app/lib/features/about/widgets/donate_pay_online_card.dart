@@ -54,6 +54,7 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
   String? _errorMessage;
   String? _successMessage;
   String? _statusMessage;
+  String? _lastAnnouncedAmount;
   DonateRazorpayService? _checkout;
 
   @override
@@ -63,6 +64,7 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
     final presets = widget.razorpay.presetAmounts;
     if (presets.isNotEmpty) {
       _selectedPreset = presets.first;
+      _lastAnnouncedAmount = presets.first.toString();
     }
     _customAmountController.addListener(_onAmountEdited);
   }
@@ -70,6 +72,31 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
   void _onAmountEdited() {
     if (!mounted) return;
     setState(() {});
+    final amount = _amountRupeesLabel();
+    if (amount == null || amount == _lastAnnouncedAmount) return;
+    // Custom field drives amount — announce only when value changes.
+    if (_customAmountController.text.trim().isEmpty) return;
+    _lastAnnouncedAmount = amount;
+    final message = widget.copy.donateCustomAmountSelected
+        .replaceAll('{amount}', amount);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      announce(context, message);
+    });
+  }
+
+  void _selectPreset(int amount) {
+    setState(() {
+      _selectedPreset = amount;
+      _lastAnnouncedAmount = '$amount';
+      _customAmountController.clear();
+      _errorMessage = null;
+      _successMessage = null;
+    });
+    announce(
+      context,
+      widget.copy.donateAmountChipSemantics.replaceAll('{amount}', '$amount'),
+    );
   }
 
   DonateRazorpayService _service() {
@@ -312,6 +339,8 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
     }
     final summary = _selectedSummary;
     final customEmpty = _customAmountController.text.trim().isEmpty;
+    final accountEmail = session?.email?.trim() ?? '';
+    final accountEmailHidden = accountEmail.isNotEmpty;
 
     return Container(
       width: double.infinity,
@@ -379,14 +408,7 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
                   customEmpty ? _selectedPreset : null,
               chipSemantics: widget.copy.donateAmountChipSemantics,
               enabled: !_loading,
-              onSelect: (amount) {
-                setState(() {
-                  _selectedPreset = amount;
-                  _customAmountController.clear();
-                  _errorMessage = null;
-                  _successMessage = null;
-                });
-              },
+              onSelect: _selectPreset,
             ),
             const SizedBox(height: 16),
           ],
@@ -394,6 +416,7 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
             anchorKey: _amountAnchorKey,
             child: UdaanLabeledField(
               label: widget.copy.donateAmountCustomLabel,
+              hint: widget.copy.donateAmountCustomHint,
               controller: _customAmountController,
               focusNode: _customAmountFocus,
               keyboardDoneLabel: widget.copy.keyboardDone,
@@ -407,40 +430,44 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
           ),
           if (summary.isNotEmpty) ...[
             const SizedBox(height: 14),
-            ExcludeSemantics(
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: palette.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: palette.primaryGlow.withValues(alpha: 0.55),
+            Semantics(
+              liveRegion: true,
+              label: summary,
+              child: ExcludeSemantics(
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.volunteer_activism_outlined,
-                      color: palette.primary,
-                      size: 22,
+                  decoration: BoxDecoration(
+                    color: palette.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: palette.primaryGlow.withValues(alpha: 0.55),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        summary,
-                        style: udaanGoogleFont(
-                          context,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: palette.primary,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.volunteer_activism_outlined,
+                        color: palette.primary,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          summary,
+                          style: udaanGoogleFont(
+                            context,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: palette.primary,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -450,7 +477,11 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
             Semantics(
               checked: _want80g,
               label: widget.copy.donate80gCheckbox,
-              hint: widget.copy.donateForm10beNote,
+              hint: widget.copy.donate80gHint,
+              enabled: !_loading,
+              onTap: _loading
+                  ? null
+                  : () => setState(() => _want80g = !_want80g),
               child: ExcludeSemantics(
                 child: Material(
                   color: palette.surfaceContainerHigh,
@@ -518,7 +549,62 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
                   ],
                 ),
               ),
-              if (_session?.email?.trim().isEmpty ?? true) ...[
+              if (accountEmailHidden) ...[
+                const SizedBox(height: 12),
+                Semantics(
+                  label: widget.copy.donateEmailFromAccount,
+                  value: session!.email!.trim(),
+                  child: ExcludeSemantics(
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: palette.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: palette.outlineVariant),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.lock_outline,
+                            size: 20,
+                            color: palette.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.copy.emailLabel,
+                                  style: udaanGoogleFont(
+                                    context,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: palette.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  session.email!.trim(),
+                                  style: udaanGoogleFont(
+                                    context,
+                                    fontSize: 16,
+                                    color: palette.onBackground,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ] else ...[
                 const SizedBox(height: 12),
                 FormFieldAnchor(
                   anchorKey: _emailAnchorKey,
@@ -533,14 +619,17 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
                 ),
               ],
               const SizedBox(height: 10),
-              ExcludeSemantics(
-                child: Text(
-                  widget.copy.donateForm10beNote,
-                  style: udaanGoogleFont(
-                    context,
-                    fontSize: 14,
-                    height: 1.4,
-                    color: palette.onSurfaceVariant,
+              Semantics(
+                label: widget.copy.donateForm10beNote,
+                child: ExcludeSemantics(
+                  child: Text(
+                    widget.copy.donateForm10beNote,
+                    style: udaanGoogleFont(
+                      context,
+                      fontSize: 14,
+                      height: 1.4,
+                      color: palette.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),
@@ -572,11 +661,19 @@ class _DonatePayOnlineCardState extends ConsumerState<DonatePayOnlineCard>
             label: widget.copy.donateNowButton,
             icon: Icons.payments_outlined,
             loading: _loading,
+            semanticsLabel: _donateButtonSemantics,
             onPressed: _loading ? null : _donate,
           ),
         ],
       ),
     );
+  }
+
+  String get _donateButtonSemantics {
+    if (_loading) return widget.copy.donateNowLoading;
+    final amount = _amountRupeesLabel();
+    if (amount == null) return widget.copy.donateNowButton;
+    return widget.copy.donateNowWithAmount.replaceAll('{amount}', amount);
   }
 }
 
@@ -721,6 +818,7 @@ class _AmountChip extends StatelessWidget {
       selected: selected,
       enabled: enabled,
       label: semanticsLabel,
+      onTap: enabled ? onTap : null,
       child: ExcludeSemantics(
         child: Material(
           color: bg,
