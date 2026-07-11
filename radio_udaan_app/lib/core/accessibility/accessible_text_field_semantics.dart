@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 
 import '../config/app_copy_defaults.dart';
 import 'udaan_semantics.dart';
@@ -36,6 +37,9 @@ class AccessibleTextFieldSemantics extends StatefulWidget {
     this.passwordHiddenAnnounce,
     this.readOnly = false,
     this.focusNode,
+    this.onClear,
+    this.clearActionLabel,
+    this.sortKey,
     super.key,
   });
 
@@ -55,6 +59,14 @@ class AccessibleTextFieldSemantics extends StatefulWidget {
   final String? passwordHiddenAnnounce;
   final bool readOnly;
   final FocusNode? focusNode;
+
+  /// When both [onClear] and [clearActionLabel] are set, exposes Clear via the
+  /// VoiceOver Actions rotor / TalkBack custom actions on this field.
+  final VoidCallback? onClear;
+  final String? clearActionLabel;
+
+  /// Optional traversal order (e.g. [OrdinalSortKey] before a sibling Clear).
+  final SemanticsSortKey? sortKey;
 
   @override
   State<AccessibleTextFieldSemantics> createState() =>
@@ -119,6 +131,13 @@ class _AccessibleTextFieldSemanticsState
 
   @override
   Widget build(BuildContext context) {
+    final clear = widget.onClear;
+    final clearLabel = widget.clearActionLabel;
+    final Map<CustomSemanticsAction, VoidCallback>? actions =
+        clear != null && clearLabel != null && clearLabel.isNotEmpty
+            ? {CustomSemanticsAction(label: clearLabel): clear}
+            : null;
+
     return Semantics(
       textField: true,
       label: widget.semanticsLabel,
@@ -130,6 +149,8 @@ class _AccessibleTextFieldSemanticsState
       obscured: widget.obscured,
       readOnly: widget.readOnly,
       focused: widget.focusNode?.hasFocus ?? false,
+      sortKey: widget.sortKey,
+      customSemanticsActions: actions,
       child: ExcludeSemantics(child: widget.child),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -57,12 +58,13 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
   @override
   Widget build(BuildContext context) {
     final hasText = widget.controller.text.isNotEmpty;
+    final copy = _copy;
 
     return Column(
       key: widget.sectionKey,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        LibrarySectionHeading(title: _copy.librarySearchVideos),
+        LibrarySectionHeading(title: copy.librarySearchVideos),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: BrandTokens.screenPadding),
           child: Row(
@@ -71,8 +73,12 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
               Expanded(
                 child: AccessibleTextFieldSemantics(
                   controller: widget.controller,
-                  semanticsLabel: _copy.librarySearchHint,
+                  semanticsLabel: copy.librarySearchHint,
                   focusNode: widget.focusNode,
+                  sortKey: const OrdinalSortKey(1.0),
+                  onClear: hasText ? _clearSearch : null,
+                  clearActionLabel:
+                      hasText ? copy.librarySearchClear : null,
                   child: TextField(
                     controller: widget.controller,
                     focusNode: widget.focusNode,
@@ -85,7 +91,7 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
                       color: context.udaan.onBackground,
                     ),
                     decoration: InputDecoration(
-                      hintText: _copy.librarySearchHint,
+                      hintText: copy.librarySearchHint,
                       hintStyle: GoogleFonts.atkinsonHyperlegible(
                         fontSize: 18,
                         fontWeight: FontWeight.w500,
@@ -129,25 +135,28 @@ class _LibrarySearchFieldState extends ConsumerState<LibrarySearchField> {
               ),
               if (hasText) ...[
                 const SizedBox(width: 4),
-                // Outside the text-field ExcludeSemantics so SR can find it;
-                // UdaanAccessibleButton supplies onTap (label-only Semantics
-                // is often skipped / not activatable by TalkBack/VoiceOver).
-                UdaanAccessibleButton(
-                  label: _copy.librarySearchClear,
-                  onPressed: _clearSearch,
-                  child: SizedBox(
-                    width: BrandTokens.a11yMinTapTarget,
-                    height: BrandTokens.a11yMinTapTarget,
-                    child: IconButton(
-                      onPressed: _clearSearch,
-                      tooltip: _copy.librarySearchClear,
-                      constraints: const BoxConstraints(
-                        minWidth: BrandTokens.a11yMinTapTarget,
-                        minHeight: BrandTokens.a11yMinTapTarget,
-                      ),
-                      icon: Icon(
-                        Icons.clear,
-                        color: context.udaan.primaryGlow,
+                // Sibling Clear: Semantics.excludeSemantics (property) so
+                // TalkBack/VoiceOver keep onTap; OrdinalSortKey keeps it
+                // between the field and results below.
+                Semantics(
+                  sortKey: const OrdinalSortKey(1.1),
+                  button: true,
+                  label: copy.librarySearchClear,
+                  excludeSemantics: true,
+                  onTap: _clearSearch,
+                  container: true,
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: InkWell(
+                      onTap: _clearSearch,
+                      customBorder: const CircleBorder(),
+                      child: SizedBox(
+                        width: BrandTokens.a11yMinTapTarget,
+                        height: BrandTokens.a11yMinTapTarget,
+                        child: Icon(
+                          Icons.clear,
+                          color: context.udaan.primaryGlow,
+                        ),
                       ),
                     ),
                   ),

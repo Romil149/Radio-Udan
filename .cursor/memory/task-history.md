@@ -2,6 +2,12 @@
 # Task History
 <!-- Log of completed work. Helps new sessions understand what's already done. -->
 
+### 2026-07-11 — Library search Clear missed by VoiceOver/TalkBack
+**Requested by**: User — cross after search missed by blind users.
+**Root cause**: Clear only as right sibling; `ExcludeSemantics` widget pattern; VO jumped to results. Field had no Actions entry for Clear.
+**Fix**: `CustomSemanticsAction` “Clear search” on the field; visible X with `Semantics.excludeSemantics` + InkWell; sort keys; bump **+64**.
+**Status**: Shipping
+
 ### 2026-07-11 — Remove Push diagnostics from Settings
 **Requested by**: User — remove Push Diagnostics from settings completely.
 **What was done**: Removed Settings entry; deleted `push_diagnostics_screen.dart`. Internal `PushDiagnostics` logger kept for push service.
