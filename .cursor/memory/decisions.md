@@ -1,6 +1,11 @@
 # Architecture Decisions Log
 <!-- When a design choice is made, document it here so we don't re-debate it. -->
 
+### 2026-07-11 — Notifications: list-only (no detail page)
+**Context**: Detail page + filters caused tap failures and VoiceOver crashes; user asked to keep it simple.
+**Decision**: Remove `NotificationDetailScreen`. Inbox is a scrollable list (≤20) with title + full message per row. Push/system notification opens the list, not a detail page. No All/Unread filters or Mark all. Keep Refresh + showing count.
+**Consequences**: Deep-link “Open in app” stays removed. Can reintroduce detail later if needed.
+
 ### 2026-07-11 — Notifications: More inbox top 20; no admin Open in app
 **Context**: User wants Notifications under User profile (top 20 → detail title/message) and removal of WP “Open in app” compose option.
 **Decision**: Restore More-tab inbox (single page, `perPage: 20`). Detail shows title + body only. Admin compose always sends empty `action_data` (message-only); Open-in-app UI removed.

@@ -2,6 +2,11 @@
 # Task History
 <!-- Log of completed work. Helps new sessions understand what's already done. -->
 
+### 2026-07-11 — Notifications simplified: list-only (no detail page)
+**Requested by**: User — remove internal page; keep simple; remove extras.
+**Decision**: Inbox shows title + full message on each row. No detail screen, no All/Unread, no Mark all. Push opens Notifications list. Refresh kept.
+**Status**: Bump **+61**, shipping
+
 ### 2026-07-11 — Video: Showing 18 but one row + VO Refresh crash
 **Evidence**: User WhatsApp video — Notifications shows "Showing 18", one row (`rvgrwff`), empty space, Refresh → crash dialog.
 **Root cause**: Duplicate ListView keys when notification `id` failed strict `as num` cast (all became 0) → Flutter collapsed to one child; VO crash on broken tree.

@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-import '../../features/more/notification_detail_screen.dart';
 import '../../features/more/notifications_providers.dart';
+import '../../features/more/notifications_screen.dart';
 import '../api/radioudaan_api.dart';
-import '../models/app_notification.dart';
 import '../router/app_router.dart';
 
-/// Opens notification detail after a system / local notification tap.
-/// Hydrates via GET when only id is known (same detail as More → Notifications).
+/// Opens the notifications list after a system / local notification tap.
 ///
-/// Retries until [rootNavigatorKey] has a mounted context (cold start), then
-/// pushes detail. If GET fails, still opens with title/body from the push payload.
+/// Marks the item read when an id is known, waits for [rootNavigatorKey]
+/// (cold start), then presents [NotificationsScreen] if it is not already
+/// the top route, and refreshes the inbox.
 Future<void> openNotificationFromPush({
   required RadioUdaanApi api,
   required Map<String, dynamic> data,
@@ -23,60 +22,33 @@ Future<void> openNotificationFromPush({
       int.tryParse(data['notification_id']?.toString() ?? '') ??
       0;
 
-  final resolvedTitle = (title ?? data['title']?.toString() ?? '').trim();
-  final resolvedBody = (body ?? data['body']?.toString() ?? '').trim();
-
-  AppNotification? notification;
-
   if (id > 0) {
     try {
-      notification = await api.getNotification(id);
-      if (!notification.isRead) {
-        try {
-          await api.markNotificationRead(id);
-          notification = notification.asRead();
-        } catch (_) {}
-      }
+      await api.markNotificationRead(id);
     } catch (_) {
-      // Fall through to synthetic notification from push data.
+      // Best-effort; list refresh still runs below.
     }
   }
 
   final navContext = await waitForRootNavigatorContext();
   if (navContext == null || !navContext.mounted) return;
 
-  if (notification != null) {
-    Navigator.of(navContext).push(
+  final navigator = Navigator.of(navContext);
+  var alreadyOnList = false;
+  navigator.popUntil((route) {
+    alreadyOnList = route.settings.name == NotificationsScreen.routeName;
+    return true; // inspect top only — do not pop
+  });
+
+  if (!alreadyOnList && navContext.mounted) {
+    navigator.push(
       MaterialPageRoute<void>(
-        builder: (_) => NotificationDetailScreen(notification: notification!),
+        settings: const RouteSettings(name: NotificationsScreen.routeName),
+        builder: (_) => const NotificationsScreen(),
       ),
     );
-    refreshNotificationInboxFromNav();
-    return;
   }
 
-  // Prefer payload copy when API failed or id unknown; keep id when known.
-  if (resolvedTitle.isEmpty && resolvedBody.isEmpty) {
-    refreshNotificationInboxFromNav();
-    return;
-  }
-
-  if (!navContext.mounted) return;
-  Navigator.of(navContext).push(
-    MaterialPageRoute<void>(
-      builder: (_) => NotificationDetailScreen(
-        notification: AppNotification(
-          id: id,
-          type: data['type']?.toString() ?? 'general',
-          title: resolvedTitle.isNotEmpty ? resolvedTitle : 'Notification',
-          body: resolvedBody,
-          isRead: true,
-          createdAt: DateTime.now().toUtc().toIso8601String(),
-          data: data,
-        ),
-      ),
-    ),
-  );
   refreshNotificationInboxFromNav();
 }
 

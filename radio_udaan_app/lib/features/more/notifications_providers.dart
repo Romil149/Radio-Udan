@@ -10,10 +10,6 @@ final notificationsListProvider = StateNotifierProvider.autoDispose<
   return NotificationsListNotifier(ref);
 });
 
-final notificationsMarkingAllProvider = StateProvider.autoDispose<bool>(
-  (ref) => false,
-);
-
 /// Unread count for More tile; works even if inbox never opened.
 final notificationUnreadCountProvider =
     FutureProvider.autoDispose<int>((ref) async {
@@ -37,23 +33,16 @@ class NotificationsListNotifier
   }
 
   final Ref _ref;
-  bool _unreadOnly = false;
 
   static const int _perPage = 20;
 
-  bool get unreadOnly => _unreadOnly;
-
-  Future<void> refresh({bool? unreadOnly}) async {
-    if (unreadOnly != null) {
-      _unreadOnly = unreadOnly;
-    }
+  Future<void> refresh() async {
     // Soft refresh: keep existing items visible — never flash loading.
     final previous = state.valueOrNull;
 
     try {
       final next = await _ref.read(radioudaanApiProvider).listNotifications(
             perPage: _perPage,
-            unreadOnly: _unreadOnly,
           );
       if (!mounted) return;
 
@@ -102,12 +91,6 @@ class NotificationsListNotifier
     return true;
   }
 
-  Future<void> setUnreadFilter(bool unreadOnly) async {
-    if (_unreadOnly == unreadOnly) return;
-    _unreadOnly = unreadOnly;
-    await refresh();
-  }
-
   Future<void> markRead(int id) async {
     if (id < 1) return;
 
@@ -141,32 +124,6 @@ class NotificationsListNotifier
     } catch (_) {
       state = AsyncValue.data(previous);
       _ref.invalidate(notificationUnreadCountProvider);
-    }
-  }
-
-  Future<void> markAllRead() async {
-    final current = state.valueOrNull;
-    if (current == null || current.unreadCount <= 0) return;
-
-    _ref.read(notificationsMarkingAllProvider.notifier).state = true;
-    final previous = current;
-    final updatedItems =
-        current.items.map((item) => item.asRead()).toList(growable: false);
-    state = AsyncValue.data(
-      current.copyWith(items: updatedItems, unreadCount: 0),
-    );
-    _ref.invalidate(notificationUnreadCountProvider);
-
-    try {
-      await _ref.read(radioudaanApiProvider).markAllNotificationsRead();
-      if (_unreadOnly) {
-        await refresh();
-      }
-    } catch (_) {
-      state = AsyncValue.data(previous);
-      _ref.invalidate(notificationUnreadCountProvider);
-    } finally {
-      _ref.read(notificationsMarkingAllProvider.notifier).state = false;
     }
   }
 }

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -12,17 +10,16 @@ import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
 import '../../core/widgets/empty_state.dart';
 import '../auth/widgets/udaan_auth_widgets.dart';
-import 'notification_detail_screen.dart';
 import 'notification_time_formatter.dart';
 import 'notifications_providers.dart';
 import 'settings_screen.dart';
 import 'widgets/notification_list_card.dart';
 
-enum _NotificationFilter { all, unread }
-
-/// In-app notification inbox: top 20 from `GET /notifications`.
+/// In-app notification inbox: scrollable top-20 list from `GET /notifications`.
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
+
+  static const String routeName = '/notifications';
 
   @override
   ConsumerState<NotificationsScreen> createState() =>
@@ -30,9 +27,6 @@ class NotificationsScreen extends ConsumerStatefulWidget {
 }
 
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
-  AppCopy get _copy => ref.read(appCopyProvider);
-
-  _NotificationFilter _filter = _NotificationFilter.all;
   String? _lastAnnouncedSignature;
   String? _lastAnnouncedError;
 
@@ -89,12 +83,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     required int shown,
     required int unread,
     required int total,
-    required bool unreadOnly,
   }) {
     if (shown == 0) {
-      return unreadOnly
-          ? copy.notificationsUnreadEmpty
-          : copy.notificationsEmpty;
+      return copy.notificationsEmpty;
     }
     final base = shown == 1
         ? copy.notificationsSummaryOne(unread)
@@ -111,9 +102,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     required int unread,
     required int total,
   }) {
-    final unreadOnly = _filter == _NotificationFilter.unread;
     // Signature omits unread so mark-read optimistic updates do not re-announce.
-    final signature = '${_filter.name}|$shown|$total';
+    final signature = '$shown|$total';
     if (_lastAnnouncedSignature == signature) return;
     _lastAnnouncedSignature = signature;
     _announce(
@@ -122,15 +112,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         shown: shown,
         unread: unread,
         total: total,
-        unreadOnly: unreadOnly,
       ),
     );
-  }
-
-  Future<void> _markAllRead() async {
-    await ref.read(notificationsListProvider.notifier).markAllRead();
-    if (!mounted) return;
-    _announce(_copy.notificationsMarkedAll);
   }
 
   /// Soft refresh only — no VoiceOver announcement (avoids crash under focus).
@@ -156,8 +139,6 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   Widget build(BuildContext context) {
     final copy = ref.watch(appCopyProvider);
     final notifications = ref.watch(notificationsListProvider);
-    final markingAll = ref.watch(notificationsMarkingAllProvider);
-    final unreadCount = notifications.valueOrNull?.unreadCount ?? 0;
     final cached = notifications.valueOrNull;
 
     return Scaffold(
@@ -183,43 +164,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      _filterToggle(
-                        copy.notificationsFilterAll,
-                        _filter == _NotificationFilter.all,
-                        () {
-                          setState(() {
-                            _filter = _NotificationFilter.all;
-                            _lastAnnouncedSignature = null;
-                          });
-                          ref
-                              .read(notificationsListProvider.notifier)
-                              .setUnreadFilter(false);
-                        },
-                      ),
-                      _filterToggle(
-                        unreadCount > 0
-                            ? copy.notificationsFilterUnreadCount(unreadCount)
-                            : copy.notificationsFilterUnread,
-                        _filter == _NotificationFilter.unread,
-                        () {
-                          setState(() {
-                            _filter = _NotificationFilter.unread;
-                            _lastAnnouncedSignature = null;
-                          });
-                          ref
-                              .read(notificationsListProvider.notifier)
-                              .setUnreadFilter(true);
-                        },
-                      ),
-                    ],
-                  ),
                   if (cached != null && cached.items.isNotEmpty) ...[
-                    const SizedBox(height: 8),
                     Semantics(
                       label: _showingStatusLine(copy, cached),
                       child: Text(
@@ -231,64 +176,27 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 4),
                   ],
-                  Row(
-                    children: [
-                      TextButton(
-                        onPressed: _refreshInbox,
-                        style: TextButton.styleFrom(
-                          foregroundColor: context.udaan.primaryGlow,
-                          minimumSize: const Size(
-                            BrandTokens.a11yMinTapTarget,
-                            BrandTokens.a11yMinTapTarget,
-                          ),
-                        ),
-                        child: Text(
-                          copy.notificationsRefresh,
-                          style: GoogleFonts.atkinsonHyperlegible(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
-                          ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      onPressed: _refreshInbox,
+                      style: TextButton.styleFrom(
+                        foregroundColor: context.udaan.primaryGlow,
+                        minimumSize: const Size(
+                          BrandTokens.a11yMinTapTarget,
+                          BrandTokens.a11yMinTapTarget,
                         ),
                       ),
-                      if (unreadCount > 0)
-                        markingAll
-                            ? TextButton(
-                                onPressed: null,
-                                style: TextButton.styleFrom(
-                                  foregroundColor: context.udaan.primaryGlow,
-                                  minimumSize: const Size(
-                                    BrandTokens.a11yMinTapTarget,
-                                    BrandTokens.a11yMinTapTarget,
-                                  ),
-                                ),
-                                child: SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: context.udaan.primary,
-                                  ),
-                                ),
-                              )
-                            : TextButton(
-                                onPressed: _markAllRead,
-                                style: TextButton.styleFrom(
-                                  foregroundColor: context.udaan.primaryGlow,
-                                  minimumSize: const Size(
-                                    BrandTokens.a11yMinTapTarget,
-                                    BrandTokens.a11yMinTapTarget,
-                                  ),
-                                ),
-                                child: Text(
-                                  copy.notificationsMarkAllRead,
-                                  style: GoogleFonts.atkinsonHyperlegible(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                    ],
+                      child: Text(
+                        copy.notificationsRefresh,
+                        style: GoogleFonts.atkinsonHyperlegible(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -363,9 +271,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             height: MediaQuery.sizeOf(context).height * 0.25,
             child: EmptyState(
               icon: Icons.notifications_none_outlined,
-              message: _filter == _NotificationFilter.unread
-                  ? copy.notificationsUnreadEmpty
-                  : copy.notificationsEmpty,
+              message: copy.notificationsEmpty,
               actionLabel: copy.notificationsManageSettings,
               onAction: _openSettings,
             ),
@@ -388,70 +294,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               items[i].createdAt,
               copy,
             ),
-            onTap: () {
-              final item = items[i];
-              // Push first so mark-read hang never blocks navigation.
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => NotificationDetailScreen(
-                    notification: item,
-                  ),
-                ),
-              );
-              unawaited(
-                ref.read(notificationsListProvider.notifier).markRead(item.id),
-              );
-            },
           ),
       ],
-    );
-  }
-
-  /// Accessible filter toggle — avoids FilterChip + ExcludeSemantics VO crashes.
-  Widget _filterToggle(String label, bool selected, VoidCallback onTap) {
-    final selectedHint = selected ? ', selected' : ', not selected';
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: '$label$selectedHint',
-      excludeSemantics: true,
-      onTap: onTap,
-      container: true,
-      child: Material(
-        color: selected
-            ? context.udaan.primary
-            : context.udaan.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            constraints: const BoxConstraints(
-              minHeight: BrandTokens.a11yMinTapTarget,
-              minWidth: BrandTokens.a11yMinTapTarget,
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: selected
-                    ? context.udaan.primaryGlow
-                    : context.udaan.outlineVariant,
-              ),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              label,
-              style: GoogleFonts.atkinsonHyperlegible(
-                fontWeight: FontWeight.w700,
-                color: selected
-                    ? context.udaan.onPrimary
-                    : context.udaan.onBackground,
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

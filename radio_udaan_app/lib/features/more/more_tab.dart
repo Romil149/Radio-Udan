@@ -116,7 +116,14 @@ class MoreTab extends ConsumerWidget {
                     icon: Icons.notifications_outlined,
                     iconBackground: context.udaan.surfaceContainerHigh,
                     iconColor: context.udaan.primaryGlow,
-                    onTap: () => _push(context, const NotificationsScreen()),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        settings: const RouteSettings(
+                          name: NotificationsScreen.routeName,
+                        ),
+                        builder: (_) => const NotificationsScreen(),
+                      ),
+                    ),
                   );
                 },
               ),
