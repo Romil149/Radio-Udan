@@ -29,14 +29,13 @@ You work on **Radio Udaan**: Flutter app + WordPress App API. The user delegates
 
 | Environment | API base |
 |-------------|----------|
-| **Production** | `https://radioudaan.com/wp-json/radioudaan/v1` |
-| **Staging** | `https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1` |
-| **Local dev** | `https://radio/wp-json/radioudaan/v1` |
+| **Production (app default)** | `https://radioudaan.com/wp-json/radioudaan/v1` |
+| Staging (optional QA only) | `https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1` |
 
-CI release builds (APK / TestFlight on push to `main`) bake **production**. Staging remains on nexusfleck for optional QA builds via `workflow_dispatch` (`api_base_url` override).
+Flutter `AppEnv` bootstraps **production** only (optional `--dart-define=API_BASE_URL=...` override). CI release builds bake production. Staging remains for optional `workflow_dispatch` QA.
 
-Staging site: https://nexusfleck.com/radioudaan/  
-Production site: https://radioudaan.com/
+Production site: https://radioudaan.com/  
+Staging site: https://nexusfleck.com/radioudaan/
 
 ## Cursor Cloud specific instructions
 

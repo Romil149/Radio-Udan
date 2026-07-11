@@ -1,6 +1,11 @@
 # Architecture Decisions Log
 <!-- When a design choice is made, document it here so we don't re-debate it. -->
 
+### 2026-07-11 — AppEnv production-only bootstrap
+**Context**: User no longer wants staging/local defaults in the Flutter app.
+**Decision**: `AppEnv` keeps only `productionApiBaseUrl`; bootstrap always uses production unless `--dart-define=API_BASE_URL` is set. Staging/local URLs removed from Dart.
+**Consequences**: Local/debug runs hit radioudaan.com by default. Optional QA still possible via dart-define or CI workflow_dispatch.
+
 ### 2026-07-11 — Release CI bakes production API
 **Context**: Production site + plugin live at radioudaan.com; secrets imported; user asked to publish the app.
 **Decision**: Default GitHub Actions iOS/Android release builds use `https://radioudaan.com/wp-json/radioudaan/v1`. Staging URL kept for optional `workflow_dispatch` QA. `AppEnv.productionApiBaseUrl` added; web bootstrap defaults to production.

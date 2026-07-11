@@ -1,6 +1,4 @@
-import 'package:flutter/foundation.dart';
-
-/// Build-time defaults. Override with `--dart-define=API_BASE_URL=...` for other environments.
+/// Build-time defaults. Override with `--dart-define=API_BASE_URL=...` when needed.
 class AppEnv {
   AppEnv._();
 
@@ -9,20 +7,13 @@ class AppEnv {
   static const String productionApiBaseUrl =
       'https://radioudaan.com/wp-json/radioudaan/v1';
 
-  static const String stagingApiBaseUrl =
-      'https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1';
-
-  static const String localApiBaseUrl =
-      'https://radio/wp-json/radioudaan/v1';
-
-  /// Bootstrap URL for the first `GET /config` (must reach a live API).
+  /// Bootstrap URL for the first `GET /config`.
   ///
-  /// Precedence: `--dart-define=API_BASE_URL=...` wins; Flutter web defaults to
-  /// production (site is live); device/debug without defines uses local.
+  /// Defaults to [productionApiBaseUrl]. CI release builds also pass
+  /// `--dart-define=API_BASE_URL=...` (same production URL).
   static String get bootstrapApiBaseUrl {
     if (_apiBaseFromEnv.isNotEmpty) return _apiBaseFromEnv;
-    if (kIsWeb) return productionApiBaseUrl;
-    return localApiBaseUrl;
+    return productionApiBaseUrl;
   }
 
   static const String appName = 'Radio Udaan';
