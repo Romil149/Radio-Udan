@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+64** (pushing) | **pending** | 2026-07-11 | Library search Clear: Actions rotor + fixed X semantics |
+| GitHub `main` | **2.0.0+64** @ `a3a13ae` | **yes** | 2026-07-11 | Library search Clear: Actions rotor + fixed X semantics |
 | TestFlight iOS | **2.0.0+64** | CI after push | 2026-07-11 | Retest Library search Clear with VoiceOver |
 | Staging WP plugin | **needs redeploy** | **no** | 2026-07-11 | |
 | Staging copy keys | 459 | staging | 2026-07-11 | |
