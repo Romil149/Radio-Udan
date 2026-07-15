@@ -97,6 +97,7 @@ class RadioUdaan_Admin_Secrets_Transfer {
 			RadioUdaan_App_Donations_Settings::OPTION_RAZORPAY_ENABLED,
 			RadioUdaan_App_Donations_Settings::OPTION_RAZORPAY_CHECKOUT_NAME,
 			RadioUdaan_App_Donations_Settings::OPTION_RAZORPAY_PRESET_AMOUNTS,
+			RadioUdaan_App_Donations_Settings::OPTION_IOS_SAFARI_PAYMENT_URL,
 			RadioUdaan_App_Donations_Settings::OPTION_80G_ENABLED,
 			RadioUdaan_App_Donations_Settings::OPTION_80G_PDF_EMAIL,
 			RadioUdaan_App_Donations_Settings::OPTION_80G_REG_NUMBER,

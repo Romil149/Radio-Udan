@@ -700,6 +700,11 @@ class RadioUdaan_Admin_Settings_Page {
 					<label for="donate_razorpay_preset_amounts"><?php esc_html_e( 'Preset amounts (INR, comma-separated)', 'radioudaan-app-api' ); ?></label>
 					<input type="text" name="donate_razorpay_preset_amounts" id="donate_razorpay_preset_amounts" class="large-text" value="<?php echo esc_attr( $c['donate_razorpay_preset_amounts'] ?? '100,500,1000,5000' ); ?>" />
 				</div>
+				<div class="ru-admin__field">
+					<label for="donate_ios_safari_payment_url"><?php esc_html_e( 'iOS Safari payment URL', 'radioudaan-app-api' ); ?></label>
+					<input type="url" name="donate_ios_safari_payment_url" id="donate_ios_safari_payment_url" class="large-text" value="<?php echo esc_attr( $c['donate_ios_safari_payment_url'] ?? RadioUdaan_App_Donations_Settings::DEFAULT_IOS_SAFARI_PAYMENT_URL ); ?>" placeholder="<?php echo esc_attr( RadioUdaan_App_Donations_Settings::DEFAULT_IOS_SAFARI_PAYMENT_URL ); ?>" />
+					<p class="description"><?php esc_html_e( 'Opened in Safari on iPhone. Not used for Android native checkout.', 'radioudaan-app-api' ); ?></p>
+				</div>
 				<div class="ru-admin__toggle">
 					<input type="checkbox" name="donate_80g_enabled" id="donate_80g_enabled" value="1" <?php checked( ! empty( $c['donate_80g_enabled'] ) ); ?> />
 					<label for="donate_80g_enabled"><strong><?php esc_html_e( 'Enable 80G receipt option in app', 'radioudaan-app-api' ); ?></strong></label>

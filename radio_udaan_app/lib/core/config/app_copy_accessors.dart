@@ -65,6 +65,11 @@ extension AppCopyStrings on AppCopy {
   String get donatePayOnlineSubtitle => text('donate_pay_online_subtitle');
   String get donatePayOnlineSubtitleIos =>
       text('donate_pay_online_subtitle_ios');
+  String get donateSafariTitle => text('donate_safari_title');
+  String get donateSafariSubtitle => text('donate_safari_subtitle');
+  String get donateSafariButton => text('donate_safari_button');
+  String get donateSafariButtonSemantics =>
+      text('donate_safari_button_semantics');
   String get donateAmountHeading => text('donate_amount_heading');
   String get donateAmountChipSemantics => text('donate_amount_chip_semantics');
   String get donateSelectedSummary => text('donate_selected_summary');

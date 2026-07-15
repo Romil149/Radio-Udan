@@ -18,6 +18,7 @@ class RadioUdaan_App_Donations_Settings {
 	const OPTION_RAZORPAY_WEBHOOK_SECRET       = 'radioudaan_donate_razorpay_webhook_secret';
 	const OPTION_RAZORPAY_CHECKOUT_NAME        = 'radioudaan_donate_razorpay_checkout_name';
 	const OPTION_RAZORPAY_PRESET_AMOUNTS       = 'radioudaan_donate_razorpay_preset_amounts';
+	const OPTION_IOS_SAFARI_PAYMENT_URL        = 'radioudaan_donate_ios_safari_payment_url';
 	const OPTION_80G_ENABLED                   = 'radioudaan_donate_80g_enabled';
 	const OPTION_80G_PDF_EMAIL                 = 'radioudaan_donate_80g_pdf_email';
 	const OPTION_80G_REG_NUMBER                = 'radioudaan_donate_80g_reg_number';
@@ -25,7 +26,8 @@ class RadioUdaan_App_Donations_Settings {
 	const OPTION_80G_TRUST_PAN                 = 'radioudaan_donate_80g_trust_pan';
 	const OPTION_80G_SIGNATORY_ATTACHMENT_ID   = 'radioudaan_donate_80g_signatory_attachment_id';
 
-	const DEFAULT_PRESET_AMOUNTS = '100,500,1000,5000';
+	const DEFAULT_PRESET_AMOUNTS         = '100,500,1000,5000';
+	const DEFAULT_IOS_SAFARI_PAYMENT_URL = 'https://rzp.io/rzp/dswNW5g';
 
 	/**
 	 * @return bool
@@ -110,6 +112,20 @@ class RadioUdaan_App_Donations_Settings {
 	}
 
 	/**
+	 * Payment page opened in Safari on iPhone (App Store compliance).
+	 * Not used for Android native checkout.
+	 *
+	 * @return string
+	 */
+	public static function get_ios_safari_payment_url() {
+		$url = trim( (string) get_option( self::OPTION_IOS_SAFARI_PAYMENT_URL, '' ) );
+		if ( '' === $url ) {
+			return self::DEFAULT_IOS_SAFARI_PAYMENT_URL;
+		}
+		return esc_url_raw( $url );
+	}
+
+	/**
 	 * Public slice for GET /config.
 	 *
 	 * @return array<string,mixed>
@@ -123,6 +139,7 @@ class RadioUdaan_App_Donations_Settings {
 				'preset_amounts'             => array(),
 				'eighty_g_enabled'           => false,
 				'eighty_g_pdf_email_enabled' => false,
+				'ios_safari_payment_url'     => self::get_ios_safari_payment_url(),
 			);
 		}
 
@@ -133,6 +150,7 @@ class RadioUdaan_App_Donations_Settings {
 			'preset_amounts'             => self::get_preset_amounts(),
 			'eighty_g_enabled'           => self::is_80g_enabled(),
 			'eighty_g_pdf_email_enabled' => self::is_80g_pdf_email_enabled(),
+			'ios_safari_payment_url'     => self::get_ios_safari_payment_url(),
 		);
 	}
 

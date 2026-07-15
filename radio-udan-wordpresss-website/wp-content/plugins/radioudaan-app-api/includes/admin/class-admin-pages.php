@@ -451,6 +451,7 @@ class RadioUdaan_Admin_Pages {
 					'donate_razorpay_key_id'    => RadioUdaan_App_Donations_Settings::get_key_id(),
 					'donate_razorpay_checkout_name' => (string) get_option( RadioUdaan_App_Donations_Settings::OPTION_RAZORPAY_CHECKOUT_NAME, '' ),
 					'donate_razorpay_preset_amounts' => (string) get_option( RadioUdaan_App_Donations_Settings::OPTION_RAZORPAY_PRESET_AMOUNTS, RadioUdaan_App_Donations_Settings::DEFAULT_PRESET_AMOUNTS ),
+					'donate_ios_safari_payment_url' => RadioUdaan_App_Donations_Settings::get_ios_safari_payment_url(),
 					'donate_80g_enabled'        => RadioUdaan_App_Donations_Settings::is_80g_enabled(),
 					'donate_80g_pdf_email'      => RadioUdaan_App_Donations_Settings::is_80g_pdf_email_enabled(),
 					'donate_80g_reg_number'     => RadioUdaan_App_Donations_Settings::get_80g_reg_number(),

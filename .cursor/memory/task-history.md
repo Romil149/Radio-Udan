@@ -2,6 +2,21 @@
 # Task History
 <!-- Log of completed work. Helps new sessions understand what's already done. -->
 
+### 2026-07-14 — iOS Safari-only donate (App Store 3.1.1)
+**Requested by**: User — Apple 3.1.1 rejection fix; Safari link-out only on iOS/iPad.
+**Agents**: Daniel (Flutter / mobile).
+**What was done**: iOS never mounts `DonatePayOnlineCard`; shows `DonateSafariLinkCard` opening Razorpay payment page via `LaunchMode.externalApplication`. URL from `info_hub.donate.razorpay.ios_safari_payment_url` or default `https://rzp.io/rzp/dswNW5g`. Android native Pay Online unchanged. Scan & bank kept. Copy keys `donate_safari_*`. Build **2.0.0+69**.
+**Files**: `donate_screen.dart`, `donate_safari_link_card.dart`, `info_hub_config.dart`, `app_copy_defaults.dart`, `app_copy_accessors.dart`, WP `class-app-copy-catalog.php`, `pubspec.yaml`, `app-review-donations.md`, `release-state.md`.
+**Status**: ✅ Local complete (not committed / not shipped).
+**Notes**: Deploy WP catalog for new copy keys before expecting remote overrides; app defaults work offline.
+
+### 2026-07-11 — App Store Connect submission paste package
+**Requested by**: User — one markdown for ASC iOS submit (description exact, 4+, Review Notes, checklist).
+**Agents**: Taylor (technical writer) — packaging only; no ASC API.
+**What was done**: Created `.cursor/memory/app-store-connect-submission.md` (subtitle, promo, exact description, keywords, What’s New 2.0.0, Support/Privacy URLs from prod config, age 4+ guidance, build 68, Review Notes with demo PLACEHOLDERs, human click checklist). Fixed stale “I completed payment” in `app-review-donations.md` → auto-confirm on resume. Updated `release-state.md`.
+**Status**: ✅ Package ready — human must fill demo phone/OTP, screenshots/App Privacy, then Submit for Review.
+**Notes**: Privacy URL live: `https://radioudaan.com/privacy-policy/`.
+
 ### 2026-07-11 — Production cutover: bake radioudaan.com into release builds
 **Requested by**: User — secrets imported; go ahead and publish.
 **What was done**: CI iOS/APK + AppEnv → production API; bump **+66**; ship Transfer secrets plugin; prod smoke 19/19.

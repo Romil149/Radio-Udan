@@ -123,6 +123,10 @@ class DonateConfig {
 
 /// Public Razorpay slice from `info_hub.donate.razorpay`.
 class RazorpayDonateConfig {
+  /// App Store–compliant iOS fallback when WP config omits the Safari URL.
+  static const String defaultIosSafariPaymentUrl =
+      'https://rzp.io/rzp/dswNW5g';
+
   const RazorpayDonateConfig({
     this.enabled = false,
     this.keyId = '',
@@ -130,6 +134,7 @@ class RazorpayDonateConfig {
     this.presetAmounts = const [],
     this.eightyGEnabled = false,
     this.eightyGPdfEmailEnabled = false,
+    this.iosSafariPaymentUrl = '',
   });
 
   factory RazorpayDonateConfig.fromJson(Map<String, dynamic>? json) {
@@ -149,6 +154,8 @@ class RazorpayDonateConfig {
       presetAmounts: presets,
       eightyGEnabled: json['eighty_g_enabled'] == true,
       eightyGPdfEmailEnabled: json['eighty_g_pdf_email_enabled'] == true,
+      iosSafariPaymentUrl:
+          json['ios_safari_payment_url']?.toString() ?? '',
     );
   }
 
@@ -158,6 +165,16 @@ class RazorpayDonateConfig {
   final List<int> presetAmounts;
   final bool eightyGEnabled;
   final bool eightyGPdfEmailEnabled;
+
+  /// From `info_hub.donate.razorpay.ios_safari_payment_url` (may be empty).
+  final String iosSafariPaymentUrl;
+
+  /// Safari payment page: config URL when set, else [defaultIosSafariPaymentUrl].
+  String get resolvedIosSafariPaymentUrl {
+    final fromConfig = iosSafariPaymentUrl.trim();
+    if (fromConfig.isNotEmpty) return fromConfig;
+    return defaultIosSafariPaymentUrl;
+  }
 }
 
 class DonateBankConfig {

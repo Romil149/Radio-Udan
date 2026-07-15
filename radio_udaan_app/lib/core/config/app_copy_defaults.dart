@@ -65,6 +65,12 @@ const Map<String, String> appCopyDefaults = {
       'Choose a donation amount, then donate securely. You can pick a suggested amount or type your own.',
   'donate_pay_online_subtitle_ios':
       'Choose a donation amount, then donate securely. You can pick a suggested amount or type your own. Opens Razorpay in Safari. After you pay, return here — we confirm automatically.',
+  'donate_safari_title': 'Donate online',
+  'donate_safari_subtitle':
+      'Payment opens in Safari for Udaan Empowerment Trust. You can choose your amount on the secure Razorpay page.',
+  'donate_safari_button': 'Donate in Safari',
+  'donate_safari_button_semantics':
+      'Donate in Safari. Opens Razorpay payment page for Udaan Empowerment Trust.',
   'donate_amount_heading':
       'Donation amounts. Pick one, or use the custom amount field below.',
   'donate_amount_chip_semantics': '{amount} rupees',

@@ -521,6 +521,12 @@ class RadioUdaan_Admin_App_Hub {
 				sanitize_text_field( wp_unslash( $_POST['donate_razorpay_preset_amounts'] ) )
 			);
 		}
+		if ( isset( $_POST['donate_ios_safari_payment_url'] ) ) {
+			update_option(
+				RadioUdaan_App_Donations_Settings::OPTION_IOS_SAFARI_PAYMENT_URL,
+				esc_url_raw( wp_unslash( $_POST['donate_ios_safari_payment_url'] ) )
+			);
+		}
 		update_option( RadioUdaan_App_Donations_Settings::OPTION_80G_ENABLED, ! empty( $_POST['donate_80g_enabled'] ) ? 1 : 0 );
 		update_option( RadioUdaan_App_Donations_Settings::OPTION_80G_PDF_EMAIL, ! empty( $_POST['donate_80g_pdf_email'] ) ? 1 : 0 );
 		if ( isset( $_POST['donate_80g_reg_number'] ) ) {

@@ -1,3 +1,6 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,10 +15,20 @@ import '../../core/theme/udaan_google_fonts.dart';
 import '../../core/widgets/brand_app_bar.dart';
 import '../auth/widgets/udaan_auth_widgets.dart';
 import 'widgets/donate_pay_online_card.dart';
+import 'widgets/donate_safari_link_card.dart';
 
 /// Donate screen: UPI QR + bank transfer details from WordPress config.
+///
+/// iOS/iPad: Safari link-out only for online pay (App Store 3.1.1).
+/// Android: native Razorpay [DonatePayOnlineCard] when enabled.
 class DonateScreen extends ConsumerWidget {
   const DonateScreen({super.key});
+
+  /// Never mounts [DonatePayOnlineCard] on Apple platforms.
+  static bool get _showIosSafariDonate {
+    if (kIsWeb) return false;
+    return Platform.isIOS;
+  }
 
   Future<void> _copyValue(BuildContext context, AppCopy copy, String value) async {
     if (value.trim().isEmpty) return;
@@ -111,7 +124,13 @@ class DonateScreen extends ConsumerWidget {
                 ),
               ),
             ],
-            if (donate.razorpay.enabled) ...[
+            if (_showIosSafariDonate) ...[
+              const SizedBox(height: 24),
+              DonateSafariLinkCard(
+                copy: copy,
+                paymentUrl: donate.razorpay.resolvedIosSafariPaymentUrl,
+              ),
+            ] else if (donate.razorpay.enabled) ...[
               const SizedBox(height: 24),
               DonatePayOnlineCard(copy: copy, razorpay: donate.razorpay),
             ],

@@ -126,6 +126,13 @@
 **Decision**: Follow `.cursor/rules/coding-standards.mdc` — centralised `AppStrings` / `AppConstants`, `parseApiError()` for Dio, module doc comments, dev UI only in `kDebugMode`, no filler comments.
 **Consequences**: All new Flutter/PHP work must match; bump `AppConstants.appVersion` when `pubspec` version changes.
 
+### 2026-07-14 — iOS donate: Safari payment-page link-out only (3.1.1)
+**Context**: App Store rejection for in-app donation checkout (amount chips / create order) on iOS.
+**Options Considered**: (1) Keep Payment Link + order/verify flow; (2) Safari-only to fixed Razorpay payment page; (3) Remove online donate on iOS.
+**Decision**: **iOS/iPad** never mount `DonatePayOnlineCard`. Show `DonateSafariLinkCard` that opens Safari (`LaunchMode.externalApplication`) to `ios_safari_payment_url` from config, else `https://rzp.io/rzp/dswNW5g`. **Android** keeps native Razorpay. QR + bank unchanged on all platforms.
+**Reasoning**: Simplest Guideline 3.1.1–compliant charitable donation path; no in-app purchase UI on Apple.
+**Consequences**: No amount presets / 80G / order create on iOS app UI; donors pick amount on Razorpay’s page. Build **2.0.0+69**.
+
 ### 2026-07-08 — Razorpay donations: Android native SDK, iOS payment link
 **Context**: In-app donations via Razorpay with 80G receipts; Apple Guideline 3.1.1 restricts in-app purchase of digital goods — charitable donations to a registered trust are generally exempt, but embedding third-party checkout in WebView on iOS is risky.
 **Options Considered**: (1) WebView Razorpay on both platforms; (2) native SDK both; (3) native Android + Payment Link (Safari) on iOS.
