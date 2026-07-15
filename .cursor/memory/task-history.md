@@ -2,6 +2,13 @@
 # Task History
 <!-- Log of completed work. Helps new sessions understand what's already done. -->
 
+### 2026-07-15 — iPad cold-launch blank page (App Store 2.1a)
+**Requested by**: User — ASC rejection build 70, blank page on cold launch (iPad Air M3 / iPadOS 26).
+**Root cause**: (1) Firebase/Crashlytics could hang before `runApp`; (2) bootstrap navigated to `/login` when config failed then router forced `/bootstrap` with `SizedBox.shrink()` blank; (3) `ValueKey(settingsKey)` remounted MaterialApp.router; (4) white LaunchScreen looked like a blank page.
+**What was done**: Timed-out safe init; stay on splash offline+Retry when `!configLoaded`; allow auth routes when config null; remove MaterialApp remount key; dark launch storyboards; bump **2.0.0+71**.
+**Files**: `main.dart`, `bootstrap_screen.dart`, `app_router.dart`, `app.dart`, LaunchScreen/Main storyboards, `pubspec.yaml`, `release-state.md`
+**Status**: ✅ Local fix — needs TestFlight +71 for App Review resubmit.
+
 ### 2026-07-15 — Lock-screen / notification radio controls disabled
 **Requested by**: User — Stop disabled in Notification Center / lock screen on Android + iOS.
 **Root cause**: `RadioAudioHandler` exposed stop-only controls; iOS/Android media UIs primarily enable pause/play. Also only piped `playbackEventStream` (misses some `playing` flips) and left `systemActions` empty.

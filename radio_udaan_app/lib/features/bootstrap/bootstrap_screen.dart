@@ -19,13 +19,14 @@ class BootstrapScreen extends ConsumerStatefulWidget {
 
 class _BootstrapScreenState extends ConsumerState<BootstrapScreen> {
   bool _navigated = false;
+  bool _configFailed = false;
   final DateTime _splashStarted = DateTime.now();
 
   /// Minimum time on splash so branding is visible (Stitch layout).
   static const Duration _minSplash = Duration(milliseconds: 1800);
 
   void _navigate(BootstrapResult result) {
-    if (_navigated) return;
+    if (_navigated || _configFailed) return;
     final elapsed = DateTime.now().difference(_splashStarted);
     final wait = _minSplash - elapsed;
     if (wait > Duration.zero) {
@@ -39,7 +40,14 @@ class _BootstrapScreenState extends ConsumerState<BootstrapScreen> {
   }
 
   void _completeNavigation(BootstrapResult result) {
-    if (_navigated) return;
+    if (_navigated || _configFailed) return;
+
+    // Offline / config failure: stay on splash with retry — never blank login.
+    if (!result.configLoaded && !result.forceUpdateRequired) {
+      setState(() => _configFailed = true);
+      return;
+    }
+
     _navigated = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -71,6 +79,14 @@ class _BootstrapScreenState extends ConsumerState<BootstrapScreen> {
     });
   }
 
+  void _retryBootstrap() {
+    setState(() {
+      _navigated = false;
+      _configFailed = false;
+    });
+    ref.invalidate(bootstrapProvider);
+  }
+
   @override
   Widget build(BuildContext context) {
     final bootstrap = ref.watch(bootstrapProvider);
@@ -84,9 +100,19 @@ class _BootstrapScreenState extends ConsumerState<BootstrapScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: bootstrap.when(
         data: (result) {
-          _navigate(result);
-          // Keep splash visible until navigation completes (avoids black flash).
-          if (_navigated) return const SizedBox.shrink();
+          if (!_configFailed) {
+            _navigate(result);
+          }
+          // Keep SplashBody visible until the route actually changes (no blank).
+          if (_configFailed) {
+            return SplashBody(
+              branding: branding,
+              copy: copy,
+              statusMessage: copy.bootstrapOffline,
+              showLoading: false,
+              onRetry: _retryBootstrap,
+            );
+          }
           return SplashBody(
             branding: branding,
             copy: copy,
@@ -106,10 +132,7 @@ class _BootstrapScreenState extends ConsumerState<BootstrapScreen> {
           statusMessage: copy.bootstrapOffline,
           showLoading: false,
           errorDetail: error.toString(),
-          onRetry: () {
-            _navigated = false;
-            ref.invalidate(bootstrapProvider);
-          },
+          onRetry: _retryBootstrap,
         ),
       ),
     );

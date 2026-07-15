@@ -26,15 +26,7 @@ class RadioUdaanApp extends ConsumerWidget {
       branding: branding,
       settings: settings,
     );
-    final settingsKey = Object.hash(
-      settings.highContrast,
-      settings.textScale,
-      settings.boldText,
-      settings.reduceMotion,
-    );
-
     return MaterialApp.router(
-      key: ValueKey(settingsKey),
       title: branding.appName,
       theme: theme,
       routerConfig: router,

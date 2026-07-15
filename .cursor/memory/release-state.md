@@ -3,17 +3,18 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+70** @ `b43ae8f` **yes** 2026-07-15 | Lock-screen pause/stop media controls |
-| TestFlight iOS | **2.0.0+70** | CI after push | 2026-07-15 | Production API; Safari donate + media controls |
-| Android APK | **2.0.0+70** | CI after push | 2026-07-15 | Production API; native Razorpay + media controls |
+| GitHub `main` | **2.0.0+71** | CI after this push | 2026-07-15 | iPad cold-launch blank fix (ASC 2.1a) |
+| TestFlight iOS | **2.0.0+71** | CI after push | 2026-07-15 | Verify iPhone + iPad Simulator before ASC |
+| Android APK | **2.0.0+71** | CI after push | 2026-07-15 | Production API |
 | **Production WP** (`radioudaan.com`) | secrets imported | **yes** | 2026-07-11 | Redeploy plugin for Safari URL + copy keys |
 | Production copy keys | **472+** | prod | 2026-07-15 | Redeploy for `donate_safari_*` + `ios_safari_payment_url` |
 
 ## App Store Connect metadata
 
-- **ASC paste package**: `.cursor/memory/app-store-connect-submission.md` — update build to **2.0.0 (69)** before resubmit.
+- **ASC paste package**: `.cursor/memory/app-store-connect-submission.md` — update build to **2.0.0 (71)** before resubmit.
+- **2026-07-15**: iPad blank-page fix local **+71** (Firebase timeout, splash offline UI, no MaterialApp remount, dark launch).
 - **2026-07-15**: iOS donate is Safari link-out only (`https://rzp.io/rzp/dswNW5g`). Use `app-review-donations.md` for Review Notes.
-- **Still awaiting human:** Install TestFlight **+69**, verify Safari donate, reply to App Review / resubmit with build 69.
+- **Still awaiting human:** Ship TestFlight **+71**, verify cold launch on iPad, reply to App Review / resubmit.
 
 ## Open deploy blockers
 

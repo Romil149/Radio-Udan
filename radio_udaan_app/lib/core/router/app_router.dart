@@ -70,7 +70,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       if (path == '/bootstrap') return null;
 
+      // When config is still null, allow auth + force-update so a failed
+      // bootstrap cannot trap the user on a blank remount of /bootstrap.
       if (config == null) {
+        if (_isAuthRoute(path) || path == '/force-update') {
+          return null;
+        }
         return '/bootstrap';
       }
 
