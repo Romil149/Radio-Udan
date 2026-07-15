@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+71** | CI after this push | 2026-07-15 | iPad cold-launch blank fix (ASC 2.1a) |
+| GitHub `main` | **2.0.0+71** @ `a4f44b2` **yes** 2026-07-15 | iPad cold-launch blank fix (ASC 2.1a) |
 | TestFlight iOS | **2.0.0+71** | CI after push | 2026-07-15 | Verify iPhone + iPad Simulator before ASC |
 | Android APK | **2.0.0+71** | CI after push | 2026-07-15 | Production API |
 | **Production WP** (`radioudaan.com`) | secrets imported | **yes** | 2026-07-11 | Redeploy plugin for Safari URL + copy keys |
