@@ -1,7 +1,7 @@
 name: radio_udaan_app
 description: Radio Udaan — accessibility-first community radio app (Android + iOS).
 publish_to: 'none'
-version: 2.0.0+69
+version: 2.0.0+70
 
 environment:
   sdk: ^3.12.1

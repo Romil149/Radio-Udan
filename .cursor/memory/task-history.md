@@ -2,6 +2,13 @@
 # Task History
 <!-- Log of completed work. Helps new sessions understand what's already done. -->
 
+### 2026-07-15 — Lock-screen / notification radio controls disabled
+**Requested by**: User — Stop disabled in Notification Center / lock screen on Android + iOS.
+**Root cause**: `RadioAudioHandler` exposed stop-only controls; iOS/Android media UIs primarily enable pause/play. Also only piped `playbackEventStream` (misses some `playing` flips) and left `systemActions` empty.
+**What was done**: Broadcast pause+stop while playing; play+stop when paused with media; set `systemActions` play/pause/stop; refresh state from playbackEvent + playing + processingState streams. Build **2.0.0+70**.
+**Files**: `radio_audio_handler.dart`, `pubspec.yaml`
+**Status**: ✅ Local fix — needs TestFlight/APK ship to verify on device.
+
 ### 2026-07-14 — iOS Safari-only donate (App Store 3.1.1)
 **Requested by**: User — Apple 3.1.1 rejection fix; Safari link-out only on iOS/iPad.
 **Agents**: Daniel (Flutter / mobile).

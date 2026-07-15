@@ -3,10 +3,16 @@ import 'package:audio_session/audio_session.dart';
 import 'package:just_audio/just_audio.dart';
 
 /// System media session for live radio (`just_audio` + `audio_service`).
+///
+/// Lock screen / notification must expose **pause/play** (not stop-only).
+/// iOS Control Center and Android media notifications primarily enable those.
 class RadioAudioHandler extends BaseAudioHandler {
   RadioAudioHandler() {
-    _player.playbackEventStream.map(_transformEvent).pipe(playbackState);
+    _player.playbackEventStream.listen((_) => _broadcastState());
+    _player.playingStream.listen((_) => _broadcastState());
+    _player.processingStateStream.listen((_) => _broadcastState());
     _initSession();
+    _broadcastState();
   }
 
   final AudioPlayer _player = AudioPlayer();
@@ -78,12 +84,14 @@ class RadioAudioHandler extends BaseAudioHandler {
 
     if (canResumeLiveStream(streamUri)) {
       await _player.play();
+      _broadcastState();
       return;
     }
 
     _loadedStreamUri = streamUri;
     await _player.setAudioSource(AudioSource.uri(streamUri, tag: item));
     await _player.play();
+    _broadcastState();
   }
 
   /// Updates lock-screen / notification metadata when the on-air show changes.
@@ -104,10 +112,16 @@ class RadioAudioHandler extends BaseAudioHandler {
   }
 
   @override
-  Future<void> play() => _player.play();
+  Future<void> play() async {
+    await _player.play();
+    _broadcastState();
+  }
 
   @override
-  Future<void> pause() => _player.pause();
+  Future<void> pause() async {
+    await _player.pause();
+    _broadcastState();
+  }
 
   @override
   Future<void> seek(Duration position) async {
@@ -125,27 +139,49 @@ class RadioAudioHandler extends BaseAudioHandler {
     } catch (_) {
       // Best-effort — iOS may keep session until next activation.
     }
+    _broadcastState();
     await super.stop();
   }
 
-  PlaybackState _transformEvent(PlaybackEvent event) {
-    return PlaybackState(
-      controls: [
-        if (_player.playing) MediaControl.stop else MediaControl.play,
-      ],
-      androidCompactActionIndices: const [0],
-      processingState: const {
-        ProcessingState.idle: AudioProcessingState.idle,
-        ProcessingState.loading: AudioProcessingState.loading,
-        ProcessingState.buffering: AudioProcessingState.buffering,
-        ProcessingState.ready: AudioProcessingState.ready,
-        ProcessingState.completed: AudioProcessingState.completed,
-      }[_player.processingState]!,
-      playing: _player.playing,
-      updatePosition: _player.position,
-      bufferedPosition: _player.bufferedPosition,
-      speed: _player.speed,
-      queueIndex: event.currentIndex,
+  void _broadcastState() {
+    final playing = _player.playing;
+    final processing = _player.processingState;
+    final hasMedia = mediaItem.valueOrNull != null ||
+        processing != ProcessingState.idle ||
+        _loadedStreamUri != null;
+
+    final controls = <MediaControl>[
+      if (playing) MediaControl.pause else if (hasMedia) MediaControl.play,
+      if (playing || hasMedia) MediaControl.stop,
+    ];
+
+    playbackState.add(
+      PlaybackState(
+        controls: controls,
+        systemActions: const {
+          MediaAction.play,
+          MediaAction.pause,
+          MediaAction.stop,
+        },
+        androidCompactActionIndices: controls.isEmpty
+            ? const <int>[]
+            : List<int>.generate(
+                controls.length.clamp(0, 2),
+                (i) => i,
+              ),
+        processingState: const {
+          ProcessingState.idle: AudioProcessingState.idle,
+          ProcessingState.loading: AudioProcessingState.loading,
+          ProcessingState.buffering: AudioProcessingState.buffering,
+          ProcessingState.ready: AudioProcessingState.ready,
+          ProcessingState.completed: AudioProcessingState.completed,
+        }[processing]!,
+        playing: playing,
+        updatePosition: _player.position,
+        bufferedPosition: _player.bufferedPosition,
+        speed: _player.speed,
+        queueIndex: 0,
+      ),
     );
   }
 }
