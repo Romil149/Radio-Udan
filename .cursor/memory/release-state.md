@@ -3,7 +3,7 @@
 
 | Layer | Version / commit | Deployed? | Last verified | Notes |
 |-------|------------------|-----------|---------------|-------|
-| GitHub `main` | **2.0.0+70** | CI after this push | 2026-07-15 | Lock-screen pause/stop media controls |
+| GitHub `main` | **2.0.0+70** @ `b43ae8f` **yes** 2026-07-15 | Lock-screen pause/stop media controls |
 | TestFlight iOS | **2.0.0+70** | CI after push | 2026-07-15 | Production API; Safari donate + media controls |
 | Android APK | **2.0.0+70** | CI after push | 2026-07-15 | Production API; native Razorpay + media controls |
 | **Production WP** (`radioudaan.com`) | secrets imported | **yes** | 2026-07-11 | Redeploy plugin for Safari URL + copy keys |
