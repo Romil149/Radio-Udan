@@ -155,10 +155,10 @@ jobs:
           # Push to main: production. workflow_dispatch: inputs.api_base_url if set, else production.
           API_BASE_URL: ${{ github.event.inputs.api_base_url || env.PRODUCTION_API_BASE_URL }}
         run: |
-          # iOS stays on 2.0.0+71 until an explicit iOS bump (Android pubspec may be 3.0.0+N).
+          # iOS stays on marketing 2.0.0; build number must rise for each ASC upload.
           flutter build ipa --release \
             --build-name=2.0.0 \
-            --build-number=71 \
+            --build-number=72 \
             --dart-define=API_BASE_URL="$API_BASE_URL" \
             --export-options-plist=ios/ExportOptions.ci.plist
 

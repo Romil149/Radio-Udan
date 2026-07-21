@@ -1,5 +1,5 @@
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"
 #include "Generated.xcconfig"
-// Keep iOS store/TestFlight on 2.0.0+71 even when pubspec is Android 3.0.0+N.
+// Keep iOS marketing version 2.0.0; bump build only for ASC uniqueness.
 FLUTTER_BUILD_NAME=2.0.0
-FLUTTER_BUILD_NUMBER=71
+FLUTTER_BUILD_NUMBER=72
