@@ -29,7 +29,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCguBzurEU8WdwT_wzSuahE-DQViCG8vSE',
-    appId: '1:508596678027:android:88f0398cfe2642ac1b938e',
+    appId: '1:508596678027:android:1ed61f37f51077a81b938e',
     messagingSenderId: '508596678027',
     projectId: 'radio-udaan-72232',
     storageBucket: 'radio-udaan-72232.firebasestorage.app',

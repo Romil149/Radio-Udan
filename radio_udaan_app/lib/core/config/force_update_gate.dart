@@ -18,7 +18,7 @@ class ForceUpdateState {
 class ForceUpdateGate {
   // Android fallback (used when WP admin hasn't set Play URL yet).
   static const String androidMarketFallbackUrl =
-      'market://details?id=com.radioudaan.radio_udaan_app';
+      'market://details?id=bane.kjsdev.radioudaan';
 
   static ForceUpdateState evaluate({
     required RemoteConfig? config,

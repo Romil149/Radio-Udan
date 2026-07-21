@@ -903,3 +903,8 @@
 **Files changed**: WP config/admin/settings/copy catalog + `scripts/staging-api-smoke.sh`; Flutter `remote_config.dart`, `app_providers.dart`, `app_bootstrap.dart`, router/bootstrap + `force_update_gate.dart` and `force_update_screen.dart`.
 **Status**: ⚠️ Partial — local verification passed; staging API smoke failed because `/config.app_update.enabled` was missing (staging plugin redeploy required).
 **Notes**: Re-run `bash scripts/staging-api-smoke.sh` after uploading the full packaged plugin zip to staging.
+
+### 2026-07-21 — Push Android 3.0.0+76; keep iOS 2.0.0+71
+**Requested by**: User
+**What was done**: Native YouTube player; Play package/signing; pubspec 3.0.0+76; iOS locked via xcconfig + CI --build-name/--build-number 2.0.0+71.
+**Status**: Committing + pushing to GitHub

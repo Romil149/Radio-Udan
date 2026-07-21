@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,24 +12,17 @@ import '../../core/theme/brand_tokens.dart';
 import '../../core/theme/udaan_colors.dart';
 import '../../core/widgets/brand_app_bar.dart';
 import 'library_formatters.dart';
-import 'library_image_url.dart';
 
 /// Mobile WebView embed params — `youtube-nocookie` origin avoids YouTube error 15/153.
 const _libraryYoutubeParams = YoutubePlayerParams(
-  showControls: false,
-  showFullscreenButton: false,
+  showControls: true,
+  showFullscreenButton: true,
   origin: 'https://www.youtube-nocookie.com',
   enableCaption: true,
   showVideoAnnotations: false,
   playsInline: true,
-  pointerEvents: PointerEvents.none,
+  pointerEvents: PointerEvents.auto,
 );
-
-const _playbackStartTimeout = Duration(seconds: 15);
-
-/// Brief grace before clearing the starting overlay without waiting on flaky
-/// iframe [PlayerState.playing] (Option A — optimistic / intent-based UI).
-const _optimisticReadyGrace = Duration(milliseconds: 1000);
 
 /// In-app YouTube playback with Udaan chrome (IFrame API — stream only, store compliant).
 class LibraryPlayerScreen extends ConsumerStatefulWidget {
@@ -43,309 +35,82 @@ class LibraryPlayerScreen extends ConsumerStatefulWidget {
 }
 
 class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
-  AppCopy get _copy => ref.read(appCopyProvider);
-
   YoutubePlayerController? _controller;
   StreamSubscription<YoutubePlayerValue>? _playerSubscription;
-  StreamSubscription<YoutubeVideoState>? _videoStateSubscription;
-  Timer? _playbackTimeoutTimer;
-  Timer? _optimisticReadyTimer;
-  PlayerState? _lastAnnouncedPlayerState;
   bool _playerError = false;
-
-  /// Brief “starting” overlay only — never gated solely on iframe playing.
-  bool _startingPlayback = false;
-
-  /// User intent + last command (Play → true, Pause → false). Soft iframe
-  /// confirms may reinforce; unknown/cued/unStarted must not clear this.
-  bool _isPlaying = false;
-
-  /// True from Play until soft confirm, pause, end, failure, or reset.
-  /// Drives the 15s error path independently of the optimistic spinner clear.
-  bool _awaitingPlaybackConfirm = false;
 
   String? get _videoId {
     return YoutubePlayerController.convertUrlToId(widget.video.watchUrl) ??
         (widget.video.id.trim().isNotEmpty ? widget.video.id.trim() : null);
   }
 
-  void _announce(String message) {
-    announce(context, message);
+  @override
+  void initState() {
+    super.initState();
+    final videoId = _videoId;
+    if (videoId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _createAndCuePlayer(videoId);
+      });
+    }
   }
 
   @override
   void dispose() {
-    _cancelPlaybackTimeout();
-    _cancelOptimisticReady();
     _playerSubscription?.cancel();
-    _videoStateSubscription?.cancel();
     _controller?.close();
     super.dispose();
   }
 
-  /// Soft confirm from iframe probes — clears loader and cancels failure timeout.
-  void _onPlaybackStarted({bool announce = true}) {
-    _cancelPlaybackTimeout();
-    _cancelOptimisticReady();
-    _awaitingPlaybackConfirm = false;
-    if (!mounted) return;
-    setState(() {
-      _startingPlayback = false;
-      _isPlaying = true;
-    });
-    if (announce && _lastAnnouncedPlayerState != PlayerState.playing) {
-      _lastAnnouncedPlayerState = PlayerState.playing;
-      _announce('${_copy.libraryPlayVideo}. ${widget.video.title}');
-    }
-  }
-
-  /// Primary path: clear spinner after grace once controller exists + play requested.
-  void _scheduleOptimisticReady() {
-    _cancelOptimisticReady();
-    if (_controller == null) return;
-    _optimisticReadyTimer = Timer(_optimisticReadyGrace, () {
-      if (!mounted || !_startingPlayback || !_isPlaying) return;
-      if (_controller == null) return;
-      setState(() => _startingPlayback = false);
-    });
-  }
-
-  void _cancelOptimisticReady() {
-    _optimisticReadyTimer?.cancel();
-    _optimisticReadyTimer = null;
-  }
-
-  bool _isAudiblePlaybackState(PlayerState state) {
-    return state == PlayerState.playing || state == PlayerState.buffering;
-  }
-
-  /// Iframe [PlayerState] → soft UI updates only.
-  ///
-  /// unknown / cued / unStarted must not flip intent playing → false.
-  void _applyPlayerState(PlayerState state) {
-    switch (state) {
-      case PlayerState.playing:
-      case PlayerState.buffering:
-        _onPlaybackStarted(announce: false);
-        break;
-      case PlayerState.paused:
-        // During start, iframe often emits paused while still loading — ignore.
-        if (_awaitingPlaybackConfirm) break;
-        _cancelPlaybackTimeout();
-        _cancelOptimisticReady();
-        if (!mounted) return;
-        setState(() {
-          _startingPlayback = false;
-          _isPlaying = false;
-        });
-        if (_lastAnnouncedPlayerState != PlayerState.paused) {
-          _lastAnnouncedPlayerState = PlayerState.paused;
-          _announce(_copy.libraryPlayerPaused);
-        }
-        break;
-      case PlayerState.ended:
-        _cancelPlaybackTimeout();
-        _cancelOptimisticReady();
-        _awaitingPlaybackConfirm = false;
-        if (!mounted) return;
-        setState(() {
-          _startingPlayback = false;
-          _isPlaying = false;
-        });
-        _lastAnnouncedPlayerState = PlayerState.ended;
-        break;
-      case PlayerState.unknown:
-      case PlayerState.unStarted:
-      case PlayerState.cued:
-        // Keep intent; optimistic clear + soft probes + timeout own the loader.
-        break;
-    }
-  }
-
-  Future<void> _pollUntilPlaybackStarts(YoutubePlayerController controller) async {
-    const pollInterval = Duration(milliseconds: 400);
-    final deadline = DateTime.now().add(_playbackStartTimeout);
-
-    while (mounted && _awaitingPlaybackConfirm && DateTime.now().isBefore(deadline)) {
-      try {
-        final state = await controller.playerState;
-        if (_isAudiblePlaybackState(state)) {
-          _onPlaybackStarted(announce: false);
-          return;
-        }
-        if (state == PlayerState.ended) {
-          _applyPlayerState(state);
-          return;
-        }
-        // Spurious paused during start — keep polling for soft confirm.
-        final elapsed = await controller.currentTime;
-        if (elapsed > 0.1) {
-          _onPlaybackStarted(announce: false);
-          return;
-        }
-        final loaded = await controller.videoLoadedFraction;
-        if (loaded > 0.05 && elapsed > 0) {
-          _onPlaybackStarted(announce: false);
-          return;
-        }
-      } catch (_) {
-        // Player iframe may not be ready yet.
-      }
-      await Future<void>.delayed(pollInterval);
-    }
-  }
-
-  /// Soft probe after load — secondary to optimistic clear.
-  Future<void> _probePlaybackAfterLoad(YoutubePlayerController controller) async {
-    await Future<void>.delayed(const Duration(milliseconds: 350));
-    if (!mounted || !_awaitingPlaybackConfirm) return;
-    try {
-      final state = await controller.playerState;
-      if (_isAudiblePlaybackState(state)) {
-        _onPlaybackStarted(announce: false);
-        return;
-      }
-      final elapsed = await controller.currentTime;
-      if (elapsed > 0.1) {
-        _onPlaybackStarted(announce: false);
-      }
-    } catch (_) {
-      // Iframe may still be initializing.
-    }
-  }
-
-  void _cancelPlaybackTimeout() {
-    _playbackTimeoutTimer?.cancel();
-    _playbackTimeoutTimer = null;
-  }
-
-  void _startPlaybackTimeout() {
-    _cancelPlaybackTimeout();
-    _playbackTimeoutTimer = Timer(_playbackStartTimeout, () {
-      if (!mounted || !_awaitingPlaybackConfirm) return;
-      _handlePlayerFailure();
-    });
-  }
-
   void _handlePlayerFailure() {
-    _cancelPlaybackTimeout();
-    _cancelOptimisticReady();
-    _awaitingPlaybackConfirm = false;
     if (!mounted) return;
-    if (_playerError && !_startingPlayback && !_isPlaying) return;
-    setState(() {
-      _playerError = true;
-      _startingPlayback = false;
-      _isPlaying = false;
-    });
-    announce(context, _copy.libraryEmbedError);
+    if (_playerError) return;
+    setState(() => _playerError = true);
+    announce(context, ref.read(appCopyProvider).libraryEmbedError);
   }
 
   void _bindPlayerListener(YoutubePlayerController controller) {
     _playerSubscription?.cancel();
-    _videoStateSubscription?.cancel();
-
     _playerSubscription = controller.listen((value) {
       if (value.hasError) {
         _handlePlayerFailure();
-        return;
-      }
-      _applyPlayerState(value.playerState);
-    });
-
-    _videoStateSubscription = controller.videoStateStream.listen((state) {
-      if (state.position.inMilliseconds > 100) {
-        _onPlaybackStarted(announce: false);
       }
     });
   }
 
-  Future<void> _loadAndPlay(YoutubePlayerController controller, String videoId) async {
-    unawaited(_pollUntilPlaybackStarts(controller));
+  void _createAndCuePlayer(String videoId) {
+    _playerSubscription?.cancel();
+    _controller?.close();
+
+    setState(() {
+      _controller = null;
+      _playerError = false;
+    });
+
     try {
-      await controller.loadVideoById(videoId: videoId);
-      // loadVideoById auto-plays; do not await playVideo — it can hang after playback starts.
-      unawaited(controller.playVideo());
+      final created = YoutubePlayerController(
+        params: _libraryYoutubeParams,
+        key: videoId,
+        onWebResourceError: (_) => _handlePlayerFailure(),
+      );
+      _controller = created;
+      _bindPlayerListener(created);
+      if (mounted) setState(() {});
+      // Cue after the scaffold/WebView is in the tree.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        unawaited(_probePlaybackAfterLoad(controller));
+        if (!mounted || _controller != created) return;
+        unawaited(created.cueVideoById(videoId: videoId));
       });
     } catch (_) {
       _handlePlayerFailure();
     }
   }
 
-  Future<void> _startPlayback() async {
+  void _resetPlayer() {
     final videoId = _videoId;
-    if (videoId == null || _startingPlayback || _isPlaying) return;
-
-    setState(() {
-      _startingPlayback = true;
-      _isPlaying = true;
-      _playerError = false;
-      _awaitingPlaybackConfirm = true;
-    });
-    if (_lastAnnouncedPlayerState != PlayerState.playing) {
-      _lastAnnouncedPlayerState = PlayerState.playing;
-      _announce('${_copy.libraryPlayVideo}. ${widget.video.title}');
-    }
-    _startPlaybackTimeout();
-
-    try {
-      final controller = _controller;
-      if (controller == null) {
-        final created = YoutubePlayerController(
-          params: _libraryYoutubeParams,
-          key: videoId,
-          onWebResourceError: (_) => _handlePlayerFailure(),
-        );
-        _controller = created;
-        _bindPlayerListener(created);
-        if (mounted) setState(() {});
-        _scheduleOptimisticReady();
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          unawaited(_loadAndPlay(created, videoId));
-        });
-      } else {
-        _scheduleOptimisticReady();
-        unawaited(_pollUntilPlaybackStarts(controller));
-        unawaited(controller.playVideo());
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          unawaited(_probePlaybackAfterLoad(controller));
-        });
-      }
-    } catch (_) {
-      _handlePlayerFailure();
-    }
-  }
-
-  void _pausePlayback() {
-    final controller = _controller;
-    if (controller == null) return;
-    _cancelPlaybackTimeout();
-    _cancelOptimisticReady();
-    _awaitingPlaybackConfirm = false;
-    if (!mounted) return;
-    setState(() {
-      _startingPlayback = false;
-      _isPlaying = false;
-    });
-    if (_lastAnnouncedPlayerState != PlayerState.paused) {
-      _lastAnnouncedPlayerState = PlayerState.paused;
-      _announce(_copy.libraryPlayerPaused);
-    }
-    // Do not await — pauseVideo can hang the same way playVideo can.
-    unawaited(_pauseVideoSafe(controller));
-  }
-
-  Future<void> _pauseVideoSafe(YoutubePlayerController controller) async {
-    try {
-      await controller.pauseVideo();
-    } catch (_) {
-      _handlePlayerFailure();
-    }
+    if (videoId == null) return;
+    _createAndCuePlayer(videoId);
   }
 
   Widget _buildVideoRegion({
@@ -353,49 +118,17 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
     required String title,
     required Widget child,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Semantics(
-          label: copy.libraryPlayVideo,
-          hint: copy.libraryPlayerNativeHint,
-          child: ExcludeSemantics(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: child,
-              ),
-            ),
-          ),
+    return Semantics(
+      label: '$title. ${copy.libraryYoutubeAttribution}. '
+          'YouTube player controls are in the video area.',
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(BrandTokens.cardRadius),
+        child: AspectRatio(
+          aspectRatio: 16 / 9,
+          child: child,
         ),
-        const SizedBox(height: 12),
-        _LibraryNativeControls(
-          copy: copy,
-          enabled: !_playerError,
-          loading: _startingPlayback,
-          isPlaying: _isPlaying,
-          onPlay: () => unawaited(_startPlayback()),
-          onPause: _pausePlayback,
-        ),
-      ],
+      ),
     );
-  }
-
-  void _resetPlayer() {
-    _cancelPlaybackTimeout();
-    _cancelOptimisticReady();
-    _awaitingPlaybackConfirm = false;
-    _playerSubscription?.cancel();
-    _videoStateSubscription?.cancel();
-    _controller?.close();
-    setState(() {
-      _controller = null;
-      _playerError = false;
-      _startingPlayback = false;
-      _isPlaying = false;
-      _lastAnnouncedPlayerState = null;
-    });
   }
 
   @override
@@ -404,7 +137,6 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
     final video = widget.video;
     final controller = _controller;
     final videoId = _videoId;
-    final thumbnailUrl = libraryThumbnailFor(ref, video);
     final description = summarizeYoutubeDescription(video.description);
     final duration = video.displayDuration;
     final uploaded = video.publishedAtDate != null
@@ -461,13 +193,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
               _buildVideoRegion(
                 copy: copy,
                 title: video.title,
-                child: _TapToPlayPoster(
-                  copy: copy,
-                  title: video.title,
-                  thumbnailUrl: thumbnailUrl,
-                  loading: _startingPlayback,
-                  onPlay: () => unawaited(_startPlayback()),
-                ),
+                child: ColoredBox(color: context.udaan.surfaceContainer),
               ),
               metadata,
             ],
@@ -490,21 +216,7 @@ class _LibraryPlayerScreenState extends ConsumerState<LibraryPlayerScreen> {
                 _buildVideoRegion(
                   copy: copy,
                   title: video.title,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      player,
-                      if (_startingPlayback)
-                        ColoredBox(
-                          color: context.udaan.scrim,
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              color: context.udaan.primary,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                  child: player,
                 ),
                 metadata,
               ],
@@ -633,171 +345,6 @@ class _PlayerMetadata extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _LibraryNativeControls extends StatelessWidget {
-  const _LibraryNativeControls({
-    required this.copy,
-    required this.enabled,
-    required this.loading,
-    required this.isPlaying,
-    required this.onPlay,
-    required this.onPause,
-  });
-
-  final AppCopy copy;
-  final bool enabled;
-  final bool loading;
-  final bool isPlaying;
-  final VoidCallback onPlay;
-  final VoidCallback onPause;
-
-  @override
-  Widget build(BuildContext context) {
-    if (loading) {
-      return Semantics(
-        button: true,
-        enabled: false,
-        label: copy.libraryPlayVideo,
-        child: ExcludeSemantics(
-          child: FilledButton.icon(
-            onPressed: null,
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(56),
-            ),
-            icon: SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                color: context.udaan.onPrimary.withValues(alpha: 0.7),
-              ),
-            ),
-            label: Text(copy.libraryPlayVideo),
-          ),
-        ),
-      );
-    }
-
-    final showPause = isPlaying;
-    final label = showPause ? copy.libraryPauseVideo : copy.libraryPlayVideo;
-    return Semantics(
-      button: true,
-      enabled: enabled,
-      label: label,
-      child: ExcludeSemantics(
-        child: FilledButton.icon(
-          onPressed: !enabled ? null : (showPause ? onPause : onPlay),
-          style: FilledButton.styleFrom(
-            minimumSize: const Size.fromHeight(56),
-          ),
-          icon: Icon(
-            showPause ? Icons.pause_rounded : Icons.play_arrow_rounded,
-          ),
-          label: Text(label),
-        ),
-      ),
-    );
-  }
-}
-
-class _TapToPlayPoster extends StatelessWidget {
-  const _TapToPlayPoster({
-    required this.copy,
-    required this.title,
-    required this.thumbnailUrl,
-    required this.onPlay,
-    this.loading = false,
-  });
-
-  final AppCopy copy;
-  final String title;
-  final String thumbnailUrl;
-  final VoidCallback onPlay;
-  final bool loading;
-
-  @override
-  Widget build(BuildContext context) {
-    return ExcludeSemantics(
-      child: Material(
-        color: context.udaan.surfaceContainer,
-        child: InkWell(
-          onTap: loading ? null : onPlay,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (thumbnailUrl.isNotEmpty)
-                ExcludeSemantics(
-                  child: CachedNetworkImage(
-                    imageUrl: thumbnailUrl,
-                    fit: BoxFit.cover,
-                    memCacheHeight: 360,
-                    placeholder: (_, _) => const _PosterPlaceholder(),
-                    errorWidget: (_, _, _) => const _PosterPlaceholder(),
-                  ),
-                )
-              else
-                const _PosterPlaceholder(),
-              Container(
-                color: context.udaan.scrim.withValues(alpha: 0.25),
-              ),
-              Center(
-                child: loading
-                    ? CircularProgressIndicator(color: context.udaan.primary)
-                    : ExcludeSemantics(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 64,
-                              height: 64,
-                              decoration: BoxDecoration(
-                                color: context.udaan.primary,
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: Icon(
-                                Icons.play_arrow_rounded,
-                                color: context.udaan.onPrimary,
-                                size: 40,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              copy.libraryTapToPlay,
-                              style: GoogleFonts.atkinsonHyperlegible(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w800,
-                                color: context.udaan.onBackground,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PosterPlaceholder extends StatelessWidget {
-  const _PosterPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: context.udaan.surfaceContainerHigh,
-      child: Center(
-        child: Icon(
-          Icons.video_library_outlined,
-          size: 48,
-          color: context.udaan.onSurfaceMuted.withValues(alpha: 0.7),
-        ),
-      ),
     );
   }
 }

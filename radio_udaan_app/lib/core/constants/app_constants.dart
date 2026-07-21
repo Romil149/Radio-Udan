@@ -1,7 +1,8 @@
 /// Build-time and client metadata sent to the App API.
 abstract final class AppConstants {
-  /// Sent in registration payloads; must match `pubspec.yaml` version.
-  static const String appVersion = '2.0.0';
+  /// Android marketing version (`pubspec` 3.0.0+N). iOS store builds stay on
+  /// 2.0.0 via `ios/Flutter/{Debug,Release}.xcconfig` overrides.
+  static const String appVersion = '3.0.0';
 
   static const String clientPlatform = 'flutter';
 

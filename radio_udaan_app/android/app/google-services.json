@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:508596678027:android:1ed61f37f51077a81b938e",
+        "android_client_info": {
+          "package_name": "bane.kjsdev.radioudaan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCguBzurEU8WdwT_wzSuahE-DQViCG8vSE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:508596678027:android:88f0398cfe2642ac1b938e",
         "android_client_info": {
           "package_name": "com.radioudaan.radio_udaan_app"
