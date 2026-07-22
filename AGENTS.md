@@ -39,6 +39,33 @@ Staging site: https://nexusfleck.com/radioudaan/
 
 ## Cursor Cloud specific instructions
 
+### VM toolchain (after snapshot / first boot)
+
+| Tool | Location / version |
+|------|-------------------|
+| Flutter | `~/flutter` (stable **3.44.1**, matches CI) — use `$HOME/flutter/bin/flutter` or ensure `~/flutter/bin` is on `PATH` |
+| PHP | `php` CLI **8.3** (plugin `php -l` only; no local WordPress on the VM) |
+| Chrome | `/usr/local/bin/google-chrome` — use `flutter run -d chrome` for UI smoke |
+
+WordPress does **not** run on the VM. Use **staging** for live API: `https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1`.
+
+### Run the Flutter app (web UI smoke)
+
+```bash
+cd radio_udaan_app
+flutter run -d chrome --web-port=8765 --web-hostname=0.0.0.0 \
+  --dart-define=API_BASE_URL=https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1
+```
+
+Open http://127.0.0.1:8765/ — bootstrap should load staging branding, then login/register screens.
+
+HTTP-only API smoke (no Flutter UI):
+
+```bash
+cd radio_udaan_app
+API_BASE_URL=https://nexusfleck.com/radioudaan/wp-json/radioudaan/v1 dart run tool/live_api_check.dart
+```
+
 ### Before every PR
 
 ```bash
@@ -61,7 +88,13 @@ php -l path/to/file.php
 bash scripts/staging-api-smoke.sh
 ```
 
-Must exit **0** before telling the user staging is ready for QA.
+Must exit **0** before telling the user staging is ready for QA. A common failure is missing support helpline/email in WP Admin → **Radio Udaan App** (app still runs; smoke gate fails until fixed).
+
+### Known VM caveats
+
+- `flutter test test/widget_test.dart` may fail if bootstrap copy changed (CI runs `dart analyze lib` as the primary gate).
+- OTP E2E on staging needs an active test account; dev OTP `123456` only when enabled in WP.
+- Android APK builds need GitHub Actions (no Android SDK on the VM).
 
 ### APK for testers (no local Android SDK)
 
